@@ -47,7 +47,7 @@
 #include "qsparqlbindingset.h"
 #include "qsparqlresult.h"
 #include "qvector.h"
-#include "private/qsparqldriver_p.h"
+#include "qsparqldriver_p.h"
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE

@@ -54,18 +54,23 @@
 #include "qcoreapplication.h"
 #include "qsparqlresult.h"
 #include "qsparqlconnectionoptions.h"
-#include "private/qsparqldriver_p.h"
-#include "private/qsparqldriverplugin_p.h"
-#include "private/qfactoryloader_p.h"
-#include "private/qsparqlnulldriver_p.h"
+#include "qsparqldriver_p.h"
+#include "qsparqldriverplugin_p.h"
+#if WE_ARE_QT
+#include "qfactoryloader_p.h"
+#endif
+#include "qsparqlnulldriver_p.h"
 #include "qhash.h"
 
 QT_BEGIN_NAMESPACE
+
+#if WE_ARE_QT
 
 #if !defined(QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
                           (QSparqlDriverFactoryInterface_iid,
                            QLatin1String("/sparqldrivers")))
+#endif
 #endif
 
 typedef QHash<QString, QSparqlDriverCreatorBase*> DriverDict;
@@ -136,6 +141,8 @@ DriverDict &QSparqlConnectionPrivate::driverDict()
 
 QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 {
+    return 0; // HACK
+#if WE_ARE_QT
     QSparqlDriver * driver = 0;
     if (!driver) {
         DriverDict dict = QSparqlConnectionPrivate::driverDict();
@@ -163,6 +170,7 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
         driver = QSparqlConnectionPrivate::shared_null()->driver;
     }
     return driver;
+#endif
 }
 
 void qSparqlRegisterConnectionCreator(const QString& type,
@@ -281,7 +289,9 @@ bool QSparqlConnection::isValid() const
 QStringList QSparqlConnection::drivers()
 {
     QStringList list;
+    return list; // a hack
 
+#if WE_ARE_QT
 #ifdef QT_SPARQL_ODBC
     list << QLatin1String("QODBC3");
     list << QLatin1String("QODBC");
@@ -310,6 +320,7 @@ QStringList QSparqlConnection::drivers()
     }
 
     return list;
+#endif
 }
 
 #ifndef QT_NO_DEBUG_STREAM
