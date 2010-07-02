@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qsparqldriver_p.h"
+#include "qsparqldriver_p.h"
 
 #include "qdatetime.h"
 #include "qsparqlerror.h"

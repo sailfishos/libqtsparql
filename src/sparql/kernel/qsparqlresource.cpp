@@ -46,6 +46,7 @@
 #include "qatomic.h"
 #include "qstring.h"
 #include "qvector.h"
+#include "qvariant.h"
 
 QT_BEGIN_NAMESPACE
 
