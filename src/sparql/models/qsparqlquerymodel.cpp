@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#if 0 // hack: what to do with QAbstractItemModelPrivate?
+
 #include "qsparqlquerymodel.h"
 
 #include <qdebug.h>
@@ -618,3 +620,5 @@ QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
 }
 
 QT_END_NAMESPACE
+
+#endif

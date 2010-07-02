@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#if 0 // FIXME: disabled because of QAbstractItemModelPrivate
 #ifndef QSPARQLQUERYMODEL_H
 #define QSPARQLQUERYMODEL_H
 
@@ -108,3 +109,5 @@ QT_END_HEADER
 #include "qsparqlquerymodel_p.h"
 
 #endif // QSPARQLQUERYMODEL_H
+
+#endif
