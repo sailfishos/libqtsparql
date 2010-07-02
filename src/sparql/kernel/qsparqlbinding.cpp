@@ -44,6 +44,7 @@
 #include "qdebug.h"
 #include <QtCore/qurl.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qregexp.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -294,7 +295,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 QString QSparqlBinding::toString() const
 {    
     if (d->nodetype == QSparqlBindingPrivate::Resource)
-        return '<' + QString::fromAscii(val.toUrl().toEncoded()) + '>';
+        return QLatin1Char('<') + QString::fromAscii(val.toUrl().toEncoded()) + QLatin1Char('>');
     
     if (d->nodetype == QSparqlBindingPrivate::Blank)
         return QLatin1String("_:") + val.toString();
@@ -307,13 +308,13 @@ QString QSparqlBinding::toString() const
         case QVariant::LongLong:
         case QVariant::UInt:
         case QVariant::ULongLong:
-            literal = '\"' + val.toString() + '\"';
+            literal = QLatin1Char('\"') + val.toString() + QLatin1Char('\"');
             break;
         case QVariant::Bool:
             literal = val.toBool() ? QLatin1String("'true'") : QLatin1String("'false'");
             break;
         case QVariant::Double:
-            literal = '\"' + QString::number(val.toDouble(), 'e', 10) + '\"';
+            literal = QLatin1Char('\"') + QString::number(val.toDouble(), 'e', 10) + QLatin1Char('\"');
             break;
         case QVariant::String:
         {
@@ -346,16 +347,16 @@ QString QSparqlBinding::toString() const
             QDate dt = val.toDateTime().date();
             QTime tm = val.toDateTime().time();
             // Dateformat has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
-            literal = '\"' + QString::number(dt.year()) + QLatin1Char('-') +
+            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
                 QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('-') +
                 QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('T') +
-                tm.toString() + '\"';
+                tm.toString() + QLatin1Char('\"');
             break;
         }
         case QVariant::ByteArray:
-            literal = '\"' + QString::fromAscii(val.toByteArray().toBase64()) + '\"' ;
+            literal = QLatin1Char('\"') + QString::fromAscii(val.toByteArray().toBase64()) + QLatin1Char('\"') ;
             break;
         default:
             break;
