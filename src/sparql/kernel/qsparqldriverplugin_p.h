@@ -42,6 +42,8 @@
 #ifndef QSPARQLDRIVERPLUGIN_H
 #define QSPARQLDRIVERPLUGIN_H
 
+#include "qsparql.h"
+
 // TODO: publish this header file when the Driver interface has stabilized
 
 #include <QtCore/qplugin.h>

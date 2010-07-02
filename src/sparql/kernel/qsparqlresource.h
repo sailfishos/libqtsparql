@@ -42,6 +42,8 @@
 #ifndef QSPARQLRESOURCE_H
 #define QSPARQLRESOURCE_H
 
+#include "qsparql.h"
+
 #include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
 

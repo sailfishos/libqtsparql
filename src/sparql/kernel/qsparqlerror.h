@@ -42,6 +42,8 @@
 #ifndef QSPARQLERROR_H
 #define QSPARQLERROR_H
 
+#include "qsparql.h"
+
 #include <QtCore/qstring.h>
 
 QT_BEGIN_HEADER

@@ -48,7 +48,16 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+#define WE_ARE_QT 0
+
+#if !WE_ARE_QT
+#    undef QT_MODULE // hack; remove this when we go back to Qt repo
+#    define QT_MODULE(x) ;
+#endif
+
 QT_MODULE(Sparql)
+
+#define Q_SPARQL_EXPORT Q_DECL_EXPORT
 
 namespace QSparql
 {

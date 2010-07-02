@@ -42,6 +42,8 @@
 #ifndef QSPARQLBINDING_H
 #define QSPARQLBINDING_H
 
+#include "qsparql.h"
+
 #include <QtCore/qvariant.h>
 #include <QtCore/qstring.h>
 

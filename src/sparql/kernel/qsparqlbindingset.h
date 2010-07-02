@@ -42,6 +42,8 @@
 #ifndef QSPARQLBINDINGSET_H
 #define QSPARQLBINDINGSET_H
 
+#include "qsparql.h"
+
 #include <QtCore/qstring.h>
 
 QT_BEGIN_HEADER
