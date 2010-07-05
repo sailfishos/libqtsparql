@@ -6,9 +6,7 @@ SUBDIRS       = simple \
                 bindingset \
                 asynctracker
 
-# install
+# install-- FIXME
 sources.files = sparql.pro README
 sources.path = $$[QT_INSTALL_EXAMPLES]/sparql
 INSTALLS += sources
-
-symbian: include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
