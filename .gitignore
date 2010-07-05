@@ -6,3 +6,8 @@ lib/*.so*
 moc_*.cpp
 *.moc
 *.so
+
+# examples
+asynctracker
+bindingset
+simple
