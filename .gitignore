@@ -1,13 +1,20 @@
 include/
+
 *.o
+*.so*
+
 Makefile
-lib/*.so*
 *~
+
 moc_*.cpp
 *.moc
-*.so
+ui_*.h
 
 # examples
 asynctracker
 bindingset
 simple
+contacts
+dbpedia
+querymodel
+
