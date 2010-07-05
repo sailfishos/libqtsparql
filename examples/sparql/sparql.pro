@@ -1,10 +1,11 @@
 TEMPLATE      = subdirs
 
 SUBDIRS       = simple \
-#               dbpedia \ # enable when querymodel is enabled
-#                querymodel \ # -..-
+                dbpedia \
+                querymodel \
                 bindingset \
-                asynctracker
+                asynctracker \
+                contacts
 
 # install-- FIXME
 sources.files = sparql.pro README

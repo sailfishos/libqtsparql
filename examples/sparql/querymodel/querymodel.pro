@@ -1,9 +1,10 @@
+include(../sparql-examples.pri)
 HEADERS       = ../connection.h \
                 customsparqlmodel.h 
 SOURCES       = customsparqlmodel.cpp \
                 main.cpp
-QT           += sparql
-
+#QT           += sparql #enable this later
+QT += gui
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/sparql/querymodel
 sources.files = $$SOURCES *.h $$RESOURCES $$FORMS querymodel.pro
