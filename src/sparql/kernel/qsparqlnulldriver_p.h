@@ -84,7 +84,6 @@ protected:
 
     inline void setAt(int) {}
     inline void setActive(bool) {}
-    inline void setLastError(const QSparqlError&) {}
     inline void setQuery(const QString&) {}
     inline void setSelect(bool) {}
     inline void setForwardOnly(bool) {}
