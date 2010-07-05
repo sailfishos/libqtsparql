@@ -49,6 +49,9 @@
 #ifdef QT_SPARQL_TRACKER
 #include "../drivers/tracker/qsparql_tracker.h"
 #endif
+#ifdef QT_SPARQL_ENDPOINT
+#include "../drivers/endpoint/qsparql_endpoint.h"
+#endif
 
 #include "qdebug.h"
 #include "qcoreapplication.h"
