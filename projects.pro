@@ -2,7 +2,7 @@
 # Main projectfile
 #####################################################################
 
-include (shared.pri)
+include(shared.pri)
 CONFIG += ordered
 TEMPLATE = subdirs
 
