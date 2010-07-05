@@ -1,8 +1,8 @@
 TEMPLATE      = subdirs
 
 SUBDIRS       = simple \
-                dbpedia \
-                querymodel \
+#               dbpedia \ # enable when querymodel is enabled
+#                querymodel \ # -..-
                 bindingset \
                 asynctracker
 
