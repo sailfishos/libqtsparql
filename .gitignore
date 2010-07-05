@@ -1,1 +1,6 @@
 include/
+*.o
+Makefile
+lib/*.so*
+*~
+moc_*.cpp

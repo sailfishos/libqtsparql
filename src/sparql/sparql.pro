@@ -1,10 +1,11 @@
-TEMPLATE	= lib
-TARGET	   = QtSparql
+include(../../shared.pri)
+
+TEMPLATE = lib
+TARGET = QtSparql
+DESTDIR = $$top_srcdir/lib
 DEFINES += QT_BUILD_SPARQL_LIB
 DEFINES += QT_NO_USING_NAMESPACE
-QT = core network
-
-INCLUDEPATH += ../../include/
+QT += network
 
 unix:QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
 
