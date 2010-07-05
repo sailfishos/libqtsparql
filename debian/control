@@ -1,0 +1,33 @@
+Source: libqtsparql
+Section: libs
+Priority: optional
+Maintainer: Marja Hassinen <marja.hassinen@nokia.com>
+Build-Depends: debhelper (>= 5), libqt4-dev (>= 4.7), doxygen
+Standards-Version: 3.8.0
+
+Package: libqtsparql0
+Architecture: any
+Depends: libqtcore4
+Description: Library for accessing RDF stores.
+
+Package: libqtsparql-dev
+Section: libdevel
+Architecture: any
+Depends: libqtsparql0 (= ${binary:Version})
+Description: Library for accessing RDF stores.
+
+Package: libqtsparql0-dbg
+Section: libdevel
+Architecture: any
+Depends: libqtsparql0 (= ${binary:Version})
+Description: Library for accessing RDF stores.
+
+Package: libqtsparql-tests
+Section: devel
+Architecture: any
+Depends: ${shlibs:Depends},
+         libqtsparql0 (>= ${binary:Version}),
+         ci-testing
+XB-Maemo-CI-Packages: libqtsparql0
+XB-Maemo-CI-Stage: staging, acceptance
+Description: Tests for libqtsparql.

@@ -1,2 +1,1 @@
 QTDIR=. bin/syncqt
-qmake

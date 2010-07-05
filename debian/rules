@@ -1,0 +1,72 @@
+#!/usr/bin/make -f
+# -*- makefile-mode -*-
+
+#export DH_VERBOSE=1
+
+Makefile:
+	./configure
+	qmake PREFIX=/usr
+
+build: debian/build-stamp
+debian/build-stamp: Makefile
+	dh_testdir
+	$(MAKE)
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f debian/build-stamp
+	[ -f Makefile ] && $(MAKE) distclean || true
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
+
+	#mkdir -p `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
+	#rm -rf `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc/html
+	#cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-do
+
+	# installing headers from include/ created by syncqt
+	rm -rf `pwd`/debian/tmp/usr/include/QtSparql
+	mkdir -p `pwd`/debian/tmp/usr/include/QtSparql
+	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
+	cp -a include/QtSparql/qsparql[^_]*.h `pwd`/debian/tmp/usr/include/QtSparql
+
+	dh_install --sourcedir=`pwd`/debian/tmp/
+
+binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installchangelogs -i
+	dh_installdocs -i
+	dh_link -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+binary-arch: build install
+	dh_testdir -a
+	dh_testroot -a
+	dh_installchangelogs -a
+	dh_installdocs -a
+	dh_strip -p libqtsparql0 --dbg-package="libqtsparql0-dbg"
+	dh_link -a
+	dh_compress -a
+	dh_fixperms -a
+	dh_makeshlibs -a -V
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install
