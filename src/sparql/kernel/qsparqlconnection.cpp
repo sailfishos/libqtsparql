@@ -57,7 +57,12 @@
 #include "qsparqldriver_p.h"
 #include "qsparqldriverplugin_p.h"
 #if WE_ARE_QT
-#include "qfactoryloader_p.h"
+// QFactoryLoader is an internal part of Qt; we'll use it when where part of Qt
+// (or when Qt publishes it.)
+# include "qfactoryloader_p.h"
+#else
+# include "qdir.h"
+# include "qpluginloader.h"
 #endif
 #include "qsparqlnulldriver_p.h"
 #include "qhash.h"
@@ -89,7 +94,9 @@ public:
     ~QSparqlConnectionPrivate();
 
     static DriverDict &driverDict();
-    static QSparqlDriver* findDriver(const QString &type);
+    static QSparqlDriver* findDriver(const QString& type);
+    static QSparqlDriver* findDriverWithFactoryLoader(const QString& type);
+    static QSparqlDriver* findDriverWithPluginLoader(const QString& type);
     static void registerConnectionCreator(const QString &type,
                                           QSparqlDriverCreatorBase* creator);
 
@@ -141,7 +148,15 @@ DriverDict &QSparqlConnectionPrivate::driverDict()
 
 QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 {
-    return 0; // HACK
+#if WE_ARE_QT
+    return findDriverWithFactoryLoader(type);
+#else
+    return findDriverWithPluginLoader(type);
+#endif
+}
+
+QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QString &type)
+{
 #if WE_ARE_QT
     QSparqlDriver * driver = 0;
     if (!driver) {
@@ -170,8 +185,48 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
         driver = QSparqlConnectionPrivate::shared_null()->driver;
     }
     return driver;
+#else
+    return 0;
 #endif
 }
+
+QSparqlDriver* QSparqlConnectionPrivate::findDriverWithPluginLoader(const QString &type)
+{
+#if WE_ARE_QT
+    return 0;
+#else
+    static bool keysRead = false;
+    static QHash<QString, QSparqlDriverPlugin*> plugins;
+
+    if (!keysRead) {
+        keysRead = true;
+        QStringList paths = QCoreApplication::libraryPaths();
+        foreach(const QString& path, paths) {
+            QString realPath = path + QLatin1String("/sparqldrivers");
+            QStringList pluginNames = QDir(realPath).entryList(QDir::Files);
+            for (int j = 0; j < pluginNames.count(); ++j) {
+                QString fileName = QDir::cleanPath(realPath +
+                                                   QLatin1Char('/') +
+                                                   pluginNames.at(j));
+                QPluginLoader loader(fileName);
+                QObject* instance = loader.instance();
+                QFactoryInterface *factory = qobject_cast<QFactoryInterface*>(instance);
+                QSparqlDriverPlugin* driPlu = dynamic_cast<QSparqlDriverPlugin*>(factory);
+                if (instance && factory && driPlu) {
+                    QStringList keys = factory->keys();
+                    for (int k = 0; k < keys.size(); ++k) {
+                        plugins[keys[k]] = driPlu;
+                    }
+                }
+            }
+        }
+    }
+    if (plugins.contains(type))
+        return plugins[type]->create(type);
+    return QSparqlConnectionPrivate::shared_null()->driver;
+#endif
+}
+
 
 void qSparqlRegisterConnectionCreator(const QString& type,
                                QSparqlDriverCreatorBase* creator)
