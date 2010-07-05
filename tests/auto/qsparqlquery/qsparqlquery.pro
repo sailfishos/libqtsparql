@@ -1,16 +1,6 @@
+include(../sparqltest.pri)
 load(qttest_p4)
 SOURCES  += tst_qsparqlquery.cpp
 
-QT = core sparql
-
-
-!wince*:win32:LIBS += -lws2_32
-
-
-wince*: {
-   plugFiles.sources = ../../../plugins/sparqldrivers
-   plugFiles.path    = .
-   DEPLOYMENT += plugFiles
-   LIBS += -lws2
-}
+#QT = sparql # enable this later
 

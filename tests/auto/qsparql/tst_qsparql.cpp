@@ -43,6 +43,7 @@
 #include <QtSparql/QtSparql>
 
 #include "private/qsparqlconnection_p.h"
+#include "private/qsparqldriver_p.h"
 //const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
 
 //TESTED_FILES=
@@ -93,18 +94,17 @@ class MockDriver : public QSparqlDriver
     bool open(const QSparqlConnectionOptions&)
     {
         ++openCount;
-        setOpen(openRetVal);
         return openRetVal;
     }
     void close()
     {
         ++closeCount;
     }
-    bool hasFeature(QSparqlDriver::DriverFeature) const
+    bool hasFeature(QSparqlConnection::Feature) const
     {
         return false;
     }
-    MockResult* createResult() const
+    MockResult* exec(const QString&, QSparqlQuery::StatementType)
     {
         return new MockResult(this);
     }
@@ -118,7 +118,7 @@ int MockDriver::closeCount = 0;
 bool MockDriver::openRetVal = true;
 
 MockResult::MockResult(const MockDriver* d)
-    : QSparqlResult(d)
+    : QSparqlResult()
 {
 }
 
@@ -184,22 +184,23 @@ void tst_QSparql::mock_creation()
 {
     QSparqlConnection conn("MOCK");
     QCOMPARE(MockDriver::openCount, 1);
-    QVERIFY(conn.isOpen());
 }
 
 void tst_QSparql::wrong_creation()
 {
     QSparqlConnection conn("TOTALLYNOTTHERE");
-    QVERIFY(!conn.isOpen());
-    QCOMPARE((void*)conn.exec(QSparqlQuery("foo")), (void*)0);
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(res->hasError());
+    QCOMPARE(res->lastError().type(), QSparqlError::ConnectionError);
 }
 
 void tst_QSparql::open_fails()
 {
     MockDriver::openRetVal = false;
     QSparqlConnection conn("MOCK");
-    QVERIFY(!conn.isOpen());
-    QCOMPARE((void*)conn.exec(QSparqlQuery("foo")), (void*)0);
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(res->hasError());
+    QCOMPARE(res->lastError().type(), QSparqlError::ConnectionError);
 }
 
 void tst_QSparql::connection_scope()

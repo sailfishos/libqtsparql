@@ -6,7 +6,7 @@ include(shared.pri)
 CONFIG += ordered
 TEMPLATE = subdirs
 
-SUBDIRS = src examples
+SUBDIRS = src tests examples
 
 xclean.commands = rm -rf lib plugins include
 xclean.depends = clean

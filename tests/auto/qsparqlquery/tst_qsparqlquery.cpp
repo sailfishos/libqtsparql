@@ -149,7 +149,7 @@ void tst_QSparqlQuery::replacement()
     for (int i = 0; i < placeholders.size(); ++i)
         q.bindValue(placeholders[i], replacements[i]);
 
-    QCOMPARE(q.rawQueryText(), rawString);
+    QCOMPARE(q.query(), rawString);
     QCOMPARE(q.preparedQueryText(), replacedString);
 }
 
@@ -170,7 +170,7 @@ void tst_QSparqlQuery::unbind_and_replace()
     for (int i = 0; i < placeholders.size(); ++i)
         q.bindValue(placeholders[i], replacements[i]);
 
-    QCOMPARE(q.rawQueryText(), rawString);
+    QCOMPARE(q.query(), rawString);
     QCOMPARE(q.preparedQueryText(), replacedString);
 }
 
