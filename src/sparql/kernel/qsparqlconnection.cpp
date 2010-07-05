@@ -151,6 +151,16 @@ DriverDict &QSparqlConnectionPrivate::driverDict()
 
 QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 {
+    QSparqlDriver * driver = 0;
+    DriverDict dict = QSparqlConnectionPrivate::driverDict();
+    for (DriverDict::const_iterator it = dict.constBegin();
+         it != dict.constEnd() && !driver; ++it) {
+        if (type == it.key()) {
+            driver = ((QSparqlDriverCreatorBase*)(*it))->createObject();
+        }
+    }
+    if (driver)
+        return driver;
 #if WE_ARE_QT
     return findDriverWithFactoryLoader(type);
 #else
@@ -161,17 +171,6 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QString &type)
 {
 #if WE_ARE_QT
-    QSparqlDriver * driver = 0;
-    if (!driver) {
-        DriverDict dict = QSparqlConnectionPrivate::driverDict();
-        for (DriverDict::const_iterator it = dict.constBegin();
-             it != dict.constEnd() && !driver; ++it) {
-            if (type == it.key()) {
-                driver = ((QSparqlDriverCreatorBase*)(*it))->createObject();
-            }
-        }
-    }
-
 #if !defined(QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
     if (!driver && loader()) {
         if (QSparqlDriverFactoryInterface *factory = qobject_cast<QSparqlDriverFactoryInterface*>(loader()->instance(type)))
