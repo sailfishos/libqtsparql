@@ -53,25 +53,31 @@
 // We mean it.
 //
 
-#include "private/qabstractitemmodel_p.h"
 #include "QtSparql/qsparqlerror.h"
 #include "QtSparql/qsparqlquery.h"
 #include "QtSparql/qsparqlbindingset.h"
 #include "QtCore/qhash.h"
 #include "QtCore/qvarlengtharray.h"
 #include "QtCore/qvector.h"
+#include "QtCore/qabstractitemmodel.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSparqlQueryModelPrivate: public QAbstractItemModelPrivate
+class QSparqlQueryModel;
+class QSparqlResult;
+class QSparqlConnection;
+
+class QSparqlQueryModelPrivate : public QObject
 {
-    Q_DECLARE_PUBLIC(QSparqlQueryModel)
+    Q_OBJECT
 public:
-    QSparqlQueryModelPrivate() : result(0), connection(0), atEnd(false) {}
+    QSparqlQueryModelPrivate(QSparqlQueryModel* q_)
+        : q(q_), result(0), connection(0), atEnd(false) {}
     ~QSparqlQueryModelPrivate();
     void prefetch(int);
     void initColOffsets(int size);
 
+    QSparqlQueryModel* q;
     mutable QSparqlQuery query;
     mutable QSparqlError error;
     mutable QSparqlResult *result;
@@ -82,6 +88,8 @@ public:
     QVector<QHash<int, QVariant> > headers;
     QVarLengthArray<int, 56> colOffsets; // used to calculate indexInQuery of columns
     void _q_queryFinished();
+public slots:
+    void queryFinished();
 };
 
 QT_END_NAMESPACE

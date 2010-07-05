@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-#if 0 // FIXME: disabled because of QAbstractItemModelPrivate
 #ifndef QSPARQLQUERYMODEL_H
 #define QSPARQLQUERYMODEL_H
 
@@ -96,10 +95,8 @@ protected:
 
     QModelIndex indexInQuery(const QModelIndex &item) const;
     void setLastError(const QSparqlError &error);
-    QSparqlQueryModel(QSparqlQueryModelPrivate &dd, QObject *parent = 0);
-    
 private:
-    Q_PRIVATE_SLOT(d_func(), void _q_queryFinished())
+    QSparqlQueryModelPrivate* d;
 };
 
 QT_END_NAMESPACE
@@ -109,5 +106,3 @@ QT_END_HEADER
 #include "qsparqlquerymodel_p.h"
 
 #endif // QSPARQLQUERYMODEL_H
-
-#endif

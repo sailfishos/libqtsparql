@@ -39,8 +39,6 @@
 **
 ****************************************************************************/
 
-#if 0 // hack: what to do with QAbstractItemModelPrivate?
-
 #include "qsparqlquerymodel.h"
 
 #include <qdebug.h>
@@ -54,10 +52,8 @@ QT_BEGIN_NAMESPACE
 
 #define QSPARQL_PREFETCH 255
 
-void QSparqlQueryModelPrivate::_q_queryFinished()
+void QSparqlQueryModelPrivate::queryFinished()
 {
-    Q_Q(QSparqlQueryModel);
-
     // This function will only be called when result is a valid
     // pointer.
     result->first();
@@ -96,9 +92,9 @@ void QSparqlQueryModelPrivate::_q_queryFinished()
 //    }
     QModelIndex newBottom;
     if (hasQuerySize && result->size() > 0) {
-        newBottom = createIndex(result->size() - 1, bindingSet.count() - 1);
+        newBottom = q->createIndex(result->size() - 1, bindingSet.count() - 1);
         q->beginInsertRows(QModelIndex(), 0, qMax(0, newBottom.row()));
-        bottom = createIndex(result->size() - 1, columnsChanged ? 0 : bindingSet.count() - 1);
+        bottom = q->createIndex(result->size() - 1, columnsChanged ? 0 : bindingSet.count() - 1);
         atEnd = true;
         q->endInsertRows();
     } else {
@@ -114,7 +110,6 @@ void QSparqlQueryModelPrivate::_q_queryFinished()
 
 void QSparqlQueryModelPrivate::prefetch(int limit)
 {
-    Q_Q(QSparqlQueryModel);
     if (atEnd || limit <= bottom.row() || bottom.column() == -1 || !result)
         return;
 
@@ -209,15 +204,9 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
     Creates an empty QSparqlQueryModel with the given \a parent.
  */
 QSparqlQueryModel::QSparqlQueryModel(QObject *parent)
-    : QAbstractTableModel(*new QSparqlQueryModelPrivate, parent)
+    : QAbstractTableModel(parent)
 {
-}
-
-/*! \internal
- */
-QSparqlQueryModel::QSparqlQueryModel(QSparqlQueryModelPrivate &dd, QObject *parent)
-    : QAbstractTableModel(dd, parent)
-{
+    d = new QSparqlQueryModelPrivate(this);
 }
 
 /*!
@@ -227,6 +216,7 @@ QSparqlQueryModel::QSparqlQueryModel(QSparqlQueryModelPrivate &dd, QObject *pare
 */
 QSparqlQueryModel::~QSparqlQueryModel()
 {
+    delete d;
 }
 
 /*!
@@ -246,7 +236,6 @@ QSparqlQueryModel::~QSparqlQueryModel()
 */
 void QSparqlQueryModel::fetchMore(const QModelIndex &parent)
 {
-    Q_D(QSparqlQueryModel);
     if (parent.isValid())
         return;
     d->prefetch(qMax(d->bottom.row(), 0) + QSPARQL_PREFETCH);
@@ -265,7 +254,6 @@ void QSparqlQueryModel::fetchMore(const QModelIndex &parent)
  */
 bool QSparqlQueryModel::canFetchMore(const QModelIndex &parent) const
 {
-    Q_D(const QSparqlQueryModel);
     return (!parent.isValid() && !d->atEnd);
 }
 
@@ -283,7 +271,6 @@ bool QSparqlQueryModel::canFetchMore(const QModelIndex &parent) const
  */
 int QSparqlQueryModel::rowCount(const QModelIndex &index) const
 {
-    Q_D(const QSparqlQueryModel);
     return index.isValid() ? 0 : d->bottom.row() + 1;
 }
 
@@ -291,7 +278,6 @@ int QSparqlQueryModel::rowCount(const QModelIndex &index) const
  */
 int QSparqlQueryModel::columnCount(const QModelIndex &index) const
 {
-    Q_D(const QSparqlQueryModel);
     return index.isValid() ? 0 : d->bindingSet.count();
 }
 
@@ -305,7 +291,6 @@ int QSparqlQueryModel::columnCount(const QModelIndex &index) const
 */
 QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
 {
-    Q_D(const QSparqlQueryModel);
     if (!item.isValid() || !d->result)
         return QVariant();
 
@@ -333,7 +318,6 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
 */
 QVariant QSparqlQueryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    Q_D(const QSparqlQueryModel);
     if (orientation == Qt::Horizontal) {
         QVariant val = d->headers.value(section).value(role);
         if (role == Qt::DisplayRole && !val.isValid())
@@ -371,7 +355,7 @@ void QSparqlQueryModel::queryChange()
 */
 void QSparqlQueryModel::setQuery(const QSparqlQuery &query)
 {
-    Q_D(QSparqlQueryModel);
+    // FIXME: what's this function?
 }
 
 /*! \overload
@@ -389,15 +373,13 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query)
 */
 void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
 {
-    Q_D(QSparqlQueryModel);
-    
     // FIXME: the old result needs to be deleted after the new results are displayed
     // so not here..
 //    if (d->result != 0)
 //        delete d->result;
     d->connection = &connection;
     d->result = connection.exec(query);
-    connect(d->result, SIGNAL(finished()), this, SLOT(_q_queryFinished()));
+    connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
 }
 
 /*!
@@ -408,7 +390,6 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnect
 */
 void QSparqlQueryModel::clear()
 {
-    Q_D(QSparqlQueryModel);
     d->error = QSparqlError();
     d->atEnd = true;
 
@@ -440,7 +421,6 @@ void QSparqlQueryModel::clear()
 bool QSparqlQueryModel::setHeaderData(int section, Qt::Orientation orientation,
                                    const QVariant &value, int role)
 {
-    Q_D(QSparqlQueryModel);
     if (orientation != Qt::Horizontal || section < 0 || columnCount() <= section)
         return false;
 
@@ -458,7 +438,6 @@ bool QSparqlQueryModel::setHeaderData(int section, Qt::Orientation orientation,
 */
 QSparqlQuery QSparqlQueryModel::query() const
 {
-    Q_D(const QSparqlQueryModel);
     return d->query;
 }
 
@@ -470,7 +449,6 @@ QSparqlQuery QSparqlQueryModel::query() const
 */
 QSparqlError QSparqlQueryModel::lastError() const
 {
-    Q_D(const QSparqlQueryModel);
     return d->error;
 }
 
@@ -482,7 +460,6 @@ QSparqlError QSparqlQueryModel::lastError() const
 */
 void QSparqlQueryModel::setLastError(const QSparqlError &error)
 {
-    Q_D(QSparqlQueryModel);
     d->error = error;
 }
 
@@ -498,8 +475,6 @@ void QSparqlQueryModel::setLastError(const QSparqlError &error)
 */
 QSparqlBindingSet QSparqlQueryModel::bindingSet(int row) const
 {
-    Q_D(const QSparqlQueryModel);
-
     if (!d->result)
         return QSparqlBindingSet();
 
@@ -527,7 +502,6 @@ QSparqlBindingSet QSparqlQueryModel::bindingSet(int row) const
  */
 QSparqlBindingSet QSparqlQueryModel::bindingSet() const
 {
-    Q_D(const QSparqlQueryModel);
     return d->bindingSet;
 }
 
@@ -547,7 +521,6 @@ QSparqlBindingSet QSparqlQueryModel::bindingSet() const
 */
 bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &parent)
 {
-    Q_D(QSparqlQueryModel);
     if (count <= 0 || parent.isValid() || column < 0 || column > d->bindingSet.count())
         return false;
 
@@ -582,7 +555,6 @@ bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &
  */
 bool QSparqlQueryModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
-    Q_D(QSparqlQueryModel);
     if (count <= 0 || parent.isValid() || column < 0 || column >= d->bindingSet.count())
         return false;
 
@@ -612,7 +584,6 @@ bool QSparqlQueryModel::removeColumns(int column, int count, const QModelIndex &
 */
 QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
 {
-    Q_D(const QSparqlQueryModel);
     if (item.column() < 0 || item.column() >= d->bindingSet.count())
         return QModelIndex();
     return createIndex(item.row(), item.column() - d->colOffsets[item.column()],
@@ -620,5 +591,3 @@ QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
 }
 
 QT_END_NAMESPACE
-
-#endif
