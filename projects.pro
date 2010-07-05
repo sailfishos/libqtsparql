@@ -6,4 +6,5 @@ include (shared.pri)
 CONFIG += ordered
 TEMPLATE = subdirs
 
-SUBDIRS = src
+SUBDIRS = src examples
+

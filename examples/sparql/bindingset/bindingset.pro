@@ -1,6 +1,7 @@
+include(../sparql-examples.pri)
+
 SOURCES       = main.cpp
-QT           += sparql
-QT           -= gui
+#QT           += sparql # enable this later
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/sparql/bindingset
