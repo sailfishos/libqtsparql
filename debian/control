@@ -31,3 +31,14 @@ Depends: ${shlibs:Depends},
 XB-Maemo-CI-Packages: libqtsparql0
 XB-Maemo-CI-Stage: staging, acceptance
 Description: Tests for libqtsparql.
+
+Package: libqtsparql-endpoint
+Architecture: any
+Depends: libqtcore4
+Description: Endpoint driver for QtSparql.
+
+Package: libqtsparql-tracker
+Architecture: any
+Depends: libqtcore4
+Description: Tracker driver for QtSparql.
+
