@@ -5,11 +5,13 @@ lib/
 *.so*
 
 Makefile*
-*~
+.qmake.cache
 
 moc_*.cpp
 *.moc
 ui_*.h
+
+*~
 
 # examples
 asynctracker
