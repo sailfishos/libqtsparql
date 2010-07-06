@@ -17,7 +17,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f debian/build-stamp
-	[ -f Makefile ] && $(MAKE) distclean || true
+	[ -f Makefile ] && $(MAKE) distclean && $(MAKE) xclean || true
 	dh_clean
 
 install: build

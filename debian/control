@@ -7,7 +7,7 @@ Standards-Version: 3.8.0
 
 Package: libqtsparql0
 Architecture: any
-Depends: libqtcore4
+Depends: ${shlibs:Depends}
 Description: Library for accessing RDF stores.
 
 Package: libqtsparql-dev
@@ -34,11 +34,11 @@ Description: Tests for libqtsparql.
 
 Package: libqtsparql-endpoint
 Architecture: any
-Depends: libqtcore4
+Depends: ${shlibs:Depends}
 Description: Endpoint driver for QtSparql.
 
 Package: libqtsparql-tracker
 Architecture: any
-Depends: libqtcore4
+Depends: ${shlibs:Depends}
 Description: Tracker driver for QtSparql.
 
