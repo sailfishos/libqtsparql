@@ -4,7 +4,6 @@ CONFIG += qt plugin
 QT = core
 DESTDIR = $$top_srcdir/plugins/sparqldrivers
 
-# FIXME: plugin installation
 target.path     += $$[QT_INSTALL_PLUGINS]/sparqldrivers
 INSTALLS        += target
 

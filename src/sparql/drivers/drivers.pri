@@ -1,3 +1,5 @@
+# if sparql-drivers contains the driver name, we build the driver into QtSparql library.
+
 contains(sparql-drivers, all ) {
     sparql-driver +=   tracker virtuoso endpoint
 }
