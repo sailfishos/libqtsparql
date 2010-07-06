@@ -43,3 +43,7 @@ debian/libqtsparql-tests
 debian/libqtsparql-tracker
 debian/libqtsparql-endpoint
 debian/libqtsparql-virtuoso
+
+# configure-time tests
+config.tests/unix/odbc/odbc
+config.tests/unix/iodbc/iodbc

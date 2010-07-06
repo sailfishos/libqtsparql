@@ -51,6 +51,7 @@ relpath=`(cd "$relpath"; /bin/pwd)`
 outpath=`/bin/pwd`
 # FIXME: full support for "shadow builds" is not yet here
 unixtests="$relpath/config.tests/unix"
+WHICH="$unixtests/which.test"
 
 QMAKE_VARS_FILE=.qmake.vars
 :> "$QMAKE_VARS_FILE"
@@ -61,6 +62,24 @@ QT_CFLAGS_TRACKER=
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
+
+# find a make command
+if [ -z "$MAKE" ]; then
+    MAKE=
+    for mk in gmake make; do
+        if "$WHICH" $mk >/dev/null 2>&1; then
+            MAKE=`"$WHICH" $mk`
+            break
+        fi
+    done
+    if [ -z "$MAKE" ]; then
+        echo >&2 "You don't seem to have 'make' or 'gmake' in your PATH."
+        echo >&2 "Cannot proceed."
+        exit 1
+    fi
+    # export MAKE, we need it later in the config.tests
+    export MAKE
+fi
 
 # read which sparql drivers we have in the source code tree
 CFG_SPARQL_AVAILABLE=
