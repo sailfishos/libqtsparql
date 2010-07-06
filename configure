@@ -150,8 +150,8 @@ for DRIVER in $CFG_SPARQL_AVAILABLE; do
 done
 
 # write that info down for qmake
-echo "qsparql-drivers =" "$SPARQL_DRIVERS" >> "$QMAKE_VARS_FILE"
-echo "qsparql-plugins =" "$SPARQL_PLUGINS" >> "$QMAKE_VARS_FILE"
+echo "sparql-drivers =" "$SPARQL_DRIVERS" >> "$QMAKE_VARS_FILE"
+echo "sparql-plugins =" "$SPARQL_PLUGINS" >> "$QMAKE_VARS_FILE"
 
 # create the cache file (simplified)
 CACHEFILE="$outpath/.qmake.cache"
