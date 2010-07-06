@@ -19,5 +19,5 @@ INSTALLS += \
 target.path = $$PREFIX/lib
 
 QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
-QMAKE_PKGCONFIG_DESTDIR = $$DESTDIR/pkgconfig
+QMAKE_PKGCONFIG_DESTDIR = pkgconfig
 
