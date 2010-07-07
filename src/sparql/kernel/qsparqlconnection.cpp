@@ -394,3 +394,13 @@ QDebug operator<<(QDebug dbg, const QSparqlConnection &d)
 #endif
 
 QT_END_NAMESPACE
+
+/*!
+    \mainpage The QtSparql library
+
+    \brief QtSparql is a client-side library for accessing RDF stores.
+
+    FIXME: insert intro text here
+
+    \include simple/main.cpp
+*/
