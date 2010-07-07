@@ -337,11 +337,19 @@ QString QSparqlConnection::driverName() const
     This enum contains a list of features a driver might support. Use
     hasFeature() to query whether a feature is supported or not.
 
-    \value Transactions  Whether the driver supports transactions.
-    \value QuerySize  Whether the database is capable of reporting the size
+    - QuerySize:  Whether the database is capable of reporting the size
     of a query. Note that some databases do not support returning the size
     (i.e. number of rows returned) of a query, in which case
     QSparqlQuery::size() will return -1.
+
+    - BackwardsIteration: Whether the result set can be iterated
+    backwards efficiently.
+
+    \sa hasFeature()
+*/
+
+/*  FIXME: these were the rest of the features in QtSql:
+    \value Transactions  Whether the driver supports transactions.
     \value BLOB  Whether the driver supports Binary Large Object fields.
     \value Unicode  Whether the driver supports Unicode strings if the
     database server does.
@@ -355,11 +363,6 @@ QString QSparqlConnection::driverName() const
     \value EventNotifications Whether the driver supports database event notifications.
     \value FinishQuery Whether the driver can do any low-level resource cleanup when QSparqlQuery::finish() is called.
     \value MultipleResultSets Whether the driver can access multiple result sets returned from batched statements or stored procedures.
-
-    More information about supported features can be found in the
-    \l{sql-driver.html}{Qt SQL driver} documentation.
-
-    \sa hasFeature()
 */
 
 /*!

@@ -62,10 +62,11 @@ class Q_SPARQL_EXPORT QSparqlConnection : public QObject
     Q_OBJECT
 public:
     // FIXME: decide these
-    enum Feature { Transactions, QuerySize, BLOB, Unicode, PreparedQueries,
+    enum Feature { QuerySize, BackwardsIteration };
+    /*Transactions, BLOB, Unicode, PreparedQueries,
                    NamedPlaceholders, PositionalPlaceholders, LastInsertId,
                    BatchOperations, SimpleLocking, LowPrecisionNumbers,
-                   EventNotifications, FinishQuery, MultipleResultSets };
+                   EventNotifications, FinishQuery, MultipleResultSets*/
 
     explicit QSparqlConnection(QObject* parent = 0);
     QSparqlConnection(const QString& type,
