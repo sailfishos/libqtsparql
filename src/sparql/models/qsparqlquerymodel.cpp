@@ -219,11 +219,9 @@ QSparqlQueryModel::~QSparqlQueryModel()
 }
 
 /*!
-    \since 4.1
-
     Fetches more rows from a connection.
     This only affects connections that don't report back the size of a query
-    (see QSparqlDriver::hasFeature()).
+    (see QSparqlConnection::hasFeature()).
 
     To force fetching of the entire connection, you can use the following:
 
@@ -241,8 +239,6 @@ void QSparqlQueryModel::fetchMore(const QModelIndex &parent)
 }
 
 /*!
-    \since 4.1
-
     Returns true if it is possible to read more rows from the connection.
     This only affects connections that don't report back the size of a query
     (see QSparqlDriver::hasFeature()).
@@ -257,16 +253,15 @@ bool QSparqlQueryModel::canFetchMore(const QModelIndex &parent) const
 }
 
 /*! \fn int QSparqlQueryModel::rowCount(const QModelIndex &parent) const
-    \since 4.1
 
     If the connection supports returning the size of a query
-    (see QSparqlDriver::hasFeature()), the amount of rows of the current
+    (see QSparqlConnection::hasFeature()), the amount of rows of the current
     query is returned. Otherwise, returns the amount of rows
     currently cached on the client.
 
     \a parent should always be an invalid QModelIndex.
 
-    \sa canFetchMore(), QSparqlDriver::hasFeature()
+    \sa canFetchMore(), QSparqlConnection::hasFeature()
  */
 int QSparqlQueryModel::rowCount(const QModelIndex &index) const
 {
