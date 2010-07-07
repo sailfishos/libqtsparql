@@ -118,28 +118,14 @@ public:
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 5
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 6
 
-    A QSparqlBinding object can provide some meta-data about the binding, for
-    example, its name(), variant type(), languageTag(),
-    defaultValue(), typeID(), and its requiredStatus(),
-    isGenerated() and isReadOnly(). The field's data can be
-    checked to see if it isNull(), and its value() retrieved. When
-    editing the data can be set with setValue() or set to NULL with
-    clear().
+    A QSparqlBinding object can provide some meta-data about the
+    binding, for example, its name(), variant type(), languageTag(),
+    defaultValue(), typeID(), isGenerated() and isReadOnly(). The
+    binding's data can be checked to see if it isNull(), and its
+    value() retrieved. When editing the data can be set with
+    setValue() or set to NULL with clear().
 
     \sa QSparqlBindingSet
-*/
-
-/*!
-    \enum QSparqlBinding::RequiredStatus
-
-    Specifies whether the field is required or optional.
-
-    \value Required  The field must be specified when inserting records.
-    \value Optional  The fields doesn't have to be specified when inserting records.
-    \value Unknown  The database driver couldn't determine whether the field is required or
-                    optional.
-
-    \sa requiredStatus()
 */
 
 /*!
@@ -404,10 +390,10 @@ void QSparqlBinding::setBlankNodeIdentifier(const QString& id)
 }
 
 /*!
-    Clears the value of the field and sets it to NULL.
+    Clears the value of the binding and sets it to NULL.
     If the field is read-only, nothing happens.
 
-    \sa setValue() isReadOnly() requiredStatus()
+    \sa setValue() isReadOnly()
 */
 
 void QSparqlBinding::clear()
@@ -579,11 +565,5 @@ QDebug operator<<(QDebug dbg, const QSparqlBinding &f)
 #endif
 }
 #endif
-
-/*!
-    \fn void QSparqlBinding::setNull()
-
-    Use clear() instead.
-*/
 
 QT_END_NAMESPACE

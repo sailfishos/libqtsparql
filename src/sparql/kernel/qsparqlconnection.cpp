@@ -245,6 +245,16 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 }
 
 /*!
+
+  \class QSparqlConnection
+
+  \brief The QSparqlConnection provides an interface for accessing a RDF store.
+
+  \inmodule QtSparql
+
+*/
+
+/*!
     Destroys the object and frees any allocated resources.
 
     If this is the last QSparqlConnection object that uses a certain
@@ -321,6 +331,38 @@ QString QSparqlConnection::driverName() const
 {
     return d->drvName;
 }
+
+/*!
+    \enum QSparqlConnection::Feature
+    FIXME: decide the features
+
+    This enum contains a list of features a driver might support. Use
+    hasFeature() to query whether a feature is supported or not.
+
+    \value Transactions  Whether the driver supports transactions.
+    \value QuerySize  Whether the database is capable of reporting the size
+    of a query. Note that some databases do not support returning the size
+    (i.e. number of rows returned) of a query, in which case
+    QSparqlQuery::size() will return -1.
+    \value BLOB  Whether the driver supports Binary Large Object fields.
+    \value Unicode  Whether the driver supports Unicode strings if the
+    database server does.
+    \value PreparedQueries  Whether the driver supports prepared query execution.
+    \value NamedPlaceholders  Whether the driver supports the use of named placeholders.
+    \value PositionalPlaceholders  Whether the driver supports the use of positional placeholders.
+    \value LastInsertId  Whether the driver supports returning the Id of the last touched row.
+    \value BatchOperations  Whether the driver supports batched operations, see QSparqlQuery::execBatch()
+    \value SimpleLocking  Whether the driver disallows a write lock on a table while other queries have a read lock on it.
+    \value LowPrecisionNumbers  Whether the driver allows fetching numerical values with low precision.
+    \value EventNotifications Whether the driver supports database event notifications.
+    \value FinishQuery Whether the driver can do any low-level resource cleanup when QSparqlQuery::finish() is called.
+    \value MultipleResultSets Whether the driver can access multiple result sets returned from batched statements or stored procedures.
+
+    More information about supported features can be found in the
+    \l{sql-driver.html}{Qt SQL driver} documentation.
+
+    \sa hasFeature()
+*/
 
 /*!
     Returns true if the QSparqlConnection supports feature \a feature;

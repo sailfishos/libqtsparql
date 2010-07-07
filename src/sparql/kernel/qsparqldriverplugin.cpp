@@ -43,7 +43,8 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
+
+/*  FIXME: ! removed from this line on purpose, enable this doc when Driver is public
     \class QSparqlDriverPlugin
     \brief The QSparqlDriverPlugin class provides an abstract base for custom QSparqlDriver plugins.
 

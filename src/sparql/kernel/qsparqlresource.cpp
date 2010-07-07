@@ -75,7 +75,8 @@ QSparqlResourcePrivate::QSparqlResourcePrivate(const QSparqlResourcePrivate &oth
 }
 
 
-/*!
+/*  FIXME: ! removed from this line on purpose, enable this doc when Resource is published.
+
     \class QSparqlResource
     \brief The QSparqlResource class encapsulates an RDFS resource.
 

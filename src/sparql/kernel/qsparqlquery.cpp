@@ -124,8 +124,6 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     \ingroup database
     \ingroup shared
 
-    \inmodule QtSparql
-
     QSparqlQuery encapsulates the functionality involved in creating
     SPARQL queries which are executed on a \l QSparqlConnection.
 
@@ -140,7 +138,7 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     You can retrieve the values of all the fields in a single variable
     (a map) using boundValues().
 
-    \section1 Approaches to Binding Values
+    \section bindingapproaches Approaches to Binding Values
 
     Below we present the same example using each of the four
     different binding approaches, as well as one example of binding
