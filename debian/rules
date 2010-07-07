@@ -17,7 +17,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f debian/build-stamp
-	[ -f Makefile ] && $(MAKE) distclean && $(MAKE) xclean || true
+	[ -f Makefile ] && $(MAKE) xclean && $(MAKE) distclean || true
 	dh_clean
 
 install: build
@@ -32,10 +32,7 @@ install: build
 	#cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-do
 
 	# installing headers from include/ created by syncqt
-	rm -rf `pwd`/debian/tmp/usr/include/QtSparql
-	mkdir -p `pwd`/debian/tmp/usr/include/QtSparql
 	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
-	cp -a include/QtSparql/qsparql[^_]*.h `pwd`/debian/tmp/usr/include/QtSparql
 
 	dh_install --sourcedir=`pwd`/debian/tmp/
 
