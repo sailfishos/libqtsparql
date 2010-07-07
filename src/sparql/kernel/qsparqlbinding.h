@@ -58,9 +58,9 @@ class QSparqlBindingPrivate;
 class Q_SPARQL_EXPORT QSparqlBinding
 {
 public:
-    QSparqlBinding(const QString& fieldName = QString(),
+    QSparqlBinding(const QString& name = QString(),
               QVariant::Type type = QVariant::Invalid);
-    QSparqlBinding(const QString& fieldName, QVariant value);
+    QSparqlBinding(const QString& name, const QVariant& value);
 
     QSparqlBinding(const QSparqlBinding& other);
     QSparqlBinding& operator=(const QSparqlBinding& other);

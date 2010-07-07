@@ -92,7 +92,6 @@ public:
 
     \ingroup database
     \ingroup shared
-    \inmodule QtSparql
 
     QSparqlBinding represents the characteristics of a single column in a
     database table or view, such as the data type and column name. A
@@ -129,19 +128,24 @@ public:
 */
 
 /*!
-    Constructs an empty binding called \a fieldName of variant type \a
+    Constructs an empty binding called \a name of variant type \a
     type.
 
     \sa setLanguageTag()
 */
-QSparqlBinding::QSparqlBinding(const QString& fieldName, QVariant::Type type)
+QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 {
-    d = new QSparqlBindingPrivate(fieldName, type);
+    d = new QSparqlBindingPrivate(name, type);
 }
 
-QSparqlBinding::QSparqlBinding(const QString& fieldName, QVariant value)
+/*!
+    Constructs a binding called \a name with the value \a value.
+
+    \sa setLanguageTag()
+*/
+QSparqlBinding::QSparqlBinding(const QString& name, const QVariant& value)
 {
-    d = new QSparqlBindingPrivate(fieldName, value.type());
+    d = new QSparqlBindingPrivate(name, value.type());
     val = value;
 }
 
@@ -208,7 +212,7 @@ void QSparqlBinding::setDataTypeUri(const QUrl &datatype)
 /*!
     Sets the binding's \a languageTag.
 
-    \sa languageTag() setType() 
+    \sa languageTag() setType()
 */
 void QSparqlBinding::setLanguageTag(const QString &languageTag)
 {
@@ -230,6 +234,7 @@ static int extractTimezone(QString& str)
     return 0;
 }
 
+// FIXME: document this
 void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
@@ -383,6 +388,7 @@ void QSparqlBinding::setValue(const QVariant& value)
         d->nodetype = QSparqlBindingPrivate::Literal;
 }
 
+// FIXME: document this
 void QSparqlBinding::setBlankNodeIdentifier(const QString& id)
 {
     val = id;

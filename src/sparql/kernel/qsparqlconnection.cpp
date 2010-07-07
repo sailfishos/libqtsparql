@@ -250,8 +250,6 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 
   \brief The QSparqlConnection provides an interface for accessing a RDF store.
 
-  \inmodule QtSparql
-
 */
 
 /*!

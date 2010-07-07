@@ -73,7 +73,6 @@ public:
     accessing the asynchronous results of an executed QSparqlQuery.
 
     \ingroup database
-    \inmodule QtSparql
 
     When QSparqlConnection::exec() is called, it asynchronously begins
     the execution of the given query. The returned result is in an
@@ -421,13 +420,6 @@ bool QSparqlResult::last()
   \sa isFinished() QSparqlDriver::hasFeature()
 */
 
-/*!
-    \fn bool QSparqlResult::isNull(int index)
-
-    Returns true if the field at position \a index in the current row
-    is null; otherwise returns false.
-*/
-
 QVariant QSparqlResult::value(int i) const
 {
     if (!isValid())
@@ -487,22 +479,15 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
-    \fn void QSparqlResult::resultsReadyAt(int beginIndex, int endIndex)
+    \fn void QSparqlResult::dataReady(int totalCount)
 
-    This signal is emitted when a query has fetched data. The indices are
-    inclusive.
+    This signal is emitted when a query has fetched data. The \a
+    totalCount is the row count of the data set after the new data has
+    arrived.
 */
 
 /*!
-    \fn int QSparqlResult::size()
-
-    Returns the size of the \c SELECT result, or -1 if it cannot be
-    determined or if the query is not a \c SELECT statement.
-
-*/
-
-/*!
-    \fn QVariant QSparqlResult::data(int index)
+    \fn QVariant QSparqlResult::data(int index) const
 
     Returns the data for field \a index in the current row as
     a QVariant. This function is only called if the result is in

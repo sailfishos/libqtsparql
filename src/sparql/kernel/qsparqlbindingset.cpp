@@ -78,7 +78,6 @@ QSparqlBindingSetPrivate::QSparqlBindingSetPrivate(const QSparqlBindingSetPrivat
 
     \ingroup database
     \ingroup shared
-    \inmodule QtSparql
 
     The QSparqlBindingSet class encapsulates the functionality and
     characteristics of a database binding set (usually a row in a table or

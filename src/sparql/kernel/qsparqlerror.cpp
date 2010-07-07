@@ -57,7 +57,6 @@ QDebug operator<<(QDebug dbg, const QSparqlError &s)
     \brief The QSparqlError class provides SPARQL error information.
 
     \ingroup database
-    \inmodule QtSparql
 
     A QSparqlError object can provide driver-specific error data,
     including the driverText() message (or driverText() and

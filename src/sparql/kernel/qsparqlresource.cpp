@@ -82,7 +82,6 @@ QSparqlResourcePrivate::QSparqlResourcePrivate(const QSparqlResourcePrivate &oth
 
     \ingroup database
     \ingroup shared
-    \inmodule QtSparql
 
     The QSparqlResource class encapsulates the functionality and
     characteristics of an RDFS resource. 

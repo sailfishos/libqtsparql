@@ -77,7 +77,6 @@ QSparqlDriverPrivate::~QSparqlDriverPrivate()
     specific SPARQL based RDF stores.
 
     \ingroup database
-    \inmodule QtSparql
 
     This class should not be used directly. Use QSparqlConnection instead.
 
@@ -109,17 +108,12 @@ QSparqlDriver::~QSparqlDriver()
 }
 
 /*!
-    \fn bool QSparqlDriver::open(const QString &db, const QString &user, const QString& password,
-                              const QString &host, int port, const QString &options)
+    \fn bool QSparqlDriver::open(const QSparqlConnectionOptions& options)
 
     Derived classes must reimplement this pure virtual function to
-    open a database connection on database \a db, using user name \a
-    user, password \a password, host \a host, port \a port and
-    connection options \a options.
+    open a database connection with the given \a options.
 
     The function must return true on success and false on failure.
-
-    \sa setOpen()
 */
 
 /*!
@@ -129,15 +123,7 @@ QSparqlDriver::~QSparqlDriver()
     order to close the database connection. Return true on success,
     false on failure.
 
-    \sa open(), setOpen()
-*/
-
-/*!
-    \fn QSparqlResult *QSparqlDriver::createResult() const
-
-    Creates an empty SPARQL binding set on the database. Derived classes must
-    reimplement this function and return a QSparqlResult object
-    appropriate for their database to the caller.
+    \sa open()
 */
 
 /*!
