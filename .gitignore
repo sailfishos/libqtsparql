@@ -47,3 +47,6 @@ debian/libqtsparql-virtuoso
 # configure-time tests
 config.tests/unix/odbc/odbc
 config.tests/unix/iodbc/iodbc
+
+# docs
+doc/html/*

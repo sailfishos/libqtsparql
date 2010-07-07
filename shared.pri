@@ -6,5 +6,6 @@ isEmpty(PREFIX): PREFIX = /usr/local
 
 # for documentation
 VERSION = 0.0.1
-LIBRARYNAME = QtTracker
+LIBRARYNAME = QtSparql
+PACKAGENAME = libqtsparql
 

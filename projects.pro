@@ -13,3 +13,5 @@ xclean.depends = clean
 
 QMAKE_EXTRA_TARGETS += xclean
 
+include(doc/doc.pri)
+
