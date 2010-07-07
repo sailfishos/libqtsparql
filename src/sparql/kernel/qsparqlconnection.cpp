@@ -400,7 +400,75 @@ QT_END_NAMESPACE
 
     \brief QtSparql is a client-side library for accessing RDF stores.
 
-    FIXME: insert intro text here
+    The query language for RDF stores is <a
+    href="http://www.w3.org/TR/rdf-sparql-query/">SPARQL</a>.
 
-    \include simple/main.cpp
+    QtSparql takes in SPARQL queries, forwards them to the selected backend, and
+    gives back the results of the query.  It can return the results
+    asynchronously if the backend supports asynchronous operations.
+
+    QtSparql can connect to different backends.  Currently the following backends
+    exist:
+
+    - tracker backend for accessing <a href="http://projects.gnome.org/tracker/">Tracker</a>
+    - endpoint backend of accessing online RDF stores, e.g., <a href="http://dbpedia.org">DBpedia</a>
+    - virtuoso backend for accessing Virtuoso
+
+    \section basicusage Basic usage
+
+    - Create a QSparqlConnection object specifiying the backend you want to use.
+      If necessary, specify the parameters by using QSparqlConnectionOptions and
+      passing it to QSparqlConnection.
+
+    E.g., to use tracker:
+    \dontinclude simple/main.cpp
+    \skipline QSparqlConnection
+
+    E.g., to use DBpedia:
+    \dontinclude dbpedia/main.cpp
+    \skip QSparqlConnectionOptions
+    \until QENDPOINT
+
+    - Construct a QSparqlQuery with the SPARQL query string.  Specify the query
+      type, if needed.
+
+    E.g.,
+    \dontinclude simple/main.cpp
+    \skipline QSparqlQuery
+
+    or
+
+    \dontinclude bindingset/main.cpp
+    \skip QSparqlQuery insert
+    \until InsertStatement
+
+    - Use QSparqlConnection::exec() to execute the query. It gives back a
+      pointer to QSparqlResult.
+
+    E.g.,
+    \dontinclude simple/main.cpp
+    \skipline QSparqlResult
+
+    - You can use QSparqlResult::waitForFinished() to wait until the query has
+      finished, or connect to the QSparqlResult::finished() signal.
+
+    - The QSparqlResult can be iterated by using the following functions:
+      QSparqlResult::first(), QSparqlResult::last(), QSparlqResult::next(),
+      QSparqlResult::previous(), QSparqlResult::seek().
+
+    E.g.,
+    \dontinclude simple/main.cpp
+    \skip result->next
+    \until toString
+
+    - Data can be retrieved by using QSparqlResult::data().
+
+    \section querymodels Query models
+
+    TODO
+
+    \section backendspecific Accessing backend-specific functionalities
+
+    TODO
+
 */
