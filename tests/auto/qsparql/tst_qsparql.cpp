@@ -55,7 +55,7 @@ class MockResult : public QSparqlResult
     Q_OBJECT
     public:
     MockResult(const MockDriver* d);
-    int size()
+    int size() const
     {
         return 0;
     }

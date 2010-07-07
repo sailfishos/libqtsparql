@@ -107,7 +107,7 @@ protected:
     bool isActive() const;
     void setActive(bool active);
     
-    int size();
+    int size() const;
     int numRowsAffected();
     QSparqlBindingSet bindingSet() const;
     bool nextResult();

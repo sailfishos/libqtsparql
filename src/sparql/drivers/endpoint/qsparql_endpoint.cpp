@@ -334,7 +334,7 @@ bool EndpointResult::isFinished() const
     return d->isFinished;
 }
 
-int EndpointResult::size()
+int EndpointResult::size() const
 {
     return d->results.count();
 }

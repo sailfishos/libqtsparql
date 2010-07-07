@@ -242,7 +242,7 @@ bool QTrackerResult::isNull(int field) const
     return false;
 }
 
-int QTrackerResult::size()
+int QTrackerResult::size() const
 {
     return d->data.count();
 }

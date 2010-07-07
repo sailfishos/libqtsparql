@@ -79,7 +79,7 @@ protected:
     inline bool fetchLast() { return false; }
     inline QVariant data(int) const { return QVariant(); }
     inline bool isNull(int) const { return false; }
-    inline int size() { return -1; }
+    inline int size() const { return -1; }
     inline int numRowsAffected() { return 0; }
 
     inline void setAt(int) {}

@@ -87,7 +87,7 @@ protected:
     bool fetchLast();
     bool fetchFirst();
     bool isNull(int field) const;
-    int size();
+    int size() const;
 
 private:
     QTrackerResultPrivate* d;

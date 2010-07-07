@@ -73,7 +73,7 @@ public:
     bool first();
     bool last();
     bool seek(int index);
-    virtual int size() = 0;
+    virtual int size() const = 0;
     bool isValid() const; // valid = positioned on a valid row
     // TODO: decide what should be the pos() of the result when the data has
     // arrived; options: 1) pos() == BeforeFirstRow (like now), 2) pos() == 0

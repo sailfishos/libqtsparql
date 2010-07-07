@@ -539,7 +539,7 @@ QVariant QVirtuosoResult::data(int field) const
     return d->bindingSet.binding(field).value();
 }
 
-int QVirtuosoResult::size()
+int QVirtuosoResult::size() const
 {
     return -1;
 }
