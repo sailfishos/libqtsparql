@@ -40,13 +40,12 @@
 ****************************************************************************/
 
 #include "qsparqlquerymodel.h"
+#include "qsparqlquerymodel_p.h"
 
 #include <qdebug.h>
 #include "private/qsparqldriver_p.h"
 #include <qsparqlbinding.h>
 #include <qsparqlresult.h>
-
-#include "qsparqlquerymodel_p.h"
 
 QT_BEGIN_NAMESPACE
 

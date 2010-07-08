@@ -103,6 +103,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#include "qsparqlquerymodel_p.h"
-
 #endif // QSPARQLQUERYMODEL_H

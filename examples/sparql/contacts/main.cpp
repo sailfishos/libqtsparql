@@ -7,6 +7,7 @@
 #include <QSparqlQuery>
 #include <QSparqlQueryModel>
 #include <QSparqlResult>
+#include <QSparqlError>
 
 #include <QObject>
 #include <QApplication>
