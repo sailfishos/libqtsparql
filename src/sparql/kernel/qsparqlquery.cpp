@@ -140,23 +140,14 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
 
     \section bindingapproaches Approaches to Binding Values
 
-    Below we present the same example using each of the four
-    different binding approaches, as well as one example of binding
-    values to a stored procedure.
+    QSparqlQuery supports replacing placeholders (marked with ?: or $:) with strings.
 
-    \bold{Named binding using named placeholders:}
+    \dontinclude contacts/main.cpp
+    \skip QSparqlQuery nameQuery(
+    \until nameFamily
+    \skipline bindValue(
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 9
-
-    \bold{Binding values to a stored procedure:}
-
-    This code calls a stored procedure called \c AsciiToInt(), passing
-    it a character through its in parameter, and taking its result in
-    the out parameter.
-
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 13
-
-    Note that unbound parameters will retain their values.
+    \attention No escaping is performed when binding values.
 
     \sa QSparqlConnection, QSparqlQueryModel, QSparqlResult, QVariant
 */
@@ -167,13 +158,13 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     This enum contains a list of SPARQL statement (or clause) types the
     driver can create.
 
-    \value SelectStatement An SPARQL \c SELECT statement
-    \value AskStatement  An SPARQL \c ASK statement
-    \value ConstructStatement An SPARQL \c CONSTRUCT statement
-    \value DescribeStatement An SPARQL \c DESCRIBE statement
-    \value UpdateStatement An SPARQL \c UPDATE statement
-    \value InsertStatement An SPARQL \c INSERT statement
-    \value DeleteStatement An SPARQL \c DELETE statement
+    - SelectStatement An SPARQL \c SELECT statement
+    - AskStatement  An SPARQL \c ASK statement
+    - ConstructStatement An SPARQL \c CONSTRUCT statement
+    - DescribeStatement An SPARQL \c DESCRIBE statement
+    - UpdateStatement An SPARQL \c UPDATE statement
+    - InsertStatement An SPARQL \c INSERT statement
+    - DeleteStatement An SPARQL \c DELETE statement
 
 */
 

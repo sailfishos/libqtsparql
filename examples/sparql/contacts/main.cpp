@@ -114,6 +114,13 @@ private:
     QWidget* widget;
 };
 
+/* This is for docs
+
+    QSparqlQuery nameQuery("select ?ng ?nf "
+    "{ <?:contact_uri> nco:nameGiven ?ng ; nco:nameFamily ?nf . } ");
+
+ */
+
 DetailView::DetailView(Ui::ContactUI* ui, QWidget* w, QSparqlConnection& c)
     : conn(c),
       nameQuery("select fn:string-join((?ng, ?nf), ' ') "

@@ -293,13 +293,13 @@ QSparqlConnection::~QSparqlConnection()
     valid, exec() returns a QSparqlResult which is in the error
     state. It won't emit the finished() signal.
 
-    // TODO: isn't it quite bad that the user must check the error
-    // state of the result? Or should the "error result" emit the
-    // finished() signal when the main loop is entered the next time,
-    // so that the user has a change to connect to it?
-
-    \sa QSparqlQuery, QSparqlResult
+    \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
 */
+
+// TODO: isn't it quite bad that the user must check the error
+// state of the result? Or should the "error result" emit the
+// finished() signal when the main loop is entered the next time,
+// so that the user has a change to connect to it?
 
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query) const
 {
@@ -457,7 +457,13 @@ QT_END_NAMESPACE
     - endpoint backend of accessing online RDF stores, e.g., <a href="http://dbpedia.org">DBpedia</a>
     - virtuoso backend for accessing Virtuoso
 
-    \section basicusage Basic usage
+    \section gettingstarted Getting started
+
+    \attention The QtSparql library is not yet stable; we make no
+    promises about API / ABI compatibility!
+
+    The following code snippets demonstrate how to retrieve data from
+    a RDF database using QtSparql.
 
     - Create a QSparqlConnection object specifiying the backend you want to use.
       If necessary, specify the parameters by using QSparqlConnectionOptions and
@@ -506,9 +512,15 @@ QT_END_NAMESPACE
 
     - Data can be retrieved by using QSparqlResult::data().
 
+    The following classes are the most relevant for getting started with QSparql:
+    - QSparqlConnection
+    - QSparqlQuery
+    - QSparqlResult
+    - QSparqlQueryModel
+
     \section querymodels Query models
 
-    TODO
+    TODO: QSparlQueryModel
 
     \section backendspecific Accessing backend-specific functionalities
 

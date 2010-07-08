@@ -84,23 +84,28 @@ public:
     must be navigated to a valid position (so that isValid() returns
     true) before values can be retrieved.
 
-    If you are implementing your own SQL driver (by subclassing
+    Navigating the result is performed with the following functions:
+
+    - next()
+    - previous()
+    - first()
+    - last()
+    - seek()
+
+    Retrieving the data is performed with the following functions:
+    - resultRow()
+    - data()
+*/
+
+/* this doc not included in doxygen...
+    If you are implementing your own SPARQL driver (by subclassing
     QSparqlDriver), you will need to provide your own QSparqlResult
     subclass that implements all the pure virtual functions and other
     virtual functions that you need.
 
-    \target QSparqlResult examples
+*/
 
-    Navigating records is performed with the following functions:
-
-    \list
-    \o next()
-    \o previous()
-    \o first()
-    \o last()
-    \o seek()
-    \endlist
-
+/* this doc not included in doxygen...
     These functions allow the programmer to move forward, backward
     or arbitrarily through the records returned by the query. If you
     only need to move forward through the results (e.g., by using
