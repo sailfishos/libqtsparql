@@ -96,7 +96,7 @@ Q_SIGNALS:
 protected:
     QSparqlResult();
     QString lastQuery() const; // FIXME: needed?
-    virtual void setPos(int at);
+    virtual void setPos(int pos);
     virtual void setLastError(const QSparqlError& e);
 
     // The subclasses need to implement at least fecth, fetchFirst and

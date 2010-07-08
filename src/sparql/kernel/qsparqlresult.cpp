@@ -439,9 +439,9 @@ QVariant QSparqlResult::value(int i) const
     \sa pos()
 */
 
-void QSparqlResult::setPos(int index)
+void QSparqlResult::setPos(int pos)
 {
-    d->idx = index;
+    d->idx = pos;
 }
 
 
