@@ -37,6 +37,7 @@ debian/*.postinst.debhelper
 debian/*.postrm.debhelper
 debian/substvars
 debian/libqtsparql-dev
+debian/libqtsparql-doc
 debian/libqtsparql0
 debian/libqtsparql0-dbg
 debian/libqtsparql-tests

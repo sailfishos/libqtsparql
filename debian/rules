@@ -11,6 +11,7 @@ build: debian/build-stamp
 debian/build-stamp: Makefile
 	dh_testdir
 	$(MAKE)
+	$(MAKE) doc
 	touch $@
 
 clean:
@@ -27,11 +28,12 @@ install: build
 	dh_installdirs
 	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
 
-	#mkdir -p `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
-	#rm -rf `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc/html
-	#cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-do
+	# copying docs
+	mkdir -p `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
+	rm -rf `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc/html
+	cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
 
-	# installing headers from include/ created by syncqt
+	# copying headers from include/ (created by syncqt)
 	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
 
 	dh_install --sourcedir=`pwd`/debian/tmp/

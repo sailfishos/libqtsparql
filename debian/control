@@ -10,17 +10,26 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Description: Library for accessing RDF stores.
 
+Package: libqtsparql0-dbg
+Section: libdevel
+Architecture: any
+Depends: libqtsparql0 (= ${binary:Version})
+Description: Library for accessing RDF stores.
+ .
+ This package contains the debug symbols.
+
 Package: libqtsparql-dev
 Section: libdevel
 Architecture: any
 Depends: libqtsparql0 (= ${binary:Version})
 Description: Library for accessing RDF stores.
 
-Package: libqtsparql0-dbg
+Package: libqtsparql-doc
 Section: libdevel
 Architecture: any
-Depends: libqtsparql0 (= ${binary:Version})
 Description: Library for accessing RDF stores.
+ .
+ This package contains the documentation.
 
 Package: libqtsparql-tests
 Section: devel
