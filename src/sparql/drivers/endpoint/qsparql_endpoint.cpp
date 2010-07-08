@@ -363,7 +363,7 @@ EndpointDriver::~EndpointDriver()
 
 bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
 {
-    switch (f) {
+/*    switch (f) {
     case QSparqlConnection::Transactions:
         return false;
     case QSparqlConnection::NamedPlaceholders:
@@ -383,7 +383,7 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
         return false;
     case QSparqlConnection::MultipleResultSets:
         return false;
-    }
+        }*/
     return false;
 }
 
