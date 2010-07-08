@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLBINDINGSET_H
-#define QSPARQLBINDINGSET_H
+#ifndef QSPARQLRESULTROW_H
+#define QSPARQLRESULTROW_H
 
 #include "qsparql.h"
 
@@ -55,18 +55,18 @@ QT_MODULE(Sparql)
 class QSparqlBinding;
 class QStringList;
 class QVariant;
-class QSparqlBindingSetPrivate;
+class QSparqlResultRowPrivate;
 
-class Q_SPARQL_EXPORT QSparqlBindingSet
+class Q_SPARQL_EXPORT QSparqlResultRow
 {
 public:
-    QSparqlBindingSet();
-    QSparqlBindingSet(const QSparqlBindingSet& other);
-    QSparqlBindingSet& operator=(const QSparqlBindingSet& other);
-    ~QSparqlBindingSet();
+    QSparqlResultRow();
+    QSparqlResultRow(const QSparqlResultRow& other);
+    QSparqlResultRow& operator=(const QSparqlResultRow& other);
+    ~QSparqlResultRow();
 
-    bool operator==(const QSparqlBindingSet &other) const;
-    inline bool operator!=(const QSparqlBindingSet &other) const { return !operator==(other); }
+    bool operator==(const QSparqlResultRow &other) const;
+    inline bool operator!=(const QSparqlResultRow &other) const { return !operator==(other); }
 
     QVariant value(int i) const;
     QVariant value(const QString& name) const;
@@ -92,15 +92,15 @@ public:
 
 private:
     void detach();
-    QSparqlBindingSetPrivate* d;
+    QSparqlResultRowPrivate* d;
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_SPARQL_EXPORT QDebug operator<<(QDebug, const QSparqlBindingSet &);
+Q_SPARQL_EXPORT QDebug operator<<(QDebug, const QSparqlResultRow &);
 #endif
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQLBINDINGSET_H
+#endif // QSPARQLRESULTROW_H

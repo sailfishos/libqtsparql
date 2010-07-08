@@ -57,14 +57,14 @@ void QSparqlQueryModelPrivate::queryFinished()
     // This function will only be called when result is a valid
     // pointer.
     result->first();
-    QSparqlBindingSet newBindingSet = result->bindingSet();
-    bool columnsChanged = (newBindingSet != result->bindingSet());
+    QSparqlResultRow newResultRow = result->resultRow();
+    bool columnsChanged = (newResultRow != result->resultRow());
     columnsChanged = true;
     bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
-    bool hasNewData = (newBindingSet != QSparqlBindingSet()) || !result->hasError();
+    bool hasNewData = (newResultRow != QSparqlResultRow()) || !result->hasError();
 
-    if (colOffsets.size() != newBindingSet.count() || columnsChanged)
-        initColOffsets(newBindingSet.count());
+    if (colOffsets.size() != newResultRow.count() || columnsChanged)
+        initColOffsets(newResultRow.count());
 
     
     bool mustClearModel = bottom.isValid();
@@ -74,7 +74,7 @@ void QSparqlQueryModelPrivate::queryFinished()
         bottom = QModelIndex();
     }
 
-    bindingSet = newBindingSet;
+    resultRow = newResultRow;
 
     if (mustClearModel)
         q->endRemoveRows();
@@ -92,13 +92,13 @@ void QSparqlQueryModelPrivate::queryFinished()
 //    }
     QModelIndex newBottom;
     if (hasQuerySize && result->size() > 0) {
-        newBottom = q->createIndex(result->size() - 1, bindingSet.count() - 1);
+        newBottom = q->createIndex(result->size() - 1, resultRow.count() - 1);
         q->beginInsertRows(QModelIndex(), 0, qMax(0, newBottom.row()));
-        bottom = q->createIndex(result->size() - 1, columnsChanged ? 0 : bindingSet.count() - 1);
+        bottom = q->createIndex(result->size() - 1, columnsChanged ? 0 : resultRow.count() - 1);
         atEnd = true;
         q->endInsertRows();
     } else {
-        newBottom = q->createIndex(-1, bindingSet.count() - 1);
+        newBottom = q->createIndex(-1, resultRow.count() - 1);
     }
     bottom = newBottom;
 
@@ -272,7 +272,7 @@ int QSparqlQueryModel::rowCount(const QModelIndex &index) const
  */
 int QSparqlQueryModel::columnCount(const QModelIndex &index) const
 {
-    return index.isValid() ? 0 : d->bindingSet.count();
+    return index.isValid() ? 0 : d->resultRow.count();
 }
 
 /*!
@@ -292,7 +292,7 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
     if (role & ~(Qt::DisplayRole | Qt::EditRole))
         return v;
 
-//    if (!d->bindingSet.isGenerated(item.column()))
+//    if (!d->resultRow.isGenerated(item.column()))
 //        return v;
     QModelIndex dItem = indexInQuery(item);
     if (dItem.row() > d->bottom.row())
@@ -318,8 +318,8 @@ QVariant QSparqlQueryModel::headerData(int section, Qt::Orientation orientation,
             val = d->headers.value(section).value(Qt::EditRole);
         if (val.isValid())
             return val;
-        if (role == Qt::DisplayRole && d->bindingSet.count() > section)
-            return d->bindingSet.variableName(section);
+        if (role == Qt::DisplayRole && d->resultRow.count() > section)
+            return d->resultRow.variableName(section);
     }
     return QAbstractItemModel::headerData(section, orientation, role);
 }
@@ -392,7 +392,7 @@ void QSparqlQueryModel::clear()
 
     // TODO: or should we just delete d; d = 0;
 
-    d->bindingSet.clear();
+    d->resultRow.clear();
     d->colOffsets.clear();
     d->bottom = QModelIndex();
     d->headers.clear();
@@ -465,23 +465,23 @@ void QSparqlQueryModel::setLastError(const QSparqlError &error)
     If the model is not initialized, an empty record will be
     returned.
 
-    \sa QSparqlBindingSet::isEmpty()
+    \sa QSparqlResultRow::isEmpty()
 */
-QSparqlBindingSet QSparqlQueryModel::bindingSet(int row) const
+QSparqlResultRow QSparqlQueryModel::resultRow(int row) const
 {
     if (!d->result)
-        return QSparqlBindingSet();
+        return QSparqlResultRow();
 
     if (row < 0)
-        return d->bindingSet;
+        return d->resultRow;
 
     if (!d->result->seek(row))
-        return d->bindingSet;
+        return d->resultRow;
 
-    QSparqlBindingSet bindingSet = d->result->bindingSet();
-    for (int i = 0; i < bindingSet.count(); ++i)
-        bindingSet.setValue(i, data(createIndex(row, i), Qt::EditRole));
-    return bindingSet;
+    QSparqlResultRow resultRow = d->result->resultRow();
+    for (int i = 0; i < resultRow.count(); ++i)
+        resultRow.setValue(i, data(createIndex(row, i), Qt::EditRole));
+    return resultRow;
 }
 
 /*! \overload
@@ -492,11 +492,11 @@ QSparqlBindingSet QSparqlQueryModel::bindingSet(int row) const
     If the model is not initialized, an empty record will be
     returned.
 
-    \sa QSparqlBindingSet::isEmpty()
+    \sa QSparqlResultRow::isEmpty()
  */
-QSparqlBindingSet QSparqlQueryModel::bindingSet() const
+QSparqlResultRow QSparqlQueryModel::resultRow() const
 {
-    return d->bindingSet;
+    return d->resultRow;
 }
 
 /*!
@@ -515,7 +515,7 @@ QSparqlBindingSet QSparqlQueryModel::bindingSet() const
 */
 bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &parent)
 {
-    if (count <= 0 || parent.isValid() || column < 0 || column > d->bindingSet.count())
+    if (count <= 0 || parent.isValid() || column < 0 || column > d->resultRow.count())
         return false;
 
     beginInsertColumns(parent, column, column + count - 1);
@@ -523,11 +523,11 @@ bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &
         QSparqlBinding field;
 //        field.setReadOnly(true);
 //        field.setGenerated(false);
-        d->bindingSet.insert(column, field);
-        if (d->colOffsets.size() < d->bindingSet.count()) {
+        d->resultRow.insert(column, field);
+        if (d->colOffsets.size() < d->resultRow.count()) {
             int nVal = d->colOffsets.isEmpty() ? 0 : d->colOffsets[d->colOffsets.size() - 1];
             d->colOffsets.append(nVal);
-            Q_ASSERT(d->colOffsets.size() >= d->bindingSet.count());
+            Q_ASSERT(d->colOffsets.size() >= d->resultRow.count());
         }
         for (int i = column + 1; i < d->colOffsets.count(); ++i)
             ++d->colOffsets[i];
@@ -549,14 +549,14 @@ bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &
  */
 bool QSparqlQueryModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
-    if (count <= 0 || parent.isValid() || column < 0 || column >= d->bindingSet.count())
+    if (count <= 0 || parent.isValid() || column < 0 || column >= d->resultRow.count())
         return false;
 
     beginRemoveColumns(parent, column, column + count - 1);
 
     int i;
     for (i = 0; i < count; ++i)
-        d->bindingSet.remove(column);
+        d->resultRow.remove(column);
     for (i = column; i < d->colOffsets.count(); ++i)
         d->colOffsets[i] -= count;
 
@@ -578,7 +578,7 @@ bool QSparqlQueryModel::removeColumns(int column, int count, const QModelIndex &
 */
 QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
 {
-    if (item.column() < 0 || item.column() >= d->bindingSet.count())
+    if (item.column() < 0 || item.column() >= d->resultRow.count())
         return QModelIndex();
     return createIndex(item.row(), item.column() - d->colOffsets[item.column()],
                        item.internalPointer());

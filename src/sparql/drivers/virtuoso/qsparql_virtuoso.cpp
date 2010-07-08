@@ -56,7 +56,7 @@
 
 #include <QtSparql/qsparqlerror.h>
 #include <QtSparql/qsparqlbinding.h>
-#include <QtSparql/qsparqlbindingset.h>
+#include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
 
 #include <QDebug>
@@ -100,7 +100,7 @@ public:
     }
 
     inline void clearValues()
-    { bindingSet.clear(); resultColIdx = 0; }
+    { resultRow.clear(); resultColIdx = 0; }
 
     SQLHANDLE dpEnv() const { return driverPrivate ? driverPrivate->hEnv : 0;}
     SQLHANDLE dpDbc() const { return driverPrivate ? driverPrivate->hDbc : 0;}
@@ -113,7 +113,7 @@ public:
     QSparqlQuery::StatementType statementType;
     bool isSelect;
     bool isActive;
-    QSparqlBindingSet bindingSet;
+    QSparqlResultRow resultRow;
     QStringList bindingNames;
     int resultColIdx;
     int disconnectCount;
@@ -523,20 +523,20 @@ static QSparqlBinding qMakeBinding(const QVirtuosoPrivate* p, int colNum)
 
 QVariant QVirtuosoResult::data(int field) const
 {
-    if (field >= d->bindingSet.count() || field < 0) {
+    if (field >= d->resultRow.count() || field < 0) {
         qWarning() << "QVirtuosoResult::data: column" << field << "out of range";
         return QVariant();
     }
     
     if (field < d->resultColIdx)
-        return d->bindingSet.binding(field).value();
+        return d->resultRow.binding(field).value();
 
     for (int i = d->resultColIdx; i <= field; ++i) {
-        d->bindingSet.append(qMakeBinding(d, i));
+        d->resultRow.append(qMakeBinding(d, i));
         d->resultColIdx = field + 1;
     }
     
-    return d->bindingSet.binding(field).value();
+    return d->resultRow.binding(field).value();
 }
 
 int QVirtuosoResult::size() const
@@ -555,17 +555,17 @@ int QVirtuosoResult::numRowsAffected()
     return -1;
 }
 
-QSparqlBindingSet QVirtuosoResult::bindingSet() const
+QSparqlResultRow QVirtuosoResult::resultRow() const
 {
     if (!isActive() || !isSelect())
-        return QSparqlBindingSet();
+        return QSparqlResultRow();
     
     for (int i = d->resultColIdx; i <= d->numResultCols; ++i) {
-        d->bindingSet.append(qMakeBinding(d, i));
+        d->resultRow.append(qMakeBinding(d, i));
     }
 
     d->resultColIdx = d->numResultCols;
-    return d->bindingSet;
+    return d->resultRow;
 }
 
 QVariant QVirtuosoResult::handle() const

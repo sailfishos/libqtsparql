@@ -55,7 +55,7 @@
 
 #include "QtSparql/qsparqlerror.h"
 #include "QtSparql/qsparqlquery.h"
-#include "QtSparql/qsparqlbindingset.h"
+#include "QtSparql/qsparqlresultrow.h"
 #include "QtCore/qhash.h"
 #include "QtCore/qvarlengtharray.h"
 #include "QtCore/qvector.h"
@@ -83,7 +83,7 @@ public:
     mutable QSparqlResult *result;
     const QSparqlConnection* connection;
     QModelIndex bottom;
-    QSparqlBindingSet bindingSet;
+    QSparqlResultRow resultRow;
     uint atEnd : 1;
     QVector<QHash<int, QVariant> > headers;
     QVarLengthArray<int, 56> colOffsets; // used to calculate indexInQuery of columns

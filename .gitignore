@@ -15,7 +15,7 @@ ui_*.h
 
 # examples
 asynctracker
-bindingset
+iteration
 simple
 contacts
 dbpedia

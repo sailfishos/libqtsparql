@@ -44,7 +44,7 @@
 #include "qregexp.h"
 #include "qsparqlerror.h"
 #include "qsparqlbinding.h"
-#include "qsparqlbindingset.h"
+#include "qsparqlresultrow.h"
 #include "qsparqlresult.h"
 #include "qvector.h"
 #include "qsparqldriver_p.h"
@@ -123,7 +123,7 @@ public:
     For the sake of efficiency, there are no functions to access a
     field by name (unless you use prepared queries with names, as
     explained below). To convert a field name into an index, use
-    bindingSet().\l{QSparqlBindingSet::indexOf()}{indexOf()}, for example:
+    resultRow().\l{QSparqlResultRow::indexOf()}{indexOf()}, for example:
 
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 8
 
@@ -576,15 +576,15 @@ bool QSparqlResult::fetchPrevious()
 
 /*!
     Returns the current record if the query is finished; otherwise
-    returns an empty QSparqlBindingSet.
+    returns an empty QSparqlResultRow.
 
-    The default implementation always returns an empty QSparqlBindingSet.
+    The default implementation always returns an empty QSparqlResultRow.
 
     \sa isFinished()
 */
-QSparqlBindingSet QSparqlResult::bindingSet() const
+QSparqlResultRow QSparqlResult::resultRow() const
 {
-    return QSparqlBindingSet();
+    return QSparqlResultRow();
 }
 
 QT_END_NAMESPACE

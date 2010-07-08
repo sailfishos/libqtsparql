@@ -1,6 +1,6 @@
 #include "sparqlquerytext.h"
 
-#include <QtSparql/QSparqlBindingSet>
+#include <QtSparql/QSparqlResultRow>
 #include <QtSparql/QSparqlError>
 
 SparqlQueryText::SparqlQueryText(QSparqlConnection& conn, QWidget *parent)
@@ -41,16 +41,16 @@ void printPosition(const QSparqlResult* q)
     }
 }
 
-void printBindingSet(const QSparqlBindingSet& bs)
+void printResultRow(const QSparqlResultRow& rr)
 {
-    qDebug() << "Binding set:";
-    if (bs.isEmpty()) {
+    qDebug() << "Result row:";
+    if (rr.isEmpty()) {
         qDebug() << "Empty";
         return;
     }
-    qDebug() << "Column count:" << bs.count();
-    for (int i = 0; i < bs.count(); ++i)
-        qDebug() << "\t" << i << bs.value(i).toString();
+    qDebug() << "Column count:" << rr.count();
+    for (int i = 0; i < rr.count(); ++i)
+        qDebug() << "\t" << i << rr.value(i).toString();
 }
 
 void SparqlQueryText::showResults()
@@ -64,14 +64,14 @@ void SparqlQueryText::showResults()
     qDebug() << "---- Iterating forward ----";
     // First the query is positioned "before the first row"
     printPosition(result);
-    printBindingSet(result->bindingSet());
+    printResultRow(result->resultRow());
     while (result->next()) {
         printPosition(result);
-        printBindingSet(result->bindingSet());
+        printResultRow(result->resultRow());
     }
     // Then the query is positioned "after the last row"
     printPosition(result);
-    printBindingSet(result->bindingSet());
+    printResultRow(result->resultRow());
 }
 
 

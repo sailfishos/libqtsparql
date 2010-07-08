@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qsparqlbindingset.h"
+#include "qsparqlresultrow.h"
 
 #include "qdebug.h"
 #include "qstringlist.h"
@@ -50,11 +50,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSparqlBindingSetPrivate
+class QSparqlResultRowPrivate
 {
 public:
-    QSparqlBindingSetPrivate();
-    QSparqlBindingSetPrivate(const QSparqlBindingSetPrivate &other);
+    QSparqlResultRowPrivate();
+    QSparqlResultRowPrivate(const QSparqlResultRowPrivate &other);
 
     inline bool contains(int index) { return index >= 0 && index < bindings.count(); }
 
@@ -62,77 +62,80 @@ public:
     QAtomicInt ref;
 };
 
-QSparqlBindingSetPrivate::QSparqlBindingSetPrivate()
+QSparqlResultRowPrivate::QSparqlResultRowPrivate()
 {
     ref = 1;
 }
 
-QSparqlBindingSetPrivate::QSparqlBindingSetPrivate(const QSparqlBindingSetPrivate &other): bindings(other.bindings)
+QSparqlResultRowPrivate::QSparqlResultRowPrivate(const QSparqlResultRowPrivate &other): bindings(other.bindings)
 {
     ref = 1;
 }
 
 /*!
-    \class QSparqlBindingSet
-    \brief The QSparqlBindingSet class encapsulates a database binding set.
+    \class QSparqlResultRow
+
+    \brief The QSparqlResultRow class encapsulates a row in the results of a
+    query.
 
     \ingroup database
     \ingroup shared
 
-    The QSparqlBindingSet class encapsulates the functionality and
-    characteristics of a database binding set (usually a row in a table or
-    view within the database). QSparqlBindingSet supports adding and
-    removing bindings as well as setting and retrieving binding values.
+    The QSparqlResultRow class encapsulates the functionality and
+    characteristics of a row of results returned by a QSparqlQuery.  A
+    QSparqlResultRow is a set of (name, value) pairs (bindings).
+    QSparqlResultRow supports adding and removing bindings as well as setting
+    and retrieving binding values.
 
-    The values of a binding set's bindings' can be set by name or position
-    with setValue(); if you want to set a binding to null use
-    setNull(). To find the position of a binding by name use indexOf(),
-    and to find the name of a binding at a particular position use
-    bindingName(). Use binding() to retrieve a QSparqlBinding object for a
-    given binding. Use contains() to see if the binding set contains a
-    particular binding name.
+    The values of a QSparqlResultRow can be set by name or position with
+    setValue(); if you want to set a binding to null use setValue() with
+    QVariant().  To find the position of a binding by name use indexOf(), and to
+    find the name of a binding at a particular position use bindingName().  Use
+    binding() to retrieve a QSparqlBinding object for a given binding. Use
+    contains() to see if the QSparqlResultRow contains a particular binding
+    name.
 
-    A binding set can have bindings added with append() or insert(), replaced
-    with replace(), and removed with remove(). All the bindings can be
-    removed with clear(). The number of bindings is given by count();
-    all their values can be cleared (to null) using clearValues().
+    A QSparqlResultRow can have bindings added with append() or insert(),
+    replaced with replace(), and removed with remove(). All the bindings can be
+    removed with clear(). The number of bindings is given by count(); all their
+    values can be cleared (to null) using clearValues().
 
-    \sa QSparqlBinding, QSparqlQuery::bindingSet()
+    \sa QSparqlBinding, QSparqlResult
 */
 
 
 /*!
-    Constructs an empty binding set.
+    Constructs an empty result row.
 
     \sa isEmpty(), append(), insert()
 */
 
-QSparqlBindingSet::QSparqlBindingSet()
+QSparqlResultRow::QSparqlResultRow()
 {
-    d = new QSparqlBindingSetPrivate();
+    d = new QSparqlResultRowPrivate();
 }
 
 /*!
     Constructs a copy of \a other.
 
-    QSparqlBindingSet is \l{implicitly shared}. This means you can make copies
-    of a binding set in \l{constant time}.
+    QSparqlResultRow is \l{implicitly shared}. This means you can make copies
+    of a result row in \l{constant time}.
 */
 
-QSparqlBindingSet::QSparqlBindingSet(const QSparqlBindingSet& other)
+QSparqlResultRow::QSparqlResultRow(const QSparqlResultRow& other)
 {
     d = other.d;
     d->ref.ref();
 }
 
 /*!
-    Sets the binding set equal to \a other.
+    Sets the result row equal to \a other.
 
-    QSparqlBindingSet is \l{implicitly shared}. This means you can make copies
-    of a binding set in \l{constant time}.
+    QSparqlResultRow is \l{implicitly shared}. This means you can make copies
+    of a result row in \l{constant time}.
 */
 
-QSparqlBindingSet& QSparqlBindingSet::operator=(const QSparqlBindingSet& other)
+QSparqlResultRow& QSparqlResultRow::operator=(const QSparqlResultRow& other)
 {
     qAtomicAssign(d, other.d);
     return *this;
@@ -142,14 +145,14 @@ QSparqlBindingSet& QSparqlBindingSet::operator=(const QSparqlBindingSet& other)
     Destroys the object and frees any allocated resources.
 */
 
-QSparqlBindingSet::~QSparqlBindingSet()
+QSparqlResultRow::~QSparqlResultRow()
 {
     if (!d->ref.deref())
         delete d;
 }
 
 /*!
-    \fn bool QSparqlBindingSet::operator!=(const QSparqlBindingSet &other) const
+    \fn bool QSparqlResultRow::operator!=(const QSparqlResultRow &other) const
 
     Returns true if this object is not identical to \a other;
     otherwise returns false.
@@ -163,20 +166,20 @@ QSparqlBindingSet::~QSparqlBindingSet()
 
     \sa operator!=()
 */
-bool QSparqlBindingSet::operator==(const QSparqlBindingSet &other) const
+bool QSparqlResultRow::operator==(const QSparqlResultRow &other) const
 {
     return d->bindings == other.d->bindings;
 }
 
 /*!
     Returns the value of the binding located at position \a index in
-    the binding set. If \a index is out of bounds, an invalid QVariant
+    the result row. If \a index is out of bounds, an invalid QVariant
     is returned.
 
     \sa bindingName() isNull()
 */
 
-QVariant QSparqlBindingSet::value(int index) const
+QVariant QSparqlResultRow::value(int index) const
 {
     return d->bindings.value(index).value();
 }
@@ -184,13 +187,13 @@ QVariant QSparqlBindingSet::value(int index) const
 /*!
     \overload
 
-    Returns the value of the binding called \a name in the binding set. If
+    Returns the value of the binding called \a name in the result row. If
     binding \a name does not exist an invalid variant is returned.
 
     \sa indexOf()
 */
 
-QVariant QSparqlBindingSet::value(const QString& name) const
+QVariant QSparqlResultRow::value(const QString& name) const
 {
     return value(indexOf(name));
 }
@@ -202,21 +205,21 @@ QVariant QSparqlBindingSet::value(const QString& name) const
     \sa indexOf()
 */
 
-QString QSparqlBindingSet::variableName(int index) const
+QString QSparqlResultRow::variableName(int index) const
 {
     return d->bindings.value(index).name();
 }
 
 /*!
     Returns the position of the binding called \a name within the
-    binding set, or -1 if it cannot be found. Field names are not
+    result row, or -1 if it cannot be found. Field names are not
     case-sensitive. If more than one binding matches, the first one is
     returned.
 
     \sa bindingName()
 */
 
-int QSparqlBindingSet::indexOf(const QString& name) const
+int QSparqlResultRow::indexOf(const QString& name) const
 {
     QString nm = name.toUpper();
     for (int i = 0; i < count(); ++i) {
@@ -230,7 +233,7 @@ int QSparqlBindingSet::indexOf(const QString& name) const
     Returns the binding at position \a index. If the position is out of
     range, an empty binding is returned.
  */
-QSparqlBinding QSparqlBindingSet::binding(int index) const
+QSparqlBinding QSparqlResultRow::binding(int index) const
 {
     return d->bindings.value(index);
 }
@@ -238,30 +241,30 @@ QSparqlBinding QSparqlBindingSet::binding(int index) const
 /*! \overload
     Returns the binding called \a name.
  */
-QSparqlBinding QSparqlBindingSet::binding(const QString &name) const
+QSparqlBinding QSparqlResultRow::binding(const QString &name) const
 {
     return binding(indexOf(name));
 }
 
 
 /*!
-    Append a copy of binding \a binding to the end of the binding set.
+    Append a copy of binding \a binding to the end of the result row.
 
     \sa insert() replace() remove()
 */
 
-void QSparqlBindingSet::append(const QSparqlBinding& binding)
+void QSparqlResultRow::append(const QSparqlBinding& binding)
 {
     detach();
     d->bindings.append(binding);
 }
 
 /*!
-    Inserts the binding \a binding at position \a pos in the binding set.
+    Inserts the binding \a binding at position \a pos in the result row.
 
     \sa append() replace() remove()
  */
-void QSparqlBindingSet::insert(int pos, const QSparqlBinding& binding)
+void QSparqlResultRow::insert(int pos, const QSparqlBinding& binding)
 {
    detach();
    d->bindings.insert(pos, binding);
@@ -274,7 +277,7 @@ void QSparqlBindingSet::insert(int pos, const QSparqlBinding& binding)
     \sa append() insert() remove()
 */
 
-void QSparqlBindingSet::replace(int pos, const QSparqlBinding& binding)
+void QSparqlResultRow::replace(int pos, const QSparqlBinding& binding)
 {
     if (!d->contains(pos))
         return;
@@ -290,7 +293,7 @@ void QSparqlBindingSet::replace(int pos, const QSparqlBinding& binding)
     \sa append() insert() replace()
 */
 
-void QSparqlBindingSet::remove(int pos)
+void QSparqlResultRow::remove(int pos)
 {
     if (!d->contains(pos))
         return;
@@ -300,48 +303,48 @@ void QSparqlBindingSet::remove(int pos)
 }
 
 /*!
-    Removes all the binding set's bindings.
+    Removes all the result row's bindings.
 
     \sa clearValues() isEmpty()
 */
 
-void QSparqlBindingSet::clear()
+void QSparqlResultRow::clear()
 {
     detach();
     d->bindings.clear();
 }
 
 /*!
-    Returns true if there are no bindings in the binding set; otherwise
+    Returns true if there are no bindings in the result row; otherwise
     returns false.
 
     \sa append() insert() clear()
 */
 
-bool QSparqlBindingSet::isEmpty() const
+bool QSparqlResultRow::isEmpty() const
 {
     return d->bindings.isEmpty();
 }
 
 
 /*!
-    Returns true if there is a binding in the binding set called \a name;
+    Returns true if there is a binding in the result row called \a name;
     otherwise returns false.
 */
 
-bool QSparqlBindingSet::contains(const QString& name) const
+bool QSparqlResultRow::contains(const QString& name) const
 {
     return indexOf(name) >= 0;
 }
 
 /*!
-    Clears the value of all bindings in the binding set and sets each binding
+    Clears the value of all bindings in the result row and sets each binding
     to null.
 
     \sa setValue()
 */
 
-void QSparqlBindingSet::clearValues()
+void QSparqlResultRow::clearValues()
 {
     detach();
     int count = d->bindings.count();
@@ -350,12 +353,12 @@ void QSparqlBindingSet::clearValues()
 }
 
 /*!
-    Returns the number of bindings in the binding set.
+    Returns the number of bindings in the result row.
 
     \sa isEmpty()
 */
 
-int QSparqlBindingSet::count() const
+int QSparqlResultRow::count() const
 {
     return d->bindings.count();
 }
@@ -364,10 +367,9 @@ int QSparqlBindingSet::count() const
     Sets the value of the binding at position \a index to \a val. If the
     binding does not exist, nothing happens.
 
-    \sa setNull()
 */
 
-void QSparqlBindingSet::setValue(int index, const QVariant& val)
+void QSparqlResultRow::setValue(int index, const QVariant& val)
 {
     if (!d->contains(index))
         return;
@@ -383,7 +385,7 @@ void QSparqlBindingSet::setValue(int index, const QVariant& val)
     does not exist, nothing happens.
 */
 
-void QSparqlBindingSet::setValue(const QString& name, const QVariant& val)
+void QSparqlResultRow::setValue(const QString& name, const QVariant& val)
 {
     setValue(indexOf(name), val);
 }
@@ -391,15 +393,15 @@ void QSparqlBindingSet::setValue(const QString& name, const QVariant& val)
 
 /*! \internal
 */
-void QSparqlBindingSet::detach()
+void QSparqlResultRow::detach()
 {
     qAtomicDetach(d);
 }
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug dbg, const QSparqlBindingSet &r)
+QDebug operator<<(QDebug dbg, const QSparqlResultRow &r)
 {
-    dbg << "QSparqlBindingSet(" << r.count() << ')';
+    dbg << "QSparqlResultRow(" << r.count() << ')';
     for (int i = 0; i < r.count(); ++i)
         dbg << '\n' << QString::fromLatin1("%1:").arg(i, 2) << r.binding(i) << r.value(i).toString();
     return dbg;

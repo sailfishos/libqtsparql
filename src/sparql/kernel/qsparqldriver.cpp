@@ -44,7 +44,6 @@
 #include "qdatetime.h"
 #include "qsparqlerror.h"
 #include "qsparqlbinding.h"
-#include "qsparqlbindingset.h"
 
 QT_BEGIN_NAMESPACE
 

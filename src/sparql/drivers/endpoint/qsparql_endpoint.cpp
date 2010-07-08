@@ -47,7 +47,7 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
-#include <qsparqlbindingset.h>
+#include <qsparqlresultrow.h>
 #include <qstringlist.h>
 #include <qtextcodec.h>
 #include <qvector.h>
@@ -98,7 +98,7 @@ public:
     QSparqlQuery::StatementType statementType;
     QNetworkReply *reply;
     QByteArray buffer;
-    QList<QSparqlBindingSet> results;
+    QList<QSparqlResultRow> results;
     bool isFinished;
     QEventLoop *loop;
     EndpointResult *q;
@@ -154,7 +154,7 @@ void EndpointResultPrivate::parseResults()
                 while (!resultsNode.isNull()) {
                     QDomElement resultsElement = resultsNode.toElement();
                     if (!resultsElement.isNull()) {
-                        QSparqlBindingSet bindingSet;                        
+                        QSparqlResultRow resultRow;                        
                         QDomNode resultNode = resultsElement.firstChild();
                         
                         while (!resultNode.isNull()) {
@@ -190,14 +190,14 @@ void EndpointResultPrivate::parseResults()
                                         qWarning() << "Unknown value element: " << valueElement.text();
                                     }
                                     
-                                    bindingSet.append(binding);
+                                    resultRow.append(binding);
                                 }
                             }
 
                             resultNode = resultNode.nextSibling();
                         }
                         
-                        results.append(bindingSet);
+                        results.append(resultRow);
                     }
                     
                     resultsNode = resultsNode.nextSibling();
@@ -339,9 +339,9 @@ int EndpointResult::size() const
     return d->results.count();
 }
 
-QSparqlBindingSet EndpointResult::bindingSet() const
+QSparqlResultRow EndpointResult::resultRow() const
 {
-    QSparqlBindingSet info;
+    QSparqlResultRow info;
     if (pos() < 0 || pos() >= d->results.count())
         return info;
 

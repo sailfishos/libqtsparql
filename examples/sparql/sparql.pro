@@ -3,7 +3,7 @@ TEMPLATE      = subdirs
 SUBDIRS       = simple \
                 dbpedia \
                 querymodel \
-                bindingset \
+                iteration \
                 asynctracker \
                 contacts
 

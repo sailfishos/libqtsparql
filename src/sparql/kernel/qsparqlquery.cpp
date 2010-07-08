@@ -41,7 +41,7 @@
 
 #include "qsparqlquery.h"
 
-#include "qsparqlbindingset.h"
+#include "qsparqlresultrow.h"
 #include "qsparqlbinding.h"
 
 //#define QT_DEBUG_SQL
@@ -269,16 +269,8 @@ void QSparqlQuery::setQuery(const QString& query)
     \sa previous() next() first() last() seek() isActive() isValid()
 */
 
- /*QVariant QSparqlQuery::value(int index) const
-{
-    if (isActive() && isValid() && (index > QSparql::BeforeFirstRow))
-        return d->sparqlResult->data(index);
-    qWarning("QSparqlQuery::value: not positioned on a valid binding set");
-    return QVariant();
-    }*/
-
 /*!
-  Returns a QSparqlBindingSet containing the field information for the
+  Returns a QSparqlResultRow containing the field information for the
   current query. If the query points to a valid row (isValid() returns
   true), the record is populated with the row's values.  An empty
   record is returned when there is no active query (isActive() returns
@@ -288,23 +280,12 @@ void QSparqlQuery::setQuery(const QString& query)
   its index-based lookup is faster.
 
   In the following example, a \c{SELECT * FROM} query is executed.
-  Since the order of the columns is not defined, QSparqlBindingSet::indexOf()
+  Since the order of the columns is not defined, QSparqlResultRow::indexOf()
   is used to obtain the index of a column.
 
   \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 1
 
   \sa value()
-*/
-              /*QSparqlBindingSet QSparqlQuery::bindingSet() const
-{
-    QSparqlBindingSet rec = d->sparqlResult->bindingSet();
-
-    if (isValid()) {
-        for (int i = 0; i < rec.count(); ++i)
-            rec.setValue(i, value(i));
-    }
-    return rec;
-}
 */
 
 /*!
@@ -405,13 +386,13 @@ void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
 }
 
 /*!
-  Iterates through the variable name - value pairs from the \a bindingSet and
+  Iterates through the variable name - value pairs from the \a bindings and
   adds them as bindings.
 */
-void QSparqlQuery::bindValues(const QSparqlBindingSet& bindingSet)
+void QSparqlQuery::bindValues(const QSparqlResultRow& bindings)
 {
-    for (int i = 0; i < bindingSet.count(); ++i)
-        bindValue(bindingSet.binding(i).name(), bindingSet.binding(i).value());
+    for (int i = 0; i < bindings.count(); ++i)
+        bindValue(bindings.binding(i).name(), bindings.binding(i).value());
 }
 
 /*!

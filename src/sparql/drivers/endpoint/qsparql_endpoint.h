@@ -82,7 +82,7 @@ protected:
     bool fetchFirst();
     QVariant data(int field) const;
     int size() const;
-    QSparqlBindingSet bindingSet() const;
+    QSparqlResultRow resultRow() const;
 
     void waitForFinished();
     bool isFinished() const;

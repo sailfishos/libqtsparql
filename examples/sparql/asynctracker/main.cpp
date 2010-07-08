@@ -59,16 +59,16 @@ void printPosition(const QSparqlResult* q)
     }
 }
 
-void printBindingSet(const QSparqlBindingSet& bs)
+void printResultRow(const QSparqlResultRow& rr)
 {
-    qDebug() << "Binding set:";
-    if (bs.isEmpty()) {
+    qDebug() << "Result row:";
+    if (rr.isEmpty()) {
         qDebug() << "Empty";
         return;
     }
-    qDebug() << "Column count:" << bs.count();
-    for (int i = 0; i < bs.count(); ++i)
-        qDebug() << "\t" << i << bs.value(i).toString();
+    qDebug() << "Column count:" << rr.count();
+    for (int i = 0; i < rr.count(); ++i)
+        qDebug() << "\t" << i << rr.value(i).toString();
 }
 
 class MyObject : public QObject
@@ -79,11 +79,11 @@ public slots:
         QSparqlResult* r = qobject_cast<QSparqlResult *>(sender());
         while (r->next()) {
             printPosition(r);
-            printBindingSet(r->bindingSet());
+            printResultRow(r->resultRow());
         }
         // Then the query is positioned "after the last row"
         printPosition(r);
-        printBindingSet(r->bindingSet());
+        printResultRow(r->resultRow());
         QCoreApplication::exit(0);
     }
     void onResultsReadyAt(int start, int end) {

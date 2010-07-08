@@ -109,7 +109,7 @@ public:
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 3
 
     QSparqlBinding objects are rarely created explicitly in application
-    code. They are usually accessed indirectly through \l{QSparqlBindingSet}s
+    code. They are usually accessed indirectly through \l{QSparqlResultRow}s
     that already contain a list of bindings. For example:
 
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 4
@@ -124,7 +124,7 @@ public:
     value() retrieved. When editing the data can be set with
     setValue() or set to NULL with clear().
 
-    \sa QSparqlBindingSet
+    \sa QSparqlResultRow
 */
 
 /*!

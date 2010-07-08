@@ -53,7 +53,7 @@ QT_MODULE(Sparql)
 
 class QSparqlQueryModelPrivate;
 class QSparqlError;
-class QSparqlBindingSet;
+class QSparqlResultRow;
 class QSparqlQuery;
 
 class Q_SPARQL_EXPORT QSparqlQueryModel: public QAbstractTableModel
@@ -67,8 +67,8 @@ public:
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
-    QSparqlBindingSet bindingSet(int row) const;
-    QSparqlBindingSet bindingSet() const;
+    QSparqlResultRow resultRow(int row) const;
+    QSparqlResultRow resultRow() const;
 
     QVariant data(const QModelIndex &item, int role = Qt::DisplayRole) const;
     QVariant headerData(int section, Qt::Orientation orientation,

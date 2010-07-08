@@ -109,7 +109,7 @@ protected:
     
     int size() const;
     int numRowsAffected();
-    QSparqlBindingSet bindingSet() const;
+    QSparqlResultRow resultRow() const;
     bool nextResult();
 
 private:

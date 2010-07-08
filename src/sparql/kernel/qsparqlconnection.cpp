@@ -481,7 +481,7 @@ QT_END_NAMESPACE
 
     or
 
-    \dontinclude bindingset/main.cpp
+    \dontinclude iteration/main.cpp
     \skip QSparqlQuery insert
     \until InsertStatement
 

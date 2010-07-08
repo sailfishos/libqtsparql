@@ -45,7 +45,7 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
-#include <qsparqlbindingset.h>
+#include <qsparqlresultrow.h>
 
 #include <qcoreapplication.h>
 #include <qvariant.h>
@@ -247,9 +247,9 @@ int QTrackerResult::size() const
     return d->data.count();
 }
 
-QSparqlBindingSet QTrackerResult::bindingSet() const
+QSparqlResultRow QTrackerResult::resultRow() const
 {
-    QSparqlBindingSet info;
+    QSparqlResultRow info;
     if (pos() >= d->data.count() || pos() < 0)
         return info;
 

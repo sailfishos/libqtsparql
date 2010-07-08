@@ -4,7 +4,7 @@ HEADERS +=      kernel/qsparql.h \
                 kernel/qsparqlconnection_p.h \
                 kernel/qsparqlconnectionoptions.h \
                 kernel/qsparqlbinding.h \
-                kernel/qsparqlbindingset.h \
+                kernel/qsparqlresultrow.h \
                 kernel/qsparqldriver_p.h \
                 kernel/qsparqlnulldriver_p.h \
                 kernel/qsparqldriverplugin_p.h \
@@ -18,7 +18,7 @@ install_headers.files += \
                 kernel/qsparqlconnection.h \
                 kernel/qsparqlconnectionoptions.h \
                 kernel/qsparqlbinding.h \
-                kernel/qsparqlbindingset.h \
+                kernel/qsparqlresultrow.h \
                 kernel/qsparqlerror.h \
                 kernel/qsparqlresource.h \
                 kernel/qsparqlresult.h 
@@ -27,7 +27,7 @@ SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqlconnection.cpp \
                 kernel/qsparqlconnectionoptions.cpp \
                 kernel/qsparqlbinding.cpp \
-                kernel/qsparqlbindingset.cpp \
+                kernel/qsparqlresultrow.cpp \
                 kernel/qsparqldriver.cpp \
                 kernel/qsparqldriverplugin.cpp \
                 kernel/qsparqlerror.cpp \

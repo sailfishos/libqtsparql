@@ -44,7 +44,7 @@
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qobject.h>
-#include <QtSparql/qsparqlbindingset.h>
+#include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
 
 QT_BEGIN_HEADER
@@ -81,7 +81,7 @@ public:
 
     // Retrieving data
     QVariant value(int i) const;
-    virtual QSparqlBindingSet bindingSet() const;
+    virtual QSparqlResultRow resultRow() const;
 
     // Asynchronous operations
     virtual void waitForFinished();

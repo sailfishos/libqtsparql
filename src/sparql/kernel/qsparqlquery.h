@@ -54,7 +54,7 @@ QT_MODULE(Sparql)
 
 class QVariant;
 template <class Key, class T> class QMap;
-class QSparqlBindingSet;
+class QSparqlResultRow;
 class QSparqlBinding;
 class QSparqlQueryPrivate;
 
@@ -77,7 +77,7 @@ public:
 
     void bindValue(const QString& placeholder, const QVariant& val);
     void bindValue(const QSparqlBinding& binding);
-    void bindValues(const QSparqlBindingSet& bindingSet);
+    void bindValues(const QSparqlResultRow& bindings);
     QVariant boundValue(const QString& placeholder) const;
     QMap<QString, QVariant> boundValues() const;
     void unbindValues();
