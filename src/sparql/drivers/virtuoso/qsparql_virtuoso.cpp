@@ -607,6 +607,8 @@ QVirtuosoDriver::~QVirtuosoDriver()
 
 bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
 {
+    // FIXME: decide the features
+/*
     switch (f) {
     case QSparqlConnection::Transactions: {
         if (!d->hDbc)
@@ -643,7 +645,7 @@ bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
     case QSparqlConnection::BLOB: {
         return false;
     }
-    }
+    }*/
     return false;
 }
 
