@@ -81,7 +81,6 @@ QT_BEGIN_NAMESPACE
 class QVirtuosoPrivate;
 class QVirtuosoDriverPrivate;
 class QVirtuosoDriver;
-class QSparqlBindingSetInfo;
 
 class QVirtuosoResult : public QSparqlResult
 {
