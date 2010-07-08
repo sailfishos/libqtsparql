@@ -2,9 +2,9 @@
 **
 ** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: Nokia Corporation (ivan.frade@nokia.com)
 **
-** This file is part of the QtSparql module of the Qt Toolkit.
+** This file is part of the QtSparql module (not yet part of the Qt Toolkit).
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** Nokia at ivan.frade@nokia.com.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/

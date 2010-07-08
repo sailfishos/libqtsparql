@@ -2,9 +2,9 @@
 **
 ** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: Nokia Corporation (ivan.frade@nokia.com)
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the test suite of the QtSparql module (not yet part of the Qt Toolkit).
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** No Commercial Usage
@@ -26,7 +26,7 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** Nokia at ivan.frade@nokia.com.
 **
 **
 **
