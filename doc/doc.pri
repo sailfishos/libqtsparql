@@ -1,5 +1,5 @@
 doxygen_doc.target = doc/html/index.html
-doxygen_doc.commands = cd doc && VERSION=\"$$VERSION\" LIBRARYNAME=\"$$LIBRARYNAME\" doxygen doxygen.cfg
+doxygen_doc.commands = cd doc && VERSION=\"$$DOC_VERSION\" LIBRARYNAME=\"$$LIBRARYNAME\" doxygen doxygen.cfg
 doc.depends = doxygen_doc
 
 install_doc.files = doc/html

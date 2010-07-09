@@ -4,8 +4,11 @@ QT = core
 QMAKE_LIBDIR = $$top_srcdir/lib
 isEmpty(PREFIX): PREFIX = /usr/local
 
+# this will in the .so name
+VERSION = 0.0.0
+
 # for documentation
-VERSION = 0.0.1
+DOC_VERSION = 0.0.1
 LIBRARYNAME = QtSparql
 PACKAGENAME = libqtsparql
 
