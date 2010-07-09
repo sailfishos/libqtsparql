@@ -57,6 +57,8 @@ binary-arch: build install
 	dh_installchangelogs -a
 	dh_installdocs -a
 	dh_strip -p libqtsparql0 --dbg-package="libqtsparql0-dbg"
+	dh_strip -p libqtsparql-endpoint --dbg-package="libqtsparql-endpoint-dbg"
+	dh_strip -p libqtsparql-tracker --dbg-package="libqtsparql-tracker-dbg"
 	dh_link -a
 	dh_compress -a
 	dh_fixperms -a

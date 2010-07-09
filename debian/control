@@ -25,7 +25,7 @@ Depends: libqtsparql0 (= ${binary:Version})
 Description: Library for accessing RDF stores.
 
 Package: libqtsparql-doc
-Section: libdevel
+Section: doc
 Architecture: any
 Description: Library for accessing RDF stores.
  .
@@ -46,8 +46,22 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Description: Endpoint driver for QtSparql.
 
+Package: libqtsparql-endpoint-dbg
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Endpoint driver for QtSparql.
+ .
+ This package contains the debug symbols.
+
 Package: libqtsparql-tracker
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: Tracker driver for QtSparql.
+
+Package: libqtsparql-tracker-dbg
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Tracker driver for QtSparql.
+ .
+ This package contains the debug symbols.
 

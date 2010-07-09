@@ -42,7 +42,9 @@ debian/libqtsparql0
 debian/libqtsparql0-dbg
 debian/libqtsparql-tests
 debian/libqtsparql-tracker
+debian/libqtsparql-tracker-dbg
 debian/libqtsparql-endpoint
+debian/libqtsparql-endpoint-dbg
 debian/libqtsparql-virtuoso
 
 # configure-time tests
