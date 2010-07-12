@@ -151,6 +151,7 @@ DriverDict &QSparqlConnectionPrivate::driverDict()
 
 QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 {
+    // separately defined drivers (e.g., for tests)
     QSparqlDriver * driver = 0;
     DriverDict dict = QSparqlConnectionPrivate::driverDict();
     for (DriverDict::const_iterator it = dict.constBegin();
@@ -161,6 +162,24 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
     }
     if (driver)
         return driver;
+
+    // drivers built into the .so
+#ifdef QT_SPARQL_TRACKER
+    if (type == QLatin1String("QTRACKER"))
+        driver = new QTrackerDriver();
+#endif
+#ifdef QT_SPARQL_ENDPOINT
+    if (type == QLatin1String("QENDPOINT"))
+        driver = new EndpointDriver();
+#endif
+#ifdef QT_SPARQL_VIRTUOSO
+    if (type == QLatin1String("QVIRTUOSO"))
+        driver = new QVirtuosoDriver();
+#endif
+    if (driver)
+        return driver;
+
+    // drivers built as plugins
 #if WE_ARE_QT
     return findDriverWithFactoryLoader(type);
 #else
