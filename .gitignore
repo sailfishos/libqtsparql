@@ -53,3 +53,9 @@ config.tests/unix/iodbc/iodbc
 
 # docs
 doc/html/*
+
+# code coverage
+*.cov
+src/sparql/coverage/*
+*.gcda
+*.gcno
