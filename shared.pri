@@ -8,7 +8,7 @@ isEmpty(PREFIX): PREFIX = /usr/local
 VERSION = 0.0.0
 
 # for documentation
-DOC_VERSION = 0.0.1
+DOC_VERSION = 0.0.2
 LIBRARYNAME = QtSparql
 PACKAGENAME = libqtsparql
 

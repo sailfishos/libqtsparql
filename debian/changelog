@@ -1,3 +1,9 @@
+libqtsparql (0.0.2~unreleased) unstable; urgency=low
+
+  * 
+
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Mon, 12 Jul 2010 09:13:08 +0300
+
 libqtsparql (0.0.1) unstable; urgency=low
 
   * Initial release.
