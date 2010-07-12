@@ -25,3 +25,11 @@ target.path = $$PREFIX/lib
 QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
 QMAKE_PKGCONFIG_DESTDIR = pkgconfig
 
+coverage {
+	LIBS += -lgcov
+	QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
+	QMAKE_EXTRA_TARGETS += coverage
+	coverage.commands  = lcov -d . --capture --output-file all.cov -b . &&
+	coverage.commands += lcov -e all.cov '*/*/src/sparql/*/*.cpp' -e all.cov '*/*/src/sparql/*/*.h' -o src.cov &&
+	coverage.commands += genhtml -o coverage src.cov
+}
