@@ -1,7 +1,8 @@
-top_srcdir = $$PWD
-INCLUDEPATH = $$top_srcdir/include $$top_srcdir/include/QtSparql/
+INCLUDEPATH = $$QT_BUILD_TREE/include $$QT_BUILD_TREE/include/QtSparql/
 QT = core
-QMAKE_LIBDIR = $$top_srcdir/lib
+
+QMAKE_LIBDIR = $$QT_BUILD_TREE/lib
+
 isEmpty(PREFIX): PREFIX = /usr/local
 
 # this will in the .so name

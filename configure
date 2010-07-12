@@ -62,6 +62,57 @@ QT_CFLAGS_TRACKER=
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
+OPT_SHADOW=maybe
+
+PERL=`$WHICH perl 2>/dev/null`
+
+# is this a shadow build?
+if [ "$OPT_SHADOW" = "maybe" ]; then
+    OPT_SHADOW=no
+    if [ "$relpath" != "$outpath" ] && [ '!' -f "$outpath/configure" ]; then
+        if [ -h "$outpath" ]; then
+            [ "$relpath" -ef "$outpath" ] || OPT_SHADOW=yes
+        else
+            OPT_SHADOW=yes
+        fi
+    fi
+fi
+
+# if the source tree is different from the build tree,
+# symlink or copy part of the sources
+if [ "$OPT_SHADOW" = "yes" ]; then
+    echo "Preparing build tree..."
+
+    if [ -z "$PERL" ]; then
+        echo
+        echo "You need perl in your PATH to make a shadow build."
+        echo "Cannot proceed."
+        exit 1
+    fi
+
+    [ -d "$outpath/bin" ] || mkdir -p "$outpath/bin"
+
+    # make a syncqt script that can be used in the shadow
+    rm -f "$outpath/bin/syncqt"
+    if [ -x "$relpath/bin/syncqt" ]; then
+        mkdir -p "$outpath/bin"
+        echo "#!/bin/sh" >"$outpath/bin/syncqt"
+        echo "QTDIR=\"$relpath\"; export QTDIR" >>"$outpath/bin/syncqt"
+        echo "perl \"$relpath/bin/syncqt\" -outdir \"$outpath\" \"\$@\"" >>"$outpath/bin/syncqt"
+        chmod 755 "$outpath/bin/syncqt"
+    fi
+fi
+
+# symlink includes
+if [ -n "$PERL" ] && [ -x "$relpath/bin/syncqt" ]; then
+    SYNCQT_OPTS=
+    [ "$CFG_DEV" = "yes" ] && SYNCQT_OPTS="$SYNCQT_OPTS -check-includes"
+    if [ "$OPT_SHADOW" = "yes" ]; then
+        "$outpath/bin/syncqt" $SYNCQT_OPTS
+    elif [ "$CFG_DEV" = "yes" ] || [ ! -d $relpath/include ] || [ -d $relpath/.git ]; then
+        QTDIR="$relpath" perl "$outpath/bin/syncqt" $SYNCQT_OPTS
+    fi
+fi
 
 # find a make command
 if [ -z "$MAKE" ]; then
@@ -174,8 +225,41 @@ echo "sparql-plugins =" "$SPARQL_PLUGINS" >> "$QMAKE_VARS_FILE"
 
 # create the cache file (simplified)
 CACHEFILE="$outpath/.qmake.cache"
-mv -f "$QMAKE_VARS_FILE" "$CACHEFILE"
+
+# cmdline args
+cat "$QMAKE_VARS_FILE" >> "$CACHEFILE.tmp"
+rm -f "$QMAKE_VARS_FILE" 2>/dev/null
+
+#-------------------------------------------------------------------------------
+# save configuration into .qmake.cache
+#-------------------------------------------------------------------------------
+
+CACHEFILE="$outpath/.qmake.cache"
+[ -f "$CACHEFILE.tmp" ] && rm -f "$CACHEFILE.tmp"
+cat >>"$CACHEFILE.tmp" <<EOF
+QT_SOURCE_TREE = \$\$quote($relpath)
+QT_BUILD_TREE = \$\$quote($outpath)
+
+EOF
+
+# replace .qmake.cache if it differs from the newly created temp file
+if cmp -s "$CACHEFILE.tmp" "$CACHEFILE"; then
+    rm -f "$CACHEFILE.tmp"
+else
+    mv -f "$CACHEFILE.tmp" "$CACHEFILE"
+fi
+
 
 # create / copy header files to include/
 QTDIR=. bin/syncqt
+
+echo "Finding project files. Please wait..."
+
+"qmake" -prl -r "${relpath}/projects.pro"
+if [ -f "${relpath}/projects.pro" ]; then
+    mkfile="${outpath}/Makefile"
+    [ -f "$mkfile" ] && chmod +w "$mkfile"
+    QTDIR="$outpath" "qmake" -spec "$XQMAKESPEC" "${relpath}/projects.pro" -o "$mkfile"
+fi
+
 
