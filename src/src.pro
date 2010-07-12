@@ -3,7 +3,7 @@ SUBDIRS = sparql plugins
 
 coverage {
 	coverage.CONFIG = recursive
-	coverage.recurse = sparql
+	coverage.recurse = sparql plugins
 	QMAKE_EXTRA_TARGETS += coverage
 }
 
