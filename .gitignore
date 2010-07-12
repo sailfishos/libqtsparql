@@ -24,6 +24,7 @@ querymodel
 # tests
 tests/auto/qsparql/tst_qsparql
 tests/auto/qsparqlquery/tst_qsparqlquery
+tests/auto/qsparql_tracker/tst_qsparql_tracker
 
 # debian packaging
 debian/build-stamp

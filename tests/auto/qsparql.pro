@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS = \
     qsparqlquery \
-    qsparql
+    qsparql \
+    qsparql_tracker
 
