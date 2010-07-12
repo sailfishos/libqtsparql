@@ -27,6 +27,6 @@ contains(sparql-drivers, virtuoso) {
 
 
 contains(sparql-drivers, endpoint) {
-    HEADERS +=      drivers/tracker/qsparql_endpoint.h
-    SOURCES +=      drivers/tracker/qsparql_endpoint.cpp
+    HEADERS +=      drivers/endpoint/qsparql_endpoint.h
+    SOURCES +=      drivers/endpoint/qsparql_endpoint.cpp
 }
