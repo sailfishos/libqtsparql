@@ -36,6 +36,11 @@ install: build
 	# copying headers from include/ (created by syncqt)
 	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
 
+	# copy the tests definition and data from the src dir
+	cp -a tests/auto/tests.xml `pwd`/debian/tmp/usr/share/qsparql-tests
+	cp -a tests/auto/qsparql_tracker/testdata.ttl `pwd`/debian/tmp/usr/share/qsparql-tests
+	cp -a tests/auto/qsparql_tracker/clean_data.query `pwd`/debian/tmp/usr/share/qsparql-tests
+
 	dh_install --sourcedir=`pwd`/debian/tmp/
 
 binary-indep: build install
