@@ -2,7 +2,7 @@ include(../../../shared.pri)
 TEMPLATE = lib
 CONFIG += qt plugin
 QT = core
-DESTDIR = $$top_srcdir/plugins/sparqldrivers
+DESTDIR = $$QT_BUILD_TREE/plugins/sparqldrivers
 
 target.path     += $$[QT_INSTALL_PLUGINS]/sparqldrivers
 INSTALLS        += target
