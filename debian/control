@@ -50,7 +50,7 @@ Description: Endpoint driver for QtSparql.
 Package: libqtsparql-endpoint-dbg
 Priority: extra
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: libqtsparql-endpoint (= ${binary:Version})
 Description: Endpoint driver for QtSparql.
  .
  This package contains the debug symbols.
@@ -63,7 +63,7 @@ Description: Tracker driver for QtSparql.
 Package: libqtsparql-tracker-dbg
 Priority: extra
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: libqtsparql-tracker (= ${binary:Version})
 Description: Tracker driver for QtSparql.
  .
  This package contains the debug symbols.
