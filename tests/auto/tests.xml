@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<testdefinition version="1.0">
+  <suite name="qsparql-tests">
+    <set name="qsparlq-unit" desctiption="Unit tests of qsparql">
+      <case name="qsparqlquery" description="qsparqlquery">
+        <step expected_result="0">
+	  /usr/share/qsparql-tests/tst_qsparqlquery
+        </step>
+      </case>
+      <case name="qsparql" description="qsparql">
+        <step expected_result="0">
+	  /usr/share/qsparql-tests/tst_qsparql
+        </step>
+      </case>
+    </set>
+    <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
+      <pre_steps>
+	<step expected_result="0">
+          . /tmp/session_bus_address.user;
+	  tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query;
+	  tracker-import /usr/share/qsparql-tests/testdata.ttl
+        </step>
+      </pre_steps>
+      <case name="test-query-contacts" description="Executing a query">
+        <step expected_result="0">
+	  /usr/share/qsparql-tests/tst_qsparql_tracker query_contacts
+        </step>
+      </case>
+      <case name="test-insert-and-delete-contact" description="Executing an update">
+        <step expected_result="0">
+	  /usr/share/qsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
+	  ( i=$? && tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query &&
+	  tracker-import /usr/share/qsparql-tests/testdata.ttl &&
+	  exit $i )
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+
+      <get>
+	<file>/home/user/.local/share/tracker/tracker-store.log</file>
+      </get>
+
+    </set>
+  </suite>
+</testdefinition>
