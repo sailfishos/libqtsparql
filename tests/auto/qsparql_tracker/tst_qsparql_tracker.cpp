@@ -62,7 +62,7 @@ public slots:
 
 private slots:
     void query_contacts();
-    void insert_and_remove_contact();
+    void insert_and_delete_contact();
 };
 
 tst_QSparqlTracker::tst_QSparqlTracker()
@@ -112,7 +112,7 @@ void tst_QSparqlTracker::query_contacts()
     delete r;
 }
 
-void tst_QSparqlTracker::insert_and_remove_contact()
+void tst_QSparqlTracker::insert_and_delete_contact()
 {
     // This test will leave unclean test data into tracker if it crashes.
     QSparqlConnection conn("QTRACKER");

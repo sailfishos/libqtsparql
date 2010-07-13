@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <testdefinition version="1.0">
   <suite name="qsparql-tests">
-    <set name="qsparlq-unit" desctiption="Unit tests of qsparql">
+    <set name="qsparlq-unit" description="Unit tests of qsparql">
       <case name="qsparqlquery" description="qsparqlquery">
         <step expected_result="0">
 	  /usr/share/qsparql-tests/tst_qsparqlquery
@@ -29,8 +29,8 @@
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
 	  /usr/share/qsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
-	  ( i=$? && tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query &&
-	  tracker-import /usr/share/qsparql-tests/testdata.ttl &&
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query &amp;&amp;
+	  tracker-import /usr/share/qsparql-tests/testdata.ttl &amp;&amp;
 	  exit $i )
         </step>
       </case>
