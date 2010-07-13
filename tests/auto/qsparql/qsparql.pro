@@ -1,5 +1,6 @@
 include(../sparqltest.pri)
-load(qttest_p4)
+CONFIG += qt warn_on console depend_includepath testcase
+QT += testlib
 SOURCES  += tst_qsparql.cpp
 
 # QT = sparql # enable this later
