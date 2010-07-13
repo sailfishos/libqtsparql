@@ -61,9 +61,8 @@ public slots:
     void cleanup();
 
 private slots:
-    void get_contacts();
-    void remove_contact();
-    void add_contact();
+    void query_contacts();
+    void insert_and_remove_contact();
 };
 
 tst_QSparqlTracker::tst_QSparqlTracker()
@@ -90,7 +89,7 @@ void tst_QSparqlTracker::cleanup()
 {
 }
 
-void tst_QSparqlTracker::get_contacts()
+void tst_QSparqlTracker::query_contacts()
 {
     QSparqlConnection conn("QTRACKER");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
@@ -101,7 +100,7 @@ void tst_QSparqlTracker::get_contacts()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
     QCOMPARE(r->hasError(), false);
-    QMap<QString, QString> contactNames; // ordered
+    QHash<QString, QString> contactNames;
     while (r->next()) {
         QCOMPARE(r->resultRow().count(), 2);
         contactNames[r->value(0).toString()] = r->value(1).toString();
@@ -110,16 +109,62 @@ void tst_QSparqlTracker::get_contacts()
     QCOMPARE(contactNames["uri001"], QString("name001"));
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
 }
 
-void tst_QSparqlTracker::add_contact()
+void tst_QSparqlTracker::insert_and_remove_contact()
 {
-}
+    // This test will leave unclean test data into tracker if it crashes.
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                     "nco:nameGiven \"addedname001\" .}",
+                     QSparqlQuery::InsertStatement);
 
-void tst_QSparqlTracker::remove_contact()
-{
-}
+    QSparqlResult* r = conn.exec(add);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
 
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QString> contactNames;
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    while (r->next()) {
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QCOMPARE(contactNames.size(), 4);
+    QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
+    delete r;
+
+    // Delete the uri
+    QSparqlQuery del("delete { <addeduri001> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r = conn.exec(del);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
+
+    // Verify that it got deleted
+    contactNames.clear();
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    while (r->next()) {
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QCOMPARE(contactNames.size(), 3);
+    delete r;
+}
 
 QTEST_MAIN( tst_QSparqlTracker )
 #include "tst_qsparql_tracker.moc"
