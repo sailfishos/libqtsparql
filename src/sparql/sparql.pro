@@ -3,7 +3,7 @@ include(../../shared.pri)
 TEMPLATE = lib
 CONFIG += create_pc create_prl
 TARGET = QtSparql
-DESTDIR = $$top_srcdir/lib
+DESTDIR = $$QT_BUILD_TREE/lib
 DEFINES += QT_BUILD_SPARQL_LIB
 DEFINES += QT_NO_USING_NAMESPACE
 QT += network
@@ -21,8 +21,6 @@ INSTALLS += \
         target \
         install_headers
 target.path = $$PREFIX/lib
-
-DESTDIR = ../../lib
 
 QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
 QMAKE_PKGCONFIG_DESTDIR = pkgconfig

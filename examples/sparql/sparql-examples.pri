@@ -1,4 +1,4 @@
 include(../../shared.pri)
 
 LIBS += -lQtSparql
-QMAKE_RPATHDIR = $$top_srcdir/lib $$QMAKE_RPATHDIR
+QMAKE_RPATHDIR = $$QT_BUILD_TREE/lib $$QMAKE_RPATHDIR
