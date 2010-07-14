@@ -1,3 +1,9 @@
+libqtsparql (0.0.3~unreleased) unstable; urgency=low
+
+  * Test package fixes.
+
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 13 Jul 2010 16:26:32 +0300
+
 libqtsparql (0.0.2) unstable; urgency=low
 
   * Added a test package.
