@@ -139,6 +139,12 @@ void tst_QSparqlQuery::replacement_data()
                 "nco:hasPhoneNumber _:pn . "
                 "_:pn a nco:PhoneNumber ; "
                 "nco:phoneNumber \"PHONE\" . }");
+
+    QTest::newRow("escape_quotes") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << "some\"thing") <<
+        QString("the \"some\\\"thing\" goes here");
 }
 
 void tst_QSparqlQuery::replacement()
