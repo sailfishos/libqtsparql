@@ -327,7 +327,7 @@ QString QSparqlQuery::preparedQueryText() const
     int i;
     QString holder;
     int ix;
-    QVariant val;
+    QSparqlBinding binding;
     // The holders are stored in order and iterated in the reverse order; this
     // way the indices of the earlier holder remain valid when we replace a
     // holder in the string.
@@ -338,11 +338,11 @@ QString QSparqlQuery::preparedQueryText() const
             qWarning() << "QSparql: Placeholder" << holder << "not replaced";
             continue;
         }
-        // FIXME, NOTE: removed here recycling the value through a
-        // QSparqlBinding and the driver
-        val = d->values.value(ix);
+        // Recycling the value through QSparqlBinding will do the
+        // escaping.
+        binding.setValue(d->values.value(ix));
         result = result.replace(d->holders.at(i).holderPos,
-                                holder.length(), val.toString());
+                                holder.length(), binding.toString());
     }
     return result;
 }

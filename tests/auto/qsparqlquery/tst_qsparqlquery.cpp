@@ -42,6 +42,8 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
+#include <QUrl>
+
 //const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
 
 //TESTED_FILES=
@@ -65,7 +67,8 @@ private slots:
     void replacement();
     void unbind_and_replace_data();
     void unbind_and_replace();
-
+    void different_datatypes_data();
+    void different_datatypes();
 };
 
 tst_QSparqlQuery::tst_QSparqlQuery()
@@ -96,31 +99,31 @@ void tst_QSparqlQuery::replacement_data()
 {
     QTest::addColumn<QString>("rawString");
     QTest::addColumn<QStringList>("placeholders");
-    QTest::addColumn<QStringList>("replacements");
+    QTest::addColumn<QVariantList>("replacements");
     QTest::addColumn<QString>("replacedString");
 
     QTest::newRow("nothing") <<
         QString("nothing to replace") <<
         (QStringList() << "?:foo" << "?:bar") <<
-        (QStringList() << "FOO" << "BAR") <<
+        (QVariantList() << "FOO" << "BAR") <<
         QString("nothing to replace");
 
     QTest::newRow("simple") <<
         QString("replace ?:foo ?:bar") <<
         (QStringList() << "?:foo" << "?:bar") <<
-        (QStringList() << "FOO" << "BAR") <<
-        QString("replace FOO BAR");
+        (QVariantList() << "FOO" << "BAR") <<
+        QString("replace \"FOO\" \"BAR\"");
 
     QTest::newRow("length_changes") <<
         QString("replace ?:foo and ?:bar also") <<
         (QStringList() << "?:foo" << "?:bar") <<
-        (QStringList() << "FOOVAL" << "BARVAL") <<
-        QString("replace FOOVAL and BARVAL also");
+        (QVariantList() << "FOOVAL" << "BARVAL") <<
+        QString("replace \"FOOVAL\" and \"BARVAL\" also");
 
     QTest::newRow("quoted") <<
         QString("do not replace '?:foo' or '?:bar'") <<
         (QStringList() << "?:foo" << "?:bar") <<
-        (QStringList() << "FOOVAL" << "BARVAL") <<
+        (QVariantList() << "FOOVAL" << "BARVAL") <<
         QString("do not replace '?:foo' or '?:bar'");
 
     QTest::newRow("reallife") <<
@@ -130,19 +133,19 @@ void tst_QSparqlQuery::replacement_data()
                 "_:pn a nco:PhoneNumber ; "
                 "nco:phoneNumber ?:userphone . }") <<
         (QStringList() << "?:username" << "?:userphone") <<
-        (QStringList() << "'NAME'" << "'PHONE'") <<
+        (QVariantList() << "NAME" << "PHONE") <<
         QString("insert { _:c a nco:Contact ; "
-                "nco:fullname 'NAME' ; "
+                "nco:fullname \"NAME\" ; "
                 "nco:hasPhoneNumber _:pn . "
                 "_:pn a nco:PhoneNumber ; "
-                "nco:phoneNumber 'PHONE' . }");
+                "nco:phoneNumber \"PHONE\" . }");
 }
 
 void tst_QSparqlQuery::replacement()
 {
     QFETCH(QString, rawString);
     QFETCH(QStringList, placeholders);
-    QFETCH(QStringList, replacements);
+    QFETCH(QVariantList, replacements);
     QFETCH(QString, replacedString);
     QSparqlQuery q(rawString);
 
@@ -162,10 +165,63 @@ void tst_QSparqlQuery::unbind_and_replace()
 {
     QFETCH(QString, rawString);
     QFETCH(QStringList, placeholders);
-    QFETCH(QStringList, replacements);
+    QFETCH(QVariantList, replacements);
     QFETCH(QString, replacedString);
     QSparqlQuery q(rawString, QSparqlQuery::InsertStatement);
     q.unbindValues();
+
+    for (int i = 0; i < placeholders.size(); ++i)
+        q.bindValue(placeholders[i], replacements[i]);
+
+    QCOMPARE(q.query(), rawString);
+    QCOMPARE(q.preparedQueryText(), replacedString);
+}
+
+void tst_QSparqlQuery::different_datatypes_data()
+{
+    QTest::addColumn<QString>("rawString");
+    QTest::addColumn<QStringList>("placeholders");
+    QTest::addColumn<QVariantList>("replacements");
+    QTest::addColumn<QString>("replacedString");
+
+    QTest::newRow("int") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << QVariant(64)) <<
+        QString("the 64 goes here");
+
+    /*QTest::newRow("double") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << -3.1) <<
+        QString("the -3.1 goes here");*/
+
+    QTest::newRow("bool") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << true) <<
+        QString("the true goes here");
+
+    QTest::newRow("string") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << "cat") <<
+        QString("the \"cat\" goes here");
+
+    QTest::newRow("url") <<
+        QString("the ?:value goes here") <<
+        (QStringList() << "?:value") <<
+        (QVariantList() << QUrl("http://www.test.com")) <<
+        QString("the <http://www.test.com> goes here");
+}
+
+void tst_QSparqlQuery::different_datatypes()
+{
+    QFETCH(QString, rawString);
+    QFETCH(QStringList, placeholders);
+    QFETCH(QVariantList, replacements);
+    QFETCH(QString, replacedString);
+    QSparqlQuery q(rawString, QSparqlQuery::InsertStatement);
 
     for (int i = 0; i < placeholders.size(); ++i)
         q.bindValue(placeholders[i], replacements[i]);

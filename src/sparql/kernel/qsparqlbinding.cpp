@@ -293,19 +293,23 @@ QString QSparqlBinding::toString() const
     
     if (d->nodetype == QSparqlBindingPrivate::Literal) {
         QString literal;
-        
+
+        bool quoted = true;
         switch (val.type()) {
         case QVariant::Int:
         case QVariant::LongLong:
         case QVariant::UInt:
         case QVariant::ULongLong:
-            literal = QLatin1Char('\"') + val.toString() + QLatin1Char('\"');
+            quoted = false;
+            literal = val.toString();
             break;
         case QVariant::Bool:
-            literal = val.toBool() ? QLatin1String("'true'") : QLatin1String("'false'");
+            quoted = false;
+            literal = val.toBool() ? QLatin1String("true") : QLatin1String("false");
             break;
         case QVariant::Double:
-            literal = QLatin1Char('\"') + QString::number(val.toDouble(), 'e', 10) + QLatin1Char('\"');
+            quoted = false;
+            literal = QString::number(val.toDouble(), 'e', 10);
             break;
         case QVariant::String:
         {
@@ -352,13 +356,17 @@ QString QSparqlBinding::toString() const
         default:
             break;
         }
-            
+
         if (!d->lang.isEmpty())
             literal.append(QLatin1Char('@') + d->lang);
-    
-        if (!d->datatype.isEmpty())
+
+        if (!d->datatype.isEmpty()) {
+            if (!quoted) {
+                literal.prepend(QLatin1String("\""));
+                literal.append(QLatin1String("\""));
+            }
             literal.append(QLatin1String("^^<") + QString::fromAscii(dataTypeUri().toEncoded()) + QLatin1Char('>'));
-        
+        }
         return literal;
     }
     
