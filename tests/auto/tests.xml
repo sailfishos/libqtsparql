@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <testdefinition version="1.0">
-  <suite name="qsparql-tests">
-    <set name="qsparlq-unit" description="Unit tests of qsparql">
+  <suite name="libqtsparql-tests">
+    <set name="qsparlq-unit" description="Unit tests of libqtsparql">
       <case name="qsparqlquery" description="qsparqlquery">
         <step expected_result="0">
-	  /usr/lib/qsparql-tests/tst_qsparqlquery
+	  /usr/lib/libqtsparql-tests/tst_qsparqlquery
         </step>
       </case>
       <case name="qsparql" description="qsparql">
         <step expected_result="0">
-	  /usr/lib/qsparql-tests/tst_qsparql
+	  /usr/lib/libqtsparql-tests/tst_qsparql
         </step>
       </case>
     </set>
@@ -17,20 +17,20 @@
       <pre_steps>
 	<step expected_result="0">
           . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query;
-	  tracker-import /usr/share/qsparql-tests/testdata.ttl
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data.query;
+	  tracker-import /usr/share/libqtsparql-tests/testdata.ttl
         </step>
       </pre_steps>
       <case name="test-query-contacts" description="Executing a query">
         <step expected_result="0">
-	  /usr/lib/qsparql-tests/tst_qsparql_tracker query_contacts
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker query_contacts
         </step>
       </case>
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
-	  /usr/lib/qsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/qsparql-tests/clean_data.query &amp;&amp;
-	  tracker-import /usr/share/qsparql-tests/testdata.ttl &amp;&amp;
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data.query &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata.ttl &amp;&amp;
 	  exit $i )
         </step>
       </case>
