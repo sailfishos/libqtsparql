@@ -16,8 +16,13 @@ QMAKE_EXTRA_TARGETS += xclean
 include(doc/doc.pri)
 
 # To measure code coverage:
+# 1) build the plugins into the libqtsparql.so
+# ./configure -qt-sparql-endpoint -qt-sparql-tracker
+# 2) compile with coverage flags
 # qmake CONFIG+=coverage
-# run tests
+# make
+# 3) run tests
+# 4) create coverage reports
 # make coverage
 coverage {
 	coverage.CONFIG = recursive

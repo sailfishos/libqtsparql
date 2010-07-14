@@ -19,6 +19,6 @@ coverage {
 	QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
 	QMAKE_EXTRA_TARGETS += coverage
 	coverage.commands  = lcov -d . --capture --output-file all.cov -b . &&
-	coverage.commands += lcov -e all.cov '*/*/src/plugins/sparqldrivers/endpoint/*.cpp' -e all.cov '*/*/src/plugins/sparqldrivers/endpoint/*.h' -o src.cov &&
+	coverage.commands += lcov -e all.cov '*/endpoint/*.cpp' -e all.cov '*/endpoint/*.h' -o src.cov &&
 	coverage.commands += genhtml -o coverage src.cov || echo "no coverage measures for endpoint driver"
 }

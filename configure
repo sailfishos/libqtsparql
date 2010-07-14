@@ -144,10 +144,46 @@ if [ -d "$relpath/src/plugins/sparqldrivers" ]; then
   done
 fi
 
+# check how the user wants the SPARQL drivers to be built
+# options: 
+# -plugin-sparql-<driver>  build as separate plugin
+# -qt-sparql-<driver>      build into libqsparql
+# -no-sparql-<driver>      don't build
+
+# parse the arguments, setting things to "yes" or "no"
+while [ "$#" -gt 0 ]; do
+    CURRENT_OPT="$1"
+    UNKNOWN_ARG=no
+    case "$1" in
+    -no-*-*|-plugin-*-*|-qt-*-*)
+        VAR=`echo $1 | sed "s,^-[^-]*-\(.*\),\1,"`
+        VAL=`echo $1 | sed "s,^-\([^-]*\).*,\1,"`
+        ;;
+    *)
+        echo "Unknown option: $1";
+        exit 1
+	;;
+    esac
+
+    OPT="$VAL"
+    VAL=`echo $VAR | sed "s,^[^-]*-\([^-]*\).*,\1,"`
+    VAR=`echo $VAR | sed "s,^\([^-]*\).*,\1,"`
+
+    found=no
+    for d in $CFG_SPARQL_AVAILABLE; do
+            if [ "$VAL" = "$d" ]; then
+                found=yes
+                break
+            fi
+        done
+    [ "$found" = yes ] || ( echo "driver not available: $VAR"; exit 1 )
+    eval "CFG_SPARQL_$VAL=\$OPT"
+    shift
+done
+
 # detect which SPARQL drivers we can build
 # CFG_SPARQL_driver=plugin -> we'll build the driver as a plugin
 # CFG_SPARQL_driver=qt -> we'll embed the driver into QtSparql library
-# (this option is not yet honored by the build system)
 # CFG_SPARQL=no (or empty) -> we don't build that driver at all
 for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
         case $_SPARQLDR in
