@@ -106,8 +106,6 @@ public:
     void close();
     QTrackerResult* exec(const QString& query,
                          QSparqlQuery::StatementType type);
-    QString formatValue(const QSparqlBinding &field,
-                                     bool trimStrings) const;
 private:
     QTrackerDriverPrivate* d;
 };
