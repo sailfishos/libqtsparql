@@ -65,6 +65,8 @@ public slots:
 private slots:
     void toString_data();
     void toString();
+    void types_data();
+    void types();
 };
 
 tst_QSparqlBinding::tst_QSparqlBinding()
@@ -151,7 +153,39 @@ void tst_QSparqlBinding::toString()
         b.setDataTypeUri(datatype.toUrl());
 
     QCOMPARE(b.toString(), toString);
+    QCOMPARE(b.value(), value);
 }
+
+void tst_QSparqlBinding::types_data()
+{
+    QTest::addColumn<QVariant>("value");
+    QTest::addColumn<bool>("isResource");
+    QTest::addColumn<bool>("isLiteral");
+    QTest::addColumn<bool>("isBlank");
+
+    QTest::newRow("int") <<
+        QVariant(-67) <<
+        false << true << false;
+
+    QTest::newRow("url") <<
+        QVariant(QUrl("urn:uri:123")) <<
+        true << false << false;
+}
+
+void tst_QSparqlBinding::types()
+{
+    QFETCH(QVariant, value);
+    QFETCH(bool, isResource);
+    QFETCH(bool, isLiteral);
+    QFETCH(bool, isBlank);
+
+    QSparqlBinding b("testBinding", value);
+
+    QCOMPARE(b.isResource(), isResource);
+    QCOMPARE(b.isLiteral(), isLiteral);
+    QCOMPARE(b.isBlank(), isBlank);
+}
+
 
 QTEST_MAIN( tst_QSparqlBinding )
 #include "tst_qsparqlbinding.moc"

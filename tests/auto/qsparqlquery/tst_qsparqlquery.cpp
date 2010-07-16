@@ -160,6 +160,16 @@ void tst_QSparqlQuery::replacement()
 
     QCOMPARE(q.query(), rawString);
     QCOMPARE(q.preparedQueryText(), replacedString);
+
+    // convenience accessor for bound values
+    QMap<QString, QVariant> bv = q.boundValues();
+
+    for (int i = 0; i < placeholders.size(); ++i) {
+        QCOMPARE(q.boundValue(placeholders[i]), replacements[i]);
+        QVERIFY(bv.contains(placeholders[i]));
+        QCOMPARE(bv[placeholders[i]], replacements[i]);
+    }
+    QCOMPARE(bv.size(), placeholders.size());
 }
 
 void tst_QSparqlQuery::unbind_and_replace_data()
