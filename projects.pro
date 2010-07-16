@@ -3,7 +3,6 @@
 #####################################################################
 
 include(shared.pri)
-CONFIG += ordered
 TEMPLATE = subdirs
 
 SUBDIRS = src tests examples
@@ -11,9 +10,12 @@ SUBDIRS = src tests examples
 xclean.commands = rm -rf lib plugins include
 xclean.depends = clean
 
-QMAKE_EXTRA_TARGETS += xclean
-
 include(doc/doc.pri)
+
+check.CONFIG = recursive
+check.recurse = tests
+
+QMAKE_EXTRA_TARGETS += xclean foocheck
 
 # To measure code coverage:
 # 1) build the plugins into the libqtsparql.so
