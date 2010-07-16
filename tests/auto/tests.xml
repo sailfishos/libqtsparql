@@ -2,12 +2,17 @@
 <testdefinition version="1.0">
   <suite name="libqtsparql-tests">
     <set name="qsparlq-unit" description="Unit tests of libqtsparql">
-      <case name="qsparqlquery" description="qsparqlquery">
+      <case name="qsparqlquery" description="qsparqlquery unit tests">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparqlquery
         </step>
       </case>
-      <case name="qsparql" description="qsparql">
+      <case name="qsparqlbinding" description="qsparqlbinding unit tests">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparqlbinding
+        </step>
+      </case>
+      <case name="qsparql" description="qsparql unit tests">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql
         </step>
