@@ -78,7 +78,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QVirtuosoPrivate;
+class QVirtuosoResultPrivate;
 class QVirtuosoDriverPrivate;
 class QVirtuosoDriver;
 
@@ -90,7 +90,8 @@ public:
 
     QVariant handle() const;
     // FIXME: this should eventually be removed
-    bool exec(const QString& query, QSparqlQuery::StatementType type);
+    void exec(const QString& query, QSparqlQuery::StatementType type);
+    bool exec();
 
 protected:
     bool fetchNext();
@@ -107,12 +108,12 @@ protected:
     void setActive(bool active);
     
     int size() const;
-    int numRowsAffected();
     QSparqlResultRow resultRow() const;
     bool nextResult();
 
 private:
-    QVirtuosoPrivate *d;
+    QVirtuosoResultPrivate *d;
+    friend class QVirtuosoFetcherPrivate;
 };
 
 class Q_EXPORT_SPARQLDRIVER_VIRTUOSO QVirtuosoDriver : public QSparqlDriver
@@ -139,7 +140,7 @@ private:
     bool endTrans();
     void cleanup();
     QVirtuosoDriverPrivate* d;
-    friend class QVirtuosoPrivate;
+    friend class QVirtuosoResultPrivate;
 };
 
 QT_END_NAMESPACE

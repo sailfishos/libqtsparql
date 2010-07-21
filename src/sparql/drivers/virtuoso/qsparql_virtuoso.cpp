@@ -54,6 +54,10 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qurl.h>
 
+#include <QtCore/QMutex>
+#include <QtCore/QMutexLocker>
+#include <QtCore/QThread>
+
 #include <QtSparql/qsparqlerror.h>
 #include <QtSparql/qsparqlbinding.h>
 #include <QtSparql/qsparqlresultrow.h>
@@ -75,11 +79,22 @@ QT_BEGIN_NAMESPACE
 
 static const int COLNAMESIZE = 256;
 
+class QVirtuosoFetcherPrivate : public QThread
+{
+public:
+    
+    QVirtuosoFetcherPrivate(QVirtuosoResult *result);
+    void run();
+
+private:
+    QVirtuosoResult *result; 
+};
+
 class QVirtuosoDriverPrivate
 {
 public:
     QVirtuosoDriverPrivate()
-    : hEnv(0), hDbc(0), disconnectCount(0)
+    : hEnv(0), hDbc(0), disconnectCount(0), mutex(QMutex::Recursive)
     {
     }
 
@@ -87,20 +102,33 @@ public:
     SQLHANDLE hDbc;
 
     int disconnectCount;
+    // This mutex is for ensuring that only one thread at a time
+    // is using the connection to make odbc queries
+    QMutex mutex;
 };
 
-class QVirtuosoPrivate
+class QVirtuosoResultPrivate
 {
 public:
-    QVirtuosoPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp)
-    : driver(d), hstmt(0), numResultCols(0), hdesc(0),
-    statementType(QSparqlQuery::SelectStatement), isSelect(true), isActive(false), 
-    resultColIdx(0), driverPrivate(dpp)
+    QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
+        driver(d), hstmt(0), numResultCols(0), hdesc(0),
+        statementType(QSparqlQuery::SelectStatement), isSelect(true), isActive(false), 
+        resultColIdx(0), driverPrivate(dpp), fetcher(f), mutex(QMutex::Recursive)
     {
+    }
+    
+    ~QVirtuosoResultPrivate()
+    {
+        fetcher->terminate();
+        fetcher->wait();
+        delete fetcher;
     }
 
     inline void clearValues()
-    { resultRow.clear(); resultColIdx = 0; }
+    { 
+        results.append(QSparqlResultRow());
+        resultColIdx = 0; 
+    }
 
     SQLHANDLE dpEnv() const { return driverPrivate ? driverPrivate->hEnv : 0;}
     SQLHANDLE dpDbc() const { return driverPrivate ? driverPrivate->hDbc : 0;}
@@ -110,26 +138,31 @@ public:
     SQLSMALLINT numResultCols;
     SQLHDESC hdesc;
 
+    QByteArray query;
     QSparqlQuery::StatementType statementType;
     bool isSelect;
     bool isActive;
-    QSparqlResultRow resultRow;
+    QList<QSparqlResultRow> results;
     QStringList bindingNames;
     int resultColIdx;
     int disconnectCount;
     QVirtuosoDriverPrivate *driverPrivate;
+    QVirtuosoFetcherPrivate *fetcher;
+    // This mutex is for ensuring that only one thread at a time
+    // is accessing the results array
+    QMutex mutex;
 
     bool isStmtHandleValid(const QSparqlDriver *driver);
     void updateStmtHandleState(const QSparqlDriver *driver);
 };
 
-bool QVirtuosoPrivate::isStmtHandleValid(const QSparqlDriver *driver)
+bool QVirtuosoResultPrivate::isStmtHandleValid(const QSparqlDriver *driver)
 {
     const QVirtuosoDriver *odbcdriver = static_cast<const QVirtuosoDriver*> (driver);
     return disconnectCount == odbcdriver->d->disconnectCount;
 }
 
-void QVirtuosoPrivate::updateStmtHandleState(const QSparqlDriver *driver)
+void QVirtuosoResultPrivate::updateStmtHandleState(const QSparqlDriver *driver)
 {
     const QVirtuosoDriver *odbcdriver = static_cast<const QVirtuosoDriver*> (driver);
     disconnectCount = odbcdriver->d->disconnectCount;
@@ -184,7 +217,7 @@ static QString qWarnODBCHandle(int handleType, SQLHANDLE handle, int *nativeCode
     return result;
 }
 
-static QString qVirtuosoWarn(const QVirtuosoPrivate* odbc, int *nativeCode = 0)
+static QString qVirtuosoWarn(const QVirtuosoResultPrivate* odbc, int *nativeCode = 0)
 {
     return (qWarnODBCHandle(SQL_HANDLE_ENV, odbc->dpEnv()) + QLatin1Char(' ')
              + qWarnODBCHandle(SQL_HANDLE_DBC, odbc->dpDbc()) + QLatin1Char(' ')
@@ -197,7 +230,7 @@ static QString qVirtuosoWarn(const QVirtuosoDriverPrivate* odbc, int *nativeCode
              + qWarnODBCHandle(SQL_HANDLE_DBC, odbc->hDbc, nativeCode));
 }
 
-static void qSparqlWarning(const QString& message, const QVirtuosoPrivate* odbc)
+static void qSparqlWarning(const QString& message, const QVirtuosoResultPrivate* odbc)
 {
     qWarning() << message << "\tError:" << qVirtuosoWarn(odbc);
 }
@@ -207,7 +240,7 @@ static void qSparqlWarning(const QString &message, const QVirtuosoDriverPrivate 
     qWarning() << message << "\tError:" << qVirtuosoWarn(odbc);
 }
 
-static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type, const QVirtuosoPrivate* p)
+static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type, const QVirtuosoResultPrivate* p)
 {
     int nativeCode = -1;
     QString message = qVirtuosoWarn(p, &nativeCode);
@@ -228,12 +261,14 @@ static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type,
 QVirtuosoResult::QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p)
 : QSparqlResult()
 {
-    d = new QVirtuosoPrivate(db, p);
+    d = new QVirtuosoResultPrivate(db, p, new QVirtuosoFetcherPrivate(this));
     d->disconnectCount = p->disconnectCount;
 }
 
 QVirtuosoResult::~QVirtuosoResult()
 {
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+
     if (d->hstmt && d->isStmtHandleValid(d->driver) && d->driver->isOpen()) {
         SQLRETURN r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
         if (r != SQL_SUCCESS)
@@ -273,16 +308,24 @@ QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::State
     return res;
 }
 
-bool QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type)
+void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type)
 {
-    QString query = QLatin1String("SPARQL ") + sparqlQuery;
+    setQuery(sparqlQuery);
+    d->query = QString(QLatin1String("SPARQL ")).append(sparqlQuery).toUtf8();
+
     setActive(false);
     setPos(QSparql::BeforeFirstRow);
     d->statementType = type;
     setSelect(type == QSparqlQuery::SelectStatement);
-    d->clearValues();
+    // d->clearValues();
     d->bindingNames.clear();
-    
+    d->fetcher->start();
+}
+
+bool QVirtuosoResult::exec()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+
     // Always reallocate the statement handle - the statement attributes
     // are not reset if SQLFreeStmt() is called which causes some problems.
     SQLRETURN r;
@@ -305,8 +348,7 @@ bool QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
 
     d->updateStmtHandleState(d->driver);
 
-    QByteArray utf8query = sparqlQuery.toUtf8();
-    r = SQLExecDirect(d->hstmt, (UCHAR*) utf8query.data(), utf8query.length());
+    r = SQLExecDirect(d->hstmt, (UCHAR*) d->query.data(), d->query.length());
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r!= SQL_NO_DATA) {
         emit finished();
         setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
@@ -357,7 +399,7 @@ bool QVirtuosoResult::fetch(int i)
         return false;
     if (i == pos())
         return true;
-    d->clearValues();
+    // d->clearValues();
     int actualIdx = i + 1;
     if (actualIdx <= 0) {
         setPos(QSparql::BeforeFirstRow);
@@ -379,54 +421,7 @@ bool QVirtuosoResult::fetch(int i)
     return true;
 }
 
-bool QVirtuosoResult::fetchNext()
-{
-    SQLRETURN r;
-    d->clearValues();
-    r = SQLFetch(d->hstmt);
-
-    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
-        emit finished();
-        if (r != SQL_NO_DATA)
-            setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
-                "Unable to fetch next"), QSparqlError::ConnectionError, d));
-        return false;
-        
-    }
-    setPos(pos() + 1);
-    return true;
-}
-
-bool QVirtuosoResult::fetchFirst()
-{
-    if (pos() != QSparql::BeforeFirstRow)
-        return false;
-    d->clearValues();
-    return fetchNext();
-}
-
-bool QVirtuosoResult::fetchPrevious()
-{
-    return false;
-}
-
-bool QVirtuosoResult::fetchLast()
-{
-    d->clearValues();
-
-    // cannot seek to last row in forwardOnly mode, so we have to use brute force
-    int i = pos();
-    if (i == QSparql::AfterLastRow)
-        return false;
-    if (i == QSparql::BeforeFirstRow)
-        i = 0;
-    while (fetchNext())
-        ++i;
-    setPos(i);
-    return true;
-}
-
-static QSparqlBinding qMakeBinding(const QVirtuosoPrivate* p, int colNum)
+static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 {
     QSparqlBinding b;
     int r;
@@ -521,22 +516,73 @@ static QSparqlBinding qMakeBinding(const QVirtuosoPrivate* p, int colNum)
     return b;
 }
 
+bool QVirtuosoResult::fetchNext()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+
+    SQLRETURN r;
+    d->clearValues();
+    r = SQLFetch(d->hstmt);
+
+    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
+        emit finished();
+        if (r != SQL_NO_DATA)
+            setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
+                "Unable to fetch next"), QSparqlError::ConnectionError, d));
+        return false;
+        
+    }
+    
+    QMutexLocker resultLocker(&(d->mutex)); 
+    
+    for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
+        d->results[d->results.count()].append(qMakeBinding(d, d->resultColIdx));
+    }
+
+    setPos(pos() + 1);
+    emit dataReady(d->results.count());
+    return true;
+}
+
+bool QVirtuosoResult::fetchFirst()
+{
+    if (pos() != QSparql::BeforeFirstRow)
+        return false;
+    // d->clearValues();
+    return fetchNext();
+}
+
+bool QVirtuosoResult::fetchPrevious()
+{
+    return false;
+}
+
+bool QVirtuosoResult::fetchLast()
+{
+
+    // cannot seek to last row in forwardOnly mode, so we have to use brute force
+    int i = pos();
+    if (i == QSparql::AfterLastRow)
+        return false;
+    if (i == QSparql::BeforeFirstRow)
+        i = 0;
+    while (fetchNext())
+        ++i;
+    setPos(i);
+    return true;
+}
+
+
 QVariant QVirtuosoResult::data(int field) const
 {
-    if (field >= d->resultRow.count() || field < 0) {
+    QMutexLocker resultLocker(&(d->mutex)); 
+
+    if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QVirtuosoResult::data: column" << field << "out of range";
         return QVariant();
     }
     
-    if (field < d->resultColIdx)
-        return d->resultRow.binding(field).value();
-
-    for (int i = d->resultColIdx; i <= field; ++i) {
-        d->resultRow.append(qMakeBinding(d, i));
-        d->resultColIdx = field + 1;
-    }
-    
-    return d->resultRow.binding(field).value();
+    return d->results[pos()].binding(field).value();
 }
 
 int QVirtuosoResult::size() const
@@ -544,28 +590,14 @@ int QVirtuosoResult::size() const
     return -1;
 }
 
-int QVirtuosoResult::numRowsAffected()
-{
-    QSQLLEN affectedRowCount = 0;
-    SQLRETURN r = SQLRowCount(d->hstmt, &affectedRowCount);
-    if (r == SQL_SUCCESS)
-        return affectedRowCount;
-    else
-        qSparqlWarning(QLatin1String("QVirtuosoResult::numRowsAffected: Unable to count affected rows"), d);
-    return -1;
-}
-
 QSparqlResultRow QVirtuosoResult::resultRow() const
 {
-    if (!isActive() || !isSelect())
-        return QSparqlResultRow();
-    
-    for (int i = d->resultColIdx; i <= d->numResultCols; ++i) {
-        d->resultRow.append(qMakeBinding(d, i));
-    }
+    QMutexLocker resultLocker(&(d->mutex)); 
 
-    d->resultColIdx = d->numResultCols;
-    return d->resultRow;
+    if (!isActive() || !isSelect() || pos() == QSparql::BeforeFirstRow || pos() >= d->results.count())
+        return QSparqlResultRow();
+
+    return d->results[pos()];
 }
 
 QVariant QVirtuosoResult::handle() const
@@ -719,6 +751,8 @@ void QVirtuosoDriver::close()
 
 void QVirtuosoDriver::cleanup()
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     SQLRETURN r;
     if (!d)
         return;
@@ -754,6 +788,8 @@ QVirtuosoResult *QVirtuosoDriver::createResult() const
 
 bool QVirtuosoDriver::beginTransaction()
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::beginTransaction: Database not open";
         return false;
@@ -773,6 +809,8 @@ bool QVirtuosoDriver::beginTransaction()
 
 bool QVirtuosoDriver::commitTransaction()
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::commitTransaction: Database not open";
         return false;
@@ -790,6 +828,8 @@ bool QVirtuosoDriver::commitTransaction()
 
 bool QVirtuosoDriver::rollbackTransaction()
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::rollbackTransaction: Database not open";
         return false;
@@ -807,6 +847,8 @@ bool QVirtuosoDriver::rollbackTransaction()
 
 bool QVirtuosoDriver::endTrans()
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     SQLUINTEGER ac(SQL_AUTOCOMMIT_ON);
     SQLRETURN r  = SQLSetConnectAttr(d->hDbc,
                                       SQL_ATTR_AUTOCOMMIT,
@@ -823,6 +865,19 @@ bool QVirtuosoDriver::endTrans()
 QVariant QVirtuosoDriver::handle() const
 {
     return QVariant(qRegisterMetaType<SQLHANDLE>("SQLHANDLE"), &d->hDbc);
+}
+
+QVirtuosoFetcherPrivate::QVirtuosoFetcherPrivate(QVirtuosoResult *res) : result(res)
+{
+}
+
+void QVirtuosoFetcherPrivate::run()
+{
+    if (result->exec()) {
+        while (result->fetchNext()) {
+            ;
+        }
+    }
 }
 
 QT_END_NAMESPACE
