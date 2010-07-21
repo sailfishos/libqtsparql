@@ -39,6 +39,9 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QtCore>
+Q_DECLARE_METATYPE(QVariant)
+
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
