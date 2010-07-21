@@ -83,8 +83,16 @@ class QVirtuosoFetcherPrivate : public QThread
 {
 public:
     
-    QVirtuosoFetcherPrivate(QVirtuosoResult *result);
-    void run();
+    QVirtuosoFetcherPrivate(QVirtuosoResult *res) : result(res) { }
+
+    void run()
+    {
+        if (result->exec()) {
+            while (result->fetchNext()) {
+                ;
+            }
+        }
+    }
 
 private:
     QVirtuosoResult *result; 
@@ -865,19 +873,6 @@ bool QVirtuosoDriver::endTrans()
 QVariant QVirtuosoDriver::handle() const
 {
     return QVariant(qRegisterMetaType<SQLHANDLE>("SQLHANDLE"), &d->hDbc);
-}
-
-QVirtuosoFetcherPrivate::QVirtuosoFetcherPrivate(QVirtuosoResult *res) : result(res)
-{
-}
-
-void QVirtuosoFetcherPrivate::run()
-{
-    if (result->exec()) {
-        while (result->fetchNext()) {
-            ;
-        }
-    }
 }
 
 QT_END_NAMESPACE
