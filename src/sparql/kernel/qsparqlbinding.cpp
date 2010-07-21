@@ -146,7 +146,7 @@ QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 QSparqlBinding::QSparqlBinding(const QString& name, const QVariant& value)
 {
     d = new QSparqlBindingPrivate(name, value.type());
-    val = value;
+    setValue(value);
 }
 
 /*!
@@ -316,13 +316,13 @@ QString QSparqlBinding::toString() const
             literal.append(QLatin1Char('\"'));
             foreach (const QChar ch, val.toString()) {
                 if (ch == QLatin1Char('\t'))
-                    literal.append(QLatin1String("\\\t"));
+                    literal.append(QLatin1String("\\t"));
                 else if (ch == QLatin1Char('\n'))
-                    literal.append(QLatin1String("\\\n"));
+                    literal.append(QLatin1String("\\n"));
                 else if (ch == QLatin1Char('\r'))
-                    literal.append(QLatin1String("\\\b"));
+                    literal.append(QLatin1String("\\b"));
                 else if (ch == QLatin1Char('\f'))
-                    literal.append(QLatin1String("\\\f"));
+                    literal.append(QLatin1String("\\f"));
                 else if (ch == QLatin1Char('\"'))
                     literal.append(QLatin1String("\\\""));
                 else if (ch == QLatin1Char('\''))

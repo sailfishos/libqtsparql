@@ -63,6 +63,8 @@ public slots:
 private slots:
     void query_contacts();
     void insert_and_delete_contact();
+
+    void query_with_error();
 };
 
 tst_QSparqlTracker::tst_QSparqlTracker()
@@ -100,6 +102,7 @@ void tst_QSparqlTracker::query_contacts()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
     QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
         QCOMPARE(r->resultRow().count(), 2);
@@ -136,6 +139,7 @@ void tst_QSparqlTracker::insert_and_delete_contact()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
     }
@@ -159,10 +163,24 @@ void tst_QSparqlTracker::insert_and_delete_contact()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
     }
     QCOMPARE(contactNames.size(), 3);
+    delete r;
+}
+
+void tst_QSparqlTracker::query_with_error()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("this is not a valid query");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), true);
+    QCOMPARE(r->lastError().type(), QSparqlError::BackendError);
     delete r;
 }
 

@@ -1,3 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS += qsparql.pro
+
+include(qsparql.pro)
 

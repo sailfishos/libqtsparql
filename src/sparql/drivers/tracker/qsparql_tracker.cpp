@@ -356,13 +356,4 @@ void QTrackerDriver::close()
     }
 }
 
-QString QTrackerDriver::formatValue(const QSparqlBinding &field, bool trimStrings) const
-{
-    Q_UNUSED(field);
-    Q_UNUSED(trimStrings);
-    // FIXME: how to deal with nulls?
-    QString r;
-    return r;
-}
-
 QT_END_NAMESPACE
