@@ -88,14 +88,16 @@ public:
     virtual bool isFinished() const;
     bool hasError() const;
     QSparqlError lastError() const;
-
+    
+    QString lastQuery() const; // FIXME: needed?
+    void setQuery(const QString & query);
+    
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
 
 protected:
     QSparqlResult();
-    QString lastQuery() const; // FIXME: needed?
     virtual void setPos(int pos);
     virtual void setLastError(const QSparqlError& e);
 

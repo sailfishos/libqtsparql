@@ -161,6 +161,11 @@ QString QSparqlResult::lastQuery() const
     return d->sparql;
 }
 
+void QSparqlResult::setQuery(const QString &query)
+{
+    d->sparql = query;
+}
+
 /*!
     Returns the current internal position of the query. The first
     record is at position zero. If the position is invalid, the
