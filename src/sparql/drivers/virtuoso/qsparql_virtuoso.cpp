@@ -81,17 +81,14 @@ static const int COLNAMESIZE = 256;
 
 class QVirtuosoFetcherPrivate : public QThread
 {
-public:
-    
+public:    
     QVirtuosoFetcherPrivate(QVirtuosoResult *res) : result(res) { }
 
     void run()
     {
-        if (result->exec()) {
-            while (result->fetchNext()) {
+        if (result->exec())
+            while (result->fetchNext())
                 ;
-            }
-        }
     }
 
 private:
@@ -121,7 +118,8 @@ public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
         statementType(QSparqlQuery::SelectStatement), isSelect(true), isActive(false), 
-        resultColIdx(0), driverPrivate(dpp), fetcher(f), mutex(QMutex::Recursive)
+        resultColIdx(0), driverPrivate(dpp), fetcher(f), 
+        mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
     }
     
@@ -159,6 +157,8 @@ public:
     // This mutex is for ensuring that only one thread at a time
     // is accessing the results array
     QMutex mutex;
+    bool isFinished;
+    QEventLoop *loop;
 
     bool isStmtHandleValid(const QSparqlDriver *driver);
     void updateStmtHandleState(const QSparqlDriver *driver);
@@ -340,7 +340,10 @@ bool QVirtuosoResult::exec()
     if (d->hstmt && d->isStmtHandleValid(d->driver)) {
         r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
         if (r != SQL_SUCCESS) {
+            d->isFinished = true;
             emit finished();
+            if (d->loop != 0)
+                d->loop->exit();
             qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to free statement handle"), d);
             return false;
         }
@@ -349,7 +352,10 @@ bool QVirtuosoResult::exec()
                          d->dpDbc(),
                          &d->hstmt);
     if (r != SQL_SUCCESS) {
+        d->isFinished = true;
         emit finished();
+        if (d->loop != 0)
+            d->loop->exit();
         qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to allocate statement handle"), d);
         return false;
     }
@@ -358,14 +364,20 @@ bool QVirtuosoResult::exec()
 
     r = SQLExecDirect(d->hstmt, (UCHAR*) d->query.data(), d->query.length());
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r!= SQL_NO_DATA) {
+        d->isFinished = true;
         emit finished();
+        if (d->loop != 0)
+            d->loop->exit();
         setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
                      "Unable to execute statement"), QSparqlError::StatementError, d));
         return false;
     }
 
     if (r == SQL_NO_DATA) {
+        d->isFinished = true;
         emit finished();
+        if (d->loop != 0)
+            d->loop->exit();
         setSelect(false);
         return true;
     }
@@ -383,7 +395,10 @@ bool QVirtuosoResult::exec()
             r = SQLDescribeCol(d->hstmt, i+1, colName, (SQLSMALLINT)COLNAMESIZE, &colNameLen, 0, 0, 0, 0);
 
             if (r != SQL_SUCCESS) {
+                d->isFinished = true;
                 emit finished();
+                if (d->loop != 0)
+                    d->loop->exit();
                 qSparqlWarning(QString::fromLatin1("qMakeField: Unable to describe column %1").arg(i), d);
                 return false;
             }
@@ -396,6 +411,22 @@ bool QVirtuosoResult::exec()
     setActive(true);
 
     return true;
+}
+
+void QVirtuosoResult::waitForFinished()
+{
+    if (d->isFinished)
+        return;
+    
+    QEventLoop loop;
+    d->loop = &loop;
+    loop.exec();
+    d->loop = 0;
+}
+
+bool QVirtuosoResult::isFinished() const
+{
+    return d->isFinished;
 }
 
 bool QVirtuosoResult::fetch(int i)
@@ -419,7 +450,6 @@ bool QVirtuosoResult::fetch(int i)
         ok = fetchNext();
     return ok;
     if (r != SQL_SUCCESS) {
-        emit finished();
         if (r != SQL_NO_DATA)
             setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
                 "Unable to fetch"), QSparqlError::ConnectionError, d));
@@ -533,7 +563,10 @@ bool QVirtuosoResult::fetchNext()
     r = SQLFetch(d->hstmt);
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
+        d->isFinished = true;
         emit finished();
+        if (d->loop != 0)
+            d->loop->exit();
         if (r != SQL_NO_DATA)
             setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
                 "Unable to fetch next"), QSparqlError::ConnectionError, d));
@@ -556,7 +589,7 @@ bool QVirtuosoResult::fetchFirst()
 {
     if (pos() != QSparql::BeforeFirstRow)
         return false;
-    // d->clearValues();
+
     return fetchNext();
 }
 
@@ -567,7 +600,6 @@ bool QVirtuosoResult::fetchPrevious()
 
 bool QVirtuosoResult::fetchLast()
 {
-
     // cannot seek to last row in forwardOnly mode, so we have to use brute force
     int i = pos();
     if (i == QSparql::AfterLastRow)
@@ -691,6 +723,8 @@ bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
 {
+    QMutexLocker connectionLocker(&(d->mutex)); 
+
     if (isOpen())
       close();
     SQLRETURN r;

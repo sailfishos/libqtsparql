@@ -109,7 +109,9 @@ protected:
     
     int size() const;
     QSparqlResultRow resultRow() const;
-    bool nextResult();
+
+    void waitForFinished();
+    bool isFinished() const;
 
 private:
     QVirtuosoResultPrivate *d;
