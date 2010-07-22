@@ -132,7 +132,8 @@ public:
 
     inline void clearValues()
     { 
-        results.append(QSparqlResultRow());
+        QSparqlResultRow resultRow;                        
+        results.append(resultRow);
         resultColIdx = 0; 
     }
 
@@ -325,7 +326,6 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
     setPos(QSparql::BeforeFirstRow);
     d->statementType = type;
     setSelect(type == QSparqlQuery::SelectStatement);
-    // d->clearValues();
     d->bindingNames.clear();
     d->fetcher->start();
 }
@@ -402,8 +402,8 @@ bool QVirtuosoResult::exec()
                 qSparqlWarning(QString::fromLatin1("qMakeField: Unable to describe column %1").arg(i), d);
                 return false;
             }
-
-            d->bindingNames.append(QString((const QChar*)colName, colNameLen));
+            
+            d->bindingNames.append(QString::fromLatin1((const char*) colName));
         }
     } else {
         setSelect(false);
@@ -438,7 +438,7 @@ bool QVirtuosoResult::fetch(int i)
         return false;
     if (i == pos())
         return true;
-    // d->clearValues();
+
     int actualIdx = i + 1;
     if (actualIdx <= 0) {
         setPos(QSparql::BeforeFirstRow);
@@ -463,12 +463,15 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 {
     QSparqlBinding b;
     int r;
-    SQLLEN length;
+    SQLLEN length = 0;
     int bufferLength = 0;
-    r = SQLGetData(p->hstmt, colNum, SQL_C_WCHAR, 0, 0, &length);
+    SQLCHAR dummyBuffer[1]; // dummy buffer only used to determine length
+    r = SQLGetData(p->hstmt, colNum, SQL_C_CHAR, dummyBuffer, 0, &length);
     if ((r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO) && length > 0)
         bufferLength = length / sizeof(SQLTCHAR) + 1;
+    
     QVarLengthArray<char> buffer(bufferLength);
+    r = SQLGetData(p->hstmt, colNum, SQL_C_CHAR, buffer.data(), buffer.size(), 0);
     
     int dvtype = 0;
     r = SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_DV_TYPE, &dvtype, SQL_IS_INTEGER, 0);
@@ -550,7 +553,10 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         }
     }
     
-    b.setName(p->bindingNames[colNum]);
+    // qDebug() << "binding name: " << p->bindingNames[colNum - 1];
+    // qDebug() << "binding value: " << b.toString();
+    
+    b.setName(p->bindingNames[colNum - 1]);
     return b;
 }
 
@@ -577,7 +583,7 @@ bool QVirtuosoResult::fetchNext()
     QMutexLocker resultLocker(&(d->mutex)); 
     
     for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
-        d->results[d->results.count()].append(qMakeBinding(d, d->resultColIdx));
+        d->results[d->results.count() - 1].append(qMakeBinding(d, d->resultColIdx));
     }
 
     setPos(pos() + 1);
