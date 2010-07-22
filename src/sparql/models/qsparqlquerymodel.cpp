@@ -346,7 +346,7 @@ void QSparqlQueryModel::queryChange()
 
     \sa query(), QSparqlQuery::isActive(), QSparqlQuery::setForwardOnly(), lastError()
 */
-void QSparqlQueryModel::setQuery(const QSparqlQuery &query)
+QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query)
 {
     // FIXME: what's this function?
 }
@@ -364,7 +364,7 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query)
 
     \sa query(), queryChange(), lastError()
 */
-void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
+QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
 {
     // FIXME: the old result needs to be deleted after the new results are displayed
     // so not here..
@@ -373,6 +373,7 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnect
     d->connection = &connection;
     d->result = connection.exec(query);
     connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
+    return d->result;
 }
 
 /*!
