@@ -336,21 +336,6 @@ void QSparqlQueryModel::queryChange()
     // do nothing
 }
 
-/*!
-    Resets the model and sets the data provider to be the given \a
-    query. Note that the query must be active and must not be
-    isForwardOnly().
-
-    lastError() can be used to retrieve verbose information if there
-    was an error setting the query.
-
-    \sa query(), QSparqlQuery::isActive(), QSparqlQuery::setForwardOnly(), lastError()
-*/
-QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query)
-{
-    // FIXME: what's this function?
-}
-
 /*! \overload
 
     Executes the query \a query for the given connection connection \a
@@ -364,7 +349,7 @@ QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query)
 
     \sa query(), queryChange(), lastError()
 */
-QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
+void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
 {
     // FIXME: the old result needs to be deleted after the new results are displayed
     // so not here..
@@ -373,7 +358,6 @@ QSparqlResult * QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSp
     d->connection = &connection;
     d->result = connection.exec(query);
     connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
-    return d->result;
 }
 
 /*!

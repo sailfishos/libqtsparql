@@ -79,8 +79,7 @@ public:
     bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex());
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
 
-    QSparqlResult* setQuery(const QSparqlQuery &query);
-    QSparqlResult* setQuery(const QSparqlQuery &query, const QSparqlConnection &conn);
+    void setQuery(const QSparqlQuery &query, const QSparqlConnection &conn);
     QSparqlQuery query() const;
 
     virtual void clear(); // FIXME: do we need this?
