@@ -94,6 +94,7 @@ public:
     bool exec();
 
 protected:
+    bool fetchNextResult();
     bool fetchNext();
     bool fetchFirst();
     bool fetchLast();
@@ -103,9 +104,6 @@ protected:
     
     bool isSelect() const;
     void setSelect(bool select); 
-    
-    bool isActive() const;
-    void setActive(bool active);
     
     int size() const;
     QSparqlResultRow resultRow() const;

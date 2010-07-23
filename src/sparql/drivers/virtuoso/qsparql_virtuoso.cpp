@@ -87,7 +87,7 @@ public:
     void run()
     {
         if (result->exec())
-            while (result->fetchNext())
+            while (result->fetchNextResult())
                 ;
     }
 
@@ -117,7 +117,7 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        statementType(QSparqlQuery::SelectStatement), isSelect(true), isActive(false), 
+        statementType(QSparqlQuery::SelectStatement), isSelect(true), 
         resultColIdx(0), driverPrivate(dpp), fetcher(f), 
         mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
@@ -148,7 +148,6 @@ public:
     QByteArray query;
     QSparqlQuery::StatementType statementType;
     bool isSelect;
-    bool isActive;
     QList<QSparqlResultRow> results;
     QStringList bindingNames;
     int resultColIdx;
@@ -298,16 +297,6 @@ void QVirtuosoResult::setSelect(bool select)
     d->isSelect = select; 
 };
 
-bool QVirtuosoResult::isActive() const 
-{ 
-    return d->isActive; 
-};
-
-void QVirtuosoResult::setActive(bool active) 
-{ 
-    d->isActive = active; 
-};
-
 // This is just a temporary hack; eventually this should be refactored so that
 // the work is done here instead of Result::exec.
 QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
@@ -322,7 +311,6 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
     setQuery(sparqlQuery);
     d->query = QString(QLatin1String("SPARQL ")).append(sparqlQuery).toUtf8();
 
-    setActive(false);
     setPos(QSparql::BeforeFirstRow);
     d->statementType = type;
     setSelect(type == QSparqlQuery::SelectStatement);
@@ -408,7 +396,6 @@ bool QVirtuosoResult::exec()
     } else {
         setSelect(false);
     }
-    setActive(true);
 
     return true;
 }
@@ -429,36 +416,6 @@ bool QVirtuosoResult::isFinished() const
     return d->isFinished;
 }
 
-bool QVirtuosoResult::fetch(int i)
-{
-    if (!d->driver->isOpen())
-        return false;
-
-    if (i < pos())
-        return false;
-    if (i == pos())
-        return true;
-
-    int actualIdx = i + 1;
-    if (actualIdx <= 0) {
-        setPos(QSparql::BeforeFirstRow);
-        return false;
-    }
-    SQLRETURN r;
-    bool ok = true;
-    while (ok && i > pos())
-        ok = fetchNext();
-    return ok;
-    if (r != SQL_SUCCESS) {
-        if (r != SQL_NO_DATA)
-            setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
-                "Unable to fetch"), QSparqlError::ConnectionError, d));
-        return false;
-    }
-    setPos(i);
-    return true;
-}
-
 static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 {
     QSparqlBinding b;
@@ -470,7 +427,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     if ((r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO) && length > 0)
         bufferLength = length / sizeof(SQLTCHAR) + 1;
     
-    QVarLengthArray<char> buffer(bufferLength);
+    QVarLengthArray<char> buffer(bufferLength);  // The real buffer
     r = SQLGetData(p->hstmt, colNum, SQL_C_CHAR, buffer.data(), buffer.size(), 0);
     
     int dvtype = 0;
@@ -560,12 +517,10 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     return b;
 }
 
-bool QVirtuosoResult::fetchNext()
+bool QVirtuosoResult::fetchNextResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
-
     SQLRETURN r;
-    d->clearValues();
     r = SQLFetch(d->hstmt);
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
@@ -581,22 +536,46 @@ bool QVirtuosoResult::fetchNext()
     }
     
     QMutexLocker resultLocker(&(d->mutex)); 
+    d->clearValues();
     
     for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
         d->results[d->results.count() - 1].append(qMakeBinding(d, d->resultColIdx));
     }
 
-    setPos(pos() + 1);
     emit dataReady(d->results.count());
     return true;
 }
 
+bool QVirtuosoResult::fetch(int i)
+{
+    QMutexLocker resultLocker(&(d->mutex)); 
+    setPos(i);
+    return pos() < d->results.count();
+}
+
+bool QVirtuosoResult::fetchNext()
+{
+    QMutexLocker resultLocker(&(d->mutex)); 
+    if (pos() == QSparql::AfterLastRow) {
+        return false;
+    }
+
+    setPos(pos() + 1);
+    
+    if (d->isFinished && pos() >= d->results.count()) {
+        setPos(QSparql::AfterLastRow);
+        return false;
+    }
+        
+    return pos() < d->results.count();
+}
+
 bool QVirtuosoResult::fetchFirst()
 {
-    if (pos() != QSparql::BeforeFirstRow)
-        return false;
+    if (pos() == 0)
+        return true;
 
-    return fetchNext();
+    return fetch(0);
 }
 
 bool QVirtuosoResult::fetchPrevious()
@@ -606,16 +585,9 @@ bool QVirtuosoResult::fetchPrevious()
 
 bool QVirtuosoResult::fetchLast()
 {
-    // cannot seek to last row in forwardOnly mode, so we have to use brute force
-    int i = pos();
-    if (i == QSparql::AfterLastRow)
-        return false;
-    if (i == QSparql::BeforeFirstRow)
-        i = 0;
-    while (fetchNext())
-        ++i;
-    setPos(i);
-    return true;
+    QMutexLocker resultLocker(&(d->mutex)); 
+    setPos(d->results.count() - 1);
+    return pos() >= 0;
 }
 
 
@@ -624,7 +596,7 @@ QVariant QVirtuosoResult::data(int field) const
     QMutexLocker resultLocker(&(d->mutex)); 
 
     if (field >= d->results[pos()].count() || field < 0) {
-        qWarning() << "QVirtuosoResult::data: column" << field << "out of range";
+        qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
     }
     
@@ -640,8 +612,9 @@ QSparqlResultRow QVirtuosoResult::resultRow() const
 {
     QMutexLocker resultLocker(&(d->mutex)); 
 
-    if (!isActive() || !isSelect() || pos() == QSparql::BeforeFirstRow || pos() >= d->results.count())
-        return QSparqlResultRow();
+    QSparqlResultRow info;
+    if (pos() < 0 || pos() >= d->results.count())
+        return info;
 
     return d->results[pos()];
 }
