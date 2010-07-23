@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     layout->addWidget(&button);
     layout->addWidget(&queryText);
     mainWidget.setLayout(layout);
+    mainWidget.resize(600, 300);
     
     QObject::connect(&button, SIGNAL(clicked()), &queryText, SLOT(runQuery()));
     mainWidget.show();
