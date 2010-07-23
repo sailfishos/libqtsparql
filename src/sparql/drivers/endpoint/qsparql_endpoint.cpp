@@ -246,7 +246,17 @@ bool EndpointResult::fetch(int i)
 
 bool EndpointResult::fetchNext()
 {
+    if (pos() == QSparql::AfterLastRow) {
+        return false;
+    }
+
     setPos(pos() + 1);
+    
+    if (d->isFinished && pos() >= d->results.count()) {
+        setPos(QSparql::AfterLastRow);
+        return false;
+    }
+        
     return pos() < d->results.count();
 }
 
@@ -267,7 +277,7 @@ bool EndpointResult::fetchFirst()
 QVariant EndpointResult::data(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
-        qWarning() << "EndpointResult::data: column" << field << "out of range";
+        qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
     }
 
@@ -385,12 +395,6 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
         return false;
         }*/
     return false;
-}
-
-static void setOptionFlag(uint &optionFlags, const QString &opt)
-{
-    Q_UNUSED(optionFlags);
-    Q_UNUSED(opt);
 }
 
 bool EndpointDriver::open(const QSparqlConnectionOptions& options)
