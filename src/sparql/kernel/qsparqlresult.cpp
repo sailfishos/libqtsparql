@@ -56,7 +56,8 @@ class QSparqlResultPrivate
 {
 public:
     QSparqlResultPrivate()
-    : idx(QSparql::BeforeFirstRow)
+    : idx(QSparql::BeforeFirstRow), statementType(QSparqlQuery::SelectStatement), 
+      boolValue(false)
     {}
 
 public:
@@ -189,11 +190,13 @@ bool QSparqlResult::isBool() const
 
 bool QSparqlResult::boolValue() const
 {
+    qDebug() << "QSparqlResult::boolValue(): " << d->boolValue;
     return d->boolValue;
 }
 
 void QSparqlResult::setBoolValue(bool v)
 {
+    qDebug() << "QSparqlResult::setBoolValue(" << v << ")";
     d->boolValue = v;
 }
 

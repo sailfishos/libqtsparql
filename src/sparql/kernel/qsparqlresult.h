@@ -82,6 +82,7 @@ public:
     // Retrieving data
     QVariant value(int i) const;
     virtual QSparqlResultRow resultRow() const;
+    virtual bool boolValue() const;
 
     // Asynchronous operations
     virtual void waitForFinished();
@@ -93,9 +94,9 @@ public:
     
     bool isTable() const;
     bool isGraph() const;
-    bool isBool() const; 
+    bool isBool() const;
     
-    bool boolValue() const;
+    
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
@@ -105,7 +106,6 @@ protected:
     
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
-    void setBoolValue(bool v);
     virtual void setPos(int pos);
     virtual void setLastError(const QSparqlError& e);
 
@@ -120,6 +120,7 @@ protected:
 
     // The subclasses need to implement these for retrieving the data
     virtual QVariant data(int i) const = 0;
+    virtual void setBoolValue(bool v);
 
 private:
     QSparqlResultPrivate* d;
