@@ -149,6 +149,8 @@ void EndpointResultPrivate::parseResults()
                     
                     variableNode = variableNode.nextSibling();
                 }
+            } else if (sectionElement.tagName() == QLatin1String("boolean")) {
+                q->setBoolValue(sectionElement.text().toLower() == QLatin1String("true"));
             } else if (sectionElement.tagName() == QLatin1String("results")) {
                 QDomNode resultsNode = sectionElement.firstChild();
                 while (!resultsNode.isNull()) {
@@ -217,7 +219,7 @@ void EndpointResultPrivate::parseResults()
     return;
 }
 
-EndpointResult::EndpointResult(const EndpointDriver* db, EndpointDriverPrivate* p)
+EndpointResult::EndpointResult(EndpointDriverPrivate* p)
 {
     d = new EndpointResultPrivate(this, p);
 }
@@ -448,7 +450,7 @@ void EndpointDriver::close()
 
 EndpointResult* EndpointDriver::createResult() const
 {
-    return new EndpointResult(this, d);
+    return new EndpointResult(d);
 }
 
 QT_END_NAMESPACE

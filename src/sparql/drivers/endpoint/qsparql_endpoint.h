@@ -67,7 +67,7 @@ class EndpointResult : public QSparqlResult
 {
     friend class EndpointResultPrivate;
 public:
-    explicit EndpointResult(const EndpointDriver* db, EndpointDriverPrivate* p);
+    explicit EndpointResult(EndpointDriverPrivate* p);
     ~EndpointResult();
 
     QVariant handle() const;
