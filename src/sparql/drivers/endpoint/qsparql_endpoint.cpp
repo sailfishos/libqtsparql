@@ -95,7 +95,6 @@ public:
         delete reply;
     }
     
-    QSparqlQuery::StatementType statementType;
     QNetworkReply *reply;
     QByteArray buffer;
     QList<QSparqlResultRow> results;
@@ -111,6 +110,7 @@ public Q_SLOTS:
     }
     
     void handleError(QNetworkReply::NetworkError code);
+    void terminate();
     void parseResults();
 };
 
@@ -120,8 +120,14 @@ void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
                        QSparqlError::ConnectionError,
                        code);
     q->setLastError(error);
+    terminate();
+}
+
+void EndpointResultPrivate::terminate()
+{
     isFinished = true;
     q->emit finished();
+    
     if (loop != 0)
         loop->exit();
 }
@@ -130,6 +136,7 @@ void EndpointResultPrivate::parseResults()
 {    
     QDomDocument doc(QLatin1String("sparqlresults"));
     if (!doc.setContent(buffer)) {
+        terminate();
         return;
     }
 
@@ -210,12 +217,7 @@ void EndpointResultPrivate::parseResults()
         sectionNode = sectionNode.nextSibling();
     }
     
-    isFinished = true;
-    q->emit finished();
-    
-    if (loop != 0)
-        loop->exit();
-    
+    terminate();    
     return;
 }
 
@@ -317,10 +319,11 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
 
     d->buffer.clear();
     QNetworkRequest request(queryUrl);
-    request.setRawHeader("Content-Type", "application/sparql-results+xml");
+    request.setRawHeader("Accept", "application/sparql-results+xml");
     request.setRawHeader("charset", "utf-8");
     
-    d->statementType = type;
+    setQuery(query);
+    setStatementType(type);
     d->reply = d->driverPrivate->manager->get(request);
 
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
