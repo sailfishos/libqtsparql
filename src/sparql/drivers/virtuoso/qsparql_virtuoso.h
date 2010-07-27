@@ -92,9 +92,11 @@ public:
     // FIXME: this should eventually be removed
     void exec(const QString& query, QSparqlQuery::StatementType type);
     bool exec();
+    bool boolValue() const;
 
 protected:
     bool fetchNextResult();
+    bool fetchBoolResult();
     bool fetchNext();
     bool fetchFirst();
     bool fetchLast();
@@ -110,6 +112,7 @@ protected:
 
     void waitForFinished();
     bool isFinished() const;
+    void terminate();
 
 private:
     QVirtuosoResultPrivate *d;

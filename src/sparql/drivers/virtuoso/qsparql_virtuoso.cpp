@@ -86,9 +86,14 @@ public:
 
     void run()
     {
-        if (result->exec())
-            while (result->fetchNextResult())
-                ;
+        if (result->exec()) {
+            if (result->isTable()) {
+                while (result->fetchNextResult())
+                    ;
+            } else if (result->isBool()) {
+                result->fetchBoolResult();
+            }
+        }
     }
 
 private:
@@ -117,7 +122,7 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        statementType(QSparqlQuery::SelectStatement), isSelect(true), 
+        isSelect(true), 
         resultColIdx(0), driverPrivate(dpp), fetcher(f), 
         mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
@@ -146,7 +151,6 @@ public:
     SQLHDESC hdesc;
 
     QByteArray query;
-    QSparqlQuery::StatementType statementType;
     bool isSelect;
     QList<QSparqlResultRow> results;
     QStringList bindingNames;
@@ -309,10 +313,10 @@ QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::State
 void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type)
 {
     setQuery(sparqlQuery);
+    setStatementType(type);
     d->query = QString(QLatin1String("SPARQL ")).append(sparqlQuery).toUtf8();
 
     setPos(QSparql::BeforeFirstRow);
-    d->statementType = type;
     setSelect(type == QSparqlQuery::SelectStatement);
     d->bindingNames.clear();
     d->fetcher->start();
@@ -328,10 +332,7 @@ bool QVirtuosoResult::exec()
     if (d->hstmt && d->isStmtHandleValid(d->driver)) {
         r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
         if (r != SQL_SUCCESS) {
-            d->isFinished = true;
-            emit finished();
-            if (d->loop != 0)
-                d->loop->exit();
+            terminate();
             qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to free statement handle"), d);
             return false;
         }
@@ -340,10 +341,7 @@ bool QVirtuosoResult::exec()
                          d->dpDbc(),
                          &d->hstmt);
     if (r != SQL_SUCCESS) {
-        d->isFinished = true;
-        emit finished();
-        if (d->loop != 0)
-            d->loop->exit();
+        terminate();
         qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to allocate statement handle"), d);
         return false;
     }
@@ -352,20 +350,14 @@ bool QVirtuosoResult::exec()
 
     r = SQLExecDirect(d->hstmt, (UCHAR*) d->query.data(), d->query.length());
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r!= SQL_NO_DATA) {
-        d->isFinished = true;
-        emit finished();
-        if (d->loop != 0)
-            d->loop->exit();
+        terminate();
         setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
                      "Unable to execute statement"), QSparqlError::StatementError, d));
         return false;
     }
 
     if (r == SQL_NO_DATA) {
-        d->isFinished = true;
-        emit finished();
-        if (d->loop != 0)
-            d->loop->exit();
+        terminate();
         setSelect(false);
         return true;
     }
@@ -383,10 +375,7 @@ bool QVirtuosoResult::exec()
             r = SQLDescribeCol(d->hstmt, i+1, colName, (SQLSMALLINT)COLNAMESIZE, &colNameLen, 0, 0, 0, 0);
 
             if (r != SQL_SUCCESS) {
-                d->isFinished = true;
-                emit finished();
-                if (d->loop != 0)
-                    d->loop->exit();
+                terminate();
                 qSparqlWarning(QString::fromLatin1("qMakeField: Unable to describe column %1").arg(i), d);
                 return false;
             }
@@ -414,6 +403,14 @@ void QVirtuosoResult::waitForFinished()
 bool QVirtuosoResult::isFinished() const
 {
     return d->isFinished;
+}
+
+void QVirtuosoResult::terminate()
+{
+    d->isFinished = true;
+    emit finished();
+    if (d->loop != 0)
+        d->loop->exit();
 }
 
 static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
@@ -510,8 +507,9 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         }
     }
     
-    // qDebug() << "binding name: " << p->bindingNames[colNum - 1];
-    // qDebug() << "binding value: " << b.toString();
+    qDebug() << "dvtype: " << dvtype;
+    qDebug() << "binding name: " << p->bindingNames[colNum - 1];
+    qDebug() << "binding value: " << b.toString();
     
     b.setName(p->bindingNames[colNum - 1]);
     return b;
@@ -524,10 +522,7 @@ bool QVirtuosoResult::fetchNextResult()
     r = SQLFetch(d->hstmt);
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
-        d->isFinished = true;
-        emit finished();
-        if (d->loop != 0)
-            d->loop->exit();
+        terminate();
         if (r != SQL_NO_DATA)
             setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
                 "Unable to fetch next"), QSparqlError::ConnectionError, d));
@@ -544,6 +539,34 @@ bool QVirtuosoResult::fetchNextResult()
 
     emit dataReady(d->results.count());
     return true;
+}
+
+bool QVirtuosoResult::fetchBoolResult()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    SQLRETURN r = SQLFetch(d->hstmt);
+    QMutexLocker resultLocker(&(d->mutex)); 
+
+    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
+        if (r != SQL_NO_DATA)
+            setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
+                "Unable to fetch next"), QSparqlError::ConnectionError, d));
+        setBoolValue(false);
+        terminate();
+        return false;
+        
+    }
+    
+    QSparqlBinding retval = qMakeBinding(d, 1);
+    setBoolValue(retval.name() == QLatin1String("__ASK_RETVAL") && retval.value().toInt() == 1);
+    terminate();
+    return true;
+}
+
+bool QVirtuosoResult::boolValue() const
+{
+    QMutexLocker resultLocker(&(d->mutex));
+    return QSparqlResult::boolValue();
 }
 
 bool QVirtuosoResult::fetch(int i)
