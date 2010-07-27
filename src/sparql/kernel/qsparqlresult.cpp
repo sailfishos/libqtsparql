@@ -61,10 +61,10 @@ public:
 
 public:
     int idx;
-    QString sparql; // FIXME: needed?
+    QString sparql; // FIXME: needed? rdale: yes it is needed (for debugging)
+    QSparqlQuery::StatementType statementType;
     QSparqlError error;
-
-    QString executedQuery; // FIXME: needed?
+    bool boolValue;
 };
 
 /*!
@@ -164,6 +164,37 @@ QString QSparqlResult::lastQuery() const
 void QSparqlResult::setQuery(const QString &query)
 {
     d->sparql = query;
+}
+
+void QSparqlResult::setStatementType(QSparqlQuery::StatementType type)
+{
+    d->statementType = type;
+}
+
+bool QSparqlResult::isTable() const
+{
+    return d->statementType == QSparqlQuery::SelectStatement;
+}
+
+bool QSparqlResult::isGraph() const
+{
+    return d->statementType == QSparqlQuery::ConstructStatement 
+            || d->statementType == QSparqlQuery::AskStatement;
+}
+
+bool QSparqlResult::isBool() const 
+{
+    return d->statementType == QSparqlQuery::AskStatement;
+}
+
+bool QSparqlResult::boolValue() const
+{
+    return d->boolValue;
+}
+
+void QSparqlResult::setBoolValue(bool v)
+{
+    d->boolValue = v;
 }
 
 /*!

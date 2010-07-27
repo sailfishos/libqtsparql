@@ -90,14 +90,22 @@ public:
     QSparqlError lastError() const;
     
     QString lastQuery() const; // FIXME: needed?
-    void setQuery(const QString & query);
     
+    bool isTable() const;
+    bool isGraph() const;
+    bool isBool() const; 
+    
+    bool boolValue() const;
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
 
 protected:
     QSparqlResult();
+    
+    void setQuery(const QString & query);
+    void setStatementType(QSparqlQuery::StatementType type);
+    void setBoolValue(bool v);
     virtual void setPos(int pos);
     virtual void setLastError(const QSparqlError& e);
 
