@@ -57,8 +57,7 @@ void QSparqlQueryModelPrivate::queryFinished()
     // pointer.
     result->first();
     QSparqlResultRow newResultRow = result->resultRow();
-    bool columnsChanged = (newResultRow != result->resultRow());
-    columnsChanged = true;
+    bool columnsChanged = (newResultRow != resultRow);
     bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
     bool hasNewData = (newResultRow != QSparqlResultRow()) || !result->hasError();
 
