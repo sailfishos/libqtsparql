@@ -116,10 +116,11 @@ public Q_SLOTS:
 
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 {
-    QSparqlError error(reply->errorString(),
-                       QSparqlError::ConnectionError,
-                       code);
-    q->setLastError(error);
+    if (code == QNetworkReply::UnknownContentError)
+        q->setLastError(QSparqlError(QString::fromLatin1(buffer), QSparqlError::BackendError, code));
+    else
+        q->setLastError(QSparqlError(reply->errorString(), QSparqlError::ConnectionError, code));
+
     terminate();
 }
 
@@ -133,7 +134,10 @@ void EndpointResultPrivate::terminate()
 }
 
 void EndpointResultPrivate::parseResults()
-{    
+{ 
+    if (isFinished)
+        return;
+    
     QDomDocument doc(QLatin1String("sparqlresults"));
     if (!doc.setContent(buffer)) {
         terminate();
