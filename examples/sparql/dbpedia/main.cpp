@@ -53,8 +53,6 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QSparqlConnectionOptions options;
-    options.setPath("sparql");
-    options.setPort(80);
     options.setHostName("dbpedia.org");
     QSparqlConnection connection("QENDPOINT", options);
 

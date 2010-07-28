@@ -94,8 +94,6 @@ void tst_QSparqlEndpoint::cleanup()
 void tst_QSparqlEndpoint::query_places_of_birth()
 {
     QSparqlConnectionOptions options;
-    options.setPath("sparql");
-    options.setPort(80);
     options.setHostName("dbpedia.org");
     QSparqlConnection conn("QENDPOINT", options);
 
@@ -125,8 +123,6 @@ void tst_QSparqlEndpoint::query_places_of_birth()
 void tst_QSparqlEndpoint::ask_current_member()
 {
     QSparqlConnectionOptions options;
-    options.setPath("sparql");
-    options.setPort(80);
     options.setHostName("dbpedia.org");
     QSparqlConnection conn("QENDPOINT", options);
 
@@ -156,8 +152,6 @@ void tst_QSparqlEndpoint::ask_current_member()
 void tst_QSparqlEndpoint::query_with_error()
 {
     QSparqlConnectionOptions options;
-    options.setPath("sparql");
-    options.setPort(80);
     options.setHostName("dbpedia.org");
     QSparqlConnection conn("QENDPOINT", options);
 
