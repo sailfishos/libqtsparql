@@ -190,13 +190,11 @@ bool QSparqlResult::isBool() const
 
 bool QSparqlResult::boolValue() const
 {
-    qDebug() << "QSparqlResult::boolValue(): " << d->boolValue;
     return d->boolValue;
 }
 
 void QSparqlResult::setBoolValue(bool v)
 {
-    qDebug() << "QSparqlResult::setBoolValue(" << v << ")";
     d->boolValue = v;
 }
 
