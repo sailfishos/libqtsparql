@@ -3,6 +3,7 @@ SUBDIRS = \
     qsparqlquery \
     qsparqlbinding \
     qsparql \
+    qsparql_endpoint \
     qsparql_tracker
 
 check.CONFIG = recursive
