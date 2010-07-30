@@ -117,7 +117,7 @@ public Q_SLOTS:
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 {
     if (code == QNetworkReply::UnknownContentError)
-        q->setLastError(QSparqlError(QString::fromLatin1(buffer), QSparqlError::BackendError, code));
+        q->setLastError(QSparqlError(QString::fromLatin1(buffer), QSparqlError::StatementError, code));
     else
         q->setLastError(QSparqlError(reply->errorString(), QSparqlError::ConnectionError, code));
 
