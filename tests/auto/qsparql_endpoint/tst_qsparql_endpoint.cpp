@@ -161,7 +161,7 @@ void tst_QSparqlEndpoint::query_with_error()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), true);
-    QCOMPARE(r->lastError().type(), QSparqlError::BackendError);
+    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
 }
 
