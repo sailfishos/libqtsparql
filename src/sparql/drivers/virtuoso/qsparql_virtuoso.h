@@ -104,9 +104,6 @@ protected:
     bool fetch(int i);
     QVariant data(int field) const;
     
-    bool isSelect() const;
-    void setSelect(bool select); 
-    
     int size() const;
     QSparqlResultRow resultRow() const;
 

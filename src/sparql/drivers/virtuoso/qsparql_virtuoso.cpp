@@ -92,6 +92,8 @@ public:
                     ;
             } else if (result->isBool()) {
                 result->fetchBoolResult();
+            } else {
+                result->terminate();
             }
         }
     }
@@ -122,7 +124,6 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        isSelect(true), 
         resultColIdx(0), driverPrivate(dpp), fetcher(f), 
         mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
@@ -131,7 +132,9 @@ public:
     ~QVirtuosoResultPrivate()
     {
         fetcher->terminate();
-        fetcher->wait();
+        // Don't call wait() as it will hang 
+        // if the thread in no longer running
+        // fetcher->wait();
         delete fetcher;
     }
 
@@ -151,7 +154,6 @@ public:
     SQLHDESC hdesc;
 
     QByteArray query;
-    bool isSelect;
     QList<QSparqlResultRow> results;
     QStringList bindingNames;
     int resultColIdx;
@@ -191,33 +193,20 @@ static QString qWarnODBCHandle(int handleType, SQLHANDLE handle, int *nativeCode
     int i = 1;
 
     description_[0] = 0;
-    r = SQLGetDiagRec(handleType,
-                      handle,
-                      i,
-                      state_,
-                      &nativeCode_,
-                      0,
-                      NULL,
-                      &msgLen);
-    if(r == SQL_NO_DATA)
+    SQLCHAR dummyBuffer[1]; // dummy buffer only used to determine length
+    r = SQLGetDiagRec(handleType, handle, i, state_, &nativeCode_, dummyBuffer, NULL, &msgLen);
+    if (r == SQL_NO_DATA)
         return QString();
     description_.resize(msgLen+1);
     do {
-        r = SQLGetDiagRec(handleType,
-                            handle,
-                            i,
-                            state_,
-                            &nativeCode_,
-                            description_.data(),
-                            description_.size(),
-                            &msgLen);
+        r = SQLGetDiagRec(handleType, handle, i, state_, &nativeCode_, description_.data(), description_.size(), &msgLen);
         if (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO) {
             if (nativeCode)
                 *nativeCode = nativeCode_;
             QString tmpstore;
-            tmpstore = QString((const QChar*)description_.data(), msgLen);
-            if(result != tmpstore) {
-                if(!result.isEmpty())
+            tmpstore = QString::fromLatin1((const char *) description_.data(), msgLen);
+            if (result != tmpstore) {
+                if (!result.isEmpty())
                     result += QLatin1Char(' ');
                 result += tmpstore;
             }
@@ -256,7 +245,7 @@ static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type,
 {
     int nativeCode = -1;
     QString message = qVirtuosoWarn(p, &nativeCode);
-    return QSparqlError(QLatin1String("QVirtuoso: ") + err + QLatin1String(" ") + message, type, nativeCode);
+    return QSparqlError(QString::fromLatin1("Virtuoso: %1 %2").arg(err).arg(message), type, nativeCode);
 }
 
 static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type,
@@ -291,16 +280,6 @@ QVirtuosoResult::~QVirtuosoResult()
     delete d;
 }
 
-bool QVirtuosoResult::isSelect() const 
-{ 
-    return d->isSelect; 
-};
-
-void QVirtuosoResult::setSelect(bool select) 
-{ 
-    d->isSelect = select; 
-};
-
 // This is just a temporary hack; eventually this should be refactored so that
 // the work is done here instead of Result::exec.
 QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
@@ -317,7 +296,6 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
     d->query = QString(QLatin1String("SPARQL ")).append(sparqlQuery).toUtf8();
 
     setPos(QSparql::BeforeFirstRow);
-    setSelect(type == QSparqlQuery::SelectStatement);
     d->bindingNames.clear();
     d->fetcher->start();
 }
@@ -332,17 +310,16 @@ bool QVirtuosoResult::exec()
     if (d->hstmt && d->isStmtHandleValid(d->driver)) {
         r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
         if (r != SQL_SUCCESS) {
-            terminate();
             qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to free statement handle"), d);
+            terminate();
             return false;
         }
     }
-    r  = SQLAllocHandle(SQL_HANDLE_STMT,
-                         d->dpDbc(),
-                         &d->hstmt);
+    
+    r  = SQLAllocHandle(SQL_HANDLE_STMT, d->dpDbc(), &d->hstmt);
     if (r != SQL_SUCCESS) {
-        terminate();
         qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to allocate statement handle"), d);
+        terminate();
         return false;
     }
 
@@ -350,15 +327,15 @@ bool QVirtuosoResult::exec()
 
     r = SQLExecDirect(d->hstmt, (UCHAR*) d->query.data(), d->query.length());
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r!= SQL_NO_DATA) {
+        setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult", "Unable to execute statement"), 
+                                QSparqlError::StatementError, 
+                                d));
         terminate();
-        setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
-                     "Unable to execute statement"), QSparqlError::StatementError, d));
         return false;
     }
 
     if (r == SQL_NO_DATA) {
         terminate();
-        setSelect(false);
         return true;
     }
 
@@ -368,22 +345,19 @@ bool QVirtuosoResult::exec()
 
     SQLNumResultCols(d->hstmt, &(d->numResultCols));
     if (d->numResultCols > 0) {
-        setSelect(true);
         for (int i = 0; i < d->numResultCols; ++i) {
             SQLSMALLINT colNameLen;
             SQLTCHAR colName[COLNAMESIZE];
             r = SQLDescribeCol(d->hstmt, i+1, colName, (SQLSMALLINT)COLNAMESIZE, &colNameLen, 0, 0, 0, 0);
 
             if (r != SQL_SUCCESS) {
-                terminate();
                 qSparqlWarning(QString::fromLatin1("qMakeField: Unable to describe column %1").arg(i), d);
+                terminate();
                 return false;
             }
             
             d->bindingNames.append(QString::fromLatin1((const char*) colName));
         }
-    } else {
-        setSelect(false);
     }
 
     return true;
@@ -507,10 +481,6 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         }
     }
     
-    qDebug() << "dvtype: " << dvtype;
-    qDebug() << "binding name: " << p->bindingNames[colNum - 1];
-    qDebug() << "binding value: " << b.toString();
-    
     b.setName(p->bindingNames[colNum - 1]);
     return b;
 }
@@ -522,10 +492,10 @@ bool QVirtuosoResult::fetchNextResult()
     r = SQLFetch(d->hstmt);
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
-        terminate();
         if (r != SQL_NO_DATA)
             setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
-                "Unable to fetch next"), QSparqlError::ConnectionError, d));
+                "Unable to fetch next"), QSparqlError::BackendError, d));
+        terminate();
         return false;
         
     }
@@ -550,7 +520,7 @@ bool QVirtuosoResult::fetchBoolResult()
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
         if (r != SQL_NO_DATA)
             setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
-                "Unable to fetch next"), QSparqlError::ConnectionError, d));
+                "Unable to fetch next"), QSparqlError::BackendError, d));
         setBoolValue(false);
         terminate();
         return false;
@@ -628,7 +598,8 @@ QVariant QVirtuosoResult::data(int field) const
 
 int QVirtuosoResult::size() const
 {
-    return -1;
+//    QMutexLocker resultLocker(&(d->mutex)); 
+    return d->results.count();
 }
 
 QSparqlResultRow QVirtuosoResult::resultRow() const
@@ -758,9 +729,28 @@ bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
     else
         connectString = QLatin1String("DSN=") + options.databaseName();
 
-    if (!options.userName().isEmpty())
+    QString hostName;
+    int port;
+    if (options.hostName().isEmpty())
+        hostName = QLatin1String("localhost");
+    else
+        hostName = options.hostName();
+    
+    if (options.port() == -1)
+        port = 1111;
+    else
+        port = options.port();
+        
+    connectString += QString(QLatin1String(";HOST=%1:%2")).arg(hostName).arg(port);
+
+    if (options.userName().isEmpty())
+        connectString += QLatin1String(";UID=dba");
+    else
         connectString += QLatin1String(";UID=") + options.userName();
-    if (!options.password().isEmpty())
+        
+    if (options.password().isEmpty())
+        connectString += QLatin1String(";PWD=dba");
+    else
         connectString += QLatin1String(";PWD=") + options.password();
 
     SQLSMALLINT cb;
