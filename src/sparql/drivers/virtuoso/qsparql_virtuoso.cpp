@@ -131,10 +131,12 @@ public:
     
     ~QVirtuosoResultPrivate()
     {
-        fetcher->terminate();
-        // Don't call wait() as it will hang 
-        // if the thread in no longer running
-        // fetcher->wait();
+        if (fetcher->isRunning()) {
+            fetcher->terminate();
+            // Don't call wait() as it will hang 
+            // if the thread in no longer running
+            // fetcher->wait(100);
+        }
         delete fetcher;
     }
 
