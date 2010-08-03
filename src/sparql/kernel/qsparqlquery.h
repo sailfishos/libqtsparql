@@ -61,7 +61,8 @@ class QSparqlQueryPrivate;
 class Q_SPARQL_EXPORT QSparqlQuery
 {
 public:
-    enum StatementType { SelectStatement, AskStatement, ConstructStatement,
+    enum StatementType { SelectStatement, AskStatement, 
+                         ConstructStatement, DescribeStatement,
                          UpdateStatement, InsertStatement, DeleteStatement };
     explicit QSparqlQuery(const QString& query = QString(),
                           StatementType type = SelectStatement);

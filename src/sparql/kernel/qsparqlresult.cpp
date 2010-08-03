@@ -180,7 +180,7 @@ bool QSparqlResult::isTable() const
 bool QSparqlResult::isGraph() const
 {
     return d->statementType == QSparqlQuery::ConstructStatement 
-            || d->statementType == QSparqlQuery::AskStatement;
+            || d->statementType == QSparqlQuery::DescribeStatement;
 }
 
 bool QSparqlResult::isBool() const 
