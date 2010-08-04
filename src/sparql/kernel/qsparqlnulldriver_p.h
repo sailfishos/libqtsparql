@@ -80,18 +80,11 @@ protected:
     inline QVariant data(int) const { return QVariant(); }
     inline bool isNull(int) const { return false; }
     inline int size() const { return -1; }
-    inline int numRowsAffected() { return 0; }
 
     inline void setAt(int) {}
-    inline void setActive(bool) {}
     inline void setQuery(const QString&) {}
     inline void setSelect(bool) {}
     inline void setForwardOnly(bool) {}
-
-    inline bool prepare(const QString&) { return false; }
-    inline bool savePrepare(const QString&) { return false; }
-    inline void bindValue(int, const QVariant&, QSparql::ParamType) {}
-    inline void bindValue(const QString&, const QVariant&, QSparql::ParamType) {}
 };
 
 class QSparqlNullDriver : public QSparqlDriver
