@@ -313,14 +313,17 @@ QTrackerDriver::~QTrackerDriver()
 
 bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 {
-    switch(f) {
-    case QSparqlConnection::QuerySize:
-    case QSparqlConnection::BackwardsIteration:
-        return true;
-    default:
+    switch (f) {
+    case QSparqlConnection::AskQueries:
         return false;
+    case QSparqlConnection::ConstructQueries:
+        return false;
+    case QSparqlConnection::UpdateQueries:
+        return false;
+    case QSparqlConnection::DefaultGraph:
+        return true;
     }
-    // FIXME: decide features
+    return false;
 }
 
 QAtomicInt connectionCounter = 0;

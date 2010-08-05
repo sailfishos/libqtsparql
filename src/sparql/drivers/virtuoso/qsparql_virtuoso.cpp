@@ -654,45 +654,16 @@ QVirtuosoDriver::~QVirtuosoDriver()
 
 bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
 {
-    // FIXME: decide the features
-/*
     switch (f) {
-    case QSparqlConnection::Transactions: {
-        if (!d->hDbc)
-            return false;
-        SQLUSMALLINT txn;
-        SQLSMALLINT t;
-        int r = SQLGetInfo(d->hDbc,
-                        (SQLUSMALLINT)SQL_TXN_CAPABLE,
-                        &txn,
-                        sizeof(txn),
-                        &t);
-        if (r != SQL_SUCCESS || txn == SQL_TC_NONE)
-            return false;
-        else
-            return true;
-    }
-    case QSparqlConnection::Unicode:
+    case QSparqlConnection::AskQueries:
         return true;
-    case QSparqlConnection::PreparedQueries:
-        return false;
-    case QSparqlConnection::PositionalPlaceholders:
-    case QSparqlConnection::FinishQuery:
-    case QSparqlConnection::LowPrecisionNumbers:
+    case QSparqlConnection::ConstructQueries:
         return true;
-    case QSparqlConnection::QuerySize:
-    case QSparqlConnection::NamedPlaceholders:
-    case QSparqlConnection::LastInsertId:
-    case QSparqlConnection::BatchOperations:
-    case QSparqlConnection::SimpleLocking:
-    case QSparqlConnection::EventNotifications:
-        return false;
-    case QSparqlConnection::MultipleResultSets:
-        return false;
-    case QSparqlConnection::BLOB: {
+    case QSparqlConnection::UpdateQueries:
+        return true;
+    case QSparqlConnection::DefaultGraph:
         return false;
     }
-    }*/
     return false;
 }
 

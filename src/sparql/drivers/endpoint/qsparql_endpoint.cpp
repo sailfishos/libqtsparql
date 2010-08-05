@@ -213,7 +213,6 @@ public:
         bool isUtf8 = false;
         
         if (buffer[i] == '"') {
-            int start = i;
             i++;
             while (i < buffer.size()) {
                 if (buffer[i] == '"') {
@@ -707,27 +706,16 @@ EndpointDriver::~EndpointDriver()
 
 bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
 {
-/*    switch (f) {
-    case QSparqlConnection::Transactions:
-        return false;
-    case QSparqlConnection::NamedPlaceholders:
-    case QSparqlConnection::BatchOperations:
-    case QSparqlConnection::SimpleLocking:
-    case QSparqlConnection::EventNotifications:
-    case QSparqlConnection::FinishQuery:
-        return false;
-    case QSparqlConnection::QuerySize:
-    case QSparqlConnection::BLOB:
-    case QSparqlConnection::LastInsertId:
-    case QSparqlConnection::Unicode:
-    case QSparqlConnection::LowPrecisionNumbers:
+    switch (f) {
+    case QSparqlConnection::AskQueries:
         return true;
-    case QSparqlConnection::PreparedQueries:
-    case QSparqlConnection::PositionalPlaceholders:
+    case QSparqlConnection::ConstructQueries:
+        return true;
+    case QSparqlConnection::UpdateQueries:
         return false;
-    case QSparqlConnection::MultipleResultSets:
+    case QSparqlConnection::DefaultGraph:
         return false;
-        }*/
+    }
     return false;
 }
 
