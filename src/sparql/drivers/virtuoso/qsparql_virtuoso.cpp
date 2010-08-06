@@ -86,16 +86,20 @@ public:
 
     void run()
     {
+        setTerminationEnabled(false);
         if (result->exec()) {
             if (result->isTable()) {
-                while (result->fetchNextResult())
-                    ;
+                while (result->fetchNextResult()) {
+                    setTerminationEnabled(true);
+                    setTerminationEnabled(false);
+                }
             } else if (result->isBool()) {
                 result->fetchBoolResult();
             } else {
                 result->terminate();
             }
         }
+        setTerminationEnabled(true);
     }
 
 private:
@@ -133,9 +137,8 @@ public:
     {
         if (fetcher->isRunning()) {
             fetcher->terminate();
-            // Don't call wait() as it will hang 
-            // if the thread in no longer running
-            // fetcher->wait(100);
+            if (!fetcher->wait(500))
+                return;
         }
         delete fetcher;
     }
