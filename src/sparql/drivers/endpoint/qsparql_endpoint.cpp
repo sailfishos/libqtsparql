@@ -642,10 +642,9 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
     QNetworkRequest request(queryUrl);
     
     if (isGraph())
-        // A Virtuoso protocol extension for CONSTRUCT or DESCRIBE queries
-        //request.setRawHeader("Accept", "text/rdf+n3");
-        // However, DBPedia only returns ntriples if the accept header is 
-        // set to 'text/plain' as below
+        // A Virtuoso protocol extension for CONSTRUCT or DESCRIBE queries.
+        // With DBPedia, 'text/plain' returns triples, but it isn't documented 
+        // in the Virtuoso manual
         request.setRawHeader("Accept", "text/plain");
     else
         request.setRawHeader("Accept", "application/sparql-results+xml");
