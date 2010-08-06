@@ -62,6 +62,7 @@ public slots:
 
 private slots:
     void query_contacts();
+    void ask_contact();
     void insert_and_delete_contact();
     void query_with_error();
 };
@@ -116,6 +117,43 @@ void tst_QSparqlVirtuoso::query_contacts()
     QCOMPARE(contactNames["uri001"], QString("name001"));
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
+}
+
+void tst_QSparqlVirtuoso::ask_contact()
+{
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    QSparqlQuery q1("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
+                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
+                   " ask { "
+                   " ?u a nco:PersonContact; "
+                   " nie:isLogicalPartOf <qsparql-virtuoso-tests> ; "
+                   "nco:nameGiven \"name001\" . }", QSparqlQuery::AskStatement);
+    QSparqlResult* r = conn.exec(q1);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->isBool(), true);
+    QCOMPARE(r->boolValue(), true);
+    delete r;
+    
+    QSparqlQuery q2("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
+                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
+                   " ask { "
+                   " ?u a nco:PersonContact; "
+                   " nie:isLogicalPartOf <qsparql-virtuoso-tests> ; "
+                   "nco:nameGiven \"name005\" . }", QSparqlQuery::AskStatement);
+    r = conn.exec(q2);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->isBool(), true);
+    QCOMPARE(r->boolValue(), false);
     delete r;
 }
 
@@ -197,6 +235,7 @@ void tst_QSparqlVirtuoso::query_with_error()
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
+    qDebug() << r->lastError();
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
