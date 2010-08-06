@@ -62,6 +62,7 @@ public slots:
 
 private slots:
     void query_places_of_birth();
+    void construct_current_members();
     void ask_current_member();
 
     void query_with_error();
@@ -120,6 +121,43 @@ void tst_QSparqlEndpoint::query_places_of_birth()
     delete r;
 }
 
+void tst_QSparqlEndpoint::construct_current_members()
+{
+    QSparqlConnectionOptions options;
+    options.setHostName("dbpedia.org");
+    QSparqlConnection conn("QENDPOINT", options);
+
+    QSparqlQuery q("CONSTRUCT { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object } "
+                   "WHERE { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object . }",
+                   QSparqlQuery::ConstructStatement );
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->isGraph(), true);
+    QCOMPARE(r->size(), 4);
+    QStringList currentMembers;
+    currentMembers << QLatin1String("<http://dbpedia.org/resource/George_Harrison>");
+    currentMembers << QLatin1String("<http://dbpedia.org/resource/John_Lennon>");
+    currentMembers << QLatin1String("<http://dbpedia.org/resource/Ringo_Starr>");
+    currentMembers << QLatin1String("<http://dbpedia.org/resource/Paul_McCartney>");
+    
+    while (r->next()) {
+        QCOMPARE(r->resultRow().count(), 3);
+        QCOMPARE(r->resultRow().binding(0).name(), QString("s"));
+        QCOMPARE(r->resultRow().binding(0).toString(), QString("<http://dbpedia.org/resource/The_Beatles>"));
+        
+        QCOMPARE(r->resultRow().binding(1).name(), QString("p"));
+        QCOMPARE(r->resultRow().binding(1).toString(), QString("<http://dbpedia.org/property/currentMembers>"));
+        
+        QCOMPARE(r->resultRow().binding(2).name(), QString("o"));        
+        QCOMPARE((bool) currentMembers.contains(r->resultRow().binding(2).toString()), true);
+    }
+
+    delete r;
+}
+
 void tst_QSparqlEndpoint::ask_current_member()
 {
     QSparqlConnectionOptions options;
@@ -134,6 +172,7 @@ void tst_QSparqlEndpoint::ask_current_member()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), true);
     delete r;
     
