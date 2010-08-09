@@ -97,6 +97,7 @@ public:
 protected:
     bool fetchNextResult();
     bool fetchBoolResult();
+    bool fetchGraphResult();
     bool fetchNext();
     bool fetchFirst();
     bool fetchLast();

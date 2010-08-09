@@ -62,6 +62,7 @@
 #include <QtSparql/qsparqlbinding.h>
 #include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
+#include <QtSparql/private/qsparqlntriples_p.h>
 
 #include <QDebug>
 
@@ -75,7 +76,6 @@ QT_BEGIN_NAMESPACE
 # define QSQLLEN SQLLEN
 # define QSQLULEN SQLULEN
 #endif
-
 
 static const int COLNAMESIZE = 256;
 
@@ -95,6 +95,8 @@ public:
                 }
             } else if (result->isBool()) {
                 result->fetchBoolResult();
+            } else if (result->isGraph()) {
+                result->fetchGraphResult();
             } else {
                 result->terminate();
             }
@@ -298,7 +300,15 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
 {
     setQuery(sparqlQuery);
     setStatementType(type);
-    d->query = QString(QLatin1String("SPARQL ")).append(sparqlQuery).toUtf8();
+    
+    d->query = "SPARQL ";
+    
+    // Note that NTriples output support depends on a patch from Ivan Mikhailov
+    // of OpenLink software. It should be in the next release (ie after 6.1.2)
+    if (isGraph())
+        d->query.append("define output:format \"NT\" ");
+    
+    d->query.append(sparqlQuery.toUtf8());
 
     setPos(QSparql::BeforeFirstRow);
     d->bindingNames.clear();
@@ -408,7 +418,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     
     int dvtype = 0;
     r = SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_DV_TYPE, &dvtype, SQL_IS_INTEGER, 0);
-                
+
     switch (dvtype) {
     case VIRTUOSO_DV_TIMESTAMP:
     case VIRTUOSO_DV_TIMESTAMP_OBJ:
@@ -469,13 +479,13 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 
             if ((boxFlags & VIRTUOSO_BF_IRI) != 0) {
                 if (qstrncmp(buffer.constData(), "_:", 2) == 0) {
-                    b.setBlankNodeIdentifier(QString::fromUtf8(buffer.constData() + 2));
+                    b.setNodeName(QString::fromUtf8(buffer.constData() + 2));
                 } else {
                     b.setValue(QUrl(QString::fromUtf8(buffer.constData())));
                 }
             } else {
                 if (qstrncmp(buffer.constData(), "nodeID://", 9) == 0) {
-                    b.setBlankNodeIdentifier(QString::fromUtf8(buffer.constData() + 9));
+                    b.setNodeName(QString::fromUtf8(buffer.constData() + 9));
                 } else if ((boxFlags & VIRTUOSO_BF_UTF8) != 0) {
                     b.setValue(QString::fromUtf8(buffer.constData()));
                 } else {
@@ -536,6 +546,33 @@ bool QVirtuosoResult::fetchBoolResult()
     setBoolValue(retval.name() == QLatin1String("__ASK_RETVAL") && retval.value().toInt() == 1);
     terminate();
     return true;
+}
+
+bool QVirtuosoResult::fetchGraphResult()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    SQLRETURN r = SQLFetch(d->hstmt);
+    QMutexLocker resultLocker(&(d->mutex)); 
+
+    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
+        if (r != SQL_NO_DATA)
+            setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult",
+                "Unable to fetch next"), QSparqlError::BackendError, d));
+        setBoolValue(false);
+        terminate();
+        return false;
+        
+    }
+    
+    QSparqlBinding retval = qMakeBinding(d, 1);
+
+    if (retval.name() == QLatin1String("fmtaggret-NT")) {
+        QByteArray buffer = retval.value().toString().toLatin1();
+        QSparqlNTriplesParser parser(buffer);
+        d->results = parser.parse();
+    }
+    
+    terminate();
 }
 
 bool QVirtuosoResult::boolValue() const

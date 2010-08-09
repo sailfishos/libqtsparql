@@ -48,6 +48,8 @@
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
 #include <qsparqlresultrow.h>
+#include <QtSparql/private/qsparqlntriples_p.h>
+
 #include <qstringlist.h>
 #include <qtextcodec.h>
 #include <qvector.h>
@@ -65,313 +67,7 @@
 
 #include <qdebug.h>
 
-#define GET_NEXT_CHAR   ++i; \
-                        prev = ch; \
-                        ch = buffer.at(i);
-
-/*  From the raptor ntriples parser                        
-    These are for 7-bit ASCII and not locale-specific 
- */
-#define IS_ASCII_ALPHA(c) (((c)>0x40 && (c)<0x5B) || ((c)>0x60 && (c)<0x7B))
-#define IS_ASCII_UPPER(c) ((c)>0x40 && (c)<0x5B)
-#define IS_ASCII_DIGIT(c) ((c)>0x2F && (c)<0x3A)
-#define IS_ASCII_PRINT(c) ((c)>0x1F && (c)<0x7F)
-#define TO_ASCII_LOWER(c) ((c)+0x20)
-                        
-
 QT_BEGIN_NAMESPACE
-
-class NTriplesParser {
-public:
-    NTriplesParser(QByteArray &b) : buffer(b), i(0), lineNumber(1) {}
-    
-    void parseError(QString message) 
-    {
-        QString context;
-        
-        while (i < buffer.size()) {
-            context.append(QLatin1Char(buffer[i]));
-            if (buffer[i] == '\n' || buffer[i] == '\r')
-                break;
-                
-            i++;
-        }
-        
-        qWarning() << "ERROR in line " << lineNumber << ":" << message << ": '" << context << "'";        
-    }
-    
-    void skipWhiteSpace() 
-    {
-        while (i < buffer.size()) {
-            if (buffer[i] != ' ' && buffer[i] != '\t')
-                break;
-                
-            i++;
-        }
-    }
-    
-    void skipComment() 
-    {
-        while (i < buffer.size()) {
-            if (buffer[i] == '\n' || buffer[i] == '\r')
-                break;
-                
-            i++;
-        }
-    }
-    
-    void skipEoln() 
-    {
-        if (buffer[i] == '\n') {
-            i++;
-        } else if (buffer[i] == '\r') {
-            i++;
-            if (i < buffer.size() && buffer[i] == '\n') {
-                i++;
-            }
-        }
-        
-        lineNumber++;
-    }
-    
-    QUrl parseUri() 
-    {
-        QByteArray uri;
-        bool isUtf8 = false;
-        
-        if (i < buffer.size() && buffer[i] == '<') {
-            i++;
-            while (i < buffer.size()) {
-                if (buffer[i] == '>') {
-                    i++;
-                    break;
-                }
-                
-                if (buffer[i] > 0x7f)
-                    isUtf8 = true;
-                
-                uri.append(buffer[i]);
-                i++;
-            }
-        }
-        
-        if (isUtf8)
-            return QUrl(QString::fromUtf8(uri));
-        else
-            return QUrl::fromEncoded(uri);
-    }
-    
-    QSparqlBinding parseNamedNode(QString name) 
-    {
-        QString namedNode;
-        QSparqlBinding binding(name);
-        
-        i++;
-        if (i >= buffer.size() || buffer[i] != ':') {
-            parseError(QLatin1String("Expected name node"));
-        }
-        
-        i++;
-        if (i < buffer.size() && IS_ASCII_ALPHA((uchar) buffer[i])) {
-            while (i < buffer.size()) {
-                if (!IS_ASCII_ALPHA((uchar) buffer[i]) && !IS_ASCII_DIGIT((uchar) buffer[i]))
-                    break;
-                
-                namedNode.append(QLatin1Char(buffer[i]));
-                i++;
-            }
-        }
-        
-        binding.setValue(namedNode);
-        return binding;
-    }
-    
-    QString parseLanguageTag() 
-    {
-        QString languageTag;
-        
-        if (i < buffer.size() && buffer[i] == '@') {
-            i++;
-            while (i < buffer.size()) {
-                if (!IS_ASCII_ALPHA((uchar) buffer[i]))
-                    break;
-                
-                languageTag.append(QLatin1Char(buffer[i]));
-                i++;
-            }
-        }
-        
-        return languageTag;
-    }
-    
-    QSparqlBinding parseLiteral(QString name) 
-    {
-        QByteArray literal;
-        QString languageTag;
-        QUrl dataTypeUri;
-        QSparqlBinding binding(name);
-        bool isUtf8 = false;
-        
-        if (buffer[i] == '"') {
-            i++;
-            while (i < buffer.size()) {
-                if (buffer[i] == '"') {
-                    i++;
-                    if (i < buffer.size() && buffer[i] == '^') {
-                        i++;
-                        if (i < buffer.size() && buffer[i] == '^') {
-                            i++;
-                            dataTypeUri = parseUri();
-                        }
-                    } else if (i < buffer.size() && buffer[i] == '@') {
-                        languageTag = parseLanguageTag();
-                    }
-                    
-                    break;
-                }
-                
-                if (buffer[i] > 0x7f)
-                    isUtf8 = true;
-
-                if (buffer[i] != '\\') {
-                    literal.append(buffer[i]);
-                } else {
-                    i++;
-                    if (i < buffer.size()) {
-                        if (buffer[i] == '"' || buffer[i] == 'n' || buffer[i] == 'r' || buffer[i] == 't') {
-                            literal.append(buffer[i - 1]);
-                            literal.append(buffer[i]);
-                        } else if (buffer[i] == 'u') {
-                            // Unicode escape \uxxxx
-                            isUtf8 = true;
-                            QString str = QString::fromAscii(buffer.mid(i + 1, 4));
-                            bool ok = false;
-                            ushort unicode = str.toUShort(&ok, 16);
-                            if (ok) {
-                                literal.append(QString::fromUtf16(&unicode, 1).toUtf8());
-                                i += 4;
-                            } else {
-                                parseError(QLatin1String("Invalid unicode escape sequence"));
-                            }
-                        } else if (buffer[i] == 'U') {
-                           // Unicode escape \Uxxxxxxxx
-                            isUtf8 = true;
-                            QString str = QString::fromAscii(buffer.mid(i + 1, 8));
-                            bool ok = false;
-                            uint unicode = str.toUInt(&ok, 16);
-                            if (ok) {
-                                literal.append(QString::fromUcs4(&unicode, 1).toUtf8());
-                                i += 8;
-                            } else {
-                                parseError(QLatin1String("Invalid unicode escape sequence"));
-                            }
-                        } else {
-                            parseError(QLatin1String("Invalid literal escape sequence"));
-                        }
-                    }
-                }
-                
-                i++;
-            }
-        }
-                
-        QString value;
-        if (isUtf8) 
-            value = QString::fromUtf8(literal);
-        else
-            value = QString::fromAscii(literal);
-            
-        if (!languageTag.isEmpty()) {
-            binding.setValue(value);
-            binding.setLanguageTag(languageTag);
-        } else if (!dataTypeUri.isEmpty()) {
-            binding.setValue(value, dataTypeUri);
-        } else {
-            binding.setValue(value);
-        }
-        
-        return binding;
-    }
-    
-    QSparqlResultRow parseStatement() 
-    {
-        QSparqlResultRow resultRow;
-        
-        skipWhiteSpace();
-        if (i >= buffer.size())
-            return resultRow;
-        
-        if (buffer[i] == '_') {
-            resultRow.append(parseNamedNode(QLatin1String("s")));
-        } else if (buffer[i] == '<') {
-            resultRow.append(QSparqlBinding(QLatin1String("s"), parseUri()));
-        } else {
-            parseError(QLatin1String("Expected subject node"));
-        }
-        
-        skipWhiteSpace();
-        if (i >= buffer.size())
-            return resultRow;
-
-        if (buffer[i] == '<') {
-            resultRow.append(QSparqlBinding(QLatin1String("p"), parseUri()));
-        } else {
-            parseError(QLatin1String("Expected predicate node"));
-        }
-        
-        skipWhiteSpace();
-        if (i >= buffer.size())
-            return resultRow;
-
-        if (buffer[i] == '<') {
-            resultRow.append(QSparqlBinding(QLatin1String("o"), parseUri()));
-        } else if (buffer[i] == '"') {
-            resultRow.append(parseLiteral(QLatin1String("o")));
-        } else if (buffer[i] == '_') {
-            resultRow.append(parseNamedNode(QLatin1String("o")));
-        } else {
-            parseError(QLatin1String("Expected object node"));
-        }
-        
-        skipWhiteSpace();
-        if (i >= buffer.size())
-            return resultRow;
-
-        if (i >= buffer.size() || buffer[i] == '.') {
-            i++;
-        } else {
-            parseError(QLatin1String("Expected '.' as statement terminator"));
-        }
-        
-        skipWhiteSpace();        
-        return resultRow;
-    }
-    
-    QList<QSparqlResultRow> parse() 
-    {
-        skipWhiteSpace();
-        
-        while (i < buffer.size()) {
-            if (buffer[i] == '#') {
-                skipComment();
-            } else if (buffer[i] == '\n' || buffer[i] == '\r') {
-                ; // Blank line
-            } else {
-                results.append(parseStatement());
-            }
-            
-            skipEoln();
-            skipWhiteSpace();
-        }
-        
-        return results;
-    }
-    
-    QByteArray buffer;
-    int i;
-    int lineNumber;
-    QList<QSparqlResultRow> results;
-};
 
 struct EndpointDriverPrivate {
     EndpointDriverPrivate()
@@ -418,7 +114,6 @@ public Q_SLOTS:
     
     void handleError(QNetworkReply::NetworkError code);
     void terminate();
-    void parseNTriples();
     void parseResults();
 };
 
@@ -447,7 +142,7 @@ void EndpointResultPrivate::parseResults()
         return;
     
     if (q->isGraph()) {
-        NTriplesParser parser(buffer);
+        QSparqlNTriplesParser parser(buffer);
         results = parser.parse();
         terminate();
         return;
@@ -496,7 +191,7 @@ void EndpointResultPrivate::parseResults()
                                 
                                 if (!valueElement.isNull()) {
                                     if (valueElement.tagName() == QLatin1String("bnode")) {
-                                        binding.setBlankNodeIdentifier(valueElement.text());
+                                        binding.setNodeName(valueElement.text());
                                     } else if (valueElement.tagName() == QLatin1String("literal")) {
                                         if (valueElement.hasAttribute(QString::fromLatin1("datatype"))) {
                                             if (valueElement.hasAttribute(QString::fromLatin1("xsi:type"))) {

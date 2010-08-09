@@ -9,6 +9,7 @@ HEADERS +=      kernel/qsparql.h \
                 kernel/qsparqlnulldriver_p.h \
                 kernel/qsparqldriverplugin_p.h \
                 kernel/qsparqlerror.h \
+                kernel/qsparqlntriples_p.h \
                 kernel/qsparqlresult.h 
 
 install_headers.files += \
@@ -29,5 +30,6 @@ SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqldriver.cpp \
                 kernel/qsparqldriverplugin.cpp \
                 kernel/qsparqlerror.cpp \
+                kernel/qsparqlntriples.cpp \
                 kernel/qsparqlresult.cpp 
 
