@@ -70,12 +70,12 @@ public:
 
     void setValue(const QString& value, const QUrl& dataTypeUri);
     void setValue(const QVariant& value);
-    void setNodeName(const QString& id);
+    void setBlankNodeLabel(const QString& label);
     inline QVariant value() const
     { return val; }
     void setName(const QString& name);
     QString name() const;
-    bool isResource() const;
+    bool isUri() const;
     bool isLiteral() const;
     bool isBlank() const;
     void clear();

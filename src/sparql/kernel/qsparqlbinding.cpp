@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 class QSparqlBindingPrivate
 {
 public:
-    enum NodeType { Invalid, Resource, Literal, Blank };
+    enum NodeType { Invalid, Uri, Literal, Blank };
                          
     QSparqlBindingPrivate(const QString &name,
               QVariant::Type type) :
@@ -87,24 +87,24 @@ public:
 
 /*!
     \class QSparqlBinding
-    \brief The QSparqlBinding class manipulates the fields in SQL database tables
-    and views.
+    \brief The QSparqlBinding class handles a binding between a SPARQL query variable
+    name and the value of the RDF node.
 
     \ingroup database
     \ingroup shared
 
-    QSparqlBinding represents the characteristics of a single column in a
-    database table or view, such as the data type and column name. A
-    field also contains the value of the database column, which can be
+    QSparqlBinding represents the characteristics of a single RDF node in a
+    query result, such as the data type and variable name. A
+    binding also contains the value of the variable, which can be
     viewed or changed.
 
-    Field data values are stored as QVariants. Using an incompatible
+    Binding data values are stored as QVariants. Using an incompatible
     type is not permitted. For example:
 
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 2
 
     However, the field will attempt to cast certain data types to the
-    field data type where possible:
+    binding data type where possible:
 
     \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 3
 
@@ -119,10 +119,12 @@ public:
 
     A QSparqlBinding object can provide some meta-data about the
     binding, for example, its name(), variant type(), languageTag(),
-    defaultValue(), typeID(), isGenerated() and isReadOnly(). The
-    binding's data can be checked to see if it isNull(), and its
-    value() retrieved. When editing the data can be set with
-    setValue() or set to NULL with clear().
+    and dataTypeUri(). The RDF node type is given with the isUri(), 
+    isLiteral() and isBlank() methods. The
+    binding's data can be checked to see if it isValid(), and its
+    value() retrieved, or a string representation toString(). When 
+    editing the data can be set with setValue() or set to an invalid 
+    type with clear().
 
     \sa QSparqlResultRow
 */
@@ -131,7 +133,7 @@ public:
     Constructs an empty binding called \a name of variant type \a
     type.
 
-    \sa setLanguageTag()
+    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel() setType()
 */
 QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 {
@@ -141,7 +143,7 @@ QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 /*!
     Constructs a binding called \a name with the value \a value.
 
-    \sa setLanguageTag()
+    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel() setType()
 */
 QSparqlBinding::QSparqlBinding(const QString& name, const QVariant& value)
 {
@@ -161,7 +163,7 @@ QSparqlBinding::QSparqlBinding(const QSparqlBinding& other)
 }
 
 /*!
-    Sets the field equal to \a other.
+    Sets the binding equal to \a other.
 */
 
 QSparqlBinding& QSparqlBinding::operator=(const QSparqlBinding& other)
@@ -173,12 +175,12 @@ QSparqlBinding& QSparqlBinding::operator=(const QSparqlBinding& other)
 
 
 /*! \fn bool QSparqlBinding::operator!=(const QSparqlBinding &other) const
-    Returns true if the field is unequal to \a other; otherwise returns
+    Returns true if the binding is unequal to \a other; otherwise returns
     false.
 */
 
 /*!
-    Returns true if the field is equal to \a other; otherwise returns
+    Returns true if the binding is equal to \a other; otherwise returns
     false.
 */
 bool QSparqlBinding::operator==(const QSparqlBinding& other) const
@@ -199,7 +201,7 @@ QSparqlBinding::~QSparqlBinding()
 
 
 /*!
-    Sets the field's \a data type URI.
+    Sets the binding's \a data type URI.
 
     \sa dataTypeUri() setType()
 */
@@ -212,7 +214,7 @@ void QSparqlBinding::setDataTypeUri(const QUrl &datatype)
 /*!
     Sets the binding's \a languageTag.
 
-    \sa languageTag() setType()
+    \sa languageTag() setDataTypeUri()
 */
 void QSparqlBinding::setLanguageTag(const QString &languageTag)
 {
@@ -234,7 +236,11 @@ static int extractTimezone(QString& str)
     return 0;
 }
 
-// FIXME: document this
+/*!
+    Sets the binding's value and the Uri of its data type
+
+    \sa dataTypeUri() setDataTypeUri()
+*/
 void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
@@ -285,7 +291,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 
 QString QSparqlBinding::toString() const
 {    
-    if (d->nodetype == QSparqlBindingPrivate::Resource)
+    if (d->nodetype == QSparqlBindingPrivate::Uri)
         return QLatin1Char('<') + QString::fromAscii(val.toUrl().toEncoded()) + QLatin1Char('>');
     
     if (d->nodetype == QSparqlBindingPrivate::Blank)
@@ -376,12 +382,12 @@ QString QSparqlBinding::toString() const
 /*!
     Sets the value of the binding to \a value..
 
-    If the data type of \a value differs from the field's current
+    If the data type of \a value differs from the binding's current
     data type, an attempt is made to cast it to the proper type. This
     preserves the data type of the field in the case of assignment,
     e.g. a QString to an integer data type.
 
-    To set the value to NULL, use clear().
+    To set the value to isInvalid(), use clear().
 
     \sa value() isReadOnly() defaultValue()
 */
@@ -391,13 +397,19 @@ void QSparqlBinding::setValue(const QVariant& value)
     val = value;
     
     if (value.type() == QVariant::Url)
-        d->nodetype = QSparqlBindingPrivate::Resource;
+        d->nodetype = QSparqlBindingPrivate::Uri;
     else
         d->nodetype = QSparqlBindingPrivate::Literal;
 }
 
-// FIXME: document this
-void QSparqlBinding::setNodeName(const QString& id)
+/*!
+    Sets the label name and RDF type of a blank node,
+    and isBlank() will return true.
+
+    \sa isBlank() toString()
+*/
+
+void QSparqlBinding::setBlankNodeLabel(const QString& id)
 {
     val = id;
     d->nodetype = QSparqlBindingPrivate::Blank;
@@ -416,7 +428,7 @@ void QSparqlBinding::clear()
 }
 
 /*!
-    Sets the name of the field to \a name.
+    Sets the name of the binding variable to \a name.
 
     \sa name()
 */
@@ -430,13 +442,15 @@ void QSparqlBinding::setName(const QString& name)
 /*!
     \fn QVariant QSparqlBinding::value() const
 
-    Returns the value of the field as a QVariant.
+    Returns the value of the binding as a QVariant.
 
-    Use isNull() to check if the field's value is NULL.
+    Use isValid() to check if the binding's value has been set.
+    
+    \sa setValue()
 */
 
 /*!
-    Returns the name of the field.
+    Returns the name of the binding's variable name.
 
     \sa setName()
 */
@@ -456,6 +470,11 @@ QVariant::Type QSparqlBinding::type() const
 }
 
 
+/*!
+    If the binding is a literal, returns the data type Uri of the RDF type
+
+    \sa setDataTypeUri()
+*/
 QUrl QSparqlBinding::dataTypeUri() const
 {
     if (d->nodetype != QSparqlBindingPrivate::Literal)
@@ -494,9 +513,9 @@ QUrl QSparqlBinding::dataTypeUri() const
 }
 
 /*!
-    Set's the field's variant type to \a type.
+    Set's the binding's variant type to \a type.
 
-    \sa type() setLanguageTag()
+    \sa type()
 */
 void QSparqlBinding::setType(QVariant::Type type)
 {
@@ -507,19 +526,19 @@ void QSparqlBinding::setType(QVariant::Type type)
 
 
 /*!
-    Returns true if the value is a resource node.
+    Returns true if the value is a Uri representing an RDF resource node.
 
-    \sa setResource()
+    \sa setValue()
 */
-bool QSparqlBinding::isResource() const
+bool QSparqlBinding::isUri() const
 {
-    return d->nodetype == QSparqlBindingPrivate::Resource;
+    return d->nodetype == QSparqlBindingPrivate::Uri;
 }
 
 /*!
     Returns true if the value is a literal node.
 
-    \sa setLiteral()
+    \sa setValue()
 */
 bool QSparqlBinding::isLiteral() const
 {
@@ -529,7 +548,7 @@ bool QSparqlBinding::isLiteral() const
 /*!
     Returns true if the value is a blank node.
 
-    \sa setBlank()
+    \sa setBlankNodeLabel()
 */
 bool QSparqlBinding::isBlank() const
 {
@@ -544,9 +563,9 @@ void QSparqlBinding::detach()
 }
 
 /*!
-    Returns the field's languageTag.
+    Returns the binding's languageTag.
 
-    \sa setLanguageTag() type()
+    \sa setLanguageTag() dataTypeUri()
 */
 QString QSparqlBinding::languageTag() const
 {

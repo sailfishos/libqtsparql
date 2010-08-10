@@ -153,7 +153,7 @@ QSparqlBinding QSparqlNTriples::parseNamedNode(QString name)
         }
     }
     
-    binding.setNodeName(nodeName);
+    binding.setBlankNodeLabel(nodeName);
     return binding;
 }
 

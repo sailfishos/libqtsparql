@@ -162,7 +162,7 @@ void tst_QSparqlBinding::toString()
 void tst_QSparqlBinding::types_data()
 {
     QTest::addColumn<QVariant>("value");
-    QTest::addColumn<bool>("isResource");
+    QTest::addColumn<bool>("isUri");
     QTest::addColumn<bool>("isLiteral");
     QTest::addColumn<bool>("isBlank");
 
@@ -178,13 +178,13 @@ void tst_QSparqlBinding::types_data()
 void tst_QSparqlBinding::types()
 {
     QFETCH(QVariant, value);
-    QFETCH(bool, isResource);
+    QFETCH(bool, isUri);
     QFETCH(bool, isLiteral);
     QFETCH(bool, isBlank);
 
     QSparqlBinding b("testBinding", value);
 
-    QCOMPARE(b.isResource(), isResource);
+    QCOMPARE(b.isUri(), isUri);
     QCOMPARE(b.isLiteral(), isLiteral);
     QCOMPARE(b.isBlank(), isBlank);
 }

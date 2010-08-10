@@ -191,7 +191,7 @@ void EndpointResultPrivate::parseResults()
                                 
                                 if (!valueElement.isNull()) {
                                     if (valueElement.tagName() == QLatin1String("bnode")) {
-                                        binding.setNodeName(valueElement.text());
+                                        binding.setBlankNodeLabel(valueElement.text());
                                     } else if (valueElement.tagName() == QLatin1String("literal")) {
                                         if (valueElement.hasAttribute(QString::fromLatin1("datatype"))) {
                                             if (valueElement.hasAttribute(QString::fromLatin1("xsi:type"))) {

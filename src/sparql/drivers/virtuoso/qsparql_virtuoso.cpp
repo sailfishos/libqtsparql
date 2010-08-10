@@ -479,13 +479,13 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 
             if ((boxFlags & VIRTUOSO_BF_IRI) != 0) {
                 if (qstrncmp(buffer.constData(), "_:", 2) == 0) {
-                    b.setNodeName(QString::fromUtf8(buffer.constData() + 2));
+                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 2));
                 } else {
                     b.setValue(QUrl(QString::fromUtf8(buffer.constData())));
                 }
             } else {
                 if (qstrncmp(buffer.constData(), "nodeID://", 9) == 0) {
-                    b.setNodeName(QString::fromUtf8(buffer.constData() + 9));
+                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 9));
                 } else if ((boxFlags & VIRTUOSO_BF_UTF8) != 0) {
                     b.setValue(QString::fromUtf8(buffer.constData()));
                 } else {
