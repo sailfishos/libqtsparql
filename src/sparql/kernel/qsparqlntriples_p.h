@@ -62,9 +62,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSparqlNTriplesParser {
+class QSparqlNTriples {
 public:
-    QSparqlNTriplesParser(QByteArray &b) : buffer(b), i(0), lineNumber(1) {}
+    QSparqlNTriples(QByteArray &b) : buffer(b), i(0), lineNumber(1) {}
     
     void parseError(QString message);
     void skipWhiteSpace();

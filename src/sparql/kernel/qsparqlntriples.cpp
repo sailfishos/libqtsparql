@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-void QSparqlNTriplesParser::parseError(QString message) 
+void QSparqlNTriples::parseError(QString message) 
 {
     QString context;
     
@@ -71,7 +71,7 @@ void QSparqlNTriplesParser::parseError(QString message)
     qWarning() << "ERROR in line " << lineNumber << ":" << message << ": '" << context << "'";        
 }
 
-void QSparqlNTriplesParser::skipWhiteSpace() 
+void QSparqlNTriples::skipWhiteSpace() 
 {
     while (i < buffer.size()) {
         if (buffer[i] != ' ' && buffer[i] != '\t')
@@ -81,7 +81,7 @@ void QSparqlNTriplesParser::skipWhiteSpace()
     }
 }
 
-void QSparqlNTriplesParser::skipComment() 
+void QSparqlNTriples::skipComment() 
 {
     while (i < buffer.size()) {
         if (buffer[i] == '\n' || buffer[i] == '\r')
@@ -91,7 +91,7 @@ void QSparqlNTriplesParser::skipComment()
     }
 }
 
-void QSparqlNTriplesParser::skipEoln() 
+void QSparqlNTriples::skipEoln() 
 {
     if (buffer[i] == '\n') {
         i++;
@@ -105,7 +105,7 @@ void QSparqlNTriplesParser::skipEoln()
     lineNumber++;
 }
 
-QUrl QSparqlNTriplesParser::parseUri() 
+QUrl QSparqlNTriples::parseUri() 
 {
     QByteArray uri;
     bool isUtf8 = false;
@@ -132,7 +132,7 @@ QUrl QSparqlNTriplesParser::parseUri()
         return QUrl::fromEncoded(uri);
 }
 
-QSparqlBinding QSparqlNTriplesParser::parseNamedNode(QString name) 
+QSparqlBinding QSparqlNTriples::parseNamedNode(QString name) 
 {
     QString nodeName;
     QSparqlBinding binding(name);
@@ -157,7 +157,7 @@ QSparqlBinding QSparqlNTriplesParser::parseNamedNode(QString name)
     return binding;
 }
 
-QString QSparqlNTriplesParser::parseLanguageTag() 
+QString QSparqlNTriples::parseLanguageTag() 
 {
     QString languageTag;
     
@@ -175,7 +175,7 @@ QString QSparqlNTriplesParser::parseLanguageTag()
     return languageTag;
 }
 
-QSparqlBinding QSparqlNTriplesParser::parseLiteral(QString name) 
+QSparqlBinding QSparqlNTriples::parseLiteral(QString name) 
 {
     QByteArray literal;
     QString languageTag;
@@ -264,7 +264,7 @@ QSparqlBinding QSparqlNTriplesParser::parseLiteral(QString name)
     return binding;
 }
 
-QSparqlResultRow QSparqlNTriplesParser::parseStatement() 
+QSparqlResultRow QSparqlNTriples::parseStatement() 
 {
     QSparqlResultRow resultRow;
     
@@ -318,7 +318,7 @@ QSparqlResultRow QSparqlNTriplesParser::parseStatement()
     return resultRow;
 }
 
-QList<QSparqlResultRow> QSparqlNTriplesParser::parse() 
+QList<QSparqlResultRow> QSparqlNTriples::parse() 
 {
     skipWhiteSpace();
     

@@ -142,7 +142,7 @@ void EndpointResultPrivate::parseResults()
         return;
     
     if (q->isGraph()) {
-        QSparqlNTriplesParser parser(buffer);
+        QSparqlNTriples parser(buffer);
         results = parser.parse();
         terminate();
         return;

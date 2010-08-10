@@ -568,11 +568,12 @@ bool QVirtuosoResult::fetchGraphResult()
 
     if (retval.name() == QLatin1String("fmtaggret-NT")) {
         QByteArray buffer = retval.value().toString().toLatin1();
-        QSparqlNTriplesParser parser(buffer);
+        QSparqlNTriples parser(buffer);
         d->results = parser.parse();
     }
     
     terminate();
+    return true;
 }
 
 bool QVirtuosoResult::boolValue() const
