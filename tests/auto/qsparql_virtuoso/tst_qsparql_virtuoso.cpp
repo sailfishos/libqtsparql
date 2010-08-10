@@ -62,6 +62,7 @@ public slots:
 
 private slots:
     void query_contacts();
+    void construct_contacts();
     void ask_contact();
     void insert_and_delete_contact();
     void query_with_error();
@@ -112,6 +113,38 @@ void tst_QSparqlVirtuoso::query_contacts()
     while (r->next()) {
         QCOMPARE(r->resultRow().count(), 2);
         contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QCOMPARE(contactNames.size(), 3);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
+}
+
+void tst_QSparqlVirtuoso::construct_contacts()
+{
+    // Note that to run this test you will need a patched version of Virtuoso with
+    // support for NTriples via a 'define output:format "NT"' option in the query
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
+                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
+                   "construct { ?u <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#nameGiven> ?ng } where {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
+                   "nco:nameGiven ?ng .}", QSparqlQuery::ConstructStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    qDebug() << r->lastError();
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+    QHash<QString, QString> contactNames;
+    while (r->next()) {
+        QCOMPARE(r->resultRow().count(), 3);
+        contactNames[r->value(0).toString()] = r->value(2).toString();
     }
     QCOMPARE(contactNames.size(), 3);
     QCOMPARE(contactNames["uri001"], QString("name001"));
