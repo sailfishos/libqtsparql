@@ -397,7 +397,7 @@ void QSparqlBinding::setValue(const QVariant& value)
 }
 
 // FIXME: document this
-void QSparqlBinding::setBlankNodeIdentifier(const QString& id)
+void QSparqlBinding::setNodeName(const QString& id)
 {
     val = id;
     d->nodetype = QSparqlBindingPrivate::Blank;

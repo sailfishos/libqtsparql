@@ -70,7 +70,7 @@ public:
 
     void setValue(const QString& value, const QUrl& dataTypeUri);
     void setValue(const QVariant& value);
-    void setBlankNodeIdentifier(const QString& id);
+    void setNodeName(const QString& id);
     inline QVariant value() const
     { return val; }
     void setName(const QString& name);
