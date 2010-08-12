@@ -130,10 +130,10 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     It can also be used to execute database-specific commands which
     are not standard SPARQL.
 
-    To execute the QSparqlQuery, call QSparqlConnection::exec() with it.
+    To execute the QSparqlQuery, pass it to QSparqlConnection::exec().
 
     QSparqlQuery supports binding of parameter values to placeholders;
-    :? and :$ are used as placeholder markers.
+    ?: and $: are used as placeholder markers.
 
     You can retrieve the values of all the fields in a single variable
     (a map) using boundValues().
@@ -158,13 +158,13 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     This enum contains a list of SPARQL statement (or clause) types the
     driver can create.
 
-    - SelectStatement An SPARQL \c SELECT statement
-    - AskStatement  An SPARQL \c ASK statement
-    - ConstructStatement An SPARQL \c CONSTRUCT statement
-    - DescribeStatement An SPARQL \c DESCRIBE statement
-    - UpdateStatement An SPARQL \c UPDATE statement
-    - InsertStatement An SPARQL \c INSERT statement
-    - DeleteStatement An SPARQL \c DELETE statement
+    \value SelectStatement A SPARQL \c SELECT statement
+    \value AskStatement  A SPARQL \c ASK statement
+    \value ConstructStatement A SPARQL \c CONSTRUCT statement
+    \value DescribeStatement A SPARQL \c DESCRIBE statement
+    \value UpdateStatement A SPARQL \c UPDATE statement
+    \value InsertStatement A SPARQL \c INSERT statement
+    \value DeleteStatement A SPARQL \c DELETE statement
 
 */
 
@@ -240,44 +240,6 @@ void QSparqlQuery::setQuery(const QString& query)
 {
     d->query = query;
 }
-
-/*!
-    Returns the value of field \a index in the current record.
-
-    The fields are numbered from left to right using the text of the
-    \c SELECT statement, e.g. in
-
-    \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 0
-
-    field 0 is \c forename and field 1 is \c
-    surname. Using \c{SELECT *} is not recommended because the order
-    of the fields in the query is undefined.
-
-    An invalid QVariant is returned if field \a index does not
-    exist, if the query is inactive, or if the query is positioned on
-    an invalid record.
-
-    \sa previous() next() first() last() seek() isActive() isValid()
-*/
-
-/*!
-  Returns a QSparqlResultRow containing the field information for the
-  current query. If the query points to a valid row (isValid() returns
-  true), the record is populated with the row's values.  An empty
-  record is returned when there is no active query (isActive() returns
-  false).
-
-  To retrieve values from a query, value() should be used since
-  its index-based lookup is faster.
-
-  In the following example, a \c{SELECT * FROM} query is executed.
-  Since the order of the columns is not defined, QSparqlResultRow::indexOf()
-  is used to obtain the index of a column.
-
-  \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 1
-
-  \sa value()
-*/
 
 /*!
     Finds the placeholders from the query, creates holders for them and inserts

@@ -61,7 +61,7 @@ class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
     Q_OBJECT
 public:
-    enum Feature {  DefaultGraph,
+    enum Feature {  QuerySize, DefaultGraph,
                     AskQueries, ConstructQueries, UpdateQueries };
 
     explicit QSparqlConnection(QObject* parent = 0);

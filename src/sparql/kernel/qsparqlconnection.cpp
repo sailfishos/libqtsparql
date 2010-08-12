@@ -267,15 +267,12 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 
   \class QSparqlConnection
 
-  \brief The QSparqlConnection provides an interface for accessing a RDF store.
+  \brief The QSparqlConnection class provides an interface for accessing an RDF store.
 
 */
 
 /*!
     Destroys the object and frees any allocated resources.
-
-    If this is the last QSparqlConnection object that uses a certain
-    database connection, the is automatically closed.
 
     \sa close()
 */
@@ -351,37 +348,16 @@ QString QSparqlConnection::driverName() const
 
 /*!
     \enum QSparqlConnection::Feature
-    FIXME: decide the features
 
     This enum contains a list of features a driver might support. Use
     hasFeature() to query whether a feature is supported or not.
 
-    - QuerySize:  Whether the database is capable of reporting the size
+    \value QuerySize  Whether the database is capable of reporting the size
     of a query. Note that some databases do not support returning the size
     (i.e. number of rows returned) of a query, in which case
     QSparqlQuery::size() will return -1.
 
-    - BackwardsIteration: Whether the result set can be iterated
-    backwards efficiently.
-
     \sa hasFeature()
-*/
-
-/*  FIXME: these were the rest of the features in QtSql:
-    \value Transactions  Whether the driver supports transactions.
-    \value BLOB  Whether the driver supports Binary Large Object fields.
-    \value Unicode  Whether the driver supports Unicode strings if the
-    database server does.
-    \value PreparedQueries  Whether the driver supports prepared query execution.
-    \value NamedPlaceholders  Whether the driver supports the use of named placeholders.
-    \value PositionalPlaceholders  Whether the driver supports the use of positional placeholders.
-    \value LastInsertId  Whether the driver supports returning the Id of the last touched row.
-    \value BatchOperations  Whether the driver supports batched operations, see QSparqlQuery::execBatch()
-    \value SimpleLocking  Whether the driver disallows a write lock on a table while other queries have a read lock on it.
-    \value LowPrecisionNumbers  Whether the driver allows fetching numerical values with low precision.
-    \value EventNotifications Whether the driver supports database event notifications.
-    \value FinishQuery Whether the driver can do any low-level resource cleanup when QSparqlQuery::finish() is called.
-    \value MultipleResultSets Whether the driver can access multiple result sets returned from batched statements or stored procedures.
 */
 
 /*!
@@ -474,7 +450,7 @@ QT_END_NAMESPACE
 
     - tracker backend for accessing <a href="http://projects.gnome.org/tracker/">Tracker</a>
     - endpoint backend of accessing online RDF stores, e.g., <a href="http://dbpedia.org">DBpedia</a>
-    - virtuoso backend for accessing Virtuoso
+    - virtuoso backend for accessing <a href="http://docs.openlinksw.com/virtuoso/">Virtuoso</a>
 
     \section gettingstarted Getting started
 
@@ -510,7 +486,7 @@ QT_END_NAMESPACE
     \skip QSparqlQuery insert
     \until InsertStatement
 
-    - Use QSparqlConnection::exec() to execute the query. It gives back a
+    - Use QSparqlConnection::exec() to execute the query. It returns a
       pointer to QSparqlResult.
 
     E.g.,
@@ -520,7 +496,7 @@ QT_END_NAMESPACE
     - You can use QSparqlResult::waitForFinished() to wait until the query has
       finished, or connect to the QSparqlResult::finished() signal.
 
-    - The QSparqlResult can be iterated by using the following functions:
+    - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparlqResult::next(),
       QSparqlResult::previous(), QSparqlResult::seek().
 

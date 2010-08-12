@@ -237,7 +237,7 @@ static int extractTimezone(QString& str)
 }
 
 /*!
-    Sets the binding's value and the Uri of its data type
+    Sets the binding's value and the URI of its data type
 
     \sa dataTypeUri() setDataTypeUri()
 */

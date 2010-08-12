@@ -108,12 +108,12 @@ public:
 
 /* this doc not included in doxygen...
     These functions allow the programmer to move forward, backward
-    or arbitrarily through the records returned by the query. If you
+    or arbitrarily through the rows returned by the query. If you
     only need to move forward through the results (e.g., by using
     next()), you can use setForwardOnly(), which will save a
     significant amount of memory overhead and improve performance on
     some databases. Once a finished query is positioned on a valid
-    record, data can be retrieved using value(). All data is
+    row, data can be retrieved using value(). All data is
     transferred from the SQL backend using QVariants.
 
     For example:
@@ -177,22 +177,56 @@ bool QSparqlResult::isTable() const
     return d->statementType == QSparqlQuery::SelectStatement;
 }
 
+/*!
+    Returns true if the statement is a CONSTRUCT or DESCRIBE query 
+    returning a graph. Each QSparqlResultRow in a graph result hasError
+    three QSParqlBinding values, named 's', 'p' and 'o' corresponding
+    to triples with Subject, Predicate and Object values
+
+    \sa isTable() isBool()
+*/
+
 bool QSparqlResult::isGraph() const
 {
     return d->statementType == QSparqlQuery::ConstructStatement 
             || d->statementType == QSparqlQuery::DescribeStatement;
 }
 
+/*!
+    Returns true if the statement is an ASK query returning a 
+    boolean value
+
+    \sa isTable() isGraph()
+*/
+
+/*!
+    Returns true if the statement is an ASK query returning a 
+    boolean value
+
+    \sa isTable() isGraph() boolValue()
+*/
+
 bool QSparqlResult::isBool() const 
 {
     return d->statementType == QSparqlQuery::AskStatement;
 }
+
+/*!
+    Returns the boolean result of an ASK query
+
+    \sa isBool() setBoolValue()
+*/
 
 bool QSparqlResult::boolValue() const
 {
     return d->boolValue;
 }
 
+/*!
+    Set the boolean result of an ASK query
+
+    \sa isBool() boolValue()
+*/
 void QSparqlResult::setBoolValue(bool v)
 {
     d->boolValue = v;
@@ -200,7 +234,7 @@ void QSparqlResult::setBoolValue(bool v)
 
 /*!
     Returns the current internal position of the query. The first
-    record is at position zero. If the position is invalid, the
+    row is at position zero. If the position is invalid, the
     function returns QSparql::BeforeFirstRow or
     QSparql::AfterLastRow, which are special negative values.
 
@@ -225,9 +259,28 @@ bool QSparqlResult::isValid() const
     return d->idx != QSparql::BeforeFirstRow && d->idx != QSparql::AfterLastRow;
 }
 
+/*!
+    Suspends the execution of the calling thread until all the query results 
+    have arrived. After this function returns, isFinished() should return true, 
+    indicating the result's contents are ready to be processed.
+
+    \sa isFinished()
+*/
 void QSparqlResult::waitForFinished()
 {
 }
+
+/*!
+    Returns true if the pending query has finished processing and the result has been 
+    received. If this function returns true, the hasError() and lastError() 
+    methods should return valid information.
+
+    Note that this function only changes state if you call waitForFinished(),
+    or if an external event happens, which in general only happens if 
+    you return to the event loop execution.
+
+    \sa waitForFinished() lastError() error()
+*/
 
 bool QSparqlResult::isFinished() const
 {
@@ -235,8 +288,8 @@ bool QSparqlResult::isFinished() const
 }
 
 /*!
-  Retrieves the record at position \a index, if available, and
-  positions the query on the retrieved record. The first record is at
+  Retrieves the result row at position \a index, if available, and
+  positions the query on the retrieved row. The first result row is at
   position 0. Note that the query must be in an \l{finished()}
   {finished} state and isSelect() must return true before calling this
   function.
@@ -246,12 +299,12 @@ bool QSparqlResult::isFinished() const
   \list
 
   \o If \a index is negative, the result is positioned before the
-  first record and false is returned.
+  first row and false is returned.
 
-  \o Otherwise, an attempt is made to move to the record at position
-  \a index. If the record at position \a index could not be retrieved,
-  the result is positioned after the last record and false is
-  returned. If the record is successfully retrieved, true is returned.
+  \o Otherwise, an attempt is made to move to the row at position
+  \a index. If the row at position \a index could not be retrieved,
+  the result is positioned after the last row and false is
+  returned. If the row is successfully retrieved, true is returned.
 
   \endlist
 
@@ -259,23 +312,23 @@ bool QSparqlResult::isFinished() const
 
   \list
 
-  \o If the result is currently positioned before the first record or
-  on the first record, and \a index is negative, there is no change,
+  \o If the result is currently positioned before the first row or
+  on the first row, and \a index is negative, there is no change,
   and false is returned.
 
-  \o If the result is currently located after the last record, and \a
+  \o If the result is currently located after the last row, and \a
   index is positive, there is no change, and false is returned.
 
   \o If the result is currently located somewhere in the middle, and
   the relative offset \a index moves the result below zero, the result
-  is positioned before the first record and false is returned.
+  is positioned before the first row and false is returned.
 
-  \o Otherwise, an attempt is made to move to the record \a index
-  records ahead of the current record (or \a index records behind the
-  current record if \a index is negative). If the record at offset \a
+  \o Otherwise, an attempt is made to move to the row \a index
+  rows ahead of the current row (or \a index rows behind the
+  current row if \a index is negative). If the row at offset \a
   index could not be retrieved, the result is positioned after the
-  last record if \a index >= 0, (or before the first record if \a
-  index is negative), and false is returned. If the record is
+  last row if \a index >= 0, (or before the first row if \a
+  index is negative), and false is returned. If the row is
   successfully retrieved, true is returned.
 
   \endlist
@@ -317,8 +370,8 @@ bool QSparqlResult::seek(int index)
 
 /*!
 
-  Retrieves the next record in the result, if available, and positions
-  the query on the retrieved record. Note that the result must be in
+  Retrieves the next row in the result, if available, and positions
+  the query on the retrieved row. Note that the result must be in
   the \l{isFinished()}{finished} state and isSelect() must return true
   before calling this function or it will do nothing and return false.
 
@@ -326,20 +379,20 @@ bool QSparqlResult::seek(int index)
 
   \list
 
-  \o If the result is currently located before the first record,
+  \o If the result is currently located before the first row,
   e.g. immediately after a query is executed, an attempt is made to
-  retrieve the first record.
+  retrieve the first row.
 
-  \o If the result is currently located after the last record, there
+  \o If the result is currently located after the last row, there
   is no change and false is returned.
 
   \o If the result is located somewhere in the middle, an attempt is
-  made to retrieve the next record.
+  made to retrieve the next row.
 
   \endlist
 
-  If the record could not be retrieved, the result is positioned after
-  the last record and false is returned. If the record is successfully
+  If the row could not be retrieved, the result is positioned after
+  the last row and false is returned. If the row is successfully
   retrieved, true is returned.
 
   \sa previous() first() last() seek() pos() isFinished() isValid()
@@ -366,8 +419,8 @@ bool QSparqlResult::next()
 
 /*!
 
-  Retrieves the previous record in the result, if available, and
-  positions the query on the retrieved record. Note that the result
+  Retrieves the previous row in the result, if available, and
+  positions the query on the retrieved row. Note that the result
   must be in the \l{isFinished()}{finished} state before calling this
   function or it will do nothing and return false.
 
@@ -375,19 +428,19 @@ bool QSparqlResult::next()
 
   \list
 
-  \o If the result is currently located before the first record, there
+  \o If the result is currently located before the first row, there
   is no change and false is returned.
 
-  \o If the result is currently located after the last record, an
-  attempt is made to retrieve the last record.
+  \o If the result is currently located after the last row, an
+  attempt is made to retrieve the last row.
 
   \o If the result is somewhere in the middle, an attempt is made to
-  retrieve the previous record.
+  retrieve the previous row.
 
   \endlist
 
-  If the record could not be retrieved, the result is positioned
-  before the first record and false is returned. If the record is
+  If the row could not be retrieved, the result is positioned
+  before the first row and false is returned. If the row is
   successfully retrieved, true is returned.
 
   \sa next() first() last() seek() pos() isFinished() isValid()
@@ -415,8 +468,8 @@ bool QSparqlResult::previous()
 }
 
 /*!
-  Retrieves the first record in the result, if available, and
-  positions the query on the retrieved record. Note that the result
+  Retrieves the first row in the result, if available, and
+  positions the query on the retrieved row. Note that the result
   must be in the \l{isFinished()}{finished} state before calling this
   function or it will do nothing and return false.  Returns true if
   successful. If unsuccessful the query position is set to an invalid
@@ -434,8 +487,8 @@ bool QSparqlResult::first()
 
 /*!
 
-  Retrieves the last record in the result, if available, and positions
-  the query on the retrieved record. Note that the result must be in
+  Retrieves the last row in the result, if available, and positions
+  the query on the retrieved row. Note that the result must be in
   the \l{isFinished()}{finished} state before calling this function or
   it will do nothing and return false.  Returns true if successful. If
   unsuccessful the query position is set to an invalid position and
@@ -462,6 +515,25 @@ bool QSparqlResult::last()
   \sa isFinished() QSparqlDriver::hasFeature()
 */
 
+/*!
+    Returns the value of binding \a index in the current result row.
+
+    The binding values are numbered from left to right using the text of the
+    \c SELECT statement, e.g. in
+
+    \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 0
+
+    field 0 is \c forename and field 1 is \c
+    surname. Using \c{SELECT *} is not recommended because the order
+    of the fields in the query is undefined.
+
+    An invalid QVariant is returned if binding value \a index does not
+    exist, if the query is inactive, or if the query is positioned on
+    an invalid result row.
+
+    \sa previous() next() first() last() seek() isActive() isValid()
+*/
+
 QVariant QSparqlResult::value(int i) const
 {
     if (!isValid())
@@ -486,7 +558,7 @@ void QSparqlResult::setPos(int pos)
     This function is provided for derived classes to set the last
     error to \a error.
 
-    \sa lastError()
+    \sa lastError() hasError()
 */
 
 void QSparqlResult::setLastError(const QSparqlError &error)
@@ -497,6 +569,8 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 
 /*!
     Returns true if there is an error associated with the result.
+    
+    \sa setLastError() lastError()
 */
 
 bool QSparqlResult::hasError() const
@@ -521,10 +595,10 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
-    \fn void QSparqlResult::dataReady(int totalCount)
+    \fn void QSparqlResult::dataReady(int totalRows)
 
     This signal is emitted when a query has fetched data. The \a
-    totalCount is the row count of the data set after the new data has
+    totalRows is the row count of the data set after the new data has
     arrived.
 */
 
@@ -533,7 +607,7 @@ QSparqlError QSparqlResult::lastError() const
 
     Returns the data for field \a index in the current row as
     a QVariant. This function is only called if the result is in
-    a finished state and is positioned on a valid record and \a index is
+    a finished state and is positioned on a valid row and \a index is
     non-negative. Derived classes must reimplement this function and
     return the value of field \a index, or QVariant() if it cannot be
     determined.
@@ -556,11 +630,11 @@ QSparqlError QSparqlResult::lastError() const
 /*!
     \fn bool QSparqlResult::fetchFirst()
 
-    Positions the result to the first record (row 0) in the result.
+    Positions the result to the first row (row 0) in the result.
 
     This function is only called if the result is in a finished state.
     Derived classes must reimplement this function and position the
-    result to the first record, and call setPos() with an appropriate
+    result to the first row, and call setPos() with an appropriate
     value. Return true to indicate success, or false to signify
     failure.
 
@@ -570,11 +644,11 @@ QSparqlError QSparqlResult::lastError() const
 /*!
     \fn bool QSparqlResult::fetchLast()
 
-    Positions the result to the last record (last row) in the result.
+    Positions the result to the last row (last row) in the result.
 
     This function is only called if the result is in an finished state.
     Derived classes must reimplement this function and position the
-    result to the last record, and call setPos() with an appropriate
+    result to the last row, and call setPos() with an appropriate
     value. Return true to indicate success, or false to signify
     failure.
 
@@ -582,13 +656,13 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
-    Positions the result to the next available record (row) in the
+    Positions the result to the next available row (row) in the
     result.
 
     This function is only called if the result is in a finished
     state. The default implementation calls fetch() with the next
     index. Derived classes can reimplement this function and position
-    the result to the next record in some other way, and call setPos()
+    the result to the next row in some other way, and call setPos()
     with an appropriate value. Return true to indicate success, or
     false to signify failure.
 
@@ -601,12 +675,12 @@ bool QSparqlResult::fetchNext()
 }
 
 /*!
-    Positions the result to the previous record (row) in the result.
+    Positions the result to the previous row (row) in the result.
 
     This function is only called if the result is in a finished state.
     The default implementation calls fetch() with the previous index.
     Derived classes can reimplement this function and position the
-    result to the next record in some other way, and call setPos()
+    result to the next row in some other way, and call setPos()
     with an appropriate value. Return true to indicate success, or
     false to signify failure.
 */
@@ -615,15 +689,26 @@ bool QSparqlResult::fetchPrevious()
 {
     return fetch(pos() - 1);
 }
-
 /*!
-    Returns the current record if the query is finished; otherwise
-    returns an empty QSparqlResultRow.
+  Returns a QSparqlResultRow containing the binding values information for the
+  current query. If the query points to a valid row (isValid() returns
+  true), the result row is populated.  An empty
+  result row is returned when there is no result at the current position
 
-    The default implementation always returns an empty QSparqlResultRow.
+  To retrieve just the values from a query, value() should be used since
+  its index-based lookup is faster. Use QSparqlResultRow::binding() to
+  retrieve the value along with meta data, such as the data type URI
+  or language tag for literals.
 
-    \sa isFinished()
+  In the following example, a \c{SELECT * FROM} query is executed.
+  Since the order of the columns is not defined, QSparqlResultRow::indexOf()
+  is used to obtain the index of a column.
+
+  \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 1
+
+  \sa value() pos() setPos()
 */
+
 QSparqlResultRow QSparqlResult::resultRow() const
 {
     return QSparqlResultRow();
