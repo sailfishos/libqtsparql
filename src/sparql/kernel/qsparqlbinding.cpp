@@ -101,21 +101,21 @@ public:
     Binding data values are stored as QVariants. Using an incompatible
     type is not permitted. For example:
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 2
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 2
 
     However, the field will attempt to cast certain data types to the
     binding data type where possible:
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 3
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 3
 
     QSparqlBinding objects are rarely created explicitly in application
     code. They are usually accessed indirectly through \l{QSparqlResultRow}s
     that already contain a list of bindings. For example:
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 4
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 4
     \dots
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 5
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 6
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 5
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 6
 
     A QSparqlBinding object can provide some meta-data about the
     binding, for example, its name(), variant type(), languageTag(),

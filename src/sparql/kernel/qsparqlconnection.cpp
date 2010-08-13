@@ -374,7 +374,7 @@ bool QSparqlConnection::hasFeature(Feature feature) const
     the name of the driver given in the constructor was valid.
 
     Example:
-    \snippet doc/src/snippets/code/src_sql_kernel_qsparqlconnection.cpp 8
+    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlconnection.cpp 8
 */
 bool QSparqlConnection::isValid() const
 {

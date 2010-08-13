@@ -374,7 +374,7 @@ QVariant QSparqlQuery::boundValue(const QString& placeholder) const
   With named binding, the bound values can be examined in the
   following ways:
 
-  \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 14
+  \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 14
 
   \sa boundValue() bindValue()
 */

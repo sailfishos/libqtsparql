@@ -118,7 +118,7 @@ public:
 
     For example:
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 7
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 7
 
     To access the data returned by a query, use value(int). Each
     field in the data returned by a \c SELECT statement is accessed
@@ -131,7 +131,7 @@ public:
     explained below). To convert a field name into an index, use
     resultRow().\l{QSparqlResultRow::indexOf()}{indexOf()}, for example:
 
-    \snippet doc/src/snippets/sqldatabase/sqldatabase.cpp 8
+    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 8
 
     \sa QSparqlDriver
 */
@@ -521,7 +521,7 @@ bool QSparqlResult::last()
     The binding values are numbered from left to right using the text of the
     \c SELECT statement, e.g. in
 
-    \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 0
+    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 0
 
     field 0 is \c forename and field 1 is \c
     surname. Using \c{SELECT *} is not recommended because the order
@@ -704,7 +704,7 @@ bool QSparqlResult::fetchPrevious()
   Since the order of the columns is not defined, QSparqlResultRow::indexOf()
   is used to obtain the index of a column.
 
-  \snippet doc/src/snippets/code/src_sql_kernel_qsparqlquery.cpp 1
+  \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 1
 
   \sa value() pos() setPos()
 */

@@ -201,7 +201,7 @@ void QSparqlError::setNumber(int number)
     Returns true if an error is set, otherwise false.
 
     Example:
-    \snippet doc/src/snippets/code/src_sql_kernel_qsparqlerror.cpp 0
+    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlerror.cpp 0
 
     \sa type()
 */
