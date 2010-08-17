@@ -123,6 +123,7 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
 
     \ingroup database
     \ingroup shared
+    \inmodule QtSparql
 
     QSparqlQuery encapsulates the functionality involved in creating
     SPARQL queries which are executed on a \l QSparqlConnection.

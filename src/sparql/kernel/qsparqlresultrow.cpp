@@ -80,6 +80,7 @@ QSparqlResultRowPrivate::QSparqlResultRowPrivate(const QSparqlResultRowPrivate &
 
     \ingroup database
     \ingroup shared
+    \inmodule QtSparql
 
     The QSparqlResultRow class encapsulates the functionality and
     characteristics of a row of results returned by a QSparqlQuery.  A

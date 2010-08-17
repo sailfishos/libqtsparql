@@ -268,6 +268,7 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
   \class QSparqlConnection
 
   \brief The QSparqlConnection class provides an interface for accessing an RDF store.
+    \inmodule QtSparql
 
 */
 
@@ -356,6 +357,15 @@ QString QSparqlConnection::driverName() const
     of a query. Note that some databases do not support returning the size
     (i.e. number of rows returned) of a query, in which case
     QSparqlQuery::size() will return -1.
+    
+    \value DefaultGraph  The store has a default graph which doesn't have
+    to be specified. Some stores, like Virtuoso, don't have a default graph.
+    
+    \value AskQueries The driver supports ASK queries
+    
+    \value ConstructQueries The driver supports CONSTRUCT queries
+    
+    \value UpdateQueries The driver supports INSERT and UPDATE queries
 
     \sa hasFeature()
 */

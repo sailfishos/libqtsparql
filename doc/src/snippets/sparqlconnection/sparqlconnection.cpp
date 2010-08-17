@@ -125,7 +125,7 @@ void QSparqlQuery_snippets()
     {
     // binding index lookup
 //! [8]
-    QSparqlQuery query("SELECT * FROM artist");
+    QSparqlQuery query("SELECT ?country WHERE { ?country rdf:type dbpedia-owl:Country . }");
     QSparqlResult * result = connection.exec(query);
     int bindingNo = result->resultRow().indexOf("country");
     while (result->next()) {
@@ -165,10 +165,12 @@ void QSparqlQueryModel_snippets()
     {
 //! [16]
     QSparqlQueryModel *model = new QSparqlQueryModel;
-    QSparqlQuery query("SELECT name, salary FROM employee");
+    QSparqlQuery query("SELECT ?name ?surname WHERE { "
+                       "?person foaf:name ?name; "
+                       "foaf:surname ?surname . }");
     model->setQuery(query, connection);
     model->setHeaderData(0, Qt::Horizontal, tr("Name"));
-    model->setHeaderData(1, Qt::Horizontal, tr("Salary"));
+    model->setHeaderData(1, Qt::Horizontal, tr("Surname"));
 
 //! [17]
     QTableView *view = new QTableView;
@@ -183,7 +185,8 @@ void QSparqlQueryModel_snippets()
 
 //! [21]
     QSparqlQueryModel model;
-    QSparqlQuery query("SELECT * FROM employee");
+    QSparqlQuery query("select distinct ?person ?salary where { "
+                       "?person dbpedia-owl:salary ?salary}");
     model.setQuery(query, connection);
     int salary = model.resultRow(4).value("salary").toInt();
 //! [21]
@@ -249,7 +252,9 @@ void sql_intro_snippets()
     {
     // SELECT1
 //! [31]
-    QSparqlQuery query("SELECT name, salary FROM employee WHERE salary > 50000");
+    QSparqlQuery query("select distinct ?person ?salary where { "
+                       "?person dbpedia-owl:salary ?salary . "
+                       " FILTER (?salary > 5000)");
     result = connection.exec(query);
 //! [31]
 
@@ -265,7 +270,9 @@ void sql_intro_snippets()
     {
     // FEATURE
 //! [33]
-    QSparqlQuery query("SELECT name, salary FROM employee WHERE salary > 50000");
+    QSparqlQuery query("select distinct ?person ?salary where { "
+                       "?person dbpedia-owl:salary ?salary . "
+                       " FILTER (?salary > 5000)");
     int numRows;
     result = connection.exec(query);
 
@@ -282,8 +289,10 @@ void sql_intro_snippets()
     {
     // INSERT1
 //! [34]
-    QSparqlQuery query("INSERT INTO employee (id, name, salary) "
-                       "VALUES (1001, 'Thad Beaumont', 65000)");
+    QSparqlQuery query("insert into <http://example.org/contacts#> "
+                       "{ <http://example.org/foaf/Thad_Beaumont> a nco:PersonContact; "
+                       "nco:nameGiven \"Thad Beaumont\" . }",
+                       QSparqlQuery::InsertStatement);
     result = connection.exec(query);
 //! [34]
     }
@@ -292,7 +301,13 @@ void sql_intro_snippets()
     {
     // UPDATE1
 //! [37]
-    QSparqlQuery query("UPDATE employee SET salary = 70000 WHERE id = 1003");
+    QSparqlQuery query("WITH <http://example/addresses> "
+                       "DELETE { ?person foaf:firstName 'Bill' } "
+                       "INSERT { ?person foaf:firstName 'William' } "
+                       "WHERE "
+                       "{ ?person a foaf:Person . "
+                       "  ?person foaf:firstName 'Bill' } ", 
+                       QSparqlQuery::InsertStatement);
     result = connection.exec(query);
 //! [37]
     }
@@ -300,7 +315,11 @@ void sql_intro_snippets()
     {
     // DELETE1
 //! [38]
-    QSparqlQuery query("DELETE FROM employee WHERE id = 1007");
+    QSparqlQuery del("DELETE FROM GRAPH <http://example.org/contacts#> "
+                     "{ <uri001> ?p ?o . } "
+                     "FROM <http://example.org/contacts#> "
+                     "WHERE { <uri001> ?p ?o . }",
+                     QSparqlQuery::DeleteStatement);
     result = connection.exec(query);
 //! [38]
     }
@@ -309,12 +328,13 @@ void sql_intro_snippets()
     // SQLQUERYMODEL1
 //! [40]
     QSparqlQueryModel model;
-    QSparqlQuery query("SELECT * FROM employee");
+    QSparqlQuery query("select distinct ?person ?salary where { "
+                       "?person dbpedia-owl:salary ?salary . }");
     model.setQuery(query, connection);
 
     for (int i = 0; i < model.rowCount(); ++i) {
-        int id = model.resultRow(i).value("id").toInt();
-        QString name = model.resultRow(i).value("name").toString();
+        int id = model.resultRow(i).value("salary").toInt();
+        QString name = model.resultRow(i).value("person").toString();
         qDebug() << id << name;
     }
 //! [40]

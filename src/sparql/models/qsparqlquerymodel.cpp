@@ -156,6 +156,7 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
     for SPARQL result sets.
 
     \ingroup connection
+    \inmodule QtSparql
 
     QSparqlQueryModel is a high-level interface for executing SPARQL
     statements and traversing the result set. It is built on top of

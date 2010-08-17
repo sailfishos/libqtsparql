@@ -74,6 +74,7 @@ public:
     accessing the asynchronous results of an executed QSparqlQuery.
 
     \ingroup database
+    \inmodule QtSparql
 
     When QSparqlConnection::exec() is called, it asynchronously begins
     the execution of the given query. The returned result is in an

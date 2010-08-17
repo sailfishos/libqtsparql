@@ -92,6 +92,7 @@ public:
 
     \ingroup database
     \ingroup shared
+    \inmodule QtSparql
 
     QSparqlBinding represents the characteristics of a single RDF node in a
     query result, such as the data type and variable name. A
