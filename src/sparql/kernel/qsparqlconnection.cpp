@@ -49,6 +49,9 @@
 #ifdef QT_SPARQL_TRACKER
 #include "../drivers/tracker/qsparql_tracker.h"
 #endif
+#ifdef QT_SPARQL_TRACKER_DIRECT
+#include "../drivers/tracker_direct/qsparql_tracker_direct.h"
+#endif
 #ifdef QT_SPARQL_ENDPOINT
 #include "../drivers/endpoint/qsparql_endpoint.h"
 #endif
@@ -403,6 +406,9 @@ QStringList QSparqlConnection::drivers()
 #endif
 #ifdef QT_SPARQL_TRACKER
     list << QLatin1String("QTRACKER");
+#endif
+#ifdef QT_SPARQL_TRACKER_DIRECT
+    list << QLatin1String("QTRACKER_DIRECT");
 #endif
 #ifdef QT_SPARQL_ENDPOINT
     list << QLatin1String("QENDPOINT");

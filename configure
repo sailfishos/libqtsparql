@@ -59,6 +59,8 @@ QMAKE_VARS_FILE=.qmake.vars
 # default flags for SPARQL drivers (can get changed later)
 QT_CFLAGS_ENDPOINT=
 QT_CFLAGS_TRACKER=
+QT_CFLAGS_TRACKER_DIRECT="-I/usr/include/tracker-0.9/libtracker-sparql -I/usr/include/glib-2.0 -I/usr/local/lib/glib-2.0/include"
+QT_LFLAGS_TRACKER_DIRECT="-ltracker-sparql-0.9"
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
@@ -196,6 +198,14 @@ for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
             fi
             ;;
 
+        tracker_direct)
+            if [ "$CFG_SPARQL_tracker_direct" != "no" ]; then
+                if [ "$CFG_SPARQL_tracker_direct" = "auto" ]; then
+                     CFG_SPARQL_tracker_direct=plugin
+                fi
+            fi
+            ;;
+
         endpoint)
             if [ "$CFG_SPARQL_endpoint" != "no" ]; then
                 QT_LFLAGS_ENDPOINT=
@@ -276,6 +286,22 @@ QT_SOURCE_TREE = \$\$quote($relpath)
 QT_BUILD_TREE = \$\$quote($outpath)
 
 EOF
+
+if [ -n "$QT_CFLAGS_ENDPOINT" ]; then
+    echo "QT_CFLAGS_ENDPOINT   = $QT_CFLAGS_ENDPOINT" >> "$CACHEFILE.tmp"
+fi
+if [ -n "$QT_CFLAGS_TRACKER" ]; then
+    echo "QT_CFLAGS_TRACKER   = $QT_CFLAGS_TRACKER" >> "$CACHEFILE.tmp"
+fi
+if [ -n "$QT_CFLAGS_TRACKER_DIRECT" ]; then
+    echo "QT_CFLAGS_TRACKER_DIRECT   = $QT_CFLAGS_TRACKER_DIRECT" >> "$CACHEFILE.tmp"
+fi
+if [ -n "$QT_LFLAGS_TRACKER_DIRECT" ]; then
+    echo "QT_LFLAGS_TRACKER_DIRECT   = $QT_LFLAGS_TRACKER_DIRECT" >> "$CACHEFILE.tmp"
+fi
+if [ -n "$QT_LFLAGS_ODBC" ]; then
+    echo "QT_LFLAGS_ODBC   = $QT_LFLAGS_ODBC" >> "$CACHEFILE.tmp"
+fi
 
 # replace .qmake.cache if it differs from the newly created temp file
 if cmp -s "$CACHEFILE.tmp" "$CACHEFILE"; then
