@@ -65,6 +65,14 @@ async_cursor_next_callback(   GObject *source_object,
     GError *error = NULL;
     gboolean active = tracker_sparql_cursor_next_finish(data->cursor, result, &error);
     
+    if (error != NULL) {
+        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+        e.setType(QSparqlError::BackendError);
+        data->setLastError(e);
+        data->terminate();
+        return;
+    }
+    
     if (!active) {
         data->terminate();
         return;
@@ -92,6 +100,9 @@ async_query_callback( GObject *source_object,
     data->cursor = tracker_sparql_connection_query_finish(data->driverPrivate->connection, result, &error);
 
     if (error != NULL || data->cursor == NULL) {
+        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+        e.setType(QSparqlError::StatementError);
+        data->setLastError(e);
         data->terminate();
         return;
     }
@@ -109,6 +120,9 @@ async_update_callback( GObject *source_object,
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
     if (error != NULL) {
+        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+        e.setType(QSparqlError::StatementError);
+        data->setLastError(e);
         data->terminate();
         return;
     }
@@ -117,7 +131,7 @@ async_update_callback( GObject *source_object,
 }
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
-: q(result), driverPrivate(dpp), loop(0)
+: q(result), driverPrivate(dpp), isFinished(false), loop(0)
 {
 }
 
@@ -132,6 +146,11 @@ void QTrackerDirectResultPrivate::terminate()
     
     if (loop != 0)
         loop->exit();
+}
+
+void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
+{
+    q->setLastError(e);
 }
 
 QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
@@ -310,10 +329,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
     if (isOpen())
         close();
-    
-    /* As we know only read-only queries will be done, it's enough
-     * to use a connection with only direct-access setup. 
-     */
+
     GError *error = NULL;
     d->connection = tracker_sparql_connection_get(&error);
     if (!d->connection) {

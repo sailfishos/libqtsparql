@@ -43,6 +43,7 @@
 #define QSPARQL_TRACKER_DIRECT_P_H
 
 #include <qsparqlquery.h>
+#include <qsparqlerror.h>
 
 #include <QtCore/QList>
 #include <QtCore/QEventLoop>
@@ -72,6 +73,7 @@ public:
 
     ~QTrackerDirectResultPrivate();
     void terminate();
+    void setLastError(const QSparqlError& e);
     
     TrackerSparqlCursor * cursor;
     QList<QSparqlResultRow> results;

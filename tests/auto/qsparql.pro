@@ -5,6 +5,7 @@ SUBDIRS = \
     qsparql \
     qsparql_endpoint \
     qsparql_tracker \
+    qsparql_tracker_direct \
     qsparql_virtuoso
 
 check.CONFIG = recursive
