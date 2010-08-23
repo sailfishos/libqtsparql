@@ -163,7 +163,6 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     \value AskStatement  A SPARQL \c ASK statement
     \value ConstructStatement A SPARQL \c CONSTRUCT statement
     \value DescribeStatement A SPARQL \c DESCRIBE statement
-    \value UpdateStatement A SPARQL \c UPDATE statement
     \value InsertStatement A SPARQL \c INSERT statement
     \value DeleteStatement A SPARQL \c DELETE statement
 
