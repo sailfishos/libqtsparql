@@ -99,6 +99,23 @@ async_query_callback( GObject *source_object,
     tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
 }
 
+static void
+async_update_callback( GObject *source_object,
+                       GAsyncResult *result,
+                       gpointer user_data)
+{
+    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
+    GError *error = NULL;
+    tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
+
+    if (error != NULL) {
+        data->terminate();
+        return;
+    }
+
+    data->terminate();
+}
+
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
 : q(result), driverPrivate(dpp), loop(0)
 {
@@ -145,6 +162,12 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
     }
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
+        tracker_sparql_connection_update_async( d->connection,
+                                                query.toLatin1().constData(),
+                                                0,
+                                                NULL,
+                                                async_update_callback,
+                                                res->d);
     {
         break;
     }
@@ -292,7 +315,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
      * to use a connection with only direct-access setup. 
      */
     GError *error = NULL;
-    d->connection = tracker_sparql_connection_get_direct(&error);
+    d->connection = tracker_sparql_connection_get(&error);
     if (!d->connection) {
         qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
                     error ? error->message : "unknown error");
