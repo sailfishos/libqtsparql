@@ -61,11 +61,10 @@ async_cursor_next_callback(   GObject *source_object,
                         GAsyncResult *result,
                         gpointer user_data)
 {
-    printf("ENTER async_cursor_next_callback\n");
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
     GError *error = NULL;
-
     gboolean active = tracker_sparql_cursor_next_finish(data->cursor, result, &error);
+    
     if (!active) {
         data->terminate();
         return;
@@ -75,13 +74,11 @@ async_cursor_next_callback(   GObject *source_object,
     gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
     
     for (int i = 0; i < n_columns; i++) {
-        printf("Got a result: %s\n", tracker_sparql_cursor_get_string(data->cursor, i, NULL));
         QSparqlBinding binding(QString::fromLatin1("$%1").arg(i + 1), QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, NULL)));
         resultRow.append(binding);
     }
     
     data->results.append(resultRow);
-    
     tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
 }
 
@@ -90,10 +87,8 @@ async_query_callback( GObject *source_object,
                 GAsyncResult *result,
                 gpointer user_data)
 {
-    printf("ENTER async_query_callback\n");
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
     GError *error = NULL;
-
     data->cursor = tracker_sparql_connection_query_finish(data->driverPrivate->connection, result, &error);
 
     if (error != NULL || data->cursor == NULL) {
@@ -101,12 +96,11 @@ async_query_callback( GObject *source_object,
         return;
     }
 
-
     tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
 }
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
-: q(result), driverPrivate(dpp)
+: q(result), driverPrivate(dpp), loop(0)
 {
 }
 
