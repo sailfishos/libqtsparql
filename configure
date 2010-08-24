@@ -184,7 +184,7 @@ while [ "$#" -gt 0 ]; do
                 break
             fi
         done
-    [ "$found" = yes ] || ( echo "driver not available: $VAR"; exit 1 )
+    [ "$found" = yes ] || ( echo "driver not available: $VAL"; exit 1 )
     eval "CFG_SPARQL_$VAL=\$OPT"
     shift
 done
