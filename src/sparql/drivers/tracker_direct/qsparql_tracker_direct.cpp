@@ -74,6 +74,12 @@ async_cursor_next_callback(   GObject *source_object,
     }
     
     if (!active) {
+        if (data->q->isBool()) {
+            data->setBoolValue(data->results.count() == 1
+                                    && data->results[0].count() == 1
+                                    && data->results[0].value(0).toString() == QLatin1String("1"));
+        }
+        
         data->terminate();
         return;
     }
@@ -153,6 +159,11 @@ void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
     q->setLastError(e);
 }
 
+void QTrackerDirectResultPrivate::setBoolValue(bool v)
+{
+    q->setBoolValue(v);
+}
+
 QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
 {
     d = new QTrackerDirectResultPrivate(this, p);
@@ -170,6 +181,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
     res->setStatementType(type);
     
     switch (type) {
+    case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
     {
         tracker_sparql_connection_query_async(  d->connection,
@@ -179,7 +191,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
                                                 res->d);
         break;
     }
-    case QSparqlQuery::InsertStatement: // fall-through
+    case QSparqlQuery::InsertStatement:
     case QSparqlQuery::DeleteStatement:
         tracker_sparql_connection_update_async( d->connection,
                                                 query.toLatin1().constData(),
@@ -310,11 +322,11 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
     case QSparqlConnection::QuerySize:
         return true;
     case QSparqlConnection::AskQueries:
-        return false;
+        return true;
     case QSparqlConnection::ConstructQueries:
         return false;
     case QSparqlConnection::UpdateQueries:
-        return false;
+        return true;
     case QSparqlConnection::DefaultGraph:
         return true;
     }

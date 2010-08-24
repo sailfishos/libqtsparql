@@ -74,6 +74,7 @@ public:
     ~QTrackerDirectResultPrivate();
     void terminate();
     void setLastError(const QSparqlError& e);
+    void setBoolValue(bool v);
     
     TrackerSparqlCursor * cursor;
     QList<QSparqlResultRow> results;
