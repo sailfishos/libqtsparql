@@ -48,6 +48,10 @@
 #include <QtCore/QList>
 #include <QtCore/QEventLoop>
 
+// The gdbusintrospection.h header has a variable called 'signals', which
+// gets substituted with the Qt 'signals' macro. So work round the 
+// problem by undefining it here.
+#undef signals
 #include <tracker-sparql.h>
 
 class QString;
@@ -75,6 +79,7 @@ public:
     void terminate();
     void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
+    void dataReady(int totalCount);
     
     TrackerSparqlCursor * cursor;
     QList<QSparqlResultRow> results;

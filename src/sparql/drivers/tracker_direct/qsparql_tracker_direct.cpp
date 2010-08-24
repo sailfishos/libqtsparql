@@ -93,6 +93,7 @@ async_cursor_next_callback(   GObject *source_object,
     }
     
     data->results.append(resultRow);
+    data->dataReady(data->results.count());
     tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
 }
 
@@ -162,6 +163,11 @@ void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
 void QTrackerDirectResultPrivate::setBoolValue(bool v)
 {
     q->setBoolValue(v);
+}
+
+void QTrackerDirectResultPrivate::dataReady(int totalCount)
+{
+    emit q->dataReady(totalCount);
 }
 
 QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
