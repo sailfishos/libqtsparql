@@ -78,6 +78,9 @@ tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
 
 void tst_QSparqlEndpoint::initTestCase()
 {
+    // For running the test without installing the plugins. Should work in
+    // normal and vpath builds.
+    QCoreApplication::addLibraryPath("../../../plugins");
 }
 
 void tst_QSparqlEndpoint::cleanupTestCase()
@@ -204,14 +207,5 @@ void tst_QSparqlEndpoint::query_with_error()
     delete r;
 }
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication app(argc, argv);
-    // TODO: There should probably be a better way of doing this:
-    app.addLibraryPath("../../../plugins");
-    tst_QSparqlEndpoint tc; 
-    return QTest::qExec(&tc, argc, argv);
-}
-
-// QTEST_MAIN( tst_QSparqlEndpoint )
+QTEST_MAIN( tst_QSparqlEndpoint )
 #include "tst_qsparql_endpoint.moc"

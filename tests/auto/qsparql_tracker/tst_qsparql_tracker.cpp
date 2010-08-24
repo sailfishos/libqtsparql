@@ -77,6 +77,9 @@ tst_QSparqlTracker::~tst_QSparqlTracker()
 
 void tst_QSparqlTracker::initTestCase()
 {
+    // For running the test without installing the plugins. Should work in
+    // normal and vpath builds.
+    QCoreApplication::addLibraryPath("../../../plugins");
 }
 
 void tst_QSparqlTracker::cleanupTestCase()

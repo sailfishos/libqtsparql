@@ -78,6 +78,9 @@ tst_QSparqlVirtuoso::~tst_QSparqlVirtuoso()
 
 void tst_QSparqlVirtuoso::initTestCase()
 {
+    // For running the test without installing the plugins. Should work in
+    // normal and vpath builds.
+    QCoreApplication::addLibraryPath("../../../plugins");
 }
 
 void tst_QSparqlVirtuoso::cleanupTestCase()
@@ -274,14 +277,5 @@ void tst_QSparqlVirtuoso::query_with_error()
     delete r;
 }
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication app(argc, argv);
-    // TODO: There should probably be a better way of doing this:
-    app.addLibraryPath("../../../plugins");
-    tst_QSparqlVirtuoso tc; 
-    return QTest::qExec(&tc, argc, argv);
-}
-
-// QTEST_MAIN( tst_QSparqlVirtuoso )
+QTEST_MAIN( tst_QSparqlVirtuoso )
 #include "tst_qsparql_virtuoso.moc"
