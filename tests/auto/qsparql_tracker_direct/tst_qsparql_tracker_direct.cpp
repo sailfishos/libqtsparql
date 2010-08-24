@@ -78,6 +78,9 @@ tst_QSparqlTrackerDirect::~tst_QSparqlTrackerDirect()
 
 void tst_QSparqlTrackerDirect::initTestCase()
 {
+    // For running the test without installing the plugins. Should work in
+    // normal and vpath builds.
+    QCoreApplication::addLibraryPath("../../../plugins");
 }
 
 void tst_QSparqlTrackerDirect::cleanupTestCase()
@@ -211,14 +214,5 @@ void tst_QSparqlTrackerDirect::query_with_error()
     delete r;
 }
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication app(argc, argv);
-    // TODO: There should probably be a better way of doing this:
-    app.addLibraryPath("../../../plugins");
-    tst_QSparqlTrackerDirect tc; 
-    return QTest::qExec(&tc, argc, argv);
-}
-
-// QTEST_MAIN( tst_QSparqlTrackerDirect )
+QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"
