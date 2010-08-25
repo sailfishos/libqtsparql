@@ -85,7 +85,7 @@ async_cursor_next_callback( GObject *source_object,
         return;
     }
 
-    QSparqlResultRow resultRow;                            
+    QSparqlResultRow resultRow;
     gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
 
     for (int i = 0; i < n_columns; i++) {
@@ -98,7 +98,7 @@ async_cursor_next_callback( GObject *source_object,
             QSparqlBinding binding(name);
             binding.setBlankNodeLabel(value.mid(2));
             resultRow.append(binding);
-        } else if (value.startsWith(QLatin1String("http:"))) {
+        } else if (value.startsWith(QLatin1String("http:")) || value.startsWith(QLatin1String("urn:"))) {
             resultRow.append(QSparqlBinding(name, QUrl(value)));
         } else {
             resultRow.append(QSparqlBinding(name, value));
