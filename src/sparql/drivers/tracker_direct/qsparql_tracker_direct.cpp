@@ -57,14 +57,15 @@
 QT_BEGIN_NAMESPACE
 
 static void
-async_cursor_next_callback(   GObject *source_object,
-                        GAsyncResult *result,
-                        gpointer user_data)
+async_cursor_next_callback( GObject *source_object,
+                            GAsyncResult *result,
+                            gpointer user_data)
 {
+    Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
     GError *error = NULL;
     gboolean active = tracker_sparql_cursor_next_finish(data->cursor, result, &error);
-    
+
     if (error != NULL) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
         e.setType(QSparqlError::BackendError);
@@ -72,36 +73,50 @@ async_cursor_next_callback(   GObject *source_object,
         data->terminate();
         return;
     }
-    
+
     if (!active) {
         if (data->q->isBool()) {
             data->setBoolValue(data->results.count() == 1
                                     && data->results[0].count() == 1
                                     && data->results[0].value(0).toString() == QLatin1String("1"));
         }
-        
+
         data->terminate();
         return;
     }
-    
+
     QSparqlResultRow resultRow;                            
     gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
-    
+
     for (int i = 0; i < n_columns; i++) {
-        QSparqlBinding binding(QString::fromLatin1("$%1").arg(i + 1), QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, NULL)));
-        resultRow.append(binding);
+        // As Tracker doesn't return the variable names in the query yet, call
+        // the variables $1, $2, $3.. as that is better than no names
+        QString name = QString::fromLatin1("$%1").arg(i + 1);
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, NULL));
+
+        if (value.startsWith(QLatin1String("_:"))) {
+            QSparqlBinding binding(name);
+            binding.setBlankNodeLabel(value.mid(2));
+            resultRow.append(binding);
+        } else if (value.startsWith(QLatin1String("http:"))) {
+            resultRow.append(QSparqlBinding(name, QUrl(value)));
+        } else {
+            resultRow.append(QSparqlBinding(name, value));
+        }
+
     }
-    
+
     data->results.append(resultRow);
     data->dataReady(data->results.count());
     tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
 }
 
 static void
-async_query_callback( GObject *source_object,
-                GAsyncResult *result,
-                gpointer user_data)
+async_query_callback(   GObject *source_object,
+                        GAsyncResult *result,
+                        gpointer user_data)
 {
+    Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
     GError *error = NULL;
     data->cursor = tracker_sparql_connection_query_finish(data->driverPrivate->connection, result, &error);
@@ -122,6 +137,7 @@ async_update_callback( GObject *source_object,
                        GAsyncResult *result,
                        gpointer user_data)
 {
+    Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
     GError *error = NULL;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
@@ -138,7 +154,7 @@ async_update_callback( GObject *source_object,
 }
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
-: q(result), driverPrivate(dpp), isFinished(false), loop(0)
+: isFinished(false), loop(0), q(result), driverPrivate(dpp)
 {
 }
 
@@ -150,7 +166,7 @@ void QTrackerDirectResultPrivate::terminate()
 {
     isFinished = true;
     q->emit finished();
-    
+
     if (loop != 0)
         loop->exit();
 }
@@ -185,7 +201,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
 {
     QTrackerDirectResult* res = new QTrackerDirectResult(d);
     res->setStatementType(type);
-    
+
     switch (type) {
     case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
@@ -266,7 +282,7 @@ void QTrackerDirectResult::waitForFinished()
 {
     if (d->isFinished)
         return;
-    
+
     QEventLoop loop;
     d->loop = &loop;
     loop.exec();
