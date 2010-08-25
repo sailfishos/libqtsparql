@@ -63,10 +63,8 @@ QMAKE_VARS_FILE=.qmake.vars
 # default flags for SPARQL drivers (can get changed later)
 QT_CFLAGS_ENDPOINT=
 QT_CFLAGS_TRACKER=
-# QT_CFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --cflags tracker-sparql-0.9  2>/dev/null`
-# QT_LFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --libs tracker-sparql-0.9 2>/dev/null`
-QT_CFLAGS_TRACKER_DIRECT="-I/usr/include/tracker-0.9/libtracker-sparql -I/usr/include/glib-2.0 -I/usr/local/lib/glib-2.0/include"
-QT_LFLAGS_TRACKER_DIRECT="-ltracker-sparql-0.9"
+QT_CFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --cflags tracker-sparql-0.9  2>/dev/null`
+QT_LFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --libs tracker-sparql-0.9 2>/dev/null`
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
@@ -184,7 +182,7 @@ while [ "$#" -gt 0 ]; do
                 break
             fi
         done
-    [ "$found" = yes ] || ( echo "driver not available: $VAL"; exit 1 )
+    [ "$found" = yes ] || ( echo "driver not available: $VAR"; exit 1 )
     eval "CFG_SPARQL_$VAL=\$OPT"
     shift
 done
