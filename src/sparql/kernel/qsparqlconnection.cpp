@@ -513,8 +513,9 @@ QT_END_NAMESPACE
       finished, or connect to the QSparqlResult::finished() signal.
 
     - The QSparqlResult can be iterated over by using the following functions:
-      QSparqlResult::first(), QSparqlResult::last(), QSparlqResult::next(),
-      QSparqlResult::previous(), QSparqlResult::seek().
+      QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),
+      QSparqlResult::previous(), QSparqlResult::seek(). The caller is
+      responsible for deleting the QSparqlResult.
 
     E.g.,
     \dontinclude simple/main.cpp
