@@ -323,8 +323,15 @@ QSparqlConnection::~QSparqlConnection()
 
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query) const
 {
-    if (!d->driver->isOpen() || d->driver->isOpenError()) {
-        qWarning("QSparqlConnection::exec: database not open");
+    if (d->driver->isOpenError()) {
+        qWarning("QSparqlConnection::exec: connection not open");
+
+        QSparqlResult* result = new QSparqlNullResult();
+        result->setLastError(d->driver->lastError());
+        return result;
+    }
+    if (!d->driver->isOpen()) {
+        qWarning("QSparqlConnection::exec: connection not open");
 
         QSparqlResult* result = new QSparqlNullResult();
         result->setLastError(QSparqlError(QLatin1String("Connection not open"),
@@ -513,8 +520,9 @@ QT_END_NAMESPACE
       finished, or connect to the QSparqlResult::finished() signal.
 
     - The QSparqlResult can be iterated over by using the following functions:
-      QSparqlResult::first(), QSparqlResult::last(), QSparlqResult::next(),
-      QSparqlResult::previous(), QSparqlResult::seek().
+      QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),
+      QSparqlResult::previous(), QSparqlResult::seek(). The caller is
+      responsible for deleting the QSparqlResult.
 
     E.g.,
     \dontinclude simple/main.cpp

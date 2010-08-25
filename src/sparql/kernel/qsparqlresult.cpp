@@ -532,7 +532,7 @@ bool QSparqlResult::last()
     exist, if the query is inactive, or if the query is positioned on
     an invalid result row.
 
-    \sa previous() next() first() last() seek() isActive() isValid()
+    \sa previous() next() first() last() seek() isValid()
 */
 
 QVariant QSparqlResult::value(int i) const
@@ -657,8 +657,7 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
-    Positions the result to the next available row (row) in the
-    result.
+    Positions the result to the next available row in the result.
 
     This function is only called if the result is in a finished
     state. The default implementation calls fetch() with the next
@@ -703,7 +702,7 @@ bool QSparqlResult::fetchPrevious()
 
   In the following example, a \c{SELECT * FROM} query is executed.
   Since the order of the columns is not defined, QSparqlResultRow::indexOf()
-  is used to obtain the index of a column.
+  is used to obtain the index of a column. FIXME: "select * from"?
 
   \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 1
 

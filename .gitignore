@@ -26,6 +26,9 @@ tests/auto/qsparql/tst_qsparql
 tests/auto/qsparqlquery/tst_qsparqlquery
 tests/auto/qsparqlbinding/tst_qsparqlbinding
 tests/auto/qsparql_tracker/tst_qsparql_tracker
+tests/auto/qsparql_endpoint/tst_qsparql_endpoint
+tests/auto/qsparql_virtuoso/tst_qsparql_virtuoso
+tests/auto/qsparql_tracker_direct/tst_qsparql_tracker_direct
 
 # debian packaging
 debian/build-stamp
