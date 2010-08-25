@@ -323,8 +323,15 @@ QSparqlConnection::~QSparqlConnection()
 
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query) const
 {
-    if (!d->driver->isOpen() || d->driver->isOpenError()) {
-        qWarning("QSparqlConnection::exec: database not open");
+    if (d->driver->isOpenError()) {
+        qWarning("QSparqlConnection::exec: connection not open");
+
+        QSparqlResult* result = new QSparqlNullResult();
+        result->setLastError(d->driver->lastError());
+        return result;
+    }
+    if (!d->driver->isOpen()) {
+        qWarning("QSparqlConnection::exec: connection not open");
 
         QSparqlResult* result = new QSparqlNullResult();
         result->setLastError(QSparqlError(QLatin1String("Connection not open"),
