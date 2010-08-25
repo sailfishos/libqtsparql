@@ -52,6 +52,7 @@
 
 #include <QObject>
 #include <QApplication>
+#include <QUrl>
 
 #include <QDebug>
 
@@ -159,20 +160,20 @@ private:
 /* This is for docs
 
     QSparqlQuery nameQuery("select ?ng ?nf "
-    "{ <?:contact_uri> nco:nameGiven ?ng ; nco:nameFamily ?nf . } ");
+    "{ ?:contact_uri nco:nameGiven ?ng ; nco:nameFamily ?nf . } ");
 
  */
 
 DetailView::DetailView(Ui::ContactUI* ui, QWidget* w, QSparqlConnection& c)
     : conn(c),
       nameQuery("select fn:string-join((?ng, ?nf), ' ') "
-                "{ <?:contact_uri> nco:nameGiven ?ng ; "
+                "{ ?:contact_uri nco:nameGiven ?ng ; "
                 "nco:nameFamily ?nf . } "),
-      phoneNumberQuery("select ?p { <?:contact_uri> nco:hasPhoneNumber ?pn . "
+      phoneNumberQuery("select ?p { ?:contact_uri nco:hasPhoneNumber ?pn . "
                       "?pn nco:phoneNumber ?p . }"),
       removeQuery("delete { ?pn a rdfs:Resource . }"
-                  "WHERE { <?:contact_uri> nco:hasPhoneNumber ?pn . } "
-                  "delete { <?:contact_uri> a rdfs:Resource . }",
+                  "WHERE { ?:contact_uri nco:hasPhoneNumber ?pn . } "
+                  "delete { ?:contact_uri a rdfs:Resource . }",
                   QSparqlQuery::DeleteStatement),
       nameResult(0),
       removeResult(0),
@@ -196,14 +197,14 @@ void DetailView::showDetails(const QString& u)
 {
     uri = u;
     nameQuery.unbindValues();
-    nameQuery.bindValue("?:contact_uri", uri);
+    nameQuery.bindValue("?:contact_uri", QUrl(uri));
 
     delete nameResult;
     nameResult = conn.exec(nameQuery);
     connect(nameResult, SIGNAL(finished()), this, SLOT(nameQueryFinished()));
 
     phoneNumberQuery.unbindValues();
-    phoneNumberQuery.bindValue("?:contact_uri", uri);
+    phoneNumberQuery.bindValue("?:contact_uri", QUrl(uri));
     phoneNumberModel.setQuery(phoneNumberQuery, conn);
 
     ui->removedLabel->hide();
@@ -225,7 +226,7 @@ void DetailView::nameQueryFinished()
 void DetailView::removeContact()
 {
     removeQuery.unbindValues();
-    removeQuery.bindValue("?:contact_uri", uri);
+    removeQuery.bindValue("?:contact_uri", QUrl(uri));
     delete removeResult;
     removeResult = conn.exec(removeQuery);
     connect(removeResult, SIGNAL(finished()), this, SLOT(removeFinished()));
@@ -290,10 +291,10 @@ AddView::AddView(Ui::AddUI* ui, QWidget* w, QSparqlConnection& c)
 void AddView::showAddView()
 {
     ui->addedLabel->hide();
-    ui->nameGivenEdit->setEnabled(true);
-    ui->nameGivenEdit->clear();
-    ui->nameFamilyEdit->setEnabled(true);
-    ui->nameFamilyEdit->clear();
+    ui->nameEdit1->setEnabled(true);
+    ui->nameEdit1->clear();
+    ui->nameEdit2->setEnabled(true);
+    ui->nameEdit2->clear();
     ui->phoneEdit->setEnabled(true);
     ui->phoneEdit->clear();
     ui->addButton->setText("Add");
@@ -307,11 +308,11 @@ void AddView::addContact()
 {
     addQuery.unbindValues();
     addQuery.bindValue("?:user_name_given",
-                       ui->nameGivenEdit->text().append("'").prepend("'"));
+                       ui->nameEdit1->text());
     addQuery.bindValue("?:user_name_family",
-                       ui->nameFamilyEdit->text().append("'").prepend("'"));
+                       ui->nameEdit2->text());
     addQuery.bindValue("?:user_phone",
-                       ui->phoneEdit->text().append("'").prepend("'"));
+                       ui->phoneEdit->text());
 
     delete addResult;
     addResult = conn.exec(addQuery);
@@ -328,8 +329,8 @@ void AddView::addFinished()
     }
     ui->addedLabel->setText("Contact added");
     ui->addedLabel->show();
-    ui->nameGivenEdit->setEnabled(false);
-    ui->nameFamilyEdit->setEnabled(false);
+    ui->nameEdit1->setEnabled(false);
+    ui->nameEdit2->setEnabled(false);
     ui->phoneEdit->setEnabled(false);
     ui->addButton->setText("Add more");
     ui->addButton->disconnect();
@@ -372,6 +373,8 @@ int main(int argc, char** argv)
     QObject::connect(&addView, SIGNAL(backToList()),
                      &contactView, SLOT(showContactList()));
 
+    QObject::connect(listUi.exitButton, SIGNAL(clicked(bool)),
+                     &app, SLOT(quit()));
     contactView.showContactList();
     mainWindow.show();
 

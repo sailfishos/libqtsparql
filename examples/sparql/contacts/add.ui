@@ -67,7 +67,7 @@
     <string>Phone:</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="nameGivenEdit">
+  <widget class="QLineEdit" name="nameEdit1">
    <property name="geometry">
     <rect>
      <x>150</x>
@@ -133,7 +133,7 @@
     <string>Contact added.</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="nameFamilyEdit">
+  <widget class="QLineEdit" name="nameEdit2">
    <property name="geometry">
     <rect>
      <x>150</x>
