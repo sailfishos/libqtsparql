@@ -543,7 +543,7 @@ bool QVirtuosoResult::fetchBoolResult()
     }
     
     QSparqlBinding retval = qMakeBinding(d, 1);
-    setBoolValue(retval.name() == QLatin1String("__ASK_RETVAL") && retval.value().toInt() == 1);
+    setBoolValue(retval.name().toUpper() == QLatin1String("__ASK_RETVAL") && retval.value().toInt() == 1);
     terminate();
     return true;
 }
