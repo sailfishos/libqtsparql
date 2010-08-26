@@ -566,7 +566,7 @@ bool QVirtuosoResult::fetchGraphResult()
     
     QSparqlBinding retval = qMakeBinding(d, 1);
 
-    if (retval.name() == QLatin1String("fmtaggret-NT")) {
+    if (retval.name().toUpper() == QLatin1String("FMTAGGRET-NT")) {
         QByteArray buffer = retval.value().toString().toLatin1();
         QSparqlNTriples parser(buffer);
         d->results = parser.parse();
