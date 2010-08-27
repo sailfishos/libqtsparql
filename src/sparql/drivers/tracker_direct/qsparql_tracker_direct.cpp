@@ -63,13 +63,14 @@ async_cursor_next_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    GError *error = NULL;
+    GError *error = 0;
     gboolean active = tracker_sparql_cursor_next_finish(data->cursor, result, &error);
 
-    if (error != NULL) {
+    if (error != 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
         e.setType(QSparqlError::BackendError);
         data->setLastError(e);
+        g_error_free(error);
         data->terminate();
         return;
     }
@@ -92,7 +93,7 @@ async_cursor_next_callback( GObject *source_object,
         // As Tracker doesn't return the variable names in the query yet, call
         // the variables $1, $2, $3.. as that is better than no names
         QString name = QString::fromLatin1("$%1").arg(i + 1);
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, NULL));
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, 0));
 
         if (value.startsWith(QLatin1String("_:"))) {
             QSparqlBinding binding(name);
@@ -108,7 +109,7 @@ async_cursor_next_callback( GObject *source_object,
 
     data->results.append(resultRow);
     data->dataReady(data->results.count());
-    tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
+    tracker_sparql_cursor_next_async(data->cursor, 0, async_cursor_next_callback, data);
 }
 
 static void
@@ -118,18 +119,19 @@ async_query_callback(   GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    GError *error = NULL;
+    GError *error = 0;
     data->cursor = tracker_sparql_connection_query_finish(data->driverPrivate->connection, result, &error);
 
-    if (error != NULL || data->cursor == NULL) {
+    if (error != 0 || data->cursor == 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
         e.setType(QSparqlError::StatementError);
         data->setLastError(e);
+        g_error_free(error);
         data->terminate();
         return;
     }
 
-    tracker_sparql_cursor_next_async(data->cursor, NULL, async_cursor_next_callback, data);
+    tracker_sparql_cursor_next_async(data->cursor, 0, async_cursor_next_callback, data);
 }
 
 static void
@@ -139,13 +141,14 @@ async_update_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    GError *error = NULL;
+    GError *error = 0;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
-    if (error != NULL) {
+    if (error != 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
         e.setType(QSparqlError::StatementError);
         data->setLastError(e);
+        g_error_free(error);
         data->terminate();
         return;
     }
@@ -208,7 +211,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
     {
         tracker_sparql_connection_query_async(  d->connection,
                                                 query.toLatin1().constData(),
-                                                NULL,
+                                                0,
                                                 async_query_callback,
                                                 res->d);
         break;
@@ -218,7 +221,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
         tracker_sparql_connection_update_async( d->connection,
                                                 query.toLatin1().constData(),
                                                 0,
-                                                NULL,
+                                                0,
                                                 async_update_callback,
                                                 res->d);
     {
@@ -364,12 +367,12 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     if (isOpen())
         close();
 
-    GError *error = NULL;
+    GError *error = 0;
     d->connection = tracker_sparql_connection_get(&error);
     if (!d->connection) {
         qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
                     error ? error->message : "unknown error");
-
+        g_error_free(error);
         return false;
     }
 
