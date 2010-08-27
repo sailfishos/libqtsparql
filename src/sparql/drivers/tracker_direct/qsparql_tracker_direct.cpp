@@ -381,6 +381,8 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
 void QTrackerDirectDriver::close()
 {
+    g_object_unref(d->connection);
+
     if (isOpen()) {
         setOpen(false);
         setOpenError(false);
