@@ -1,8 +1,13 @@
-libqtsparql (0.0.3~unreleased) unstable; urgency=low
+libqtsparql (0.0.3) unstable; urgency=low
 
-  * Test package fixes.
+  * Endpoint and virtuoso drivers: Support for CONSTRUCT queries which return results in ntriples format
+  * QSparqlBinding: renaming functions
+  * Doc additions
+  * Test package fixes and additions
+  * Support for ASK query results
+  * QSparqlQuery: modifying escaping values
 
- -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 13 Jul 2010 16:26:32 +0300
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Mon, 30 Aug 2010 18:17:58 +0300
 
 libqtsparql (0.0.2) unstable; urgency=low
 
