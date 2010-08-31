@@ -322,6 +322,8 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
         return false;
     case QSparqlConnection::DefaultGraph:
         return true;
+    default:
+        return false;
     }
     return false;
 }

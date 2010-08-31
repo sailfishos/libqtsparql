@@ -11,7 +11,7 @@ SparqlResultModel::SparqlResultModel(QObject *parent) :
 }
 
 int
-SparqlResultModel::rowCount(const QModelIndex &parent) const
+SparqlResultModel::rowCount(const QModelIndex &) const
 {
     //qDebug() << "SparqlResultModel::rowCount() size: " << m_result->size();
     return m_result->size();
