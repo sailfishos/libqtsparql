@@ -70,8 +70,7 @@ public:
 
     bool operator==(const QSparqlBindingPrivate& other) const
     {
-        return (nm == other.nm
-                && type == other.type
+        return (type == other.type
                 && nodetype == other.nodetype
                 && datatype == other.datatype
                 && lang == other.lang);

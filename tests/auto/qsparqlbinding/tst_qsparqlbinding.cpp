@@ -71,6 +71,8 @@ private slots:
     void toString();
     void types_data();
     void types();
+    void operators_data();
+    void operators();
 };
 
 tst_QSparqlBinding::tst_QSparqlBinding()
@@ -323,6 +325,115 @@ void tst_QSparqlBinding::types()
     QCOMPARE(value.isBlank(), isBlank);
 }
 
+void tst_QSparqlBinding::operators_data()
+{
+    QTest::addColumn<QSparqlBinding>("value1");
+    QTest::addColumn<QSparqlBinding>("value2");
+    QTest::addColumn<bool>("isEqual");
+
+    QSparqlBinding b1("testBinding1", QVariant(-67));
+    QSparqlBinding b2("testBinding2", QVariant(-67));
+    QSparqlBinding b3("testBinding3", QVariant(-88));
+    QSparqlBinding b4("testBinding4", QUrl("urn:uri:123"));
+    QSparqlBinding b5("testBinding5", QUrl("urn:uri:123"));
+    QSparqlBinding b6("testBinding6", QUrl("urn:uri:456"));
+    QSparqlBinding b7("testBinding7");
+    b7.setBlankNodeLabel("b3");
+    QSparqlBinding b8("testBinding8");
+    b8.setBlankNodeLabel("b3");
+    QSparqlBinding b9("testBinding9");
+    b9.setBlankNodeLabel("b6");
+
+    QTest::newRow("int1") <<
+        b1 << b1 << true;
+
+    QTest::newRow("int2") <<
+        b1 << b2 << true;
+
+    QTest::newRow("int3") <<
+        b1 << b3 << false;
+
+    QTest::newRow("int4") <<
+        b1 << b4 << false;
+
+    QTest::newRow("int5") <<
+        b1 << b5 << false;
+
+    QTest::newRow("int6") <<
+        b1 << b6 << false;
+
+    QTest::newRow("int7") <<
+        b1 << b7 << false;
+
+    QTest::newRow("int8") <<
+        b1 << b8 << false;
+
+    QTest::newRow("int9") <<
+        b1 << b9 << false;
+
+    QTest::newRow("url1") <<
+        b4 << b1 << false;
+
+    QTest::newRow("url2") <<
+        b4 << b2 << false;
+
+    QTest::newRow("url3") <<
+        b4 << b3 << false;
+
+    QTest::newRow("url4") <<
+        b4 << b4 << true;
+
+    QTest::newRow("url5") <<
+        b4 << b5 << true;
+
+    QTest::newRow("url6") <<
+        b4 << b6 << false;
+
+    QTest::newRow("url7") <<
+        b4 << b7 << false;
+
+    QTest::newRow("url8") <<
+        b4 << b8 << false;
+
+    QTest::newRow("url9") <<
+        b4 << b9 << false;
+
+    QTest::newRow("blank1") <<
+        b7 << b1 << false;
+
+    QTest::newRow("blank2") <<
+        b7 << b2 << false;
+
+    QTest::newRow("blank3") <<
+        b7 << b3 << false;
+
+    QTest::newRow("blank4") <<
+        b7 << b4 << false;
+
+    QTest::newRow("blank5") <<
+        b7 << b5 << false;
+
+    QTest::newRow("blank6") <<
+        b7 << b6 << false;
+
+    QTest::newRow("blank7") <<
+        b7 << b7 << true;
+
+    QTest::newRow("blank8") <<
+        b7 << b8 << true;
+
+    QTest::newRow("blank9") <<
+        b7 << b9 << false;
+}
+
+void tst_QSparqlBinding::operators()
+{
+    QFETCH(QSparqlBinding, value1);
+    QFETCH(QSparqlBinding, value2);
+    QFETCH(bool, isEqual);
+
+    QCOMPARE(value1 == value2, isEqual);
+}
 
 QTEST_MAIN( tst_QSparqlBinding )
 #include "tst_qsparqlbinding.moc"
