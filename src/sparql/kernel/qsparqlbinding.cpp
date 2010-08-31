@@ -301,25 +301,23 @@ QString QSparqlBinding::toString() const
     if (d->nodetype == QSparqlBindingPrivate::Literal) {
         QString literal;
 
-        bool quoted = true;
+        bool quoted = false;
         switch (val.type()) {
         case QVariant::Int:
         case QVariant::LongLong:
         case QVariant::UInt:
         case QVariant::ULongLong:
-            quoted = false;
             literal = val.toString();
             break;
         case QVariant::Bool:
-            quoted = false;
             literal = val.toBool() ? QLatin1String("true") : QLatin1String("false");
             break;
         case QVariant::Double:
-            quoted = false;
             literal = QString::number(val.toDouble(), 'e', 10);
             break;
         case QVariant::String:
         {
+            quoted = true;
             literal.append(QLatin1Char('\"'));
             foreach (const QChar ch, val.toString()) {
                 if (ch == QLatin1Char('\t'))
@@ -343,21 +341,37 @@ QString QSparqlBinding::toString() const
             break;
         }
         case QVariant::Date:
+        {
+            QDate dt = val.toDate();
+            // Date format has to be "yyyy-MM-dd", with leading zeroes if month or day < 10
+            literal = QString::number(dt.year()) + QLatin1Char('-') +
+                QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
+                QLatin1Char('-') +
+                QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true);
+            break;
+        }
         case QVariant::Time:
+        {
+            QTime tm = val.toTime();
+            // Time format has to be "hh:mm:ss"
+            literal = tm.toString();
+            break;
+        }
         case QVariant::DateTime:
         {
             QDate dt = val.toDateTime().date();
             QTime tm = val.toDateTime().time();
-            // Dateformat has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
-            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
+            // DateTime format has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
+            literal = QString::number(dt.year()) + QLatin1Char('-') +
                 QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('-') +
                 QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('T') +
-                tm.toString() + QLatin1Char('\"');
+                tm.toString();
             break;
         }
         case QVariant::ByteArray:
+            quoted = true;
             literal = QLatin1Char('\"') + QString::fromAscii(val.toByteArray().toBase64()) + QLatin1Char('\"') ;
             break;
         default:
