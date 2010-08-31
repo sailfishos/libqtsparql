@@ -117,7 +117,7 @@ int MockDriver::openCount = 0;
 int MockDriver::closeCount = 0;
 bool MockDriver::openRetVal = true;
 
-MockResult::MockResult(const MockDriver* d)
+MockResult::MockResult(const MockDriver*)
     : QSparqlResult()
 {
 }
