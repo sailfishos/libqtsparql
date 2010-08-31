@@ -1,3 +1,9 @@
+libqtsparql (0.0.4~unreleased) unstable; urgency=low
+
+  *
+
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 31 Aug 2010 08:55:12 +0300
+
 libqtsparql (0.0.3) unstable; urgency=low
 
   * Endpoint and virtuoso drivers: Support for CONSTRUCT queries which return results in ntriples format
