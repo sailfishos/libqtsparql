@@ -104,18 +104,113 @@ void tst_QSparqlBinding::toString_data()
     QTest::addColumn<QString>("toString");
 
     QTest::newRow("int") <<
-        QVariant(54) <<
+        QVariant(static_cast<int>(54)) <<
         QVariant() <<
         QVariant() <<
         QString("54");
 
     QTest::newRow("int_with_datatype") <<
-        QVariant(54) <<
+        QVariant(static_cast<int>(54)) <<
         QVariant() <<
-        QVariant("mydatatype") <<
-        QString("\"54\"^^<mydatatype>");
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#int")) <<
+        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#int>");
 
-    // FIXME: add test for doubles
+    QTest::newRow("unsigned_int") <<
+        QVariant(static_cast<unsigned int>(54)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("54");
+
+    QTest::newRow("unsigned_int_with_datatype") <<
+        QVariant(static_cast<unsigned int>(54)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#unsignedInt")) <<
+        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>");
+
+    // Note that a QVariant can't be constructed with a long
+    QTest::newRow("long") <<
+        QVariant(static_cast<int>(54)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("54");
+
+    QTest::newRow("long_with_datatype") <<
+        QVariant(static_cast<int>(54)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#long")) <<
+        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#long>");
+
+    QTest::newRow("unsigned_long") <<
+        QVariant(static_cast<int>(54)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("54");
+
+    QTest::newRow("unsigned_long_with_datatype") <<
+        QVariant(static_cast<int>(54)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#unsignedLong")) <<
+        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>");
+
+    QTest::newRow("double") <<
+        QVariant(static_cast<double>(54.0)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("5.4000000000e+01");
+
+    QTest::newRow("double_with_datatype") <<
+        QVariant(static_cast<double>(54.0)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#double")) <<
+        QString("\"5.4000000000e+01\"^^<http://www.w3.org/2001/XMLSchema#double>");
+
+    QTest::newRow("boolean") <<
+        QVariant(true) <<
+        QVariant() <<
+        QVariant() <<
+        QString("true");
+
+    QTest::newRow("boolean_with_datatype") <<
+        QVariant(true) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#date")) <<
+        QString("\"true\"^^<http://www.w3.org/2001/XMLSchema#date>");
+
+    QTest::newRow("date") <<
+        QVariant(QDate(2000, 1, 30)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("2000-01-30");
+
+    QTest::newRow("date_with_datatype") <<
+        QVariant(QDate(2000, 1, 30)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#date")) <<
+        QString("\"2000-01-30\"^^<http://www.w3.org/2001/XMLSchema#date>");
+
+    QTest::newRow("time") <<
+        QVariant(QTime(12, 5, 59)) <<
+        QVariant() <<
+        QVariant() <<
+        QString("12:05:59");
+
+    QTest::newRow("time_with_datatype") <<
+        QVariant(QTime(12, 5, 59)) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#time")) <<
+        QString("\"12:05:59\"^^<http://www.w3.org/2001/XMLSchema#time>");
+
+    QTest::newRow("datetime") <<
+        QVariant(QDateTime(QDate(2000, 1, 30), QTime(12, 5, 59))) <<
+        QVariant() <<
+        QVariant() <<
+        QString("2000-01-30T12:05:59");
+
+    QTest::newRow("datetime_with_datatype") <<
+        QVariant(QDateTime(QDate(2000, 1, 30), QTime(12, 5, 59))) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#dateTime")) <<
+        QString("\"2000-01-30T12:05:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>");
 
     QTest::newRow("string") <<
         QVariant("foo") <<
@@ -132,8 +227,8 @@ void tst_QSparqlBinding::toString_data()
     QTest::newRow("string_with_datatype") <<
         QVariant("cat") <<
         QVariant() <<
-        QVariant("mydatatype") <<
-        QString("\"cat\"^^<mydatatype>");
+        QVariant("http://www.w3.org/2001/XMLSchema#string") <<
+        QString("\"cat\"^^<http://www.w3.org/2001/XMLSchema#string>");
 
     QTest::newRow("url") <<
         QVariant(QUrl("urn:uri:123")) <<
