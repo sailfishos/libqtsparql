@@ -44,6 +44,7 @@ Q_DECLARE_METATYPE(QVariant)
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
+Q_DECLARE_METATYPE(QSparqlBinding)
 
 #include <QUrl>
 
@@ -281,37 +282,45 @@ void tst_QSparqlBinding::toString()
         QSparqlBinding b2("testBinding2");
         b2.setValue(as_string, datatype.toUrl());
         QCOMPARE(b2.toString(), toString);
+        QCOMPARE(b2.value(), value);
     }
 }
 
 void tst_QSparqlBinding::types_data()
 {
-    QTest::addColumn<QVariant>("value");
+    QTest::addColumn<QSparqlBinding>("value");
     QTest::addColumn<bool>("isUri");
     QTest::addColumn<bool>("isLiteral");
     QTest::addColumn<bool>("isBlank");
 
+    QSparqlBinding b1("testBinding1", QVariant(-67));
+    QSparqlBinding b2("testBinding2", QUrl("urn:uri:123"));
+    QSparqlBinding b3("testBinding3");
+    b3.setBlankNodeLabel("b3");
+
     QTest::newRow("int") <<
-        QVariant(-67) <<
+        b1 <<
         false << true << false;
 
     QTest::newRow("url") <<
-        QVariant(QUrl("urn:uri:123")) <<
+        b2 <<
         true << false << false;
+
+    QTest::newRow("blank") <<
+        b3 <<
+        false << false << true;
 }
 
 void tst_QSparqlBinding::types()
 {
-    QFETCH(QVariant, value);
+    QFETCH(QSparqlBinding, value);
     QFETCH(bool, isUri);
     QFETCH(bool, isLiteral);
     QFETCH(bool, isBlank);
 
-    QSparqlBinding b("testBinding", value);
-
-    QCOMPARE(b.isUri(), isUri);
-    QCOMPARE(b.isLiteral(), isLiteral);
-    QCOMPARE(b.isBlank(), isBlank);
+    QCOMPARE(value.isUri(), isUri);
+    QCOMPARE(value.isLiteral(), isLiteral);
+    QCOMPARE(value.isBlank(), isBlank);
 }
 
 
