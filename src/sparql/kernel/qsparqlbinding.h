@@ -80,10 +80,8 @@ public:
     bool isBlank() const;
     void clear();
     QUrl dataTypeUri() const;
-    QVariant::Type type() const;
     QString toString() const;
 
-    void setType(QVariant::Type type);
     void setDataTypeUri(const QUrl& datatype);
     void setLanguageTag(const QString& lang);
 

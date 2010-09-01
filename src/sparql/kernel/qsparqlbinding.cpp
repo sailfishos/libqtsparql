@@ -63,7 +63,7 @@ public:
         : ref(1),
           nm(other.nm),
           type(other.type),
-          datatype(other.datatype),
+          dataType(other.dataType),
           lang(other.lang),
           nodetype(other.nodetype)
     {}
@@ -72,14 +72,14 @@ public:
     {
         return (type == other.type
                 && nodetype == other.nodetype
-                && datatype == other.datatype
+                && dataType == other.dataType
                 && lang == other.lang);
     }
 
     QAtomicInt ref;
     QString nm;
     QVariant::Type type;
-    QUrl datatype;
+    QUrl dataType;
     QString lang;
     NodeType nodetype;
 };
@@ -133,7 +133,7 @@ public:
     Constructs an empty binding called \a name of variant type \a
     type.
 
-    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel() setType()
+    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel()
 */
 QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 {
@@ -143,7 +143,7 @@ QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 /*!
     Constructs a binding called \a name with the value \a value.
 
-    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel() setType()
+    \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel()
 */
 QSparqlBinding::QSparqlBinding(const QString& name, const QVariant& value)
 {
@@ -203,12 +203,12 @@ QSparqlBinding::~QSparqlBinding()
 /*!
     Sets the binding's \a data type URI.
 
-    \sa dataTypeUri() setType()
+    \sa dataTypeUri()
 */
-void QSparqlBinding::setDataTypeUri(const QUrl &datatype)
+void QSparqlBinding::setDataTypeUri(const QUrl &dataType)
 {
     detach();
-    d->datatype = datatype;
+    d->dataType = dataType;
 }
 
 /*!
@@ -244,7 +244,7 @@ static int extractTimezone(QString& str)
 void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
-    d->datatype = dataTypeUri;
+    d->dataType = dataTypeUri;
     QByteArray s = dataTypeUri.toString().toLatin1();
     
     if (s == "http://www.w3.org/2001/XMLSchema#int") {
@@ -380,7 +380,7 @@ QString QSparqlBinding::toString() const
         if (!d->lang.isEmpty())
             literal.append(QLatin1Char('@') + d->lang);
 
-        if (!d->datatype.isEmpty()) {
+        if (!d->dataType.isEmpty()) {
             if (!quoted) {
                 literal.prepend(QLatin1String("\""));
                 literal.append(QLatin1String("\""));
@@ -425,6 +425,7 @@ void QSparqlBinding::setValue(const QVariant& value)
 
 void QSparqlBinding::setBlankNodeLabel(const QString& id)
 {
+    detach();
     val = id;
     d->nodetype = QSparqlBindingPrivate::Blank;
 }
@@ -438,7 +439,10 @@ void QSparqlBinding::setBlankNodeLabel(const QString& id)
 
 void QSparqlBinding::clear()
 {
-    val = QVariant(type());
+    val = QVariant(val.type());
+    d->nodetype = QSparqlBindingPrivate::Invalid;
+    d->dataType = QUrl();
+    d->lang = QString();
 }
 
 /*!
@@ -474,17 +478,6 @@ QString QSparqlBinding::name() const
 }
 
 /*!
-    Returns the binding's value as a QVariant type.
-
-    \sa setType()
-*/
-QVariant::Type QSparqlBinding::type() const
-{
-    return d->type;
-}
-
-
-/*!
     If the binding is a literal, returns the data type Uri of the RDF type
 
     \sa setDataTypeUri()
@@ -494,8 +487,8 @@ QUrl QSparqlBinding::dataTypeUri() const
     if (d->nodetype != QSparqlBindingPrivate::Literal)
         return QUrl();
 
-    if (!d->datatype.isEmpty()) {
-        return d->datatype;
+    if (!d->dataType.isEmpty()) {
+        return d->dataType;
     }
     
     switch (val.type()) {
@@ -525,18 +518,6 @@ QUrl QSparqlBinding::dataTypeUri() const
         return QUrl();
     }
 }
-
-/*!
-    Set's the binding's variant type to \a type.
-
-    \sa type()
-*/
-void QSparqlBinding::setType(QVariant::Type type)
-{
-    detach();
-    d->type = type;
-}
-
 
 
 /*!
@@ -600,9 +581,7 @@ bool QSparqlBinding::isValid() const
 QDebug operator<<(QDebug dbg, const QSparqlBinding &f)
 {
 #ifndef Q_BROKEN_DEBUG_STREAM
-    dbg.nospace() << "QSparqlBinding(" << f.name() << ", " << QVariant::typeToName(f.type());
-    if (!f.languageTag().isEmpty())
-        dbg.nospace() << ", languageTag: " << f.languageTag();
+    dbg.nospace() << "QSparqlBinding(" << f.name() << ", " << f.toString();
     dbg.nospace() << ')';
     return dbg.space();
 #else
