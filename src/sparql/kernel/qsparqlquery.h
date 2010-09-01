@@ -80,7 +80,7 @@ public:
     void bindValue(const QSparqlBinding& binding);
     void bindValues(const QSparqlResultRow& bindings);
     QVariant boundValue(const QString& placeholder) const;
-    QMap<QString, QVariant> boundValues() const;
+    QMap<QString, QSparqlBinding> boundValues() const;
     void unbindValues();
 
     QString preparedQueryText() const;

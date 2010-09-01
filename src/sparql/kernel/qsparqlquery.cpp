@@ -86,7 +86,7 @@ struct QSparqlQueryPrivate
     QString query;
     QSparqlQuery::StatementType type;
 
-    QVector<QVariant> values; // bound values
+    QVector<QSparqlBinding> values; // bound values
     typedef QHash<QString, int> IndexMap;
     IndexMap indexes; // placeholder names -> indexes in the 'values' vector
     typedef QVector<QHolder> QHolderVector;
@@ -128,7 +128,7 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     QSparqlQuery encapsulates the functionality involved in creating
     SPARQL queries which are executed on a \l QSparqlConnection.
 
-    It can also be used to execute database-specific commands which
+    It can also be used to execute commands specific to an RDF store which
     are not standard SPARQL.
 
     To execute the QSparqlQuery, pass it to QSparqlConnection::exec().
@@ -150,7 +150,7 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
 
     \attention No escaping is performed when binding values.
 
-    \sa QSparqlConnection, QSparqlQueryModel, QSparqlResult, QVariant
+    \sa QSparqlConnection, QSparqlQueryModel, QSparqlResult, QSparqlResultRow, QSparqlBinding, QVariant
 */
 
 /*!
@@ -262,7 +262,7 @@ void QSparqlQueryPrivate::findPlaceholders()
             while (pos < n && qIsAlnum(query.at(pos)))
                 ++pos;
 
-            holders.append(QHolder(query.mid(i - 1, pos - i + 1), i - 1));
+            holders.append(QHolder(query.mid(i + 1, pos - i - 1), i - 1));
             i = pos;
         } else {
             if (ch == QLatin1Char('\'') || ch == QLatin1Char('"')) {
@@ -272,7 +272,7 @@ void QSparqlQueryPrivate::findPlaceholders()
                     quoteChar = QChar::Null;
                 }
             }
-            
+
             ++i;
         }
     }
@@ -289,7 +289,6 @@ QString QSparqlQuery::preparedQueryText() const
     int i;
     QString holder;
     int ix;
-    QSparqlBinding binding;
     // The holders are stored in order and iterated in the reverse order; this
     // way the indices of the earlier holder remain valid when we replace a
     // holder in the string.
@@ -302,37 +301,39 @@ QString QSparqlQuery::preparedQueryText() const
         }
         // Recycling the value through QSparqlBinding will do the
         // escaping.
-        binding.setValue(d->values.value(ix));
+        QSparqlBinding binding = d->values.value(ix);
         result = result.replace(d->holders.at(i).holderPos,
-                                holder.length(), binding.toString());
+                                holder.length() + 2, binding.toString());
     }
     return result;
 }
 
 /*!
   Set the placeholder \a placeholder to be bound to value \a val in
-  the query. Note that the placeholder mark (\c{?:} or \c{$:}) must be included
+  the query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be included
   when specifying the placeholder name.
-
-  To bind a NULL value, use a null QVariant; for example, use
-  \c {QVariant(QVariant::String)} if you are binding a string.
 
   \sa addBindValue(), boundValue() boundValues()
 */
 void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
 {
-    // indexes: QString (placeholder) -> int
-    // values: QVector<QVariant>
+    bindValue(QSparqlBinding(placeholder, val));
+}
 
+void QSparqlQuery::bindValue(const QSparqlBinding& binding)
+{
+    // indexes: QString (placeholder) -> int
+    // values: QVector<QSparqlBinding>
+    QString placeholder = binding.name();
     int idx = d->indexes.value(placeholder, -1);
     if (idx >= 0) {
         // this placeholder has been assigned an index
         if (d->values.count() <= idx)
             d->values.resize(idx + 1);
-        d->values[idx] = val;
+        d->values[idx] = binding;
     } else {
         // this placeholder hasn't been assigned an index; assign it now
-        d->values.append(val);
+        d->values.append(binding);
         idx = d->values.count() - 1;
         d->indexes[placeholder] = idx;
     }
@@ -345,7 +346,7 @@ void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
 void QSparqlQuery::bindValues(const QSparqlResultRow& bindings)
 {
     for (int i = 0; i < bindings.count(); ++i)
-        bindValue(bindings.binding(i).name(), bindings.binding(i).value());
+        bindValue(bindings.binding(i));
 }
 
 /*!
@@ -365,7 +366,7 @@ QVariant QSparqlQuery::boundValue(const QString& placeholder) const
 {
     int idx = d->indexes.value(placeholder, -1);
     // if index is out of bounds, value() returns a default constructed value
-    return d->values.value(idx);
+    return d->values.value(idx).value();
 }
 
 /*!
@@ -378,9 +379,9 @@ QVariant QSparqlQuery::boundValue(const QString& placeholder) const
 
   \sa boundValue() bindValue()
 */
-QMap<QString,QVariant> QSparqlQuery::boundValues() const
+QMap<QString, QSparqlBinding> QSparqlQuery::boundValues() const
 {
-    QMap<QString,QVariant> map;
+    QMap<QString, QSparqlBinding> map;
 
     QHash<QString, int>::const_iterator it = d->indexes.constBegin();
     while (it != d->indexes.constEnd()) {
