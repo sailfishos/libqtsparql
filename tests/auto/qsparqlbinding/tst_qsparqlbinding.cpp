@@ -477,14 +477,18 @@ void tst_QSparqlBinding::assignment_operator()
 
 void tst_QSparqlBinding::clear()
 {
-    QSparqlBinding b1("testBinding1", QVariant(-67));
+    QSparqlBinding b1;
+    b1.setName("testBinding1");
+    b1.setValue(QVariant(-67));
     QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
     QCOMPARE(b1.isLiteral(), true);
+    QCOMPARE(b1.value(), QVariant(-67));
     QCOMPARE(b1.dataTypeUri(), QUrl("http://www.w3.org/2001/XMLSchema#int"));
     b1.clear();
     QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
     QCOMPARE(b1.isLiteral(), false);
     QCOMPARE(b1.dataTypeUri(), QUrl());
+    QCOMPARE(b1.value(), QVariant());
 
     QSparqlBinding b2("testBinding2", QVariant("Here is some text"));
     b2.setLanguageTag("en");
@@ -513,8 +517,6 @@ void tst_QSparqlBinding::clear()
     QCOMPARE(b4.name(), QString::fromLatin1("testBinding4"));
     QCOMPARE(b4.isUri(), false);
     QCOMPARE(b4.value(), QVariant());
-
-
 }
 
 QTEST_MAIN( tst_QSparqlBinding )
