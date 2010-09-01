@@ -74,6 +74,7 @@ private slots:
     void equality_operator_data();
     void equality_operator();
     void assignment_operator();
+    void clear();
 };
 
 tst_QSparqlBinding::tst_QSparqlBinding()
@@ -472,6 +473,48 @@ void tst_QSparqlBinding::assignment_operator()
 
     QCOMPARE(b1 == b2, true);
     QCOMPARE(b1 == b3, true);
+}
+
+void tst_QSparqlBinding::clear()
+{
+    QSparqlBinding b1("testBinding1", QVariant(-67));
+    QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
+    QCOMPARE(b1.isLiteral(), true);
+    QCOMPARE(b1.dataTypeUri(), QUrl("http://www.w3.org/2001/XMLSchema#int"));
+    b1.clear();
+    QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
+    QCOMPARE(b1.isLiteral(), false);
+    QCOMPARE(b1.dataTypeUri(), QUrl());
+
+    QSparqlBinding b2("testBinding2", QVariant("Here is some text"));
+    b2.setLanguageTag("en");
+    QCOMPARE(b2.name(), QString::fromLatin1("testBinding2"));
+    QCOMPARE(b2.isLiteral(), true);
+    QCOMPARE(b2.dataTypeUri(), QUrl("http://www.w3.org/2001/XMLSchema#string"));
+    b2.clear();
+    QCOMPARE(b2.name(), QString::fromLatin1("testBinding2"));
+    QCOMPARE(b2.languageTag(), QString());
+    QCOMPARE(b2.isLiteral(), false);
+    QCOMPARE(b2.dataTypeUri(), QUrl());
+
+    QSparqlBinding b3("testBinding3");
+    b3.setBlankNodeLabel("b3");
+    QCOMPARE(b3.name(), QString::fromLatin1("testBinding3"));
+    QCOMPARE(b3.isBlank(), true);
+    b3.clear();
+    QCOMPARE(b3.name(), QString::fromLatin1("testBinding3"));
+    QCOMPARE(b3.isBlank(), false);
+
+    QSparqlBinding b4("testBinding4", QUrl("urn:uri:123"));
+    QCOMPARE(b4.name(), QString::fromLatin1("testBinding4"));
+    QCOMPARE(b4.isUri(), true);
+    QCOMPARE(b4.value(), QVariant(QUrl("urn:uri:123")));
+    b4.clear();
+    QCOMPARE(b4.name(), QString::fromLatin1("testBinding4"));
+    QCOMPARE(b4.isUri(), false);
+    QCOMPARE(b4.value(), QVariant());
+
+
 }
 
 QTEST_MAIN( tst_QSparqlBinding )

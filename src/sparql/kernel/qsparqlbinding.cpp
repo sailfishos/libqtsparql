@@ -439,7 +439,7 @@ void QSparqlBinding::setBlankNodeLabel(const QString& id)
 
 void QSparqlBinding::clear()
 {
-    val = QVariant(val.type());
+    val = QVariant();
     d->nodetype = QSparqlBindingPrivate::Invalid;
     d->dataType = QUrl();
     d->lang = QString();
