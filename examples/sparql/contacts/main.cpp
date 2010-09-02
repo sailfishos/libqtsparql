@@ -197,14 +197,14 @@ void DetailView::showDetails(const QString& u)
 {
     uri = u;
     nameQuery.unbindValues();
-    nameQuery.bindValue("?:contact_uri", QUrl(uri));
+    nameQuery.bindValue("contact_uri", QUrl(uri));
 
     delete nameResult;
     nameResult = conn.exec(nameQuery);
     connect(nameResult, SIGNAL(finished()), this, SLOT(nameQueryFinished()));
 
     phoneNumberQuery.unbindValues();
-    phoneNumberQuery.bindValue("?:contact_uri", QUrl(uri));
+    phoneNumberQuery.bindValue("contact_uri", QUrl(uri));
     phoneNumberModel.setQuery(phoneNumberQuery, conn);
 
     ui->removedLabel->hide();
@@ -226,7 +226,7 @@ void DetailView::nameQueryFinished()
 void DetailView::removeContact()
 {
     removeQuery.unbindValues();
-    removeQuery.bindValue("?:contact_uri", QUrl(uri));
+    removeQuery.bindValue("contact_uri", QUrl(uri));
     delete removeResult;
     removeResult = conn.exec(removeQuery);
     connect(removeResult, SIGNAL(finished()), this, SLOT(removeFinished()));
@@ -307,11 +307,11 @@ void AddView::showAddView()
 void AddView::addContact()
 {
     addQuery.unbindValues();
-    addQuery.bindValue("?:user_name_given",
+    addQuery.bindValue("user_name_given",
                        ui->nameEdit1->text());
-    addQuery.bindValue("?:user_name_family",
+    addQuery.bindValue("user_name_family",
                        ui->nameEdit2->text());
-    addQuery.bindValue("?:user_phone",
+    addQuery.bindValue("user_phone",
                        ui->phoneEdit->text());
 
     delete addResult;
