@@ -213,7 +213,7 @@ void tst_QSparqlBinding::toString_data()
         QVariant(QDate(2000, 1, 30)) <<
         QVariant() <<
         QVariant() <<
-        QString("2000-01-30") <<
+        QString("\"2000-01-30\"") <<
         QString("2000-01-30") <<
         QUrl("http://www.w3.org/2001/XMLSchema#date");
 
@@ -229,7 +229,7 @@ void tst_QSparqlBinding::toString_data()
         QVariant(QTime(12, 5, 59)) <<
         QVariant() <<
         QVariant() <<
-        QString("12:05:59") <<
+        QString("\"12:05:59\"") <<
         QString("12:05:59") <<
         QUrl("http://www.w3.org/2001/XMLSchema#time");
 
@@ -245,7 +245,7 @@ void tst_QSparqlBinding::toString_data()
         QVariant(QDateTime(QDate(2000, 1, 30), QTime(12, 5, 59))) <<
         QVariant() <<
         QVariant() <<
-        QString("2000-01-30T12:05:59") <<
+        QString("\"2000-01-30T12:05:59\"") <<
         QString("2000-01-30T12:05:59") <<
         QUrl("http://www.w3.org/2001/XMLSchema#dateTime");
 
