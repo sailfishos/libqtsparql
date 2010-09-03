@@ -206,6 +206,12 @@ void tst_QSparqlQuery::different_datatypes_data()
         (QVariantList() << QVariant(64)) <<
         QString("the 64 goes here");
 
+    QTest::newRow("int") <<
+        QString("the $:value goes here") <<
+        (QStringList() << "value") <<
+        (QVariantList() << QVariant(64)) <<
+        QString("the 64 goes here");
+
     /*QTest::newRow("double") <<
         QString("the ?:value goes here") <<
         (QStringList() << "?:value") <<
