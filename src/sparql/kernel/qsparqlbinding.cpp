@@ -341,37 +341,40 @@ QString QSparqlBinding::toString() const
         }
         case QVariant::Date:
         {
+            quoted = true;
             QDate dt = val.toDate();
             // Date format has to be "yyyy-MM-dd", with leading zeroes if month or day < 10
-            literal = QString::number(dt.year()) + QLatin1Char('-') +
+            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
                 QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('-') +
-                QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true);
+                QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) + QLatin1Char('\"');
             break;
         }
         case QVariant::Time:
         {
+            quoted = true;
             QTime tm = val.toTime();
             // Time format has to be "hh:mm:ss"
-            literal = tm.toString();
+            literal = QLatin1Char('\"') + tm.toString() + QLatin1Char('\"');
             break;
         }
         case QVariant::DateTime:
         {
+            quoted = true;
             QDate dt = val.toDateTime().date();
             QTime tm = val.toDateTime().time();
             // DateTime format has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
-            literal = QString::number(dt.year()) + QLatin1Char('-') +
+            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
                 QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('-') +
                 QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('T') +
-                tm.toString();
+                tm.toString() + QLatin1Char('\"');
             break;
         }
         case QVariant::ByteArray:
             quoted = true;
-            literal = QLatin1Char('\"') + QString::fromAscii(val.toByteArray().toBase64()) + QLatin1Char('\"') ;
+            literal = QLatin1Char('\"') + QString::fromAscii(val.toByteArray().toBase64()) + QLatin1Char('\"');
             break;
         default:
             break;
