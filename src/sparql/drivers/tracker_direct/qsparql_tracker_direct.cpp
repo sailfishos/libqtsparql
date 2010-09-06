@@ -79,9 +79,10 @@ async_cursor_next_callback( GObject *source_object,
         if (data->q->isBool()) {
             data->setBoolValue(data->results.count() == 1
                                     && data->results[0].count() == 1
-                                    && data->results[0].value(0).toString() == QLatin1String("1"));
+                                    && data->results[0].binding(0).value().toString() == QLatin1String("1"));
         }
 
+        g_object_unref(data->cursor);
         data->terminate();
         return;
     }
@@ -127,6 +128,7 @@ async_query_callback(   GObject *source_object,
         e.setType(QSparqlError::StatementError);
         data->setLastError(e);
         g_error_free(error);
+        g_object_unref(data->cursor);
         data->terminate();
         return;
     }
@@ -157,7 +159,7 @@ async_update_callback( GObject *source_object,
 }
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
-: isFinished(false), loop(0), q(result), driverPrivate(dpp)
+: cursor(0), isFinished(false), loop(0), q(result), driverPrivate(dpp)
 {
 }
 
