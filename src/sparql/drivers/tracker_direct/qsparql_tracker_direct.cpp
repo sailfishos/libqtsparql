@@ -296,9 +296,7 @@ void QTrackerDirectResult::waitForFinished()
 
 bool QTrackerDirectResult::isFinished() const
 {
-//    if (d->watcher)
-//        return d->watcher->isFinished();
-    return true;
+    return d->isFinished;
 }
 
 bool QTrackerDirectResult::isNull(int field) const
