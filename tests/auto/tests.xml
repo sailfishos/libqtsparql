@@ -17,13 +17,17 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql
         </step>
       </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
     </set>
     <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
       <pre_steps>
 	<step expected_result="0">
           . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data.query;
-	  tracker-import /usr/share/libqtsparql-tests/testdata.ttl
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl
         </step>
       </pre_steps>
       <case name="test-query-contacts" description="Executing a query">
@@ -34,20 +38,73 @@
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data.query &amp;&amp;
-	  tracker-import /usr/share/libqtsparql-tests/testdata.ttl &amp;&amp;
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
 	  exit $i )
         </step>
       </case>
+      <case name="test-query-with-error" description="Erroneous query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker query_with_error
+        </step>
+      </case>
+
+      <post_steps>
+	<step expected_result="0">
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query
+        </step>
+      </post_steps>
       <environments>
         <scratchbox>true</scratchbox>
         <hardware>true</hardware>
       </environments>
-
       <get>
 	<file>/home/user/.local/share/tracker/tracker-store.log</file>
       </get>
-
+    </set>
+    <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
+      <pre_steps>
+	<step expected_result="0">
+          . /tmp/session_bus_address.user;
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl
+        </step>
+      </pre_steps>
+      <case name="test-query-contacts" description="Executing a query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts
+        </step>
+      </case>
+      <case name="test-ask-contacts" description="Executing an ASK query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct ask_contacts
+        </step>
+      </case>
+      <case name="test-insert-and-delete-contact" description="Executing an update">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
+      <case name="test-query-with-error" description="Erroneous query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error
+        </step>
+      </case>
+      <post_steps>
+	<step expected_result="0">
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query
+        </step>
+      </post_steps>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+      <get>
+	<file>/home/user/.local/share/tracker/tracker-store.log</file>
+      </get>
     </set>
   </suite>
 </testdefinition>
