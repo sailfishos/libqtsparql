@@ -73,6 +73,7 @@ OPT_SHADOW=maybe
 PERL=`$WHICH perl 2>/dev/null`
 
 QMAKE=`$WHICH qmake 2>/dev/null`
+export QMAKE
 
 if [ -z "$QMAKE" ] ; then
 	QMAKE=`$WHICH qmake-qt4 2>/dev/null`
@@ -335,11 +336,11 @@ QTDIR=. bin/syncqt
 
 echo "Finding project files. Please wait..."
 
-"qmake" -prl -r "${relpath}/projects.pro"
+"$QMAKE" -prl -r "${relpath}/projects.pro"
 if [ -f "${relpath}/projects.pro" ]; then
     mkfile="${outpath}/Makefile"
     [ -f "$mkfile" ] && chmod +w "$mkfile"
-    QTDIR="$outpath" "qmake" -spec "$XQMAKESPEC" "${relpath}/projects.pro" -o "$mkfile"
+    QTDIR="$outpath" "$QMAKE" -spec "$XQMAKESPEC" "${relpath}/projects.pro" -o "$mkfile"
 fi
 
 

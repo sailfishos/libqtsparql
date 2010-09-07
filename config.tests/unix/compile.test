@@ -16,22 +16,6 @@ INCLUDEPATH=""
 CXXFLAGS=""
 MAC_ARCH_CXXFLAGS=""
 MAC_ARCH_LFLAGS=""
-WHICH="which.test"
-
-cd `dirname $0`
-
-QMAKE=`which qmake 2>/dev/null`
-
-if [ -z "$QMAKE" ] ; then
-	QMAKE=`which qmake-qt4 2>/dev/null`
-fi
-
-if [ -z "$QMAKE" ] ; then
-	echo
-	echo "You need qmake in your PATH to build QSparql."
-	echo "Cannot proceed."
-	exit 1
-fi
 
 while [ "$#" -gt 0 ]; do
     PARAM=$1
