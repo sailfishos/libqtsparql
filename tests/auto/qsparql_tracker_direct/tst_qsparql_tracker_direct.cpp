@@ -210,7 +210,7 @@ void tst_QSparqlTrackerDirect::query_with_error()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
     QCOMPARE(r->hasError(), true);
-    QCOMPARE(r->lastError().type(), QSparqlError::BackendError);
+    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
 }
 
