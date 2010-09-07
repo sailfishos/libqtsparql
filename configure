@@ -44,6 +44,8 @@
 # script initialization
 #-------------------------------------------------------------------------------
 
+# the name of this script
+relconf=`basename $0`
 # the directory of this script is the "source tree"
 relpath=`dirname $0`
 relpath=`(cd "$relpath"; /bin/pwd)`
@@ -191,9 +193,20 @@ while [ "$#" -gt 0 ]; do
         VAL="$1"
         ;;
 
+    -h|help|--help|-help)
+        if [ "$VAL" = "yes" ]; then
+            OPT_HELP="$VAL"
+        else
+            UNKNOWN_OPT=yes
+        fi
+        ;;
+
     *)
         echo "Unknown option: $1";
-        exit 1
+        OPT_HELP=yes
+        ERROR=yes
+        shift
+        continue
 	;;
     esac
 
@@ -221,6 +234,24 @@ while [ "$#" -gt 0 ]; do
 
     shift
 done
+
+# next, emit a usage message if something failed.
+if [ "$OPT_HELP" = "yes" ]; then
+    cat <<EOF
+Usage:  $relconf [-h] [-prefix <dir>]
+        [-no-sparql-<driver>] [-sparql-<driver>] [-plugin-sparql-<driver>]
+
+Installation options:
+
+ These are optional, but you may specify install directories.
+
+    -prefix <dir> ...... This will install everything relative to <dir>
+                         (default $QTSPARQL_INSTALL_PREFIX)
+EOF
+
+   [ "x$ERROR" = "xyes" ] && exit 1
+   exit 0
+fi
 
 #-------------------------------------------------------------------------------
 # post process QTSPARQL_INSTALL_PREFIX variable
