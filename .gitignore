@@ -6,6 +6,7 @@ lib/
 
 Makefile*
 .qmake.cache
+config.tests/unix/tracker-sparql/tracker-sparql
 
 moc_*.cpp
 *.moc
@@ -20,6 +21,7 @@ simple
 contacts
 dbpedia
 querymodel
+qmlquerymodel
 
 # tests
 tests/auto/qsparql/tst_qsparql
