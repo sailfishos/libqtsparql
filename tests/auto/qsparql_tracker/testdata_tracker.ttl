@@ -14,4 +14,3 @@
 <uri003> a nco:PersonContact, nie:InformationElement ;
     nie:isLogicalPartOf <qsparql-tracker-tests> ;
     nco:nameGiven "name003" .
-
