@@ -82,7 +82,6 @@ async_cursor_next_callback( GObject *source_object,
                                     && data->results[0].binding(0).value().toString() == QLatin1String("1"));
         }
 
-        g_object_unref(data->cursor);
         data->terminate();
         return;
     }
@@ -128,7 +127,6 @@ async_query_callback(   GObject *source_object,
         e.setType(QSparqlError::StatementError);
         data->setLastError(e);
         g_error_free(error);
-        g_object_unref(data->cursor);
         data->terminate();
         return;
     }
@@ -165,6 +163,8 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* r
 
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
+    if (cursor != 0)
+        g_object_unref(cursor);
 }
 
 void QTrackerDirectResultPrivate::terminate()
