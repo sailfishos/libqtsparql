@@ -1,8 +1,8 @@
-libqtsparql (0.0.4~unreleased) unstable; urgency=low
+libqtsparql (0.0.4) unstable; urgency=low
 
-  *
+  * New package: libqtsparq-tracker-direct for the tracker-direct driver.
 
- -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 31 Aug 2010 08:55:12 +0300
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 07 Sep 2010 13:28:34 +0300
 
 libqtsparql (0.0.3) unstable; urgency=low
 
