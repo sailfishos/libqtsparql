@@ -2,7 +2,7 @@ Source: libqtsparql
 Section: libs
 Priority: optional
 Maintainer: Marja Hassinen <marja.hassinen@nokia.com>
-Build-Depends: debhelper (>= 5), libqt4-dev (>= 4.7), doxygen
+Build-Depends: debhelper (>= 5), libqt4-dev (>= 4.7), doxygen, libtracker-sparql-dev
 Standards-Version: 3.8.0
 
 Package: libqtsparql0
@@ -65,6 +65,19 @@ Priority: extra
 Architecture: any
 Depends: libqtsparql-tracker (= ${binary:Version})
 Description: Tracker driver for QtSparql.
+ .
+ This package contains the debug symbols.
+
+Package: libqtsparql-tracker-direct
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Tracker direct access driver for QtSparql.
+
+Package: libqtsparql-tracker-direct-dbg
+Priority: extra
+Architecture: any
+Depends: libqtsparql-tracker-direct (= ${binary:Version})
+Description: Tracker direct access driver for QtSparql.
  .
  This package contains the debug symbols.
 

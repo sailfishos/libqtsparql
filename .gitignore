@@ -53,6 +53,8 @@ debian/libqtsparql-tracker-dbg
 debian/libqtsparql-endpoint
 debian/libqtsparql-endpoint-dbg
 debian/libqtsparql-virtuoso
+debian/libqtsparql-tracker-direct
+debian/libqtsparql-tracker-direct-dbg
 
 # configure-time tests
 config.tests/unix/odbc/odbc
