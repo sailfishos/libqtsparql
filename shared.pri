@@ -3,7 +3,8 @@ QT = core
 
 QMAKE_LIBDIR = $$QT_BUILD_TREE/lib
 
-isEmpty(PREFIX): PREFIX = /usr/local
+#isEmpty(PREFIX): PREFIX = /usr/local
+isEmpty(PREFIX): PREFIX = $$QTSPARQL_INSTALL_PREFIX
 
 # this will in the .so name
 VERSION = 0.0.0
