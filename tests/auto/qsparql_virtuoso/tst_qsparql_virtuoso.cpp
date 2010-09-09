@@ -104,7 +104,9 @@ void tst_QSparqlVirtuoso::query_contacts()
 
     QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
                    "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   "select ?u ?ng {?u a nco:PersonContact; "
+                   "select ?u ?ng "
+                   "from <http://virtuoso/testgraph> "
+                   " {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
@@ -165,7 +167,7 @@ void tst_QSparqlVirtuoso::ask_contact()
 
     QSparqlQuery q1("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
                    "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   " ask { "
+                   " ask from <http://virtuoso/testgraph> { "
                    " ?u a nco:PersonContact; "
                    " nie:isLogicalPartOf <qsparql-virtuoso-tests> ; "
                    "nco:nameGiven \"name001\" . }", QSparqlQuery::AskStatement);
@@ -177,10 +179,10 @@ void tst_QSparqlVirtuoso::ask_contact()
     QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), true);
     delete r;
-    
+
     QSparqlQuery q2("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
                    "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   " ask { "
+                   " ask from <http://virtuoso/testgraph> { "
                    " ?u a nco:PersonContact; "
                    " nie:isLogicalPartOf <qsparql-virtuoso-tests> ; "
                    "nco:nameGiven \"name005\" . }", QSparqlQuery::AskStatement);
@@ -219,7 +221,8 @@ void tst_QSparqlVirtuoso::insert_and_delete_contact()
     // Verify that the insertion succeeded
     QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
                    "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   "select ?u ?ng {?u a nco:PersonContact; "
+                   "select ?u ?ng from <http://virtuoso/testgraph> { "
+                   "?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
@@ -322,9 +325,11 @@ void tst_QSparqlVirtuoso::select_datatypes()
 
     // Originally 4567.123
     QCOMPARE(results["<double_property>"].toString(), QString("4.5671200000e+03"));
+    // QCOMPARE(results["<double_property>"].value().toDouble(), 4567.123);
 
     // Originally 123.45
     QCOMPARE(results["<float_property>"].toString(), QString("1.2344999695e+02"));
+    // QCOMPARE(results["<float_property>"].value().toDouble(), 123.45);
 
     QCOMPARE(results["<base64Binary_property>"].toString(), QString("\"qouh3908t38hohfr\"^^<http://www.w3.org/2001/XMLSchema#base64Binary>"));
 
