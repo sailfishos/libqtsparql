@@ -246,8 +246,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
     d->nodetype = QSparqlBindingPrivate::Literal;
     d->dataType = dataTypeUri;
     QByteArray s = dataTypeUri.toString().toLatin1();
-qDebug() << "QSparqlBinding::setValue() value: " << value;
-qDebug() << "QSparqlBinding::setValue() datatype: " << dataTypeUri;
+
     if (s == "http://www.w3.org/2001/XMLSchema#int") {
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
@@ -414,7 +413,6 @@ QString QSparqlBinding::toString() const
 
 void QSparqlBinding::setValue(const QVariant& value)
 {
-qDebug() << "QSparqlBinding::setValue() value: " << value;
     val = value;
 
     if (value.type() == QVariant::Url)
