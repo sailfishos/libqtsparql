@@ -312,7 +312,12 @@ QString QSparqlBinding::toString() const
             literal = val.toBool() ? QLatin1String("true") : QLatin1String("false");
             break;
         case QVariant::Double:
-            literal = QString::number(val.toDouble(), 'e', 10);
+            if (dataTypeUri() == QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#decimal")) {
+                literal = QString::number(val.toDouble(), 'f', 10);
+                literal.replace(QRegExp(QString::fromLatin1("0+$")), QString::fromLatin1(""));
+            } else {
+                literal = QString::number(val.toDouble(), 'e', 10);
+            }
             break;
         case QVariant::String:
         {
