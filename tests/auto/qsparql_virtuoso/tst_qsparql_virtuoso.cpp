@@ -313,9 +313,7 @@ void tst_QSparqlVirtuoso::select_datatypes()
     QCOMPARE(results["<date_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
     QCOMPARE(results["<time_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
     QCOMPARE(results["<dateTime_property>"].toString(), QString("\"2010-11-30 12:30:59\"^^<http://www.w3.org/2001/XMLSchema#datetime>"));
-
-    // This is wrong, it should 1234.56
-    QCOMPARE(results["<decimal_property>"].toString(), QString("0"));
+    QCOMPARE(results["<decimal_property>"].toString(), QString("1.2345600000e+03"));
 
     QCOMPARE(results["<short_property>"].toString(), QString("\"4567\"^^<http://www.w3.org/2001/XMLSchema#short>"));
     QCOMPARE(results["<long_property>"].toString(), QString("\"123456789\"^^<http://www.w3.org/2001/XMLSchema#long>"));

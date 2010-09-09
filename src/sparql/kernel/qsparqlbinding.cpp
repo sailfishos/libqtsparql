@@ -246,7 +246,8 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
     d->nodetype = QSparqlBindingPrivate::Literal;
     d->dataType = dataTypeUri;
     QByteArray s = dataTypeUri.toString().toLatin1();
-    
+qDebug() << "QSparqlBinding::setValue() value: " << value;
+qDebug() << "QSparqlBinding::setValue() datatype: " << dataTypeUri;
     if (s == "http://www.w3.org/2001/XMLSchema#int") {
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
@@ -290,13 +291,13 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 */
 
 QString QSparqlBinding::toString() const
-{    
+{
     if (d->nodetype == QSparqlBindingPrivate::Uri)
         return QLatin1Char('<') + QString::fromAscii(val.toUrl().toEncoded()) + QLatin1Char('>');
-    
+
     if (d->nodetype == QSparqlBindingPrivate::Blank)
         return QLatin1String("_:") + val.toString();
-    
+
     if (d->nodetype == QSparqlBindingPrivate::Literal) {
         QString literal;
 
@@ -394,7 +395,7 @@ QString QSparqlBinding::toString() const
         }
         return literal;
     }
-    
+
     return QString();
 }
 
@@ -413,8 +414,9 @@ QString QSparqlBinding::toString() const
 
 void QSparqlBinding::setValue(const QVariant& value)
 {
+qDebug() << "QSparqlBinding::setValue() value: " << value;
     val = value;
-    
+
     if (value.type() == QVariant::Url)
         d->nodetype = QSparqlBindingPrivate::Uri;
     else
@@ -468,7 +470,7 @@ void QSparqlBinding::setName(const QString& name)
     Returns the value of the binding as a QVariant.
 
     Use isValid() to check if the binding's value has been set.
-    
+
     \sa setValue()
 */
 
@@ -495,7 +497,7 @@ QUrl QSparqlBinding::dataTypeUri() const
     if (!d->dataType.isEmpty()) {
         return d->dataType;
     }
-    
+
     switch (val.type()) {
     case QVariant::Int:
         return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer");

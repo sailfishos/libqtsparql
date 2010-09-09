@@ -134,7 +134,7 @@ public:
         mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
     }
-    
+
     ~QVirtuosoResultPrivate()
     {
         if (fetcher->isRunning()) {
@@ -300,9 +300,9 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
 {
     setQuery(sparqlQuery);
     setStatementType(type);
-    
+
     d->query = "SPARQL ";
-    
+
     // Note that NTriples output support depends on a patch from Ivan Mikhailov
     // of OpenLink software. It should be in the next release (ie after 6.1.2)
     if (isGraph())
@@ -330,7 +330,7 @@ bool QVirtuosoResult::exec()
             return false;
         }
     }
-    
+
     r  = SQLAllocHandle(SQL_HANDLE_STMT, d->dpDbc(), &d->hstmt);
     if (r != SQL_SUCCESS) {
         qSparqlWarning(QLatin1String("QVirtuosoResult::exec: Unable to allocate statement handle"), d);
@@ -370,7 +370,7 @@ bool QVirtuosoResult::exec()
                 terminate();
                 return false;
             }
-            
+
             d->bindingNames.append(QString::fromLatin1((const char*) colName));
         }
     }
@@ -382,7 +382,7 @@ void QVirtuosoResult::waitForFinished()
 {
     if (d->isFinished)
         return;
-    
+
     QEventLoop loop;
     d->loop = &loop;
     loop.exec();
@@ -412,10 +412,10 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     r = SQLGetData(p->hstmt, colNum, SQL_C_CHAR, dummyBuffer, 0, &length);
     if ((r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO) && length > 0)
         bufferLength = length / sizeof(SQLTCHAR) + 1;
-    
+
     QVarLengthArray<char> buffer(bufferLength);  // The real buffer
     r = SQLGetData(p->hstmt, colNum, SQL_C_CHAR, buffer.data(), buffer.size(), 0);
-    
+
     int dvtype = 0;
     r = SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_DV_TYPE, &dvtype, SQL_IS_INTEGER, 0);
 
@@ -452,7 +452,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         b.setValue(QString::fromUtf8(buffer.constData()).toInt());
         break;
     case VIRTUOSO_DV_NUMERIC:
-        b.setValue(QString::fromUtf8(buffer.constData()).toInt());
+        b.setValue(QString::fromUtf8(buffer.constData()).toDouble());
         break;
     case VIRTUOSO_DV_RDF: 
         {
@@ -512,12 +512,12 @@ bool QVirtuosoResult::fetchNextResult()
                 "Unable to fetch next"), QSparqlError::BackendError, d));
         terminate();
         return false;
-        
+
     }
-    
+
     QMutexLocker resultLocker(&(d->mutex)); 
     d->clearValues();
-    
+
     for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
         d->results[d->results.count() - 1].append(qMakeBinding(d, d->resultColIdx));
     }
@@ -539,9 +539,9 @@ bool QVirtuosoResult::fetchBoolResult()
         setBoolValue(false);
         terminate();
         return false;
-        
+
     }
-    
+
     QSparqlBinding retval = qMakeBinding(d, 1);
     setBoolValue(retval.name().toUpper() == QLatin1String("__ASK_RETVAL") && retval.value().toInt() == 1);
     terminate();
@@ -561,9 +561,9 @@ bool QVirtuosoResult::fetchGraphResult()
         setBoolValue(false);
         terminate();
         return false;
-        
+
     }
-    
+
     QSparqlBinding retval = qMakeBinding(d, 1);
 
     if (retval.name().toUpper() == QLatin1String("FMTAGGRET-NT")) {
@@ -571,7 +571,7 @@ bool QVirtuosoResult::fetchGraphResult()
         QSparqlNTriples parser(buffer);
         d->results = parser.parse();
     }
-    
+
     terminate();
     return true;
 }
@@ -597,12 +597,12 @@ bool QVirtuosoResult::fetchNext()
     }
 
     setPos(pos() + 1);
-    
+
     if (d->isFinished && pos() >= d->results.count()) {
         setPos(QSparql::AfterLastRow);
         return false;
     }
-        
+
     return pos() < d->results.count();
 }
 
@@ -635,7 +635,7 @@ QVariant QVirtuosoResult::data(int field) const
         qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
     }
-    
+
     return d->results[pos()].binding(field).value();
 }
 
@@ -721,7 +721,7 @@ bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
         setOpenError(true);
         return false;
     }
-    
+
         // set odbc version
     SQLSetEnvAttr(d->hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, SQL_IS_UINTEGER);
 
@@ -749,19 +749,19 @@ bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
         hostName = QLatin1String("localhost");
     else
         hostName = options.hostName();
-    
+
     if (options.port() == -1)
         port = 1111;
     else
         port = options.port();
-        
+
     connectString += QString(QLatin1String(";HOST=%1:%2")).arg(hostName).arg(port);
 
     if (options.userName().isEmpty())
         connectString += QLatin1String(";UID=dba");
     else
         connectString += QLatin1String(";UID=") + options.userName();
-        
+
     if (options.password().isEmpty())
         connectString += QLatin1String(";PWD=dba");
     else
@@ -770,7 +770,7 @@ bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
     SQLSMALLINT cb;
     SQLTCHAR connectionOut[4097];
     connectionOut[4096] = 0;
-    
+
     r = SQLDriverConnect( d->hDbc,
                           0,
                           (UCHAR*) connectString.toUtf8().data(),
