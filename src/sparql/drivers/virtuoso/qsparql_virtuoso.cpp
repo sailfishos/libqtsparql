@@ -453,6 +453,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         break;
     case VIRTUOSO_DV_NUMERIC:
         b.setValue(QString::fromUtf8(buffer.constData()).toDouble());
+        b.setDataTypeUri(QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#decimal"));
         break;
     case VIRTUOSO_DV_RDF: 
         {
