@@ -66,6 +66,7 @@ private slots:
     void ask_contact();
     void insert_and_delete_contact();
     void query_with_error();
+    void select_datatypes();
 };
 
 tst_QSparqlVirtuoso::tst_QSparqlVirtuoso()
@@ -202,7 +203,7 @@ void tst_QSparqlVirtuoso::insert_and_delete_contact()
 
     QSparqlQuery add("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
                      "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                     "insert into <http://www.openlinksw.com/schemas/virtrdf#> "
+                     "insert into <http://virtuoso/testgraph> "
                      "{ <addeduri001> a nco:PersonContact; "
                      "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
                      "nco:nameGiven \"addedname001\" . }",
@@ -234,9 +235,9 @@ void tst_QSparqlVirtuoso::insert_and_delete_contact()
     delete r;
 
     // Delete the uri
-    QSparqlQuery del("DELETE FROM GRAPH <http://www.openlinksw.com/schemas/virtrdf#> "
+    QSparqlQuery del("DELETE FROM GRAPH <http://virtuoso/testgraph> "
                      "{ <addeduri001> ?p ?o . } "
-                     "FROM <http://www.openlinksw.com/schemas/virtrdf#> "
+                     "FROM <http://virtuoso/testgraph> "
                      "WHERE { <addeduri001> ?p ?o . }",
                      QSparqlQuery::DeleteStatement);
 
@@ -275,6 +276,61 @@ void tst_QSparqlVirtuoso::query_with_error()
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
+}
+
+void tst_QSparqlVirtuoso::select_datatypes()
+{
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    QSparqlQuery q("select * from <http://virtuoso/testgraph> where { <thing001> ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 22);
+    QHash<QString, QSparqlBinding> results;
+
+    while (r->next()) {
+        QSparqlResultRow resultRow = r->resultRow();
+        results[resultRow.binding(0).toString()] = resultRow.binding(1);
+    }
+
+    QCOMPARE(results["<string_property>"].toString(), QString("\"A string\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_tab_property>"].toString(), QString("\"A string \\\\t with tab\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_newline_property>"].toString(), QString("\"A string \\\\n with newline\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_carriage_return_property>"].toString(), QString("\"A string \\\\r with carriage return\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_backspace_property>"].toString(), QString("\"A string \\\\b with backspace\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_single_quote_property>"].toString(), QString("\"A string \\\' with single quote\""));
+    QCOMPARE(results["<string_double_quote_property>"].toString(), QString("\"A string \\\" with double quote\""));
+    QCOMPARE(results["<string_backslash_property>"].toString(), QString("\"A string \\\\\\\\ with backslash\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+
+    QCOMPARE(results["<integer_property>"].toString(), QString("-1234"));
+    QCOMPARE(results["<int_property>"].toString(), QString("\"5678\"^^<http://www.w3.org/2001/XMLSchema#int>"));
+    QCOMPARE(results["<nonNegativeInteger_property>"].toString(), QString("9012"));
+    QCOMPARE(results["<date_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
+    QCOMPARE(results["<time_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
+    QCOMPARE(results["<dateTime_property>"].toString(), QString("\"2010-11-30 12:30:59\"^^<http://www.w3.org/2001/XMLSchema#datetime>"));
+
+    // This is wrong, it should 1234.56
+    QCOMPARE(results["<decimal_property>"].toString(), QString("0"));
+
+    QCOMPARE(results["<short_property>"].toString(), QString("\"4567\"^^<http://www.w3.org/2001/XMLSchema#short>"));
+    QCOMPARE(results["<long_property>"].toString(), QString("\"123456789\"^^<http://www.w3.org/2001/XMLSchema#long>"));
+
+    // Booleans are just changed to ints of value 0 or 1 by Virtuoso
+    QCOMPARE(results["<boolean_property>"].toString(), QString("1"));
+
+    // Originally 4567.123
+    QCOMPARE(results["<double_property>"].toString(), QString("4.5671200000e+03"));
+
+    // Originally 123.45
+    QCOMPARE(results["<float_property>"].toString(), QString("1.2344999695e+02"));
+
+    QCOMPARE(results["<base64Binary_property>"].toString(), QString("\"qouh3908t38hohfr\"^^<http://www.w3.org/2001/XMLSchema#base64Binary>"));
+
 }
 
 QTEST_MAIN( tst_QSparqlVirtuoso )

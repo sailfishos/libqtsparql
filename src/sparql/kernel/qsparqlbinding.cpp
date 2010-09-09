@@ -232,7 +232,7 @@ static int extractTimezone(QString& str)
         str.remove(ix, 6);
         return ((adjustment.hour() * 3600) + (adjustment.minute() * 60)) * sign;
     }
-    
+
     return 0;
 }
 
@@ -324,6 +324,8 @@ QString QSparqlBinding::toString() const
                 else if (ch == QLatin1Char('\n'))
                     literal.append(QLatin1String("\\n"));
                 else if (ch == QLatin1Char('\r'))
+                    literal.append(QLatin1String("\\r"));
+                else if (ch == QLatin1Char('\b'))
                     literal.append(QLatin1String("\\b"));
                 else if (ch == QLatin1Char('\f'))
                     literal.append(QLatin1String("\\f"));
@@ -496,7 +498,7 @@ QUrl QSparqlBinding::dataTypeUri() const
     
     switch (val.type()) {
     case QVariant::Int:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#int");
+        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer");
     case QVariant::LongLong:
         return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#long");
     case QVariant::UInt:

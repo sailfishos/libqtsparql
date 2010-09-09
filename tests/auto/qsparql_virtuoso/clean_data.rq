@@ -1,8 +1,8 @@
-sparql 
+sparql
 prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
 prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
-DELETE from <http://www.openlinksw.com/schemas/virtrdf#>
+DELETE from <http://virtuoso/testgraph>
 {
     ?u a rdfs:Resource .
 }
@@ -15,7 +15,17 @@ sparql
 prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
 prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
-DELETE from <http://www.openlinksw.com/schemas/virtrdf#>
+DELETE from <http://virtuoso/testgraph>
 {
     <qsparql-virtuoso-tests> a rdfs:Resource .
+};
+
+sparql
+DELETE from <http://virtuoso/testgraph>
+{
+    <thing001> ?p ?o .
+}
+WHERE
+{
+    <thing001> ?p ?o .
 };
