@@ -273,14 +273,14 @@ bool QTrackerDirectResult::fetchFirst()
     return fetch(0);
 }
 
-QVariant QTrackerDirectResult::data(int field) const
+QSparqlBinding QTrackerDirectResult::data(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
-        return QVariant();
+        return QSparqlBinding();
     }
 
-    return d->results[pos()].binding(field).value();
+    return d->results[pos()].binding(field);
 }
 
 void QTrackerDirectResult::waitForFinished()

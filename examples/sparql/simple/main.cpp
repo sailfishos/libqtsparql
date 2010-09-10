@@ -64,6 +64,6 @@ int main(int argc, char *argv[])
         return 1;
     }
     while (result->next())
-        qDebug() << result->value(0).toString();
+        qDebug() << result->binding(0).value().toString();
     return 0;
 }

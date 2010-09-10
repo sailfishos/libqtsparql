@@ -103,8 +103,8 @@ protected:
     bool fetchLast();
     bool fetchPrevious();
     bool fetch(int i);
-    QVariant data(int field) const;
-    
+    QSparqlBinding data(int field) const;
+
     int size() const;
     QSparqlResultRow resultRow() const;
 

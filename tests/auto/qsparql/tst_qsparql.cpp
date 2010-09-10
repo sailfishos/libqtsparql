@@ -71,9 +71,9 @@ class MockResult : public QSparqlResult
     {
         return false;
     }
-    QVariant data(int) const
+    QSparqlBinding data(int) const
     {
-        return QVariant();
+        return QSparqlBinding();
     }
     bool isNull(int) const
     {

@@ -80,7 +80,8 @@ public:
     // (the first row), but what if there's no data? pos() == AfterLastRow ?
 
     // Retrieving data
-    QVariant value(int i) const;
+    QSparqlBinding binding(int i) const;
+    // QVariant value(int i) const;
     virtual QSparqlResultRow resultRow() const;
     virtual bool boolValue() const;
 
@@ -89,21 +90,21 @@ public:
     virtual bool isFinished() const;
     bool hasError() const;
     QSparqlError lastError() const;
-    
+
     QString lastQuery() const; // FIXME: needed?
-    
+
     bool isTable() const;
     bool isGraph() const;
     bool isBool() const;
-    
-    
+
+
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
 
 protected:
     QSparqlResult();
-    
+
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
     virtual void setPos(int pos);
@@ -119,7 +120,7 @@ protected:
     virtual bool fetchLast() = 0;
 
     // The subclasses need to implement these for retrieving the data
-    virtual QVariant data(int i) const = 0;
+    virtual QSparqlBinding data(int i) const = 0;
     virtual void setBoolValue(bool v);
 
 private:

@@ -79,7 +79,7 @@ public:
     virtual bool isFinished() const;
 
     virtual QSparqlResultRow resultRow() const;
-    virtual QVariant data(int i) const;
+    virtual QSparqlBinding data(int i) const;
 
 protected:
     void cleanup();

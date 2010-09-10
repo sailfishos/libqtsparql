@@ -110,7 +110,7 @@ void tst_QSparqlTrackerDirect::query_contacts()
     QHash<QString, QString> contactNames;
     while (r->next()) {
         QCOMPARE(r->resultRow().count(), 2);
-        contactNames[r->value(0).toString()] = r->value(1).toString();
+        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
     }
     QCOMPARE(contactNames.size(), 3);
     QCOMPARE(contactNames["uri001"], QString("name001"));
@@ -171,7 +171,7 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     r->waitForFinished();
     QCOMPARE(r->size(), 4);
     while (r->next()) {
-        contactNames[r->value(0).toString()] = r->value(1).toString();
+        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
     }
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
@@ -195,7 +195,7 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     r->waitForFinished();
     QCOMPARE(r->size(), 3);
     while (r->next()) {
-        contactNames[r->value(0).toString()] = r->value(1).toString();
+        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
     }
     QCOMPARE(contactNames.size(), 3);
     delete r;

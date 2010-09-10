@@ -628,16 +628,16 @@ bool QVirtuosoResult::fetchLast()
 }
 
 
-QVariant QVirtuosoResult::data(int field) const
+QSparqlBinding QVirtuosoResult::data(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex)); 
 
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
-        return QVariant();
+        return QSparqlBinding();
     }
 
-    return d->results[pos()].binding(field).value();
+    return d->results[pos()].binding(field);
 }
 
 int QVirtuosoResult::size() const

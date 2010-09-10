@@ -45,6 +45,7 @@
 #include "ui_main.h"
 
 #include <QSparqlConnection>
+#include <QSparqlBinding>
 #include <QSparqlQuery>
 #include <QSparqlQueryModel>
 #include <QSparqlResult>
@@ -220,7 +221,7 @@ void DetailView::nameQueryFinished()
     if (!nameResult->next()) {
         return;
     }
-    ui->nameLabel->setText(nameResult->value(0).toString());
+    ui->nameLabel->setText(nameResult->binding(0).value().toString());
 }
 
 void DetailView::removeContact()

@@ -68,7 +68,7 @@ void printResultRow(const QSparqlResultRow& rr)
     }
     qDebug() << "Column count:" << rr.count();
     for (int i = 0; i < rr.count(); ++i)
-        qDebug() << "\t" << i << rr.value(i).toString();
+        qDebug() << "\t" << i << rr.binding(i).toString();
 }
 
 class MyObject : public QObject

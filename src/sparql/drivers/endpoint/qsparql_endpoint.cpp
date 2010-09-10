@@ -292,14 +292,14 @@ bool EndpointResult::fetchFirst()
     return fetch(0);
 }
 
-QVariant EndpointResult::data(int field) const
+QSparqlBinding EndpointResult::data(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
-        return QVariant();
+        return QSparqlBinding();
     }
 
-    return d->results[pos()].binding(field).value();
+    return d->results[pos()].binding(field);
 }
 
 // This is just a temporary hack; eventually this should be refactored so that

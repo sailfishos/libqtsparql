@@ -57,6 +57,7 @@
 #include "QtSparql/private/qsparqldriver_p.h"
 #include "QtSparql/qsparqlerror.h"
 #include "QtSparql/qsparqlresult.h"
+#include "QtSparql/qsparqlbinding.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -77,7 +78,7 @@ protected:
     inline bool fetch(int) { return false; }
     inline bool fetchFirst() { return false; }
     inline bool fetchLast() { return false; }
-    inline QVariant data(int) const { return QVariant(); }
+    inline QSparqlBinding data(int) const { return QSparqlBinding(); }
     inline bool isNull(int) const { return false; }
     inline int size() const { return -1; }
 

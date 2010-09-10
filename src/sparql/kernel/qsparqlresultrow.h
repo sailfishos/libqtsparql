@@ -68,11 +68,6 @@ public:
     bool operator==(const QSparqlResultRow &other) const;
     inline bool operator!=(const QSparqlResultRow &other) const { return !operator==(other); }
 
-    QVariant value(int i) const;
-    QVariant value(const QString& name) const;
-    void setValue(int i, const QVariant& val);
-    void setValue(const QString& name, const QVariant& val);
-
     int indexOf(const QString &name) const;
     QString variableName(int i) const;
 
@@ -80,9 +75,6 @@ public:
     QSparqlBinding binding(const QString &name) const;
 
     void append(const QSparqlBinding& binding);
-    void replace(int pos, const QSparqlBinding& binding);
-    void insert(int pos, const QSparqlBinding& binding);
-    void remove(int pos);
 
     bool isEmpty() const;
     bool contains(const QString& name) const;

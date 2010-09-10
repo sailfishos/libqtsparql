@@ -26,7 +26,7 @@ SparqlResultModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     m_result->seek(index.row());
-    return m_result->resultRow().value(role - (Qt::UserRole + 1));
+    return m_result->resultRow().binding(role - (Qt::UserRole + 1)).value();
 }
 
 void

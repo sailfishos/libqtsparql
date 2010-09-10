@@ -302,7 +302,7 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
         return v;
     }
 
-    return d->result->value(dItem.column());
+    return d->result->binding(dItem.column()).value();
 }
 
 /*!
@@ -462,10 +462,7 @@ QSparqlResultRow QSparqlQueryModel::resultRow(int row) const
     if (!d->result->seek(row))
         return d->resultRow;
 
-    QSparqlResultRow resultRow = d->result->resultRow();
-    for (int i = 0; i < resultRow.count(); ++i)
-        resultRow.setValue(i, data(createIndex(row, i), Qt::EditRole));
-    return resultRow;
+    return d->result->resultRow();
 }
 
 /*! \overload
@@ -504,10 +501,9 @@ bool QSparqlQueryModel::insertColumns(int column, int count, const QModelIndex &
 
     beginInsertColumns(parent, column, column + count - 1);
     for (int c = 0; c < count; ++c) {
-        QSparqlBinding field;
-//        field.setReadOnly(true);
-//        field.setGenerated(false);
-        d->resultRow.insert(column, field);
+        QSparqlBinding binding;
+        d->resultRow.append(binding);
+        // d->resultRow.insert(column, binding);
         if (d->colOffsets.size() < d->resultRow.count()) {
             int nVal = d->colOffsets.isEmpty() ? 0 : d->colOffsets[d->colOffsets.size() - 1];
             d->colOffsets.append(nVal);
@@ -539,8 +535,8 @@ bool QSparqlQueryModel::removeColumns(int column, int count, const QModelIndex &
     beginRemoveColumns(parent, column, column + count - 1);
 
     int i;
-    for (i = 0; i < count; ++i)
-        d->resultRow.remove(column);
+//    for (i = 0; i < count; ++i)
+//        d->resultRow.remove(column);
     for (i = column; i < d->colOffsets.count(); ++i)
         d->colOffsets[i] -= count;
 

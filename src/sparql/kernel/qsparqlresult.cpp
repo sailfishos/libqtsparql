@@ -535,10 +535,10 @@ bool QSparqlResult::last()
     \sa previous() next() first() last() seek() isValid()
 */
 
-QVariant QSparqlResult::value(int i) const
+QSparqlBinding QSparqlResult::binding(int i) const
 {
     if (!isValid())
-        return QVariant();
+        return QSparqlBinding();
     return data(i);
 }
 

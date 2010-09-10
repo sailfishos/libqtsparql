@@ -173,33 +173,6 @@ bool QSparqlResultRow::operator==(const QSparqlResultRow &other) const
 }
 
 /*!
-    Returns the value of the binding located at position \a index in
-    the result row. If \a index is out of bounds, an invalid QVariant
-    is returned.
-
-    \sa bindingName() isNull()
-*/
-
-QVariant QSparqlResultRow::value(int index) const
-{
-    return d->bindings.value(index).value();
-}
-
-/*!
-    \overload
-
-    Returns the value of the binding called \a name in the result row. If
-    binding \a name does not exist an invalid variant is returned.
-
-    \sa indexOf()
-*/
-
-QVariant QSparqlResultRow::value(const QString& name) const
-{
-    return value(indexOf(name));
-}
-
-/*!
     Returns the name of the binding at position \a index. If the binding
     does not exist, an empty string is returned.
 
@@ -258,49 +231,6 @@ void QSparqlResultRow::append(const QSparqlBinding& binding)
 {
     detach();
     d->bindings.append(binding);
-}
-
-/*!
-    Inserts the binding \a binding at position \a pos in the result row.
-
-    \sa append() replace() remove()
- */
-void QSparqlResultRow::insert(int pos, const QSparqlBinding& binding)
-{
-   detach();
-   d->bindings.insert(pos, binding);
-}
-
-/*!
-    Replaces the binding at position \a pos with the given \a binding. If
-    \a pos is out of range, nothing happens.
-
-    \sa append() insert() remove()
-*/
-
-void QSparqlResultRow::replace(int pos, const QSparqlBinding& binding)
-{
-    if (!d->contains(pos))
-        return;
-
-    detach();
-    d->bindings[pos] = binding;
-}
-
-/*!
-    Removes the binding at position \a pos. If \a pos is out of range,
-    nothing happens.
-
-    \sa append() insert() replace()
-*/
-
-void QSparqlResultRow::remove(int pos)
-{
-    if (!d->contains(pos))
-        return;
-
-    detach();
-    d->bindings.remove(pos);
 }
 
 /*!
@@ -364,33 +294,6 @@ int QSparqlResultRow::count() const
     return d->bindings.count();
 }
 
-/*!
-    Sets the value of the binding at position \a index to \a val. If the
-    binding does not exist, nothing happens.
-
-*/
-
-void QSparqlResultRow::setValue(int index, const QVariant& val)
-{
-    if (!d->contains(index))
-        return;
-    detach();
-    d->bindings[index].setValue(val);
-}
-
-
-/*!
-    \overload
-
-    Sets the value of the binding called \a name to \a val. If the binding
-    does not exist, nothing happens.
-*/
-
-void QSparqlResultRow::setValue(const QString& name, const QVariant& val)
-{
-    setValue(indexOf(name), val);
-}
-
 
 /*! \internal
 */
@@ -404,7 +307,7 @@ QDebug operator<<(QDebug dbg, const QSparqlResultRow &r)
 {
     dbg << "QSparqlResultRow(" << r.count() << ')';
     for (int i = 0; i < r.count(); ++i)
-        dbg << '\n' << QString::fromLatin1("%1:").arg(i, 2) << r.binding(i) << r.value(i).toString();
+        dbg << '\n' << QString::fromLatin1("%1:").arg(i, 2) << r.binding(i) << r.binding(i).toString();
     return dbg;
 }
 #endif
