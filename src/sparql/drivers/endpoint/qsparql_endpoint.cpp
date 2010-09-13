@@ -140,14 +140,14 @@ void EndpointResultPrivate::parseResults()
 { 
     if (isFinished)
         return;
-    
+
     if (q->isGraph()) {
         QSparqlNTriples parser(buffer);
         results = parser.parse();
         terminate();
         return;
     }
-    
+
     QDomDocument doc(QLatin1String("sparqlresults"));
     if (!doc.setContent(buffer)) {
         terminate();
@@ -202,6 +202,7 @@ void EndpointResultPrivate::parseResults()
                                             }
                                         } else if (valueElement.hasAttribute(QString::fromLatin1("xml:lang"))) {
                                             binding.setValue(QVariant(valueElement.text()));
+                                            binding.setLanguageTag(valueElement.attribute(QString::fromLatin1("xml:lang")));
                                         } else {
                                             binding.setValue(QVariant(valueElement.text()));
                                         }

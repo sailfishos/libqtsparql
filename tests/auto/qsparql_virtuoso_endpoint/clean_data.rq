@@ -1,0 +1,31 @@
+sparql
+prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
+prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+DELETE from <http://virtuoso_endpoint/testgraph>
+{
+    ?u a rdfs:Resource .
+}
+WHERE
+{
+    ?u nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> .
+};
+
+sparql
+prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
+prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+DELETE from <http://virtuoso_endpoint/testgraph>
+{
+    <qsparql-virtuoso-endpoint-tests> a rdfs:Resource .
+};
+
+sparql
+DELETE from <http://virtuoso_endpoint/testgraph>
+{
+    <thing001> ?p ?o .
+}
+WHERE
+{
+    <thing001> ?p ?o .
+};

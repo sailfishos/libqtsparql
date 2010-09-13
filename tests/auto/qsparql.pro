@@ -6,7 +6,8 @@ SUBDIRS = \
     qsparql_endpoint \
     qsparql_tracker \
     qsparql_tracker_direct \
-    qsparql_virtuoso
+    qsparql_virtuoso \
+    qsparql_virtuoso_endpoint
 
 check.CONFIG = recursive
 check.recurse = qsparql qsparqlquery qsparqlbinding

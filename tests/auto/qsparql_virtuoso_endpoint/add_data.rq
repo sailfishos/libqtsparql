@@ -1,0 +1,44 @@
+sparql
+prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
+prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+insert into <http://virtuoso_endpoint/testgraph>
+
+{
+    <qsparql-virtuoso-endpoint-tests> a nie:InformationElement .
+
+    <uri001> a nco:PersonContact, nie:InformationElement ;
+        nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;
+        nco:nameGiven "name001" .
+
+    <uri002> a nco:PersonContact, nie:InformationElement ;
+        nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;
+        nco:nameGiven "name002" .
+
+    <uri003> a nco:PersonContact, nie:InformationElement ;
+        nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;
+        nco:nameGiven "name003" .
+
+    <thing001> a nie:InformationElement ;
+        <string_property> "A string"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_language_tag_property> "Una cadena"@es ;
+        <string_tab_property> "A string \\t with tab"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_newline_property> "A string \\n with newline"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_carriage_return_property> "A string \\r with carriage return"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_backspace_property> "A string \\b with backspace"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_single_quote_property> """A string ' with single quote""";
+        <string_double_quote_property> '''A string " with double quote''' ;
+        <string_backslash_property> "A string \\\\ with backslash"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <integer_property> "-1234"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+        <int_property> "5678"^^<http://www.w3.org/2001/XMLSchema#int> ;
+        <nonNegativeInteger_property> "9012"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger> ;
+        <date_property> "2010-11-30T12:30:59"^^<http://www.w3.org/2001/XMLSchema#date> ;
+        <time_property> "12:30:59"^^<http://www.w3.org/2001/XMLSchema#time> ;
+        <dateTime_property> "2010-11-30T12:30:59"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <decimal_property> "1234.56"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+        <short_property> "4567"^^<http://www.w3.org/2001/XMLSchema#short> ;
+        <long_property> "123456789"^^<http://www.w3.org/2001/XMLSchema#long> ;
+        <boolean_property> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+        <double_property> "4567.123"^^<http://www.w3.org/2001/XMLSchema#double> ;
+        <float_property> "123.45"^^<http://www.w3.org/2001/XMLSchema#float> ;
+        <base64Binary_property> "qouh3908t38hohfr"^^<http://www.w3.org/2001/XMLSchema#base64Binary> .
+};
