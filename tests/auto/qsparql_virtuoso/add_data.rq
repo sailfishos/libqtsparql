@@ -20,6 +20,7 @@ insert into <http://virtuoso/testgraph>
 
     <thing001> a nie:InformationElement ;
         <string_property> "A string"^^<http://www.w3.org/2001/XMLSchema#string> ;
+        <string_language_tag_property> "Una cadena"@es ;
         <string_tab_property> "A string \\t with tab"^^<http://www.w3.org/2001/XMLSchema#string> ;
         <string_newline_property> "A string \\n with newline"^^<http://www.w3.org/2001/XMLSchema#string> ;
         <string_carriage_return_property> "A string \\r with carriage return"^^<http://www.w3.org/2001/XMLSchema#string> ;

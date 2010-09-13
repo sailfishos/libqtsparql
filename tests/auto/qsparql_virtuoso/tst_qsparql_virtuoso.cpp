@@ -293,7 +293,7 @@ void tst_QSparqlVirtuoso::select_datatypes()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
     QCOMPARE(r->hasError(), false);
-    QCOMPARE(r->size(), 22);
+    QCOMPARE(r->size(), 23);
     QHash<QString, QSparqlBinding> results;
 
     while (r->next()) {
@@ -302,6 +302,7 @@ void tst_QSparqlVirtuoso::select_datatypes()
     }
 
     QCOMPARE(results["<string_property>"].toString(), QString("\"A string\"^^<http://www.w3.org/2001/XMLSchema#string>"));
+    QCOMPARE(results["<string_language_tag_property>"].toString(), QString("\"Una cadena\"@es"));
     QCOMPARE(results["<string_tab_property>"].toString(), QString("\"A string \\\\t with tab\"^^<http://www.w3.org/2001/XMLSchema#string>"));
     QCOMPARE(results["<string_newline_property>"].toString(), QString("\"A string \\\\n with newline\"^^<http://www.w3.org/2001/XMLSchema#string>"));
     QCOMPARE(results["<string_carriage_return_property>"].toString(), QString("\"A string \\\\r with carriage return\"^^<http://www.w3.org/2001/XMLSchema#string>"));
@@ -315,7 +316,7 @@ void tst_QSparqlVirtuoso::select_datatypes()
     QCOMPARE(results["<nonNegativeInteger_property>"].toString(), QString("9012"));
     QCOMPARE(results["<date_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
     QCOMPARE(results["<time_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
-    QCOMPARE(results["<dateTime_property>"].toString(), QString("\"2010-11-30 12:30:59\"^^<http://www.w3.org/2001/XMLSchema#datetime>"));
+    QCOMPARE(results["<dateTime_property>"].toString(), QString("\"2010-11-30T12:30:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"));
     QCOMPARE(results["<decimal_property>"].toString(), QString("\"1234.56\"^^<http://www.w3.org/2001/XMLSchema#decimal>"));
     QCOMPARE(results["<short_property>"].toString(), QString("\"4567\"^^<http://www.w3.org/2001/XMLSchema#short>"));
     QCOMPARE(results["<long_property>"].toString(), QString("\"123456789\"^^<http://www.w3.org/2001/XMLSchema#long>"));
