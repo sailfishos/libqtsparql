@@ -116,7 +116,7 @@ void tst_QSparqlBinding::toString_data()
         QVariant() <<
         QString("54") <<
         QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
+        QUrl("http://www.w3.org/2001/XMLSchema#integer");
 
     QTest::newRow("int_with_datatype") <<
         QVariant(static_cast<int>(54)) <<
@@ -150,7 +150,7 @@ void tst_QSparqlBinding::toString_data()
         QString("54") <<
         QString("54") <<
         // It isn't possible to create a QVariant from a long
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
+        QUrl("http://www.w3.org/2001/XMLSchema#integer");
 
     QTest::newRow("long_with_datatype") <<
         QVariant(static_cast<int>(54)) <<
@@ -167,7 +167,7 @@ void tst_QSparqlBinding::toString_data()
         QString("54") <<
         QString("54") <<
         // It isn't possible to create a QVariant from a long
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
+        QUrl("http://www.w3.org/2001/XMLSchema#integer");
 
     QTest::newRow("unsigned_long_with_datatype") <<
         QVariant(static_cast<unsigned int>(54)) <<
@@ -483,7 +483,7 @@ void tst_QSparqlBinding::clear()
     QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
     QCOMPARE(b1.isLiteral(), true);
     QCOMPARE(b1.value(), QVariant(-67));
-    QCOMPARE(b1.dataTypeUri(), QUrl("http://www.w3.org/2001/XMLSchema#int"));
+    QCOMPARE(b1.dataTypeUri(), QUrl("http://www.w3.org/2001/XMLSchema#integer"));
     b1.clear();
     QCOMPARE(b1.name(), QString::fromLatin1("testBinding1"));
     QCOMPARE(b1.isLiteral(), false);
