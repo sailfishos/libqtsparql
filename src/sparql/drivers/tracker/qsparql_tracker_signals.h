@@ -39,95 +39,36 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_P_H
-#define QSPARQL_TRACKER_P_H
-
-#include <qsparqlquery.h>
+#ifndef QSPARQL_TRACKER_SIGNALS_H
+#define QSPARQL_TRACKER_SIGNALS_H
 
 #include <QObject>
-#include <QVector>
-#include <QStringList>
-#include <QDBusConnection>
-#include <QDBusArgument>
 
-class QDBusInterface;
-class QDBusPendingCallWatcher;
-class QString;
-class QTrackerResult;
-class QTrackerDriver;
+#ifdef QT_PLUGIN
+#define Q_EXPORT_SPARQLDRIVER_TRACKER
+#else
+#define Q_EXPORT_SPARQLDRIVER_TRACKER Q_SPARQL_EXPORT
+#endif
 
-QT_BEGIN_HEADER
+class QTrackerChangeNotifierPrivate;
 
-QT_BEGIN_NAMESPACE
-
-class QTrackerDriverPrivate {
-public:
-    QTrackerDriverPrivate();
-    ~QTrackerDriverPrivate();
-    QDBusConnection connection;
-    QDBusInterface* iface;
-
-    QString service;
-    QString basePath;
-
-    QString searchInterface;
-    QString searchPath;
-
-    QString resourcesInterface;
-    QString resourcesPath;
-
-    QString resourcesClassPath;
-    QString resourcesClassInterface;
-};
-
-class QTrackerResultPrivate : public QObject {
+class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerChangeNotifier : public QObject
+{
     Q_OBJECT
 public:
-    QTrackerResultPrivate(QTrackerResult* res,
-                          QSparqlQuery::StatementType tp);
-
-    ~QTrackerResultPrivate();
-    QDBusPendingCallWatcher* watcher;
-    QVector<QStringList> data;
-    QSparqlQuery::StatementType type;
-    void setCall(QDBusPendingCall& call);
-
-private slots:
-    void onDBusCallFinished();
+    QTrackerChangeNotifier(const QString& className,
+                           QObject* parent = 0);
+    ~QTrackerChangeNotifier();
+    QString watchedClass() const;
+signals:
+    void changed(QList<QList<int> > deletes, QList<QList<int> > inserts);
 private:
-    QTrackerResult* q; // public part
-};
-
-struct Quad
-{
-    int graph;
-    int subject;
-    int predicate;
-    int object;
-};
-
-QDBusArgument& operator<<(QDBusArgument& argument, const Quad &t);
-const QDBusArgument& operator>>(const QDBusArgument& argument, Quad &t);
-
-class QTrackerChangeNotifier;
-class QTrackerChangeNotifierPrivate : public QObject
-{
-    Q_OBJECT
-public:
-    QTrackerChangeNotifierPrivate(const QString& className,
-                                  QDBusConnection c,
-                                  QTrackerChangeNotifier* q);
-public slots:
-    void changed(QString className, QVector<Quad> deleted, QVector<Quad> inserted);
-public:
-    QTrackerChangeNotifier* q; // public part
-    QString className; // which class is watched
-    QDBusConnection connection;
+    QTrackerChangeNotifierPrivate* d;
+    friend class QTrackerChangeNotifierPrivate;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_H
-
+#endif // QSPARQL_TRACKER_SIGNALS_H
