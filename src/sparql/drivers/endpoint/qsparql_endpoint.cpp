@@ -293,7 +293,7 @@ bool EndpointResult::fetchFirst()
     return fetch(0);
 }
 
-QSparqlBinding EndpointResult::data(int field) const
+QSparqlBinding EndpointResult::bindingData(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
@@ -301,6 +301,16 @@ QSparqlBinding EndpointResult::data(int field) const
     }
 
     return d->results[pos()].binding(field);
+}
+
+QVariant EndpointResult::variantData(int field) const
+{
+    if (field >= d->results[pos()].count() || field < 0) {
+        qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
+        return QVariant();
+    }
+
+    return d->results[pos()].value(field);
 }
 
 // This is just a temporary hack; eventually this should be refactored so that
@@ -377,11 +387,10 @@ int EndpointResult::size() const
     return d->results.count();
 }
 
-QSparqlResultRow EndpointResult::resultRow() const
+QSparqlResultRow EndpointResult::current() const
 {
-    QSparqlResultRow info;
     if (pos() < 0 || pos() >= d->results.count())
-        return info;
+        return QSparqlResultRow();
 
     return d->results[pos()];
 }

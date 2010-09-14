@@ -82,15 +82,15 @@ void iterateForward(QSparqlConnection* conn)
     qDebug() << "---- Iterating forward ----";
     // First the query is positioned "before the first row"
     printPosition(r);
-    printResultRow(r->resultRow());
+    printResultRow(r->current());
 
     while (r->next()) {
         printPosition(r);
-        printResultRow(r->resultRow());
+        printResultRow(r->current());
     }
     // Then the query is positioned "after the last row"
     printPosition(r);
-    printResultRow(r->resultRow());
+    printResultRow(r->current());
     delete r;
 }
 
@@ -107,15 +107,15 @@ void iterateBackward(QSparqlConnection* conn)
 
     qDebug() << "---- Iterating backwards ----";
     printPosition(r);
-    printResultRow(r->resultRow());
+    printResultRow(r->current());
 
     while (r->previous()) {
         printPosition(r);
-        printResultRow(r->resultRow());
+        printResultRow(r->current());
     }
 
     printPosition(r);
-    printResultRow(r->resultRow());
+    printResultRow(r->current());
     delete r;
 }
 

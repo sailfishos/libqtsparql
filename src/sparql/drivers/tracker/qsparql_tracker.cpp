@@ -210,7 +210,7 @@ bool QTrackerResult::fetchFirst()
     return fetch(0);
 }
 
-QSparqlBinding QTrackerResult::data(int field) const
+QSparqlBinding QTrackerResult::bindingData(int field) const
 {
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
@@ -222,6 +222,18 @@ QSparqlBinding QTrackerResult::data(int field) const
 
     QString name = QString::fromLatin1("$%1").arg(field + 1);
     return QSparqlBinding(name, QVariant(d->data[i][field]));
+}
+
+QVariant QTrackerResult::variantData(int field) const
+{
+    // The upper layer calls this function only when this Result is positioned
+    // in a valid position, so we don't need to check that.
+    int i = pos();
+    if (field >= d->data[i].count() || field < 0) {
+        qWarning() << "QTrackerResult::data: column" << field << "out of range";
+        return QVariant();
+    }
+    return d->data[i][field];
 }
 
 void QTrackerResult::waitForFinished()
@@ -248,7 +260,7 @@ int QTrackerResult::size() const
     return d->data.count();
 }
 
-QSparqlResultRow QTrackerResult::resultRow() const
+QSparqlResultRow QTrackerResult::current() const
 {
     QSparqlResultRow info;
     if (pos() >= d->data.count() || pos() < 0)

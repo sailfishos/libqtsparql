@@ -78,8 +78,9 @@ public:
     virtual void waitForFinished();
     virtual bool isFinished() const;
 
-    virtual QSparqlResultRow resultRow() const;
-    virtual QSparqlBinding data(int i) const;
+    virtual QSparqlResultRow current() const;
+    virtual QSparqlBinding bindingData(int i) const;
+    virtual QVariant variantData(int i) const;
 
 protected:
     void cleanup();

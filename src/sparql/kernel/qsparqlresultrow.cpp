@@ -212,12 +212,29 @@ QSparqlBinding QSparqlResultRow::binding(int index) const
     return d->bindings.value(index);
 }
 
+/*!
+    Returns the value at the current row and position \a index. If the position
+    is out of range, an empty QVariant is returned.
+ */
+QVariant QSparqlResultRow::value(int index) const
+{
+    return d->bindings.value(index).value();
+}
+
 /*! \overload
     Returns the binding called \a name.
  */
 QSparqlBinding QSparqlResultRow::binding(const QString &name) const
 {
     return binding(indexOf(name));
+}
+
+/*! \overload
+    Returns the value of the binding called \a name.
+ */
+QVariant QSparqlResultRow::value(const QString &name) const
+{
+    return value(indexOf(name));
 }
 
 

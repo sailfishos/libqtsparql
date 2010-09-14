@@ -79,11 +79,11 @@ public slots:
         QSparqlResult* r = qobject_cast<QSparqlResult *>(sender());
         while (r->next()) {
             printPosition(r);
-            printResultRow(r->resultRow());
+            printResultRow(r->current());
         }
         // Then the query is positioned "after the last row"
         printPosition(r);
-        printResultRow(r->resultRow());
+        printResultRow(r->current());
         QCoreApplication::exit(0);
     }
     void onResultsReadyAt(int start, int end) {

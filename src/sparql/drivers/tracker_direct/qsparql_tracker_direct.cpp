@@ -273,7 +273,7 @@ bool QTrackerDirectResult::fetchFirst()
     return fetch(0);
 }
 
-QSparqlBinding QTrackerDirectResult::data(int field) const
+QSparqlBinding QTrackerDirectResult::bindingData(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
@@ -281,6 +281,16 @@ QSparqlBinding QTrackerDirectResult::data(int field) const
     }
 
     return d->results[pos()].binding(field);
+}
+
+QVariant QTrackerDirectResult::variantData(int field) const
+{
+    if (field >= d->results[pos()].count() || field < 0) {
+        qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
+        return QVariant();
+    }
+
+    return d->results[pos()].value(field);
 }
 
 void QTrackerDirectResult::waitForFinished()
@@ -310,11 +320,10 @@ int QTrackerDirectResult::size() const
     return d->results.count();
 }
 
-QSparqlResultRow QTrackerDirectResult::resultRow() const
+QSparqlResultRow QTrackerDirectResult::current() const
 {
-    QSparqlResultRow info;
     if (pos() < 0 || pos() >= d->results.count())
-        return info;
+        return QSparqlResultRow();
 
     return d->results[pos()];
 }

@@ -113,8 +113,8 @@ void tst_QSparqlEndpoint::query_places_of_birth()
     QCOMPARE(r->size(), 4);
     QHash<QString, QString> placesOfBirth;
     while (r->next()) {
-        QCOMPARE(r->resultRow().count(), 2);
-        placesOfBirth[r->resultRow().binding(0).toString()] = r->resultRow().binding(1).toString();
+        QCOMPARE(r->current().count(), 2);
+        placesOfBirth[r->current().binding(0).toString()] = r->current().binding(1).toString();
     }
     QCOMPARE(placesOfBirth.size(), 4);
     QCOMPARE(placesOfBirth["<http://dbpedia.org/resource/George_Harrison>"], QString("<http://dbpedia.org/resource/Wavertree>"));
@@ -147,15 +147,15 @@ void tst_QSparqlEndpoint::construct_current_members()
     currentMembers << QLatin1String("<http://dbpedia.org/resource/Paul_McCartney>");
     
     while (r->next()) {
-        QCOMPARE(r->resultRow().count(), 3);
-        QCOMPARE(r->resultRow().binding(0).name(), QString("s"));
-        QCOMPARE(r->resultRow().binding(0).toString(), QString("<http://dbpedia.org/resource/The_Beatles>"));
+        QCOMPARE(r->current().count(), 3);
+        QCOMPARE(r->current().binding(0).name(), QString("s"));
+        QCOMPARE(r->current().binding(0).toString(), QString("<http://dbpedia.org/resource/The_Beatles>"));
         
-        QCOMPARE(r->resultRow().binding(1).name(), QString("p"));
-        QCOMPARE(r->resultRow().binding(1).toString(), QString("<http://dbpedia.org/property/currentMembers>"));
+        QCOMPARE(r->current().binding(1).name(), QString("p"));
+        QCOMPARE(r->current().binding(1).toString(), QString("<http://dbpedia.org/property/currentMembers>"));
         
-        QCOMPARE(r->resultRow().binding(2).name(), QString("o"));        
-        QCOMPARE((bool) currentMembers.contains(r->resultRow().binding(2).toString()), true);
+        QCOMPARE(r->current().binding(2).name(), QString("o"));
+        QCOMPARE((bool) currentMembers.contains(r->current().binding(2).toString()), true);
     }
 
     delete r;

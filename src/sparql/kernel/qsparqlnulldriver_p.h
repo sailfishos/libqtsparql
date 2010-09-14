@@ -78,7 +78,8 @@ protected:
     inline bool fetch(int) { return false; }
     inline bool fetchFirst() { return false; }
     inline bool fetchLast() { return false; }
-    inline QSparqlBinding data(int) const { return QSparqlBinding(); }
+    inline QSparqlBinding bindingData(int) const { return QSparqlBinding(); }
+    inline QVariant variantData(int) const { return QVariant(); }
     inline bool isNull(int) const { return false; }
     inline int size() const { return -1; }
 

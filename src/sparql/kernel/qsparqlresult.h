@@ -80,9 +80,11 @@ public:
     // (the first row), but what if there's no data? pos() == AfterLastRow ?
 
     // Retrieving data
+    virtual QSparqlResultRow current() const;
+    // Values from the current row
     QSparqlBinding binding(int i) const;
-    // QVariant value(int i) const;
-    virtual QSparqlResultRow resultRow() const;
+    QVariant value(int i) const;
+    // For ASK results
     virtual bool boolValue() const;
 
     // Asynchronous operations
@@ -120,7 +122,8 @@ protected:
     virtual bool fetchLast() = 0;
 
     // The subclasses need to implement these for retrieving the data
-    virtual QSparqlBinding data(int i) const = 0;
+    virtual QSparqlBinding bindingData(int i) const = 0;
+    virtual QVariant variantData(int i) const = 0;
     virtual void setBoolValue(bool v);
 
 private:

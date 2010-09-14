@@ -56,7 +56,7 @@ void QSparqlQueryModelPrivate::queryFinished()
     // This function will only be called when result is a valid
     // pointer.
     result->first();
-    QSparqlResultRow newResultRow = result->resultRow();
+    QSparqlResultRow newResultRow = result->current();
     bool columnsChanged = (newResultRow != resultRow);
     bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
     bool hasNewData = (newResultRow != QSparqlResultRow()) || !result->hasError();
@@ -462,7 +462,7 @@ QSparqlResultRow QSparqlQueryModel::resultRow(int row) const
     if (!d->result->seek(row))
         return d->resultRow;
 
-    return d->result->resultRow();
+    return d->result->current();
 }
 
 /*! \overload

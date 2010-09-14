@@ -108,8 +108,8 @@ void tst_QSparqlTracker::query_contacts()
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
-        QCOMPARE(r->resultRow().count(), 2);
-        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
+        QCOMPARE(r->current().count(), 2);
+        contactNames[r->value(0).toString()] = r->value(1).toString();
     }
     QCOMPARE(contactNames.size(), 3);
     QCOMPARE(contactNames["uri001"], QString("name001"));

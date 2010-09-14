@@ -1,6 +1,6 @@
 libqtsparql (0.0.5~unreleased) unstable; urgency=low
 
-  *
+  * API renamings: QSparqlResult::resultRow -> QSparqlResult::current()
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 07 Sep 2010 15:43:22 +0300
 

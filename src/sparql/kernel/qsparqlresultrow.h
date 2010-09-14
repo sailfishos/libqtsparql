@@ -73,6 +73,8 @@ public:
 
     QSparqlBinding binding(int i) const;
     QSparqlBinding binding(const QString &name) const;
+    QVariant value(int i) const;
+    QVariant value(const QString &name) const;
 
     void append(const QSparqlBinding& binding);
 
