@@ -194,11 +194,9 @@ while [ "$#" -gt 0 ]; do
         ;;
 
     -h|help|--help|-help)
-        if [ "$VAL" = "yes" ]; then
-            OPT_HELP="$VAL"
-        else
-            UNKNOWN_OPT=yes
-        fi
+        VAR=`echo $1 | sed "s,^[-]*\(.*\),\1,"`
+        VAL=yes
+        OPT_HELP=yes
         ;;
 
     *)
