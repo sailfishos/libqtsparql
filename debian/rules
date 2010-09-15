@@ -4,8 +4,8 @@
 #export DH_VERBOSE=1
 
 Makefile:
-	./configure
-	qmake PREFIX=/usr
+	./configure -prefix /usr
+	qmake
 
 build: debian/build-stamp
 debian/build-stamp: Makefile
