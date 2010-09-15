@@ -64,10 +64,13 @@
 #include <QtXml/QDomNode>
 #include <QtXml/QDomDocument>
 #include <QtXml/QDomElement>
+#include <QtXml/QXmlDefaultHandler>
 
 #include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
+
+class XmlResultsParser;
 
 struct EndpointDriverPrivate {
     EndpointDriverPrivate()
@@ -89,32 +92,147 @@ class EndpointResultPrivate  : public QObject {
     Q_OBJECT
 public:
     EndpointResultPrivate(EndpointResult *result, EndpointDriverPrivate *dpp)
-    : reply(0), isFinished(false), loop(0), q(result), driverPrivate(dpp) 
+    : reply(0), xml(0), parser(0), reader(0),
+        isFinished(false), loop(0), q(result), driverPrivate(dpp)
     {
     }
-    
+
     ~EndpointResultPrivate()
     {
         delete reply;
+        delete xml;
+        delete parser;
+        delete reader;
     }
-    
+
+    void setBoolValue(bool v)
+    {
+        q->setBoolValue(v);
+    }
+
     QNetworkReply *reply;
     QByteArray buffer;
+    QXmlInputSource *xml;
+    XmlResultsParser *parser;
+    QXmlSimpleReader *reader;
     QList<QSparqlResultRow> results;
     bool isFinished;
     QEventLoop *loop;
     EndpointResult *q;
     EndpointDriverPrivate *driverPrivate;
-    
+
 public Q_SLOTS:
-    void readData()
-    {
-        buffer += reply->readAll();
-    }
-    
+    void readData();
     void handleError(QNetworkReply::NetworkError code);
     void terminate();
     void parseResults();
+};
+
+class XmlResultsParser : public QXmlDefaultHandler
+{
+public:
+    XmlResultsParser(EndpointResultPrivate * res) : d(res)
+    {
+    }
+
+    bool startElement(const QString & namespaceURI,
+                                const QString & localName,
+                                const QString &qName,
+                                const QXmlAttributes &attributes)
+    {
+        Q_UNUSED(namespaceURI);
+        Q_UNUSED(localName);
+
+        currentText = QString();
+
+        if (qName == QLatin1String("sparql")) {
+        } else if (qName == QLatin1String("head")) {
+        } else if (qName == QLatin1String("variable")) {
+        } else if (qName == QLatin1String("results")) {
+        } else if (qName == QLatin1String("result")) {
+            resultRow = QSparqlResultRow();
+        } else if (qName == QLatin1String("binding")) {
+            binding = QSparqlBinding();
+            binding.setName(attributes.value(QString::fromLatin1("name")));
+        } else if (qName == QLatin1String("bnode")) {
+        } else if (qName == QLatin1String("uri")) {
+        } else if (qName == QLatin1String("literal")) {
+            lattrs = attributes;
+        } else {
+        }
+
+        return true;
+    }
+
+    bool endElement(const QString & namespaceURI,
+                                const QString & localName,
+                                const QString &qName)
+    {
+        Q_UNUSED(namespaceURI);
+        Q_UNUSED(localName);
+
+        if (qName == QLatin1String("sparql")) {
+        } else if (qName == QLatin1String("head")) {
+        } else if (qName == QLatin1String("variable")) {
+        } else if (qName == QLatin1String("results")) {
+        } else if (qName == QLatin1String("result")) {
+            d->results.append(resultRow);
+        } else if (qName == QLatin1String("binding")) {
+            resultRow.append(binding);
+        } else if (qName == QLatin1String("boolean")) {
+            d->setBoolValue(currentText.toLower() == QLatin1String("true"));
+        } else if (qName == QLatin1String("bnode")) {
+            binding.setBlankNodeLabel(currentText);
+        } else if (qName == QLatin1String("uri")) {
+            QUrl url(currentText);
+            binding.setValue(QVariant(url));
+        } else if (qName == QLatin1String("literal")) {
+            if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
+                if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
+                    // TODO: How should we treat xsi:types here?
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                } else {
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                }
+            } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
+                binding.setValue(QVariant(currentText));
+                binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
+            } else {
+                binding.setValue(QVariant(currentText));
+            }
+        } else {
+        }
+
+        return true;
+    }
+
+    bool characters(const QString &str)
+    {
+        currentText += str;
+        return true;
+    }
+
+    bool fatalError(const QXmlParseException &exception)
+    {
+        qWarning() << "Parse error at line" << exception.lineNumber() <<
+                    "column" << exception.columnNumber() <<
+                    exception.message();
+
+        return false;
+    }
+
+    QString errorString() const
+    {
+        return errorStr;
+    }
+
+private:
+    QString currentText;
+    QString errorStr;
+    QXmlAttributes lattrs;
+    QSparqlBinding binding;
+    QSparqlResultRow resultRow;
+    EndpointResultPrivate * d;
 };
 
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
@@ -136,6 +254,31 @@ void EndpointResultPrivate::terminate()
         loop->exit();
 }
 
+void EndpointResultPrivate::readData()
+{
+    if (q->isGraph()) {
+        buffer += reply->readAll();
+        return;
+    }
+
+    if (reader == 0) {
+        parser = new XmlResultsParser(this);
+        reader = new QXmlSimpleReader();
+        reader->setContentHandler(parser);
+        reader->setErrorHandler(parser);
+
+        if (!reader->parse(xml, true)) {
+            qDebug() << "reader->parse() failed";
+        }
+    } else {
+        if (!reader->parseContinue()) {
+            qDebug() << "reader->parseContinue() failed";
+        }
+    }
+
+    q->emit dataReady(results.count());
+}
+
 void EndpointResultPrivate::parseResults()
 { 
     if (isFinished)
@@ -144,94 +287,8 @@ void EndpointResultPrivate::parseResults()
     if (q->isGraph()) {
         QSparqlNTriples parser(buffer);
         results = parser.parse();
-        terminate();
-        return;
     }
 
-    QDomDocument doc(QLatin1String("sparqlresults"));
-    if (!doc.setContent(buffer)) {
-        terminate();
-        return;
-    }
-
-    QDomElement sparqlElement = doc.documentElement();
-
-    QDomNode sectionNode = sparqlElement.firstChild();
-    while (!sectionNode.isNull()) {
-        QDomElement sectionElement = sectionNode.toElement();
-        if (!sectionElement.isNull()) {
-
-            if (sectionElement.tagName() == QLatin1String("head")) {
-                QDomNode variableNode = sectionElement.firstChild();
-                while (!variableNode.isNull()) {
-                    QDomElement variableElement = variableNode.toElement();
-                    if (!variableElement.isNull()) {
-                    }
-                    
-                    variableNode = variableNode.nextSibling();
-                }
-            } else if (sectionElement.tagName() == QLatin1String("boolean")) {
-                q->setBoolValue(sectionElement.text().toLower() == QLatin1String("true"));
-            } else if (sectionElement.tagName() == QLatin1String("results")) {
-                QDomNode resultsNode = sectionElement.firstChild();
-                while (!resultsNode.isNull()) {
-                    QDomElement resultsElement = resultsNode.toElement();
-                    if (!resultsElement.isNull()) {
-                        QSparqlResultRow resultRow;                        
-                        QDomNode resultNode = resultsElement.firstChild();
-                        
-                        while (!resultNode.isNull()) {
-                            QDomElement bindingElement = resultNode.toElement();
-                            
-                            if (!bindingElement.isNull()) {
-                                QSparqlBinding binding;
-                                binding.setName(bindingElement.attribute(QLatin1String("name")));
-                                QDomNode bindingNode = bindingElement.firstChild();
-                                QDomElement valueElement = bindingNode.toElement();
-                                
-                                if (!valueElement.isNull()) {
-                                    if (valueElement.tagName() == QLatin1String("bnode")) {
-                                        binding.setBlankNodeLabel(valueElement.text());
-                                    } else if (valueElement.tagName() == QLatin1String("literal")) {
-                                        if (valueElement.hasAttribute(QString::fromLatin1("datatype"))) {
-                                            if (valueElement.hasAttribute(QString::fromLatin1("xsi:type"))) {
-                                                // TODO: How should we treat xsi:types here?
-                                                binding.setValue(valueElement.text(), QUrl(valueElement.attribute(QString::fromLatin1("datatype"))));
-                                            } else {
-                                                binding.setValue(valueElement.text(), QUrl(valueElement.attribute(QString::fromLatin1("datatype"))));
-                                            }
-                                        } else if (valueElement.hasAttribute(QString::fromLatin1("xml:lang"))) {
-                                            binding.setValue(QVariant(valueElement.text()));
-                                            binding.setLanguageTag(valueElement.attribute(QString::fromLatin1("xml:lang")));
-                                        } else {
-                                            binding.setValue(QVariant(valueElement.text()));
-                                        }
-                                    } else if (valueElement.tagName() == QLatin1String("uri")) {
-                                        QUrl url(valueElement.text());
-                                        binding.setValue(QVariant(url));
-                                    } else {
-                                        // Error
-                                        qWarning() << "Unknown value element: " << valueElement.text();
-                                    }
-                                    
-                                    resultRow.append(binding);
-                                }
-                            }
-
-                            resultNode = resultNode.nextSibling();
-                        }
-                        
-                        results.append(resultRow);
-                    }
-                    
-                    resultsNode = resultsNode.nextSibling();
-                }
-            }            
-        }
-        
-        sectionNode = sectionNode.nextSibling();
-    }
-    
     terminate();    
     return;
 }
@@ -270,12 +327,12 @@ bool EndpointResult::fetchNext()
     }
 
     setPos(pos() + 1);
-    
+
     if (d->isFinished && pos() >= d->results.count()) {
         setPos(QSparql::AfterLastRow);
         return false;
     }
-        
+
     return pos() < d->results.count();
 }
 
@@ -315,7 +372,7 @@ EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::Stateme
 bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type)
 {
     cleanup();
-    
+
     QUrl queryUrl(d->driverPrivate->url);
     queryUrl.addQueryItem(QLatin1String("query"), query);
     setQuery(query);
@@ -326,17 +383,17 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
     if (timeout.isValid()) {
         queryUrl.addQueryItem(QLatin1String("timeout"), timeout.toString());
     }
-    
+
     QVariant maxrows = d->driverPrivate->options.option(QLatin1String("maxrows"));
     if (maxrows.isValid()) {
         queryUrl.addQueryItem(QLatin1String("maxrows"), maxrows.toString());
     }
-    
+
     qDebug() << "Real url to run.... " << queryUrl.toString();
 
     d->buffer.clear();
     QNetworkRequest request(queryUrl);
-    
+
     if (isGraph())
         // A Virtuoso protocol extension for CONSTRUCT or DESCRIBE queries.
         // With DBPedia, 'text/plain' returns triples, but it isn't documented 
@@ -344,15 +401,18 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
         request.setRawHeader("Accept", "text/plain");
     else
         request.setRawHeader("Accept", "application/sparql-results+xml");
-    
+
     request.setRawHeader("charset", "utf-8");
-    
+
     d->reply = d->driverPrivate->manager->get(request);
+
+    if (!isGraph())
+        d->xml = new QXmlInputSource(d->reply);
 
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
     QObject::connect(d->reply, SIGNAL(finished()), d, SLOT(parseResults()));
     QObject::connect(d->reply, SIGNAL(error(QNetworkReply::NetworkError)), d, SLOT(handleError(QNetworkReply::NetworkError)));
-    
+
     return true;
 }
 
@@ -360,7 +420,7 @@ void EndpointResult::waitForFinished()
 {
     if (d->isFinished)
         return;
-    
+
     QEventLoop loop;
     d->loop = &loop;
     loop.exec();
@@ -421,12 +481,12 @@ bool EndpointDriver::open(const QSparqlConnectionOptions& options)
 
     d->options = options;
     d->url.setHost(options.hostName());
-    
+
     if (options.path().isEmpty())
         d->url.setPath(QLatin1String("sparql"));
     else
         d->url.setPath(options.path());
-    
+
     d->url.setScheme(QLatin1String("http"));
     if (options.port() != -1)
         d->url.setPort(options.port());
