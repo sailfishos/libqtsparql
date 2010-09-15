@@ -3,7 +3,7 @@ doxygen_doc.commands = cd doc && VERSION=\"$$DOC_VERSION\" LIBRARYNAME=\"$$LIBRA
 doc.depends = doxygen_doc
 
 install_doc.files = doc/html
-install_doc.path = $$PREFIX/share/doc/$$PACKAGENAME-doc/
+install_doc.path = $$QTSPARQL_INSTALL_DOCS/$$PACKAGENAME-doc/
 install_doc.CONFIG = no_check_exist
 INSTALLS += install_doc
 

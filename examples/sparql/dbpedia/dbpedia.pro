@@ -7,8 +7,8 @@ SOURCES += main.cpp sparqlquerytext.cpp
 QT += network xml gui
 
 # install
-target.path = $$[QT_INSTALL_EXAMPLES]/sparql/dbpedia
+target.path = $$EXAMPLES_DIR/sparql/dbpedia
 sources.files = $$SOURCES *.h $$RESOURCES $$FORMS dbpedia.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/sparql/dbpedia
+sources.path = $$EXAMPLES_DIR/sparql/dbpedia
 INSTALLS += target sources
 

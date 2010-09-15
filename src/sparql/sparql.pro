@@ -10,7 +10,7 @@ QT += network
 
 DEFINES += QT_NO_CAST_FROM_ASCII
 
-install_headers.path = $$PREFIX/include/QtSparql
+install_headers.path = $$QTSPARQL_INSTALL_HEADERS
 install_headers.files = 
 
 include(kernel/kernel.pri)
@@ -20,7 +20,7 @@ include(models/models.pri)
 INSTALLS += \
         target \
         install_headers
-target.path = $$PREFIX/lib
+target.path = $$QTSPARQL_INSTALL_LIBS
 
 QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
 QMAKE_PKGCONFIG_DESTDIR = pkgconfig

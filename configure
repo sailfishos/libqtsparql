@@ -170,6 +170,11 @@ CFG_PREFIX_INSTALL=yes
 
 # initalize variables used for installation
 QTSPARQL_INSTALL_PREFIX=
+QTSPARQL_INSTALL_DOCS=
+QTSPARQL_INSTALL_HEADERS=
+QTSPARQL_INSTALL_PLUGINS=
+QTSPARQL_INSTALL_LIBS=
+QTSPARQL_INSTALL_EXAMPLES=
 
 # check how the user wants the SPARQL drivers to be built
 # options: 
@@ -187,7 +192,7 @@ while [ "$#" -gt 0 ]; do
         VAL=`echo $1 | sed "s,^-\([^-]*\).*,\1,"`
         ;;
 
-    -prefix)
+    -prefix|-docdir|-headerdir|-plugindir|-libdir|-examplesdir)
         VAR=`echo $1 | sed "s,^-\(.*\),\1,"`
         shift
         VAL="$1"
@@ -211,6 +216,26 @@ while [ "$#" -gt 0 ]; do
     case "$VAR" in
     prefix)
         QTSPARQL_INSTALL_PREFIX="$VAL"
+        ;;
+
+    docdir)
+        QTSPARQL_INSTALL_DOCS="$VAL"
+        ;;
+
+    headerdir)
+        QTSPARQL_INSTALL_HEADERS="$VAL"
+        ;;
+
+    plugindir)
+        QTSPARQL_INSTALL_PLUGINS="$VAL"
+        ;;
+
+    libdir)
+        QTSPARQL_INSTALL_LIBS="$VAL"
+        ;;
+
+    examplesdir)
+        QTSPARQL_INSTALL_EXAMPLES="$VAL"
         ;;
 
     sparql-*)
@@ -245,6 +270,16 @@ Installation options:
 
     -prefix <dir> ...... This will install everything relative to <dir>
                          (default $QTSPARQL_INSTALL_PREFIX)
+    -docdir <dir> ...... Documentation will be installed to <dir>
+                         (default PREFIX/share/doc)
+    -headerdir <dir> ... Headers will be installed to <dir>
+                         (default PREFIX/include)
+    -plugindir <dir> ... Plugins will be installed to <dir>
+                         (default QT_PLUGIN_DIR)
+    -libdir <dir> ...... Libraries will be installed to <dir>
+                         (default PREFIX/lib)
+    -examplesdir <dir> . Examples will be installed to <dir>
+                         (default QT_EXAMPLES_DIR)
 EOF
 
    [ "x$ERROR" = "xyes" ] && exit 1
@@ -252,7 +287,7 @@ EOF
 fi
 
 #-------------------------------------------------------------------------------
-# post process QTSPARQL_INSTALL_PREFIX variable
+# post process QTSPARQL_* variables
 #-------------------------------------------------------------------------------
 
 #prefix
@@ -260,6 +295,29 @@ if [ -z "$QTSPARQL_INSTALL_PREFIX" ]; then
     QTSPARQL_INSTALL_PREFIX="/usr/local"
 fi
 QTSPARQL_INSTALL_PREFIX=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_PREFIX"`
+
+if [ -z "$QTSPARQL_INSTALL_DOCS" ]; then
+    QTSPARQL_INSTALL_DOCS="$QTSPARQL_INSTALL_PREFIX/share/docs"
+fi
+QTSPARQL_INSTALL_DOCS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_DOCS"`
+
+if [ -z "$QTSPARQL_INSTALL_HEADERS" ]; then
+    QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include"
+fi
+QTSPARQL_INSTALL_HEADERS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_HEADERS"`
+
+if [ -n "$QTSPARQL_INSTALL_PLUGINS" ]; then
+    QTSPARQL_INSTALL_PLUGINS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_PLUGINS"`
+fi
+
+if [ -z "$QTSPARQL_INSTALL_LIBS" ]; then
+    QTSPARQL_INSTALL_LIBS="$QTSPARQL_INSTALL_PREFIX/lib"
+fi
+QTSPARQL_INSTALL_LIBS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_LIBS"`
+
+if [ -n "$QTSPARQL_INSTALL_EXAMPLES" ]; then
+    QTSPARQL_INSTALL_EXAMPLES=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_EXAMPLES"`
+fi
 
 # detect which SPARQL drivers we can build
 # CFG_SPARQL_driver=plugin -> we'll build the driver as a plugin
@@ -384,6 +442,11 @@ if [ -n "$QT_LFLAGS_ODBC" ]; then
 fi
 
 echo "QTSPARQL_INSTALL_PREFIX   = $QTSPARQL_INSTALL_PREFIX" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_DOCS     = $QTSPARQL_INSTALL_DOCS" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_HEADERS  = $QTSPARQL_INSTALL_HEADERS" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_PLUGINS  = $QTSPARQL_INSTALL_PLUGINS" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_LIBS     = $QTSPARQL_INSTALL_LIBS" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_EXAMPLES = $QTSPARQL_INSTALL_EXAMPLES" >> "$CACHEFILE.tmp"
 
 # replace .qmake.cache if it differs from the newly created temp file
 if cmp -s "$CACHEFILE.tmp" "$CACHEFILE"; then

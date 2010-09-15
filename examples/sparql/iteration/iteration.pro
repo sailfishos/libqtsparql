@@ -4,7 +4,7 @@ SOURCES       = main.cpp
 #QT           += sparql # enable this later
 
 # install FIXME
-target.path = $$[QT_INSTALL_EXAMPLES]/sparql/iteration
+target.path = $$EXAMPLES_DIR/sparql/iteration
 sources.files = $$SOURCES *.h $$RESOURCES $$FORMS iteration.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/sparql/iteration
+sources.path = $$EXAMPLES_DIR/sparql/iteration
 INSTALLS += target sources
