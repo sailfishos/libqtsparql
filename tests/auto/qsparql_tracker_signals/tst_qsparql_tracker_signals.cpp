@@ -112,7 +112,7 @@ void tst_QSparqlTrackerSignals::initTestCase()
     QSparqlResult* r = conn.exec(q);
     r->waitForFinished();
     if (r->hasError()) {
-        qWarning() << r->lastError().text();
+        qWarning() << r->lastError().message();
         qFatal("Initial query: error");
     }
     if (r->next() && r->current().count() == 4) {

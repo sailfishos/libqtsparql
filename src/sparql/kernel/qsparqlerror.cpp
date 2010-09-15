@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug dbg, const QSparqlError &s)
 {
-    dbg.nospace() << "QSparqlError(" << s.number() << ", " << s.text() << ')';
+    dbg.nospace() << "QSparqlError(" << s.number() << ", " << s.message() << ')';
     return dbg.space();
 }
 #endif
@@ -59,12 +59,10 @@ QDebug operator<<(QDebug dbg, const QSparqlError &s)
     \ingroup database
     \inmodule QtSparql
 
-    A QSparqlError object can provide driver-specific error data,
-    including the driverText() message (or driverText() and
-    connectionText() concatenated together as text()), and the error
-    number() and type(). The functions all have setters so that you
-    can create and return QSparqlError objects from your own classes,
-    for example from your own SPARQL drivers.
+    A QSparqlError object can provide driver-specific error data, including the
+    error message(), number() and type(). The functions all have setters so that
+    you can create and return QSparqlError objects from your own classes, for
+    example from your own SPARQL drivers.
 
     \sa QSparqlConnection::lastError(), QSparqlResult::lastError()
 */
@@ -90,14 +88,13 @@ QDebug operator<<(QDebug dbg, const QSparqlError &s)
 */
 
 /*!
-    Constructs an error containing the driver error text \a
-    driverText, the connection specific error text \a databaseText, the
+    Constructs an error containing the driver error \a message, the
     type \a type and the optional error number \a number.
 */
 
-QSparqlError::QSparqlError(const QString& text,
+QSparqlError::QSparqlError(const QString& message,
                            ErrorType type, int number)
-    : errorText(text), errorType(type), errorNumber(number)
+    : errorMessage(message), errorType(type), errorNumber(number)
 {
 }
 
@@ -105,7 +102,7 @@ QSparqlError::QSparqlError(const QString& text,
     Creates a copy of \a other.
 */
 QSparqlError::QSparqlError(const QSparqlError& other)
-    : errorText(other.errorText), errorType(other.errorType),
+    : errorMessage(other.errorMessage), errorType(other.errorType),
       errorNumber(other.errorNumber)
 {
 }
@@ -116,7 +113,7 @@ QSparqlError::QSparqlError(const QSparqlError& other)
 
 QSparqlError& QSparqlError::operator=(const QSparqlError& other)
 {
-    errorText = other.errorText;
+    errorMessage = other.errorMessage;
     errorType = other.errorType;
     errorNumber = other.errorNumber;
     return *this;
@@ -131,14 +128,14 @@ QSparqlError::~QSparqlError()
 }
 
 /*!
-    Sets the error text to the value of \a text.
+    Sets the error message to the value of \a message.
 
-    \sa text()
+    \sa message()
 */
 
-void QSparqlError::setText(const QString& text)
+void QSparqlError::setMessage(const QString& message)
 {
-    errorText = text;
+    errorMessage = message;
 }
 
 /*!
@@ -164,14 +161,14 @@ void QSparqlError::setType(ErrorType type)
 }
 
 /*!
-    Returns the error text.
+    Returns the error message.
 
-    \sa setText()
+    \sa setMessage()
 */
 
-QString QSparqlError::text() const
+QString QSparqlError::message() const
 {
-    return errorText;
+    return errorMessage;
 }
 
 
