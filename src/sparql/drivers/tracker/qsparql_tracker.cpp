@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsparql_tracker.h"
+#include "qsparql_tracker_signals.h"
 #include "qsparql_tracker_p.h"
 
 #include <qsparqlerror.h>
@@ -82,7 +83,18 @@ Q_DECLARE_METATYPE_COMMA(QMap<QString, QString>)
 Q_DECLARE_METATYPE_COMMA(QVector<QMap<QString, QString> >)
 Q_DECLARE_METATYPE_COMMA(QVector<QVector<QMap<QString, QString> > >)
 
+Q_DECLARE_METATYPE(Quad)
+Q_DECLARE_METATYPE(QVector<Quad>)
+
 QT_BEGIN_NAMESPACE
+
+// How to recognize tracker
+static QLatin1String service("org.freedesktop.Tracker1");
+static QLatin1String basePath("/org/freedesktop/Tracker1");
+static QLatin1String resourcesInterface("org.freedesktop.Tracker1.Resources");
+static QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
+static QLatin1String changedSignal("GraphUpdated");
+static QLatin1String changedSignature("sa(iiii)a(iiii)");
 
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
                                              QSparqlQuery::StatementType tp)
@@ -210,7 +222,7 @@ bool QTrackerResult::fetchFirst()
     return fetch(0);
 }
 
-QSparqlBinding QTrackerResult::data(int field) const
+QSparqlBinding QTrackerResult::bindingData(int field) const
 {
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
@@ -222,6 +234,18 @@ QSparqlBinding QTrackerResult::data(int field) const
 
     QString name = QString::fromLatin1("$%1").arg(field + 1);
     return QSparqlBinding(name, QVariant(d->data[i][field]));
+}
+
+QVariant QTrackerResult::variantData(int field) const
+{
+    // The upper layer calls this function only when this Result is positioned
+    // in a valid position, so we don't need to check that.
+    int i = pos();
+    if (field >= d->data[i].count() || field < 0) {
+        qWarning() << "QTrackerResult::data: column" << field << "out of range";
+        return QVariant();
+    }
+    return d->data[i][field];
 }
 
 void QTrackerResult::waitForFinished()
@@ -248,7 +272,7 @@ int QTrackerResult::size() const
     return d->data.count();
 }
 
-QSparqlResultRow QTrackerResult::resultRow() const
+QSparqlResultRow QTrackerResult::current() const
 {
     QSparqlResultRow info;
     if (pos() >= d->data.count() || pos() < 0)
@@ -329,7 +353,40 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
     return false;
 }
 
+// We'll open only one D-Bus connection per thread; it will be shared between
+// QTrackerDriver and QTrackerChangeNotifier.
+QThreadStorage<QDBusConnection*> dbusTls;
+// how many instances are using the same D-Bus connection (in this thread)
+QThreadStorage<int*> dbusRefCountTls;
 QAtomicInt connectionCounter = 0;
+
+static QDBusConnection getConnection()
+{
+    // Create a separate D-Bus connection for each thread. Use
+    // ClosingDBusConnection so that the bus gets disconnected when the thread
+    // storage is deleted.
+    if (!dbusTls.hasLocalData()) {
+        QString id = QString::number(connectionCounter.fetchAndAddRelaxed(1))
+            .prepend(QString::fromLatin1("qtsparql-dbus-"));
+        dbusTls.setLocalData(new QDBusConnection
+                             (QDBusConnection::connectToBus(QDBusConnection::SessionBus, id)));
+        dbusRefCountTls.setLocalData(new int(0));
+    }
+    ++(*dbusRefCountTls.localData());
+    return *dbusTls.localData();
+}
+
+static void dropConnection()
+{
+    --(*dbusRefCountTls.localData());
+    if (*(dbusRefCountTls.localData()) == 0) {
+        QDBusConnection::disconnectFromBus(dbusTls.localData()->name());
+        dbusTls.setLocalData(0); // this deletes the connection
+        dbusRefCountTls.setLocalData(0);
+        // If this thread needs to reconnect, a QDBusConnection with a different
+        // name will be created.
+    }
+}
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
@@ -337,13 +394,9 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 
     if (isOpen())
         close();
-
-    QString id = QString::number(connectionCounter.fetchAndAddRelaxed(1))
-        .prepend(QString::fromLatin1("qsparql-dbus-"));
-    d->connection = QDBusConnection::connectToBus(QDBusConnection::SessionBus,
-                                                  id);
-    d->iface = new QDBusInterface(d->service, d->resourcesPath,
-                                  d->resourcesInterface, d->connection);
+    d->connection = getConnection();
+    d->iface = new QDBusInterface(service, resourcesPath,
+                                  resourcesInterface, d->connection);
 
     setOpen(true);
     setOpenError(false);
@@ -354,12 +407,90 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDriver::close()
 {
     if (isOpen()) {
-        d->connection.disconnectFromBus(d->connection.name());
+        dropConnection();
         delete d->iface;
         d->iface = 0;
         setOpen(false);
         setOpenError(false);
     }
+}
+
+// D-Bus marshalling
+QDBusArgument &operator<<(QDBusArgument &argument, const Quad &t)
+{
+    argument.beginStructure();
+    argument << t.graph << t.subject << t.predicate << t.object;
+    argument.endStructure();
+    return argument;
+}
+
+// D-Bus demarshalling
+const QDBusArgument &operator>>(const QDBusArgument &argument, Quad &t)
+{
+    argument.beginStructure();
+    argument >> t.graph >> t.subject >> t.predicate >> t.object;
+    argument.endStructure();
+    return argument;
+}
+
+QTrackerChangeNotifier::QTrackerChangeNotifier(const QString& className,
+                                               QObject* parent)
+    : QObject(parent)
+{
+    qDBusRegisterMetaType<Quad>();
+    qDBusRegisterMetaType<QVector<Quad> >();
+    d = new QTrackerChangeNotifierPrivate(className, getConnection(), this);
+}
+
+QTrackerChangeNotifier::~QTrackerChangeNotifier()
+{
+    dropConnection();
+}
+
+QTrackerChangeNotifierPrivate::QTrackerChangeNotifierPrivate(
+    const QString& className,
+    QDBusConnection c,
+    QTrackerChangeNotifier* q)
+    : QObject(q), q(q), className(className), connection(c)
+{
+    // Start listening to the actual signal
+    bool ok = connection.connect(service, resourcesPath,
+                                 resourcesInterface, changedSignal,
+                                 QStringList() << className,
+                                 changedSignature,
+                                 this, SLOT(changed(QString,
+                                                    QVector<Quad>,
+                                                    QVector<Quad>)));
+    if (!ok) {
+        qWarning() << "Cannot connect to signal from Tracker";
+    }
+}
+
+QString QTrackerChangeNotifier::watchedClass() const
+{
+    return d->className;
+}
+
+void QTrackerChangeNotifierPrivate::changed(QString,
+                                            QVector<Quad> deleted,
+                                            QVector<Quad> inserted)
+{
+    // D-Bus will filter based on the class name, so we only get relevant
+    // signals here.
+    QList<QList<int> > deletes;
+    QList<QList<int> > inserts;
+
+    foreach(const Quad& q, deleted) {
+        deletes <<
+            (QList<int>() << q.graph << q.subject << q.predicate << q.object);
+    }
+
+    foreach(const Quad& q, inserted) {
+        inserts <<
+            (QList<int>() << q.graph << q.subject << q.predicate << q.object);
+    }
+
+    emit q->changed(deletes, inserts);
 }
 
 QT_END_NAMESPACE

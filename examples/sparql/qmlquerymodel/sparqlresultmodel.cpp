@@ -26,7 +26,7 @@ SparqlResultModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     m_result->seek(index.row());
-    return m_result->resultRow().binding(role - (Qt::UserRole + 1)).value();
+    return m_result->value(role - (Qt::UserRole + 1));
 }
 
 void
@@ -57,7 +57,7 @@ SparqlResultModel::queryFinished()
     roleNames = QAbstractItemModel::roleNames();
 
     if (m_result->first()) {
-        QSparqlResultRow resultRow = m_result->resultRow();
+        QSparqlResultRow resultRow = m_result->current();
 
         for (int i = 0; i < resultRow.count(); i++) {
             roleNames.insert((Qt::UserRole + 1) + i, resultRow.binding(i).name().toLatin1());

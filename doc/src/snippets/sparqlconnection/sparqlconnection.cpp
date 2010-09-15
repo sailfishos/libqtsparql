@@ -96,7 +96,7 @@ void QSparqlBinding_snippets()
     QSparqlQuery query;
     QSparqlResult * result = connection.exec(query);
 //! [4] //! [5]
-    QSparqlResultRow resultRow = result->resultRow();
+    QSparqlResultRow resultRow = result->current();
 //! [5] //! [6]
     QSparqlBinding binding = resultRow.binding("country");
 //! [6]
@@ -127,7 +127,7 @@ void QSparqlQuery_snippets()
 //! [8]
     QSparqlQuery query("SELECT ?country WHERE { ?country rdf:type dbpedia-owl:Country . }");
     QSparqlResult * result = connection.exec(query);
-    int bindingNo = result->resultRow().indexOf("country");
+    int bindingNo = result->current().indexOf("country");
     while (result->next()) {
         QString country = result->value(bindingNo).toString();
         doSomething(country);

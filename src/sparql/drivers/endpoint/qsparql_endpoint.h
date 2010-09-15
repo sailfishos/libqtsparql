@@ -80,9 +80,10 @@ protected:
     bool fetchNext();
     bool fetchLast();
     bool fetchFirst();
-    QSparqlBinding data(int field) const;
+    QSparqlBinding bindingData(int field) const;
+    QVariant variantData(int field) const;
     int size() const;
-    QSparqlResultRow resultRow() const;
+    QSparqlResultRow current() const;
 
     void waitForFinished();
     bool isFinished() const;

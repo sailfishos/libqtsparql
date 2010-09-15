@@ -39,62 +39,36 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLRESULTROW_H
-#define QSPARQLRESULTROW_H
+#ifndef QSPARQL_TRACKER_SIGNALS_H
+#define QSPARQL_TRACKER_SIGNALS_H
 
-#include "qsparql.h"
+#include <QObject>
 
-#include <QtCore/qstring.h>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Sparql)
-
-class QSparqlBinding;
-class QStringList;
-class QVariant;
-class QSparqlResultRowPrivate;
-
-class Q_SPARQL_EXPORT QSparqlResultRow
-{
-public:
-    QSparqlResultRow();
-    QSparqlResultRow(const QSparqlResultRow& other);
-    QSparqlResultRow& operator=(const QSparqlResultRow& other);
-    ~QSparqlResultRow();
-
-    bool operator==(const QSparqlResultRow &other) const;
-    inline bool operator!=(const QSparqlResultRow &other) const { return !operator==(other); }
-
-    int indexOf(const QString &name) const;
-    QString variableName(int i) const;
-
-    QSparqlBinding binding(int i) const;
-    QSparqlBinding binding(const QString &name) const;
-    QVariant value(int i) const;
-    QVariant value(const QString &name) const;
-
-    void append(const QSparqlBinding& binding);
-
-    bool isEmpty() const;
-    bool contains(const QString& name) const;
-    void clear();
-    void clearValues();
-    int count() const;
-
-private:
-    void detach();
-    QSparqlResultRowPrivate* d;
-};
-
-#ifndef QT_NO_DEBUG_STREAM
-Q_SPARQL_EXPORT QDebug operator<<(QDebug, const QSparqlResultRow &);
+#ifdef QT_PLUGIN
+#define Q_EXPORT_SPARQLDRIVER_TRACKER
+#else
+#define Q_EXPORT_SPARQLDRIVER_TRACKER Q_SPARQL_EXPORT
 #endif
+
+class QTrackerChangeNotifierPrivate;
+
+class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerChangeNotifier : public QObject
+{
+    Q_OBJECT
+public:
+    QTrackerChangeNotifier(const QString& className,
+                           QObject* parent = 0);
+    ~QTrackerChangeNotifier();
+    QString watchedClass() const;
+signals:
+    void changed(QList<QList<int> > deletes, QList<QList<int> > inserts);
+private:
+    QTrackerChangeNotifierPrivate* d;
+    friend class QTrackerChangeNotifierPrivate;
+};
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQLRESULTROW_H
+#endif // QSPARQL_TRACKER_SIGNALS_H

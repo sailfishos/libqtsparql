@@ -95,8 +95,9 @@ public:
     - seek()
 
     Retrieving the data is performed with the following functions:
-    - resultRow()
-    - data()
+    - current()
+    - binding()
+    - value()
 */
 
 /* this doc not included in doxygen...
@@ -539,7 +540,14 @@ QSparqlBinding QSparqlResult::binding(int i) const
 {
     if (!isValid())
         return QSparqlBinding();
-    return data(i);
+    return bindingData(i);
+}
+
+QVariant QSparqlResult::value(int i) const
+{
+    if (!isValid())
+        return QVariant();
+    return variantData(i);
 }
 
 /*!
@@ -709,7 +717,7 @@ bool QSparqlResult::fetchPrevious()
   \sa value() pos() setPos()
 */
 
-QSparqlResultRow QSparqlResult::resultRow() const
+QSparqlResultRow QSparqlResult::current() const
 {
     return QSparqlResultRow();
 }

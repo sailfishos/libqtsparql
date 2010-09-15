@@ -118,8 +118,8 @@ void tst_QSparqlVirtuosoEndpoint::query_contacts()
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
-        QCOMPARE(r->resultRow().count(), 2);
-        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
+        QCOMPARE(r->current().count(), 2);
+        contactNames[r->value(0).toString()] = r->value(1).toString();
     }
     QCOMPARE(contactNames.size(), 3);
     QCOMPARE(contactNames["uri001"], QString("name001"));
@@ -151,8 +151,8 @@ void tst_QSparqlVirtuosoEndpoint::construct_contacts()
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
-        QCOMPARE(r->resultRow().count(), 3);
-        contactNames[r->binding(0).value().toString()] = r->binding(2).value().toString();
+        QCOMPARE(r->current().count(), 3);
+        contactNames[r->value(0).toString()] = r->value(2).toString();
     }
     QCOMPARE(contactNames.size(), 3);
     QCOMPARE(contactNames["uri001"], QString("name001"));
@@ -303,7 +303,7 @@ void tst_QSparqlVirtuosoEndpoint::select_datatypes()
     QHash<QString, QSparqlBinding> results;
 
     while (r->next()) {
-        QSparqlResultRow resultRow = r->resultRow();
+        QSparqlResultRow resultRow = r->current();
         results[resultRow.binding(0).toString()] = resultRow.binding(1);
     }
 

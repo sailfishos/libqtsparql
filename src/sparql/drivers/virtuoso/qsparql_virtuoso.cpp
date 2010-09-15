@@ -628,9 +628,9 @@ bool QVirtuosoResult::fetchLast()
 }
 
 
-QSparqlBinding QVirtuosoResult::data(int field) const
+QSparqlBinding QVirtuosoResult::bindingData(int field) const
 {
-    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
 
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
@@ -640,19 +640,29 @@ QSparqlBinding QVirtuosoResult::data(int field) const
     return d->results[pos()].binding(field);
 }
 
+QVariant QVirtuosoResult::variantData(int field) const
+{
+    QMutexLocker resultLocker(&(d->mutex));
+
+    if (field >= d->results[pos()].count() || field < 0) {
+        qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
+        return QVariant();
+    }
+    return d->results[pos()].value(field);
+}
+
 int QVirtuosoResult::size() const
 {
 //    QMutexLocker resultLocker(&(d->mutex)); 
     return d->results.count();
 }
 
-QSparqlResultRow QVirtuosoResult::resultRow() const
+QSparqlResultRow QVirtuosoResult::current() const
 {
-    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
 
-    QSparqlResultRow info;
     if (pos() < 0 || pos() >= d->results.count())
-        return info;
+        return QSparqlResultRow();
 
     return d->results[pos()];
 }

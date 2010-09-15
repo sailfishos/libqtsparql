@@ -48,6 +48,7 @@
 #include <QVector>
 #include <QStringList>
 #include <QDBusConnection>
+#include <QDBusArgument>
 
 class QDBusInterface;
 class QDBusPendingCallWatcher;
@@ -95,6 +96,33 @@ private slots:
     void onDBusCallFinished();
 private:
     QTrackerResult* q; // public part
+};
+
+struct Quad
+{
+    int graph;
+    int subject;
+    int predicate;
+    int object;
+};
+
+QDBusArgument& operator<<(QDBusArgument& argument, const Quad &t);
+const QDBusArgument& operator>>(const QDBusArgument& argument, Quad &t);
+
+class QTrackerChangeNotifier;
+class QTrackerChangeNotifierPrivate : public QObject
+{
+    Q_OBJECT
+public:
+    QTrackerChangeNotifierPrivate(const QString& className,
+                                  QDBusConnection c,
+                                  QTrackerChangeNotifier* q);
+public slots:
+    void changed(QString className, QVector<Quad> deleted, QVector<Quad> inserted);
+public:
+    QTrackerChangeNotifier* q; // public part
+    QString className; // which class is watched
+    QDBusConnection connection;
 };
 
 QT_END_NAMESPACE

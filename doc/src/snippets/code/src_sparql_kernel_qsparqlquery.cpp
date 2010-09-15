@@ -53,7 +53,7 @@ QSparqlQuery q("SELECT ?name ?surname WHERE { "
                "foaf:surname ?surname . }");
 QSparqlResult *r = conn.exec(query);
 r->first();
-QSparqlResultRow row = r->resultRow();
+QSparqlResultRow row = r->current();
 
 qDebug() << "Number of columns: " << row.count();
 
