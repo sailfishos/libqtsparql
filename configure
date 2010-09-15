@@ -273,7 +273,7 @@ Installation options:
     -docdir <dir> ...... Documentation will be installed to <dir>
                          (default PREFIX/share/doc)
     -headerdir <dir> ... Headers will be installed to <dir>
-                         (default PREFIX/include)
+                         (default PREFIX/include/QtSparql)
     -plugindir <dir> ... Plugins will be installed to <dir>
                          (default QT_PLUGIN_DIR)
     -libdir <dir> ...... Libraries will be installed to <dir>
@@ -302,7 +302,7 @@ fi
 QTSPARQL_INSTALL_DOCS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_DOCS"`
 
 if [ -z "$QTSPARQL_INSTALL_HEADERS" ]; then
-    QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include"
+    QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/QtSparql"
 fi
 QTSPARQL_INSTALL_HEADERS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_HEADERS"`
 
