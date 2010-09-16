@@ -15,6 +15,13 @@ unix: {
 include(../qsparqldriverbase.pri)
 QT += dbus
 
+install_headers.path = $$QTSPARQL_INSTALL_HEADERS
+install_headers.files = ../../../sparql/drivers/tracker/qsparql_tracker_signals.h
+
+
+INSTALLS += \
+        install_headers
+
 coverage {
 	LIBS += -lgcov
 	QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
