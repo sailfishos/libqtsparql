@@ -1,9 +1,10 @@
-libqtsparql (0.0.5~unreleased) unstable; urgency=low
+libqtsparql (0.0.5) unstable; urgency=low
 
-  * API renaming: QSparqlResult::resultRow -> QSparqlResult::current()
+  * API renaming: QSparqlResult::resultRow() -> QSparqlResult::current()
   * API renaming: QSparqlError::text() -> QSparqlError::message()
+  * Tracker driver: client-side for tracker "data changed" signal.
 
- -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 07 Sep 2010 15:43:22 +0300
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 16 Sep 2010 14:29:32 +0300
 
 libqtsparql (0.0.4) unstable; urgency=low
 
