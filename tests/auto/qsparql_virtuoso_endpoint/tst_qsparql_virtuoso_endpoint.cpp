@@ -113,7 +113,7 @@ void tst_QSparqlVirtuosoEndpoint::query_contacts()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
@@ -145,8 +145,8 @@ void tst_QSparqlVirtuosoEndpoint::construct_contacts()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
-    qDebug() << r->lastError();
+    r->waitForFinished(); // this test is synchronous only
+    // qDebug() << r->lastError();
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
@@ -177,7 +177,7 @@ void tst_QSparqlVirtuosoEndpoint::ask_contact()
     QSparqlResult* r = conn.exec(q1);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), true);
@@ -192,7 +192,7 @@ void tst_QSparqlVirtuosoEndpoint::ask_contact()
     r = conn.exec(q2);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), false);
@@ -205,6 +205,9 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
+    options.setUserName("dba");
+    options.setPassword("dba");
+    options.setPath("sparql-auth");
     QSparqlConnection conn("QENDPOINT", options);
 
     QSparqlQuery add("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
@@ -218,7 +221,7 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     delete r;
 
@@ -251,7 +254,7 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     r = conn.exec(del);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     delete r;
 
@@ -279,7 +282,7 @@ void tst_QSparqlVirtuosoEndpoint::query_with_error()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     qDebug() << r->lastError();
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
@@ -297,7 +300,7 @@ void tst_QSparqlVirtuosoEndpoint::select_datatypes()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->size(), 23);
     QHash<QString, QSparqlBinding> results;
