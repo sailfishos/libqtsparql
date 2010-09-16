@@ -67,15 +67,15 @@ public:
         BackendError, // other error sent by the backend
         UnknownError
     };
-    QSparqlError(const QString& text = QString(),
+    QSparqlError(const QString& message = QString(),
                  ErrorType type = NoError,
                  int number = -1);
     QSparqlError(const QSparqlError& other);
     QSparqlError& operator=(const QSparqlError& other);
     ~QSparqlError();
 
-    QString text() const;
-    void setText(const QString& text);
+    QString message() const;
+    void setMessage(const QString& message);
     ErrorType type() const;
     void setType(ErrorType type);
     int number() const;
@@ -83,7 +83,7 @@ public:
     bool isValid() const;
 
 private:
-    QString errorText;
+    QString errorMessage;
     ErrorType errorType;
     int errorNumber;
 };
