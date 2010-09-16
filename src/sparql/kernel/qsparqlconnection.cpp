@@ -543,6 +543,19 @@ QT_END_NAMESPACE
 
     \section backendspecific Accessing backend-specific functionalities
 
-    TODO
+    \warning This is under discussion; changes are likely
+
+    An example: using the signalling functionality implemented only by the
+    tracker driver ( http://live.gnome.org/Tracker/Documentation/SignalsOnChanges ).
+
+    The tracker driver is the only driver which offers notifications when data
+    in the store changes. To connect to the change signal, you need to do the
+    following:
+
+    - link against the tracker driver
+      ($QT_PLUGIN_PATH/sparqldrivers/libqsparqltracker.so), in addition to
+      libqtsparql
+    - include a driver specific header file, qsparql_tracker_signals.h
+    - instantiate the QTrackerChangeNotifier object and connect to its signals
 
 */
