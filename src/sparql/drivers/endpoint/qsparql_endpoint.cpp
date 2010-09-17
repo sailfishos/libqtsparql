@@ -280,12 +280,10 @@ void EndpointResultPrivate::readData()
         }
     }
 
-    // This loop shouldn't be needed, but EndpointResultPrivate::readData()
-    // is only being called once from the endpoint test program, and the
-    // results are lost without the loop. Maybe this is to do with running
-    // via a call to QSparqlResult::waitForFinished()
-    while (reader->parseContinue()) {
-        // qDebug() << "EXIT reader->parseContinue()";
+    while (reply->bytesAvailable() > 0) {
+        if (!reader->parseContinue()) {
+            qDebug() << "reader->parseContinue() failed";
+        }
     }
 
     q->emit dataReady(results.count());
