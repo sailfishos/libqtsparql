@@ -1,8 +1,8 @@
-libqtsparql (0.0.7~unreleased) unstable; urgency=low
+libqtsparql (0.0.7) unstable; urgency=low
 
-  *
+  * Endpoint driver fixes
 
- -- Marja Hassinen <marja.hassinen@nokia.com>  Fri, 17 Sep 2010 10:22:09 +0300
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Fri, 17 Sep 2010 11:20:37 +0300
 
 libqtsparql (0.0.6) unstable; urgency=low
 
