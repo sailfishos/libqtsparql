@@ -294,7 +294,6 @@ void EndpointResultPrivate::readData()
         reader->setErrorHandler(parser);
 
         if (!reader->parse(xml, true)) {
-            qDebug() << "data:" << xml->data();
             q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
             return;
