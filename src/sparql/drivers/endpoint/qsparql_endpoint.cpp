@@ -60,6 +60,7 @@
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtNetwork/qnetworkproxy.h>
+#include <QtNetwork/qauthenticator.h>
 
 #include <QtXml/QDomNode>
 #include <QtXml/QDomDocument>
@@ -122,6 +123,7 @@ public:
     EndpointDriverPrivate *driverPrivate;
 
 public Q_SLOTS:
+    void authenticate(QNetworkReply * reply, QAuthenticator * authenticator);
     void readData();
     void handleError(QNetworkReply::NetworkError code);
     void terminate();
@@ -235,6 +237,12 @@ private:
     EndpointResultPrivate * d;
 };
 
+void EndpointResultPrivate::authenticate(QNetworkReply * reply, QAuthenticator * authenticator)
+{
+    authenticator->setUser(driverPrivate->user);
+    authenticator->setPassword(driverPrivate->password);
+}
+
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 {
     if (code == QNetworkReply::UnknownContentError)
@@ -270,10 +278,14 @@ void EndpointResultPrivate::readData()
         if (!reader->parse(xml, true)) {
             qDebug() << "reader->parse() failed";
         }
-    } else {
-        if (!reader->parseContinue()) {
-            qDebug() << "reader->parseContinue() failed";
-        }
+    }
+
+    // This loop shouldn't be needed, but EndpointResultPrivate::readData()
+    // is only being called once from the endpoint test program, and the
+    // results are lost without the loop. Maybe this is to do with running
+    // via a call to QSparqlResult::waitForFinished()
+    while (reader->parseContinue()) {
+        // qDebug() << "EXIT reader->parseContinue()";
     }
 
     q->emit dataReady(results.count());
@@ -406,7 +418,7 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
 
     if (isGraph())
         // A Virtuoso protocol extension for CONSTRUCT or DESCRIBE queries.
-        // With DBPedia, 'text/plain' returns triples, but it isn't documented 
+        // With DBPedia, 'text/plain' returns triples, but it isn't documented
         // in the Virtuoso manual
         request.setRawHeader("Accept", "text/plain");
     else
@@ -422,6 +434,11 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
     QObject::connect(d->reply, SIGNAL(finished()), d, SLOT(parseResults()));
     QObject::connect(d->reply, SIGNAL(error(QNetworkReply::NetworkError)), d, SLOT(handleError(QNetworkReply::NetworkError)));
+
+    if (!d->driverPrivate->user.isEmpty() && !d->driverPrivate->password.isEmpty()) {
+        QObject::connect(d->driverPrivate->manager, SIGNAL(authenticationRequired(QNetworkReply *, QAuthenticator *)),
+                         d, SLOT(authenticate(QNetworkReply *, QAuthenticator *)));
+    }
 
     return true;
 }
