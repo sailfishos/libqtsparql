@@ -276,13 +276,13 @@ void EndpointResultPrivate::readData()
         reader->setErrorHandler(parser);
 
         if (!reader->parse(xml, true)) {
-            qDebug() << "reader->parse() failed";
+            q->setLastError(QSparqlError(QString::fromLatin1("Parse error in XML results"), QSparqlError::BackendError));
         }
     }
 
     while (reply->bytesAvailable() > 0) {
         if (!reader->parseContinue()) {
-            qDebug() << "reader->parseContinue() failed";
+            q->setLastError(QSparqlError(QString::fromLatin1("Parse error in XML results"), QSparqlError::BackendError));
         }
     }
 
