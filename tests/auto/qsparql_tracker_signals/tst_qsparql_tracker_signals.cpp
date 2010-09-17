@@ -55,13 +55,13 @@ class Receiver : public QObject
     Q_OBJECT
 
 public slots:
-    void changed(QList<QList<int> > d, QList<QList<int> > i);
+    void changed(QList<QTrackerChangeNotifier::Quad> d, QList<QTrackerChangeNotifier::Quad> i);
 public:
-    QList<QList<int> > deletes;
-    QList<QList<int> > inserts;
+    QList<QTrackerChangeNotifier::Quad> deletes;
+    QList<QTrackerChangeNotifier::Quad> inserts;
 };
 
-void Receiver::changed(QList<QList<int> > d, QList<QList<int> > i)
+void Receiver::changed(QList<QTrackerChangeNotifier::Quad> d, QList<QTrackerChangeNotifier::Quad> i)
 {
     deletes.append(d);
     inserts.append(i);
@@ -139,26 +139,27 @@ void tst_QSparqlTrackerSignals::cleanup()
 }
 
 // For QSignalSpy
-Q_DECLARE_METATYPE(QList<int>)
-Q_DECLARE_METATYPE(QList<QList<int> >)
+Q_DECLARE_METATYPE(QList<QTrackerChangeNotifier::Quad>)
 
 void tst_QSparqlTrackerSignals::contact_added()
 {
     QTrackerChangeNotifier notifier(className);
 
     // For QSignalSpy
-    qRegisterMetaType<QList<int> >("QList<int>");
-    qRegisterMetaType<QList<QList<int> > >("<QList<QList<int> >");
+    qRegisterMetaType<QList<QTrackerChangeNotifier::Quad> >("QList<QTrackerChangeNotifier::Quad>");
 
     QSignalSpy spy(&notifier,
-                   SIGNAL(changed(QList<QList<int> >, QList<QList<int> >)));
+                   SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
+                                  QList<QTrackerChangeNotifier::Quad>)));
 
     // TODO: also read the parameters from the spy.
     Receiver receiver;
     QObject::connect(&notifier,
-                     SIGNAL(changed(QList<QList<int> >, QList<QList<int> >)),
+                     SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
+                                    QList<QTrackerChangeNotifier::Quad>)),
                      &receiver,
-                     SLOT(changed(QList<QList<int> >, QList<QList<int> >)));
+                     SLOT(changed(QList<QTrackerChangeNotifier::Quad>,
+                                  QList<QTrackerChangeNotifier::Quad>)));
 
     // Now do an insert...
     QSparqlQuery q("insert { <added.uri> a nco:PersonContact ;"
@@ -191,22 +192,22 @@ void tst_QSparqlTrackerSignals::contact_added()
     // newid nameGiven 0
 
     // The graph is the default graph
-    QCOMPARE(receiver.inserts[0][0], 0);
-    QCOMPARE(receiver.inserts[1][0], 0);
-    QCOMPARE(receiver.inserts[2][0], 0);
+    QCOMPARE(receiver.inserts[0].graph, 0);
+    QCOMPARE(receiver.inserts[1].graph, 0);
+    QCOMPARE(receiver.inserts[2].graph, 0);
 
     // The newid is the same for all rows
-    QCOMPARE(receiver.inserts[0][1], receiver.inserts[1][1]);
-    QCOMPARE(receiver.inserts[0][1], receiver.inserts[2][1]);
+    QCOMPARE(receiver.inserts[0].subject, receiver.inserts[1].subject);
+    QCOMPARE(receiver.inserts[0].subject, receiver.inserts[2].subject);
 
     //qDebug() << receiver.inserts;
 
     bool typeFound = false;
     bool nameFound = false;
     for (int i=0; i<3; ++i) {
-        if (receiver.inserts[i][2] == typeId && receiver.inserts[i][3] == personContactId)
+        if (receiver.inserts[i].predicate == typeId && receiver.inserts[i].object == personContactId)
             typeFound = true;
-        else if (receiver.inserts[i][2] == nameGivenId && receiver.inserts[i][3] == 0)
+        else if (receiver.inserts[i].predicate == nameGivenId && receiver.inserts[i].object == 0)
             nameFound = true;
     }
     QVERIFY(typeFound);

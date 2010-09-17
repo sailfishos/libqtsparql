@@ -42,6 +42,8 @@
 #ifndef QSPARQL_TRACKER_P_H
 #define QSPARQL_TRACKER_P_H
 
+#include "qsparql_tracker_signals.h"
+
 #include <qsparqlquery.h>
 
 #include <QObject>
@@ -98,18 +100,11 @@ private:
     QTrackerResult* q; // public part
 };
 
-struct Quad
-{
-    int graph;
-    int subject;
-    int predicate;
-    int object;
-};
+QDBusArgument& operator<<(QDBusArgument& argument,
+                          const QTrackerChangeNotifier::Quad &t);
+const QDBusArgument& operator>>(const QDBusArgument& argument,
+                                QTrackerChangeNotifier::Quad &t);
 
-QDBusArgument& operator<<(QDBusArgument& argument, const Quad &t);
-const QDBusArgument& operator>>(const QDBusArgument& argument, Quad &t);
-
-class QTrackerChangeNotifier;
 class QTrackerChangeNotifierPrivate : public QObject
 {
     Q_OBJECT
@@ -118,7 +113,9 @@ public:
                                   QDBusConnection c,
                                   QTrackerChangeNotifier* q);
 public slots:
-    void changed(QString className, QVector<Quad> deleted, QVector<Quad> inserted);
+    void changed(QString className,
+                 QList<QTrackerChangeNotifier::Quad> deleted,
+                 QList<QTrackerChangeNotifier::Quad> inserted);
 public:
     QTrackerChangeNotifier* q; // public part
     QString className; // which class is watched
@@ -130,4 +127,3 @@ QT_END_NAMESPACE
 QT_END_HEADER
 
 #endif // QSPARQL_TRACKER_H
-

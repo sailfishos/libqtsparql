@@ -83,8 +83,8 @@ Q_DECLARE_METATYPE_COMMA(QMap<QString, QString>)
 Q_DECLARE_METATYPE_COMMA(QVector<QMap<QString, QString> >)
 Q_DECLARE_METATYPE_COMMA(QVector<QVector<QMap<QString, QString> > >)
 
-Q_DECLARE_METATYPE(Quad)
-Q_DECLARE_METATYPE(QVector<Quad>)
+Q_DECLARE_METATYPE(QTrackerChangeNotifier::Quad)
+Q_DECLARE_METATYPE(QList<QTrackerChangeNotifier::Quad>)
 
 QT_BEGIN_NAMESPACE
 
@@ -416,7 +416,7 @@ void QTrackerDriver::close()
 }
 
 // D-Bus marshalling
-QDBusArgument &operator<<(QDBusArgument &argument, const Quad &t)
+QDBusArgument &operator<<(QDBusArgument &argument, const QTrackerChangeNotifier::Quad &t)
 {
     argument.beginStructure();
     argument << t.graph << t.subject << t.predicate << t.object;
@@ -425,7 +425,7 @@ QDBusArgument &operator<<(QDBusArgument &argument, const Quad &t)
 }
 
 // D-Bus demarshalling
-const QDBusArgument &operator>>(const QDBusArgument &argument, Quad &t)
+const QDBusArgument &operator>>(const QDBusArgument &argument, QTrackerChangeNotifier::Quad &t)
 {
     argument.beginStructure();
     argument >> t.graph >> t.subject >> t.predicate >> t.object;
@@ -437,8 +437,9 @@ QTrackerChangeNotifier::QTrackerChangeNotifier(const QString& className,
                                                QObject* parent)
     : QObject(parent)
 {
-    qDBusRegisterMetaType<Quad>();
-    qDBusRegisterMetaType<QVector<Quad> >();
+    qDBusRegisterMetaType<QTrackerChangeNotifier::Quad>();
+    qDBusRegisterMetaType<QList<QTrackerChangeNotifier::Quad> >();
+
     d = new QTrackerChangeNotifierPrivate(className, getConnection(), this);
 }
 
@@ -459,8 +460,9 @@ QTrackerChangeNotifierPrivate::QTrackerChangeNotifierPrivate(
                                  QStringList() << className,
                                  changedSignature,
                                  this, SLOT(changed(QString,
-                                                    QVector<Quad>,
-                                                    QVector<Quad>)));
+                                                    QList<QTrackerChangeNotifier::Quad>,
+                                                    QList<QTrackerChangeNotifier::Quad>)));
+
     if (!ok) {
         qWarning() << "Cannot connect to signal from Tracker";
     }
@@ -472,25 +474,12 @@ QString QTrackerChangeNotifier::watchedClass() const
 }
 
 void QTrackerChangeNotifierPrivate::changed(QString,
-                                            QVector<Quad> deleted,
-                                            QVector<Quad> inserted)
+                                            QList<QTrackerChangeNotifier::Quad> deleted,
+                                            QList<QTrackerChangeNotifier::Quad> inserted)
 {
     // D-Bus will filter based on the class name, so we only get relevant
     // signals here.
-    QList<QList<int> > deletes;
-    QList<QList<int> > inserts;
-
-    foreach(const Quad& q, deleted) {
-        deletes <<
-            (QList<int>() << q.graph << q.subject << q.predicate << q.object);
-    }
-
-    foreach(const Quad& q, inserted) {
-        inserts <<
-            (QList<int>() << q.graph << q.subject << q.predicate << q.object);
-    }
-
-    emit q->changed(deletes, inserts);
+    emit q->changed(deleted, inserted);
 }
 
 QT_END_NAMESPACE
