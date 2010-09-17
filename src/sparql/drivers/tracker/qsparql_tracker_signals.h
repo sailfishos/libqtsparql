@@ -56,12 +56,23 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerChangeNotifier : public QObject
 {
     Q_OBJECT
 public:
+    struct Quad
+    {
+        int graph, subject, predicate, object;
+    };
     QTrackerChangeNotifier(const QString& className,
                            QObject* parent = 0);
     ~QTrackerChangeNotifier();
     QString watchedClass() const;
 signals:
-    void changed(QList<QList<int> > deletes, QList<QList<int> > inserts);
+    /// Emitted when tracker signals that triples have been deleted or inserted.
+    /// \a deletes is the list of deleted triples, \a inserts is the list of
+    /// inserted triples. The lists contain \a Quad objects, and each Quad
+    /// object contains the tracker id's of a triple. If the object of the
+    /// triple is a literal, the corresponding Quad will contain 0 as its
+    /// object.
+    void changed(QList<QTrackerChangeNotifier::Quad> deletes,
+                 QList<QTrackerChangeNotifier::Quad> inserts);
 private:
     QTrackerChangeNotifierPrivate* d;
     friend class QTrackerChangeNotifierPrivate;
