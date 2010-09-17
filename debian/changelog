@@ -1,6 +1,6 @@
-libqtsparql (0.0.6~unreleased) unstable; urgency=low
+libqtsparql (0.0.6) unstable; urgency=low
 
-  *
+  * API change: QTrackerChangeNotifier signals
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 16 Sep 2010 15:25:14 +0300
 
