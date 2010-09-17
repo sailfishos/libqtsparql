@@ -89,6 +89,37 @@ struct EndpointDriverPrivate {
     bool managerOwned;
 };
 
+class XmlResultsParser : public QXmlDefaultHandler
+{
+public:
+    XmlResultsParser(EndpointResultPrivate * res) : d(res)
+    {
+    }
+
+    bool startElement(const QString & namespaceURI,
+                                const QString & localName,
+                                const QString &qName,
+                                const QXmlAttributes &attributes);
+
+
+    bool endElement(const QString & namespaceURI,
+                                const QString & localName,
+                                const QString &qName);
+
+
+    bool characters(const QString &str);
+    bool fatalError(const QXmlParseException &exception);
+    QString errorString() const;
+
+private:
+    QString currentText;
+    QString errorStr;
+    QXmlAttributes lattrs;
+    QSparqlBinding binding;
+    QSparqlResultRow resultRow;
+    EndpointResultPrivate * d;
+};
+
 class EndpointResultPrivate  : public QObject {
     Q_OBJECT
 public:
@@ -130,115 +161,97 @@ public Q_SLOTS:
     void parseResults();
 };
 
-class XmlResultsParser : public QXmlDefaultHandler
+
+bool XmlResultsParser::startElement(const QString & namespaceURI,
+                            const QString & localName,
+                            const QString &qName,
+                            const QXmlAttributes &attributes)
 {
-public:
-    XmlResultsParser(EndpointResultPrivate * res) : d(res)
-    {
+    Q_UNUSED(namespaceURI);
+    Q_UNUSED(localName);
+
+    currentText = QString();
+
+    if (qName == QLatin1String("sparql")) {
+    } else if (qName == QLatin1String("head")) {
+    } else if (qName == QLatin1String("variable")) {
+    } else if (qName == QLatin1String("results")) {
+    } else if (qName == QLatin1String("result")) {
+        resultRow = QSparqlResultRow();
+    } else if (qName == QLatin1String("binding")) {
+        binding = QSparqlBinding();
+        binding.setName(attributes.value(QString::fromLatin1("name")));
+    } else if (qName == QLatin1String("bnode")) {
+    } else if (qName == QLatin1String("uri")) {
+    } else if (qName == QLatin1String("literal")) {
+        lattrs = attributes;
+    } else {
     }
 
-    bool startElement(const QString & namespaceURI,
-                                const QString & localName,
-                                const QString &qName,
-                                const QXmlAttributes &attributes)
-    {
-        Q_UNUSED(namespaceURI);
-        Q_UNUSED(localName);
+    return true;
+}
 
-        currentText = QString();
+bool XmlResultsParser::endElement(const QString & namespaceURI,
+                            const QString & localName,
+                            const QString &qName)
+{
+    Q_UNUSED(namespaceURI);
+    Q_UNUSED(localName);
 
-        if (qName == QLatin1String("sparql")) {
-        } else if (qName == QLatin1String("head")) {
-        } else if (qName == QLatin1String("variable")) {
-        } else if (qName == QLatin1String("results")) {
-        } else if (qName == QLatin1String("result")) {
-            resultRow = QSparqlResultRow();
-        } else if (qName == QLatin1String("binding")) {
-            binding = QSparqlBinding();
-            binding.setName(attributes.value(QString::fromLatin1("name")));
-        } else if (qName == QLatin1String("bnode")) {
-        } else if (qName == QLatin1String("uri")) {
-        } else if (qName == QLatin1String("literal")) {
-            lattrs = attributes;
-        } else {
-        }
-
-        return true;
-    }
-
-    bool endElement(const QString & namespaceURI,
-                                const QString & localName,
-                                const QString &qName)
-    {
-        Q_UNUSED(namespaceURI);
-        Q_UNUSED(localName);
-
-        if (qName == QLatin1String("sparql")) {
-        } else if (qName == QLatin1String("head")) {
-        } else if (qName == QLatin1String("variable")) {
-        } else if (qName == QLatin1String("results")) {
-        } else if (qName == QLatin1String("result")) {
-            d->results.append(resultRow);
-        } else if (qName == QLatin1String("binding")) {
-            resultRow.append(binding);
-        } else if (qName == QLatin1String("boolean")) {
-            d->setBoolValue(currentText.toLower() == QLatin1String("true"));
-        } else if (qName == QLatin1String("bnode")) {
-            binding.setBlankNodeLabel(currentText);
-        } else if (qName == QLatin1String("uri")) {
-            QUrl url(currentText);
-            binding.setValue(QVariant(url));
-        } else if (qName == QLatin1String("literal")) {
-            if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
-                if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
-                    // TODO: How should we treat xsi:types here?
-                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
-                } else {
-                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
-                }
-            } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
-                binding.setValue(QVariant(currentText));
-                binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
+    if (qName == QLatin1String("sparql")) {
+    } else if (qName == QLatin1String("head")) {
+    } else if (qName == QLatin1String("variable")) {
+    } else if (qName == QLatin1String("results")) {
+    } else if (qName == QLatin1String("result")) {
+        d->results.append(resultRow);
+    } else if (qName == QLatin1String("binding")) {
+        resultRow.append(binding);
+    } else if (qName == QLatin1String("boolean")) {
+        d->setBoolValue(currentText.toLower() == QLatin1String("true"));
+    } else if (qName == QLatin1String("bnode")) {
+        binding.setBlankNodeLabel(currentText);
+    } else if (qName == QLatin1String("uri")) {
+        QUrl url(currentText);
+        binding.setValue(QVariant(url));
+    } else if (qName == QLatin1String("literal")) {
+        if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
+            if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
+                // TODO: How should we treat xsi:types here?
+                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
             } else {
-                binding.setValue(QVariant(currentText));
+                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
             }
+        } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
+            binding.setValue(QVariant(currentText));
+            binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
         } else {
+            binding.setValue(QVariant(currentText));
         }
-
-        return true;
+    } else {
     }
 
-    bool characters(const QString &str)
-    {
-        currentText += str;
-        return true;
-    }
+    return true;
+}
 
-    bool fatalError(const QXmlParseException &exception)
-    {
-        qWarning() << "Parse error at line" << exception.lineNumber() <<
-                    "column" << exception.columnNumber() <<
-                    exception.message();
+bool XmlResultsParser::characters(const QString &str)
+{
+    currentText += str;
+    return true;
+}
 
-        return false;
-    }
+bool XmlResultsParser::fatalError(const QXmlParseException &exception)
+{
+    return false;
+}
 
-    QString errorString() const
-    {
-        return errorStr;
-    }
-
-private:
-    QString currentText;
-    QString errorStr;
-    QXmlAttributes lattrs;
-    QSparqlBinding binding;
-    QSparqlResultRow resultRow;
-    EndpointResultPrivate * d;
-};
+QString XmlResultsParser::errorString() const
+{
+    return errorStr;
+}
 
 void EndpointResultPrivate::authenticate(QNetworkReply * reply, QAuthenticator * authenticator)
 {
+    Q_UNUSED(reply);
     authenticator->setUser(driverPrivate->user);
     authenticator->setPassword(driverPrivate->password);
 }
@@ -264,6 +277,11 @@ void EndpointResultPrivate::terminate()
 
 void EndpointResultPrivate::readData()
 {
+    if (isFinished) {
+        reply->readAll();
+        return;
+    }
+
     if (q->isGraph()) {
         buffer += reply->readAll();
         return;
@@ -276,13 +294,17 @@ void EndpointResultPrivate::readData()
         reader->setErrorHandler(parser);
 
         if (!reader->parse(xml, true)) {
-            qDebug() << "reader->parse() failed";
+            q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
+            terminate();
+            return;
         }
     }
 
     while (reply->bytesAvailable() > 0) {
         if (!reader->parseContinue()) {
-            qDebug() << "reader->parseContinue() failed";
+            q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
+            terminate();
+            return;
         }
     }
 
@@ -486,6 +508,8 @@ EndpointDriver::~EndpointDriver()
 bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
+    case QSparqlConnection::QuerySize:
+        return true;
     case QSparqlConnection::AskQueries:
         return true;
     case QSparqlConnection::ConstructQueries:
