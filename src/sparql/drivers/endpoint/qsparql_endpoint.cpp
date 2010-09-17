@@ -241,10 +241,6 @@ bool XmlResultsParser::characters(const QString &str)
 
 bool XmlResultsParser::fatalError(const QXmlParseException &exception)
 {
-    qWarning() << "Parse error at line" << exception.lineNumber() <<
-                "column" << exception.columnNumber() <<
-                exception.message();
-
     return false;
 }
 
@@ -298,7 +294,8 @@ void EndpointResultPrivate::readData()
         reader->setErrorHandler(parser);
 
         if (!reader->parse(xml, true)) {
-            q->setLastError(QSparqlError(QString::fromLatin1("Parse error in XML results"), QSparqlError::BackendError));
+            qDebug() << "data:" << xml->data();
+            q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
             return;
         }
@@ -306,7 +303,7 @@ void EndpointResultPrivate::readData()
 
     while (reply->bytesAvailable() > 0) {
         if (!reader->parseContinue()) {
-            q->setLastError(QSparqlError(QString::fromLatin1("Parse error in XML results"), QSparqlError::BackendError));
+            q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
             return;
         }
