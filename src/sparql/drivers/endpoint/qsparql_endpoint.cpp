@@ -66,6 +66,7 @@
 #include <QtXml/QDomDocument>
 #include <QtXml/QDomElement>
 #include <QtXml/QXmlDefaultHandler>
+#include <QtXml/QXmlInputSource>
 
 #include <qdebug.h>
 
@@ -89,6 +90,18 @@ struct EndpointDriverPrivate {
     bool managerOwned;
 };
 
+class XmlInputSource : public QXmlInputSource
+{
+public:
+    XmlInputSource(QIODevice * dev) : QXmlInputSource(dev) {}
+
+    void fetchData()
+    {
+        QXmlInputSource::fetchData();
+        // qDebug() << "data" << data();
+    }
+};
+
 class XmlResultsParser : public QXmlDefaultHandler
 {
 public:
@@ -96,16 +109,14 @@ public:
     {
     }
 
-    bool startElement(const QString & namespaceURI,
-                                const QString & localName,
-                                const QString &qName,
-                                const QXmlAttributes &attributes);
+    bool startElement(  const QString & namespaceURI,
+                        const QString & localName,
+                        const QString &qName,
+                        const QXmlAttributes &attributes);
 
-
-    bool endElement(const QString & namespaceURI,
-                                const QString & localName,
-                                const QString &qName);
-
+    bool endElement(    const QString & namespaceURI,
+                        const QString & localName,
+                        const QString &qName);
 
     bool characters(const QString &str);
     bool fatalError(const QXmlParseException &exception);
@@ -144,7 +155,7 @@ public:
 
     QNetworkReply *reply;
     QByteArray buffer;
-    QXmlInputSource *xml;
+    XmlInputSource *xml;
     XmlResultsParser *parser;
     QXmlSimpleReader *reader;
     QList<QSparqlResultRow> results;
@@ -241,6 +252,7 @@ bool XmlResultsParser::characters(const QString &str)
 
 bool XmlResultsParser::fatalError(const QXmlParseException &exception)
 {
+    Q_UNUSED(exception);
     return false;
 }
 
@@ -449,7 +461,7 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
     d->reply = d->driverPrivate->manager->get(request);
 
     if (!isGraph())
-        d->xml = new QXmlInputSource(d->reply);
+        d->xml = new XmlInputSource(d->reply);
 
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
     QObject::connect(d->reply, SIGNAL(finished()), d, SLOT(parseResults()));
