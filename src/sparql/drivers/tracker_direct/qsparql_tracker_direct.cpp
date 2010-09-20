@@ -79,7 +79,7 @@ async_cursor_next_callback( GObject *source_object,
         if (data->q->isBool()) {
             data->setBoolValue(data->results.count() == 1
                                     && data->results[0].count() == 1
-                                    && data->results[0].binding(0).value().toString() == QLatin1String("1"));
+                                    && data->results[0].binding(0).value().toBool());
         }
 
         data->terminate();
@@ -90,21 +90,42 @@ async_cursor_next_callback( GObject *source_object,
     gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
 
     for (int i = 0; i < n_columns; i++) {
-        // As Tracker doesn't return the variable names in the query yet, call
-        // the variables $1, $2, $3.. as that is better than no names
-        QString name = QString::fromLatin1("$%1").arg(i + 1);
+        QString name = QString::fromUtf8(tracker_sparql_cursor_get_variable_name(data->cursor, i));
         QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, 0));
+        QSparqlBinding binding;
+        binding.setName(name);
+        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(data->cursor, i);
 
-        if (value.startsWith(QLatin1String("_:"))) {
-            QSparqlBinding binding(name);
-            binding.setBlankNodeLabel(value.mid(2));
-            resultRow.append(binding);
-        } else if (value.startsWith(QLatin1String("http:")) || value.startsWith(QLatin1String("urn:"))) {
-            resultRow.append(QSparqlBinding(name, QUrl(value)));
-        } else {
-            resultRow.append(QSparqlBinding(name, value));
+        switch (type) {
+        case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_URI:
+            binding.setValue(QUrl(value));
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_STRING:
+            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
+            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
+            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
+            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
+            binding.setBlankNodeLabel(value);
+            break;
+        case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
+            binding.setValue(value == QLatin1String("1") ? QString::fromLatin1("true") : QString::fromLatin1("false"),
+                             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+            break;
+        default:
+            break;
         }
 
+        resultRow.append(binding);
     }
 
     data->results.append(resultRow);
