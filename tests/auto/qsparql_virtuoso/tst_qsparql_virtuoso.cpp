@@ -67,6 +67,7 @@ private slots:
     void insert_and_delete_contact();
     void query_with_error();
     void select_datatypes();
+    void select_blanknode();
 };
 
 tst_QSparqlVirtuoso::tst_QSparqlVirtuoso()
@@ -334,6 +335,29 @@ void tst_QSparqlVirtuoso::select_datatypes()
 
     QCOMPARE(results["<base64Binary_property>"].toString(), QString("\"qouh3908t38hohfr\"^^<http://www.w3.org/2001/XMLSchema#base64Binary>"));
 
+}
+
+void tst_QSparqlVirtuoso::select_blanknode()
+{
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    // Example from section 2.10.1 of the SPARQL spec
+    QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
+                   "SELECT ?a FROM <http://virtuoso/testgraph> WHERE {"
+                   "?a    foaf:givenname   \"Alice\" ."
+                   "?a    foaf:family_name \"Hacker\" . }");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 1);
+    r->next();
+    QSparqlResultRow resultRow = r->current();
+    qDebug() << resultRow.binding(0).name() << resultRow.binding(0).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
 }
 
 QTEST_MAIN( tst_QSparqlVirtuoso )

@@ -479,14 +479,14 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_BOX_FLAGS, &boxFlags, SQL_IS_INTEGER, 0);
 
             if ((boxFlags & VIRTUOSO_BF_IRI) != 0) {
-                if (qstrncmp(buffer.constData(), "_:", 2) == 0) {
-                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 2));
+                if (qstrncmp(buffer.constData(), "nodeID://", 9) == 0) {
+                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 9));
                 } else {
                     b.setValue(QUrl(QString::fromUtf8(buffer.constData())));
                 }
             } else {
-                if (qstrncmp(buffer.constData(), "nodeID://", 9) == 0) {
-                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 9));
+                if (qstrncmp(buffer.constData(), "_:", 2) == 0) {
+                    b.setBlankNodeLabel(QString::fromUtf8(buffer.constData() + 2));
                 } else if ((boxFlags & VIRTUOSO_BF_UTF8) != 0) {
                     b.setValue(QString::fromUtf8(buffer.constData()));
                 } else {

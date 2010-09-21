@@ -1,6 +1,8 @@
 sparql
 prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#>
 prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+prefix  foaf:  <http://xmlns.com/foaf/0.1/>
+
 insert into <http://virtuoso/testgraph>
 
 {
@@ -41,4 +43,10 @@ insert into <http://virtuoso/testgraph>
         <double_property> "4567.123"^^<http://www.w3.org/2001/XMLSchema#double> ;
         <float_property> "123.45"^^<http://www.w3.org/2001/XMLSchema#float> ;
         <base64Binary_property> "qouh3908t38hohfr"^^<http://www.w3.org/2001/XMLSchema#base64Binary> .
+
+    _:a    foaf:givenname   "Alice" .
+    _:a    foaf:family_name "Hacker" .
+
+    _:b    foaf:firstname   "Bob" .
+    _:b    foaf:surname     "Hacker" .
 };
