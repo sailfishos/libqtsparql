@@ -67,6 +67,8 @@ private slots:
     void insert_and_delete_contact();
     void query_with_error();
     void select_datatypes();
+    void select_blanknode();
+    void construct_with_blanknodes();
 };
 
 tst_QSparqlVirtuosoEndpoint::tst_QSparqlVirtuosoEndpoint()
@@ -343,6 +345,112 @@ void tst_QSparqlVirtuosoEndpoint::select_datatypes()
 
     QCOMPARE(results["<base64Binary_property>"].toString(), QString("\"qouh3908t38hohfr\"^^<http://www.w3.org/2001/XMLSchema#base64Binary>"));
 
+}
+
+void tst_QSparqlVirtuosoEndpoint::select_blanknode()
+{
+    QSparqlConnectionOptions options;
+    options.setHostName("localhost");
+    options.setPort(8890);
+    QSparqlConnection conn("QENDPOINT", options);
+
+    // Example from section 2.10.1 of the SPARQL spec
+    QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
+                   "SELECT ?a WHERE {"
+                   "?a    foaf:givenname   \"Alice\" ."
+                   "?a    foaf:family_name \"Hacker\" . }");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 1);
+    r->next();
+    QSparqlResultRow resultRow = r->current();
+    qDebug() << resultRow.binding(0).name() << resultRow.binding(0).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+}
+
+void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
+{
+    QSparqlConnectionOptions options;
+    options.setHostName("localhost");
+    options.setPort(8890);
+    QSparqlConnection conn("QENDPOINT", options);
+
+    // Example from section 2.10.1 of the SPARQL spec
+    QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
+                   "PREFIX vcard:   <http://www.w3.org/2001/vcard-rdf/3.0#>"
+
+                    "CONSTRUCT { ?x  vcard:N _:v ."
+                    "_:v vcard:givenName ?gname ."
+                    "_:v vcard:familyName ?fname }"
+                    "WHERE"
+                    "{"
+                    "   { ?x foaf:firstname ?gname } UNION  { ?x foaf:givenname   ?gname } ."
+                    "   { ?x foaf:surname   ?fname } UNION  { ?x foaf:family_name ?fname } ."
+                    "}", QSparqlQuery::ConstructStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 6);
+
+    /*  The results should look like this:
+
+        @prefix vcard: <http://www.w3.org/2001/vcard-rdf/3.0#> .
+
+        _:v1 vcard:N         _:x .
+        _:x vcard:givenName  "Alice" .
+        _:x vcard:familyName "Hacker" .
+
+        _:v2 vcard:N         _:z .
+        _:z vcard:givenName  "Bob" .
+        _:z vcard:familyName "Hacker" .
+
+        However the order of the triples returned by virtuoso isn't defined.
+        The first node in each triple is always a blank one and so at least
+        we can test for that.
+    */
+
+    /* Result 1 */
+    r->next();
+    QSparqlResultRow resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+    // QCOMPARE(resultRow.binding(2).isBlank(), true);
+
+    /* Result 2 */
+    r->next();
+    resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+
+    /* Result 3 */
+    r->next();
+    resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+
+    /* Result 4 */
+    r->next();
+    resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+    // QCOMPARE(resultRow.binding(2).isBlank(), true);
+
+    /* Result 5 */
+    r->next();
+    resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
+
+    /* Result 6 */
+    r->next();
+    resultRow = r->current();
+    qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+    QCOMPARE(resultRow.binding(0).isBlank(), true);
 }
 
 QTEST_MAIN( tst_QSparqlVirtuosoEndpoint )

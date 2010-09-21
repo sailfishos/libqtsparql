@@ -29,3 +29,21 @@ WHERE
 {
     <thing001> ?p ?o .
 };
+
+sparql
+DELETE from <http://virtuoso_endpoint/testgraph>
+{
+    ?a   foaf:givenname   "Alice" .
+    ?a    foaf:family_name "Hacker" .
+
+    ?b    foaf:firstname   "Bob" .
+    ?b    foaf:surname     "Hacker" .
+}
+WHERE
+{
+    ?a    foaf:givenname   "Alice" .
+    ?a    foaf:family_name "Hacker" .
+
+    ?b    foaf:firstname   "Bob" .
+    ?b    foaf:surname     "Hacker" .
+};

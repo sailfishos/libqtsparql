@@ -90,6 +90,7 @@ struct EndpointDriverPrivate {
     bool managerOwned;
 };
 
+// This class is only needed for debugging reasons
 class XmlInputSource : public QXmlInputSource
 {
 public:
@@ -220,6 +221,8 @@ bool XmlResultsParser::endElement(const QString & namespaceURI,
     } else if (qName == QLatin1String("boolean")) {
         d->setBoolValue(currentText.toLower() == QLatin1String("true"));
     } else if (qName == QLatin1String("bnode")) {
+        currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
+        currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));
         binding.setBlankNodeLabel(currentText);
     } else if (qName == QLatin1String("uri")) {
         QUrl url(currentText);
