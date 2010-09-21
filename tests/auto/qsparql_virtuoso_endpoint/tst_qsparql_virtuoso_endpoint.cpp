@@ -59,6 +59,7 @@ public slots:
     void cleanupTestCase();
     void init();
     void cleanup();
+    void iterateResults(int);
 
 private slots:
     void query_contacts();
@@ -69,6 +70,10 @@ private slots:
     void select_datatypes();
     void select_blanknode();
     void construct_with_blanknodes();
+    void iterate_on_dataready();
+
+private:
+    int previousTotalResults;
 };
 
 tst_QSparqlVirtuosoEndpoint::tst_QSparqlVirtuosoEndpoint()
@@ -356,7 +361,7 @@ void tst_QSparqlVirtuosoEndpoint::select_blanknode()
 
     // Example from section 2.10.1 of the SPARQL spec
     QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
-                   "SELECT ?a WHERE {"
+                   "SELECT ?a FROM <http://virtuoso_endpoint/testgraph> WHERE {"
                    "?a    foaf:givenname   \"Alice\" ."
                    "?a    foaf:family_name \"Hacker\" . }");
     QSparqlResult* r = conn.exec(q);
@@ -451,6 +456,40 @@ void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
     resultRow = r->current();
     qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
     QCOMPARE(resultRow.binding(0).isBlank(), true);
+}
+
+void tst_QSparqlVirtuosoEndpoint::iterateResults(int totalResults)
+{
+    // qDebug() << "total results:" << totalResults;
+    QSparqlResult *r = qobject_cast<QSparqlResult *>(sender());
+    r->seek(previousTotalResults - 1);
+    int resultsRead = 0;
+    while (r->next() && r->pos() < totalResults) {
+        QSparqlResultRow resultRow = r->current();
+        // qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+        resultsRead++;
+    }
+
+    QCOMPARE(totalResults, previousTotalResults + resultsRead);
+    previousTotalResults = totalResults;
+}
+
+void tst_QSparqlVirtuosoEndpoint::iterate_on_dataready()
+{
+    QSparqlConnectionOptions options;
+    options.setHostName("localhost");
+    options.setPort(8890);
+    QSparqlConnection conn("QENDPOINT", options);
+
+    // Example from section 2.10.1 of the SPARQL spec
+    QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    previousTotalResults = 0;
+    connect(r, SIGNAL(dataReady(int)), SLOT(iterateResults(int)));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
 }
 
 QTEST_MAIN( tst_QSparqlVirtuosoEndpoint )

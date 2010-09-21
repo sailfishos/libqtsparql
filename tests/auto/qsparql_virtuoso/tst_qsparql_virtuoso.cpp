@@ -59,6 +59,7 @@ public slots:
     void cleanupTestCase();
     void init();
     void cleanup();
+    void iterateResults(int);
 
 private slots:
     void query_contacts();
@@ -68,6 +69,10 @@ private slots:
     void query_with_error();
     void select_datatypes();
     void select_blanknode();
+    void iterate_on_dataready();
+
+private:
+    int previousTotalResults;
 };
 
 tst_QSparqlVirtuoso::tst_QSparqlVirtuoso()
@@ -358,6 +363,40 @@ void tst_QSparqlVirtuoso::select_blanknode()
     QSparqlResultRow resultRow = r->current();
     qDebug() << resultRow.binding(0).name() << resultRow.binding(0).toString();
     QCOMPARE(resultRow.binding(0).isBlank(), true);
+}
+
+void tst_QSparqlVirtuoso::iterateResults(int totalResults)
+{
+    qDebug() << "total results:" << totalResults << "previousTotalResults:" << previousTotalResults;
+    QSparqlResult *r = qobject_cast<QSparqlResult *>(sender());
+    r->seek(previousTotalResults - 1);
+    int resultsRead = 0;
+    while (r->next() && r->pos() < totalResults) {
+        qDebug() << "r->pos()" << r->pos();
+        QSparqlResultRow resultRow = r->current();
+        // qDebug() << resultRow.binding(0).toString() << resultRow.binding(1).toString() << resultRow.binding(2).toString();
+        resultsRead++;
+    }
+
+    QCOMPARE(totalResults, previousTotalResults + resultsRead);
+    previousTotalResults = totalResults;
+}
+
+void tst_QSparqlVirtuoso::iterate_on_dataready()
+{
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    // Example from section 2.10.1 of the SPARQL spec
+    QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    previousTotalResults = 0;
+    connect(r, SIGNAL(dataReady(int)), SLOT(iterateResults(int)));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
 }
 
 QTEST_MAIN( tst_QSparqlVirtuoso )
