@@ -529,7 +529,7 @@ QT_END_NAMESPACE
     \skip result->next
     \until toString
 
-    - Data can be retrieved by using QSparqlResult::data().
+    - Data can be retrieved by using QSparqlResult::value().
 
     The following classes are the most relevant for getting started with QSparql:
     - QSparqlConnection

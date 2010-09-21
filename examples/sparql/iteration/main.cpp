@@ -126,7 +126,9 @@ void insertData(QSparqlConnection* conn)
                         "nco:phoneNumber 12345 . "
                         "_:u nco:hasPhoneNumber _:pn . }",
                         QSparqlQuery::InsertStatement);
-    conn->exec(insert);
+    QSparqlResult* r = conn->exec(insert);
+    r->waitForFinished();
+    delete r;
 }
 
 int main(int argc, char *argv[])
