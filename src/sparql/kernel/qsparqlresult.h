@@ -68,11 +68,11 @@ public:
 
     // Iterating the result set
     int pos() const;
+    void setPos(int pos);
     bool next();
     bool previous();
     bool first();
     bool last();
-    bool seek(int index);
     virtual int size() const = 0;
     bool isValid() const; // valid = positioned on a valid row
     // TODO: decide what should be the pos() of the result when the data has
@@ -80,20 +80,21 @@ public:
     // (the first row), but what if there's no data? pos() == AfterLastRow ?
 
     // Retrieving data
-    virtual QSparqlResultRow current() const;
+    virtual QSparqlResultRow current() const = 0;
     // Values from the current row
-    QSparqlBinding binding(int i) const;
-    QVariant value(int i) const;
+    virtual QSparqlBinding binding(int i) const = 0;
+    virtual QVariant value(int i) const = 0;
     // For ASK results
     virtual bool boolValue() const;
 
     // Asynchronous operations
     virtual void waitForFinished();
     virtual bool isFinished() const;
+
     bool hasError() const;
     QSparqlError lastError() const;
 
-    QString lastQuery() const; // FIXME: needed?
+    QString lastQuery() const;
 
     bool isTable() const;
     bool isGraph() const;
@@ -109,21 +110,7 @@ protected:
 
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
-    virtual void setPos(int pos);
     virtual void setLastError(const QSparqlError& e);
-
-    // The subclasses need to implement at least fecth, fetchFirst and
-    // fetchLast. The default implementations of fetchNext and fetchPrevious use
-    // them, but the subclasses can implement them as well.
-    virtual bool fetch(int i) = 0;
-    virtual bool fetchNext();
-    virtual bool fetchPrevious();
-    virtual bool fetchFirst() = 0;
-    virtual bool fetchLast() = 0;
-
-    // The subclasses need to implement these for retrieving the data
-    virtual QSparqlBinding bindingData(int i) const = 0;
-    virtual QVariant variantData(int i) const = 0;
     virtual void setBoolValue(bool v);
 
 private:

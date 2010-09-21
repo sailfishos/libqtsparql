@@ -71,15 +71,13 @@ public:
         setLastError(QSparqlError(QLatin1String("Driver not loaded"),
                                   QSparqlError::ConnectionError));
     }
+    inline QSparqlResultRow current() const { return QSparqlResultRow(); }
+    inline QSparqlBinding binding(int) const { return QSparqlBinding(); }
+    inline QVariant value(int) const { return QVariant(); }
     inline void waitForFinished() { }
     inline bool isFinished() { return true; }
 protected:
-    inline bool reset (const QString&) { return false; }
     inline bool fetch(int) { return false; }
-    inline bool fetchFirst() { return false; }
-    inline bool fetchLast() { return false; }
-    inline QSparqlBinding bindingData(int) const { return QSparqlBinding(); }
-    inline QVariant variantData(int) const { return QVariant(); }
     inline bool isNull(int) const { return false; }
     inline int size() const { return -1; }
 

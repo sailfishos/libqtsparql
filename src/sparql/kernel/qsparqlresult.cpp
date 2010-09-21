@@ -338,10 +338,11 @@ bool QSparqlResult::isFinished() const
   \sa next() previous() first() last() pos() isFinished() isValid()
 */
 
+/*
 bool QSparqlResult::seek(int index)
 {
-    if (!isFinished())
-        return false;
+//    if (!isFinished())
+//        return false;
     int actualIdx;
     if (index < 0) {
         setPos(QSparql::BeforeFirstRow);
@@ -369,6 +370,7 @@ bool QSparqlResult::seek(int index)
     }
     return true;
 }
+*/
 
 /*!
 
@@ -401,17 +403,18 @@ bool QSparqlResult::seek(int index)
 */
 bool QSparqlResult::next()
 {
-    if (!isFinished())
-        return false;
+//    if (!isFinished())
+//        return false;
     bool b = false;
     switch (pos()) {
     case QSparql::BeforeFirstRow:
-        b = fetchFirst();
+        b = first();
         return b;
     case QSparql::AfterLastRow:
         return false;
     default:
-        if (!fetchNext()) {
+        setPos(pos() + 1);
+        if (pos() > size()) {
             setPos(QSparql::AfterLastRow);
             return false;
         }
@@ -450,18 +453,16 @@ bool QSparqlResult::next()
 
 bool QSparqlResult::previous()
 {
-    if (!isFinished())
-        return false;
-
     bool b = false;
     switch (pos()) {
     case QSparql::BeforeFirstRow:
         return false;
     case QSparql::AfterLastRow:
-        b = fetchLast();
+        b = last();
         return b;
     default:
-        if (!fetchPrevious()) {
+        setPos(pos() - 1);
+        if (pos() < 0) {
             setPos(QSparql::BeforeFirstRow);
             return false;
         }
@@ -482,9 +483,11 @@ bool QSparqlResult::previous()
 
 bool QSparqlResult::first()
 {
-    if (!isFinished())
-        return false;
-    return fetchFirst();
+    if (pos() == 0)
+        return true;
+
+    setPos(0);
+    return size() > 0;
 }
 
 /*!
@@ -501,9 +504,8 @@ bool QSparqlResult::first()
 
 bool QSparqlResult::last()
 {
-    if (!isFinished())
-        return false;
-    return fetchLast();
+    setPos(size() - 1);
+    return pos() >= 0;
 }
 
 /*!
@@ -538,16 +540,12 @@ bool QSparqlResult::last()
 
 QSparqlBinding QSparqlResult::binding(int i) const
 {
-    if (!isValid())
-        return QSparqlBinding();
-    return bindingData(i);
+    return QSparqlBinding();
 }
 
 QVariant QSparqlResult::value(int i) const
 {
-    if (!isValid())
-        return QVariant();
-    return variantData(i);
+    return QVariant();
 }
 
 /*!
@@ -664,39 +662,6 @@ QSparqlError QSparqlResult::lastError() const
     \sa fetch(), fetchFirst()
 */
 
-/*!
-    Positions the result to the next available row in the result.
-
-    This function is only called if the result is in a finished
-    state. The default implementation calls fetch() with the next
-    index. Derived classes can reimplement this function and position
-    the result to the next row in some other way, and call setPos()
-    with an appropriate value. Return true to indicate success, or
-    false to signify failure.
-
-    \sa fetch(), fetchPrevious()
-*/
-
-bool QSparqlResult::fetchNext()
-{
-    return fetch(pos() + 1);
-}
-
-/*!
-    Positions the result to the previous row (row) in the result.
-
-    This function is only called if the result is in a finished state.
-    The default implementation calls fetch() with the previous index.
-    Derived classes can reimplement this function and position the
-    result to the next row in some other way, and call setPos()
-    with an appropriate value. Return true to indicate success, or
-    false to signify failure.
-*/
-
-bool QSparqlResult::fetchPrevious()
-{
-    return fetch(pos() - 1);
-}
 /*!
   Returns a QSparqlResultRow containing the binding values information for the
   current query. If the query points to a valid row (isValid() returns
