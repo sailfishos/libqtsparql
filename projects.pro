@@ -3,6 +3,18 @@
 #####################################################################
 
 include(shared.pri)
+
+# Require Qt 4.7 or higher
+# The predefined QT_VERSION_MAJOR and QT_VERSION_MINOR are not working
+QT_VERSION = $$[QT_VERSION]
+QT_VERSION = $$split(QT_VERSION, ".")
+QT_MAJOR_VER = $$member(QT_VERSION, 0)
+QT_MINOR_VER = $$member(QT_VERSION, 1)
+
+lessThan(QT_MAJOR_VER, 4) | lessThan(QT_MINOR_VER, 7) {
+   error("QtSparql requires Qt 4.7 or newer but Qt $$[QT_VERSION] was detected.")
+}
+
 TEMPLATE = subdirs
 
 SUBDIRS = src tests examples
