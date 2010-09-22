@@ -403,8 +403,8 @@ bool QSparqlResult::seek(int index)
 */
 bool QSparqlResult::next()
 {
-//    if (!isFinished())
-//        return false;
+    // qDebug() << "QSparqlResult::next():" << pos() << " size:" << size();
+
     bool b = false;
     switch (pos()) {
     case QSparql::BeforeFirstRow:
@@ -413,12 +413,7 @@ bool QSparqlResult::next()
     case QSparql::AfterLastRow:
         return false;
     default:
-        setPos(pos() + 1);
-        if (pos() > size()) {
-            setPos(QSparql::AfterLastRow);
-            return false;
-        }
-        return true;
+        return setPos(pos() + 1);
     }
 }
 
