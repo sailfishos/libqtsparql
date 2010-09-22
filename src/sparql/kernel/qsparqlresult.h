@@ -85,7 +85,7 @@ public:
     virtual QSparqlBinding binding(int i) const = 0;
     virtual QVariant value(int i) const = 0;
     // For ASK results
-    virtual bool boolValue() const;
+    bool boolValue() const;
 
     // Asynchronous operations
     virtual void waitForFinished();
@@ -100,7 +100,6 @@ public:
     bool isGraph() const;
     bool isBool() const;
 
-
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
@@ -111,7 +110,7 @@ protected:
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
     virtual void setLastError(const QSparqlError& e);
-    virtual void setBoolValue(bool v);
+    void setBoolValue(bool v);
 
 private:
     QSparqlResultPrivate* d;
