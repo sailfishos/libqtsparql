@@ -78,6 +78,7 @@ public:
     QVariant value(int field) const;
     int size() const;
     QSparqlResultRow current() const;
+
     void waitForFinished();
     bool isFinished() const;
 

@@ -81,14 +81,10 @@ public:
     virtual QSparqlResultRow current() const;
     virtual QSparqlBinding binding(int i) const;
     virtual QVariant value(int i) const;
+    virtual int size() const;
 
 protected:
     void cleanup();
-    // bool fetch(int i);
-    // bool fetchLast();
-    // bool fetchFirst();
-    // bool isNull(int field) const;
-    int size() const;
 
 private:
     QTrackerDirectResultPrivate* d;
