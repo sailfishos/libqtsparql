@@ -59,29 +59,20 @@ class MockResult : public QSparqlResult
     {
         return 0;
     }
-    bool fetch(int)
+
+    QSparqlResultRow current() const
     {
-        return false;
+        return QSparqlResultRow();
     }
-    bool fetchFirst()
-    {
-        return false;
-    }
-    bool fetchLast()
-    {
-        return false;
-    }
-    QSparqlBinding bindingData(int) const
+
+    QSparqlBinding binding(int) const
     {
         return QSparqlBinding();
     }
-    QVariant variantData(int) const
+
+    QVariant value(int) const
     {
         return QVariant();
-    }
-    bool isNull(int) const
-    {
-        return true;
     }
 };
 

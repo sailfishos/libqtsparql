@@ -555,9 +555,13 @@ QVariant QSparqlResult::value(int i) const
     \sa pos()
 */
 
-void QSparqlResult::setPos(int pos)
+bool QSparqlResult::setPos(int pos)
 {
+    if (pos >= size())
+        return false;
+
     d->idx = pos;
+    return true;
 }
 
 

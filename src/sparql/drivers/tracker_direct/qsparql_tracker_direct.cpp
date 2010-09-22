@@ -77,9 +77,9 @@ async_cursor_next_callback( GObject *source_object,
 
     if (!active) {
         if (data->q->isBool()) {
-            data->setBoolValue(data->results.count() == 1
-                                    && data->results[0].count() == 1
-                                    && data->results[0].binding(0).value().toBool());
+            data->setBoolValue( data->results.count() == 1
+                                && data->results[0].count() == 1
+                                && data->results[0].binding(0).value().toBool());
         }
 
         data->terminate();
@@ -265,36 +265,7 @@ void QTrackerDirectResult::cleanup()
     setPos(QSparql::BeforeFirstRow);
 }
 
-bool QTrackerDirectResult::fetch(int i)
-{
-    if (i < 0) {
-        setPos(QSparql::BeforeFirstRow);
-        return false;
-    }
-    if (i >= d->results.size()) {
-        setPos(QSparql::AfterLastRow);
-        return false;
-    }
-    setPos(i);
-    return true;
-}
-
-bool QTrackerDirectResult::fetchLast()
-{
-    if (d->results.count() == 0)
-        return false;
-    setPos(d->results.count() - 1);
-    return true;
-}
-
-bool QTrackerDirectResult::fetchFirst()
-{
-    if (pos() == 0)
-        return true;
-    return fetch(0);
-}
-
-QSparqlBinding QTrackerDirectResult::bindingData(int field) const
+QSparqlBinding QTrackerDirectResult::binding(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
@@ -304,7 +275,7 @@ QSparqlBinding QTrackerDirectResult::bindingData(int field) const
     return d->results[pos()].binding(field);
 }
 
-QVariant QTrackerDirectResult::variantData(int field) const
+QVariant QTrackerDirectResult::value(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
@@ -328,12 +299,6 @@ void QTrackerDirectResult::waitForFinished()
 bool QTrackerDirectResult::isFinished() const
 {
     return d->isFinished;
-}
-
-bool QTrackerDirectResult::isNull(int field) const
-{
-    Q_UNUSED(field);
-    return false;
 }
 
 int QTrackerDirectResult::size() const

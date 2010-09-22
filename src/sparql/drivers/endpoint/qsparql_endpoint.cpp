@@ -361,43 +361,7 @@ void EndpointResult::cleanup()
     setPos(QSparql::BeforeFirstRow);
 }
 
-bool EndpointResult::fetch(int i)
-{
-    setPos(i);
-    return pos() < d->results.count();
-}
-
-bool EndpointResult::fetchNext()
-{
-    if (pos() == QSparql::AfterLastRow) {
-        return false;
-    }
-
-    setPos(pos() + 1);
-
-    if (d->isFinished && pos() >= d->results.count()) {
-        setPos(QSparql::AfterLastRow);
-        return false;
-    }
-
-    return pos() < d->results.count();
-}
-
-bool EndpointResult::fetchLast()
-{
-    setPos(d->results.count() - 1);
-    return pos() >= 0;
-}
-
-bool EndpointResult::fetchFirst()
-{
-    if (pos() == 0)
-        return true;
-
-    return fetch(0);
-}
-
-QSparqlBinding EndpointResult::bindingData(int field) const
+QSparqlBinding EndpointResult::binding(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
@@ -407,7 +371,7 @@ QSparqlBinding EndpointResult::bindingData(int field) const
     return d->results[pos()].binding(field);
 }
 
-QVariant EndpointResult::variantData(int field) const
+QVariant EndpointResult::value(int field) const
 {
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";

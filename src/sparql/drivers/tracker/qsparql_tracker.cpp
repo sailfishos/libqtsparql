@@ -193,36 +193,7 @@ void QTrackerResult::cleanup()
     setPos(QSparql::BeforeFirstRow);
 }
 
-bool QTrackerResult::fetch(int i)
-{
-    if (i < 0) {
-        setPos(QSparql::BeforeFirstRow);
-        return false;
-    }
-    if (i >= d->data.size()) {
-        setPos(QSparql::AfterLastRow);
-        return false;
-    }
-    setPos(i);
-    return true;
-}
-
-bool QTrackerResult::fetchLast()
-{
-    if (d->data.count() == 0)
-        return false;
-    setPos(d->data.count() - 1);
-    return true;
-}
-
-bool QTrackerResult::fetchFirst()
-{
-    if (pos() == 0)
-        return true;
-    return fetch(0);
-}
-
-QSparqlBinding QTrackerResult::bindingData(int field) const
+QSparqlBinding QTrackerResult::binding(int field) const
 {
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
@@ -236,7 +207,7 @@ QSparqlBinding QTrackerResult::bindingData(int field) const
     return QSparqlBinding(name, QVariant(d->data[i][field]));
 }
 
-QVariant QTrackerResult::variantData(int field) const
+QVariant QTrackerResult::value(int field) const
 {
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
@@ -259,12 +230,6 @@ bool QTrackerResult::isFinished() const
     if (d->watcher)
         return d->watcher->isFinished();
     return true;
-}
-
-bool QTrackerResult::isNull(int field) const
-{
-    Q_UNUSED(field);
-    return false;
 }
 
 int QTrackerResult::size() const

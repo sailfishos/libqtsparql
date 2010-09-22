@@ -79,15 +79,11 @@ public:
     virtual bool isFinished() const;
 
     virtual QSparqlResultRow current() const;
-    virtual QSparqlBinding bindingData(int i) const;
-    virtual QVariant variantData(int i) const;
+    virtual QSparqlBinding binding(int i) const;
+    virtual QVariant value(int i) const;
 
 protected:
     void cleanup();
-    bool fetch(int i);
-    bool fetchLast();
-    bool fetchFirst();
-    bool isNull(int field) const;
     int size() const;
 
 private:

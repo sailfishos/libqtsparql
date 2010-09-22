@@ -369,7 +369,7 @@ void tst_QSparqlVirtuoso::iterateResults(int totalResults)
 {
     qDebug() << "total results:" << totalResults << "previousTotalResults:" << previousTotalResults;
     QSparqlResult *r = qobject_cast<QSparqlResult *>(sender());
-    r->seek(previousTotalResults - 1);
+    r->setPos(previousTotalResults - 1);
     int resultsRead = 0;
     while (r->next() && r->pos() < totalResults) {
         qDebug() << "r->pos()" << r->pos();

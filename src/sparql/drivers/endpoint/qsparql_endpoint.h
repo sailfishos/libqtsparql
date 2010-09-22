@@ -74,19 +74,16 @@ public:
     // TODO: this should be removed
     bool exec(const QString& query, QSparqlQuery::StatementType type);
 
-protected:
-    void cleanup();
-    bool fetch(int i);
-    bool fetchNext();
-    bool fetchLast();
-    bool fetchFirst();
-    QSparqlBinding bindingData(int field) const;
-    QVariant variantData(int field) const;
+    QSparqlBinding binding(int field) const;
+    QVariant value(int field) const;
     int size() const;
     QSparqlResultRow current() const;
-
     void waitForFinished();
     bool isFinished() const;
+
+protected:
+    void cleanup();
+
 private:
     EndpointResultPrivate* d;
 };

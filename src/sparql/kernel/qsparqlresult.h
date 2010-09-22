@@ -68,7 +68,7 @@ public:
 
     // Iterating the result set
     int pos() const;
-    void setPos(int pos);
+    bool setPos(int pos);
     bool next();
     bool previous();
     bool first();

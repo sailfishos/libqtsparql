@@ -114,13 +114,13 @@ void QSparqlQueryModelPrivate::prefetch(int limit)
     QModelIndex newBottom;
     const int oldBottomRow = qMax(bottom.row(), 0);
 
-    // try to seek directly
-    if (result->seek(limit)) {
+    // try to set the postion directly
+    if (result->setPos(limit)) {
         newBottom = q->createIndex(limit, bottom.column());
     } else {
         // have to seek back to our old position for MS Access
         int i = oldBottomRow;
-        if (result->seek(i)) {
+        if (result->setPos(i)) {
             while (result->next())
                 ++i;
             newBottom = q->createIndex(i, bottom.column());
@@ -297,7 +297,7 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
     if (dItem.row() > d->bottom.row())
         const_cast<QSparqlQueryModelPrivate *>(d)->prefetch(dItem.row());
 
-    if (!d->result->seek(dItem.row())) {
+    if (!d->result->setPos(dItem.row())) {
         d->error = d->result->lastError();
         return v;
     }
@@ -459,7 +459,7 @@ QSparqlResultRow QSparqlQueryModel::resultRow(int row) const
     if (row < 0)
         return d->resultRow;
 
-    if (!d->result->seek(row))
+    if (!d->result->setPos(row))
         return d->resultRow;
 
     return d->result->current();

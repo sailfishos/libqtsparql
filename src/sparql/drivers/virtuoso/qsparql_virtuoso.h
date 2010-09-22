@@ -89,31 +89,25 @@ public:
     virtual ~QVirtuosoResult();
 
     QVariant handle() const;
-    // FIXME: this should eventually be removed
     void exec(const QString& query, QSparqlQuery::StatementType type);
     bool exec();
-    bool boolValue() const;
 
-protected:
-    bool fetchNextResult();
-    bool fetchBoolResult();
-    bool fetchGraphResult();
-    bool fetchNext();
-    bool fetchFirst();
-    bool fetchLast();
-    bool fetchPrevious();
-    bool fetch(int i);
-    QSparqlBinding bindingData(int field) const;
-    QVariant variantData(int field) const;
+    bool boolValue() const;
+    QSparqlBinding binding(int field) const;
+    QVariant value(int field) const;
 
     int size() const;
     QSparqlResultRow current() const;
 
     void waitForFinished();
     bool isFinished() const;
-    void terminate();
 
 private:
+    void terminate();
+    bool fetchNextResult();
+    bool fetchBoolResult();
+    bool fetchGraphResult();
+
     QVirtuosoResultPrivate *d;
     friend class QVirtuosoFetcherPrivate;
 };

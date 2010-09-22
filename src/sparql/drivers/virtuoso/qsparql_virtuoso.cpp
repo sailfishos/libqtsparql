@@ -583,52 +583,7 @@ bool QVirtuosoResult::boolValue() const
     return QSparqlResult::boolValue();
 }
 
-bool QVirtuosoResult::fetch(int i)
-{
-    QMutexLocker resultLocker(&(d->mutex)); 
-    setPos(i);
-    return pos() < d->results.count();
-}
-
-bool QVirtuosoResult::fetchNext()
-{
-    QMutexLocker resultLocker(&(d->mutex)); 
-    if (pos() == QSparql::AfterLastRow) {
-        return false;
-    }
-
-    setPos(pos() + 1);
-
-    if (d->isFinished && pos() >= d->results.count()) {
-        setPos(QSparql::AfterLastRow);
-        return false;
-    }
-
-    return pos() < d->results.count();
-}
-
-bool QVirtuosoResult::fetchFirst()
-{
-    if (pos() == 0)
-        return true;
-
-    return fetch(0);
-}
-
-bool QVirtuosoResult::fetchPrevious()
-{
-    return false;
-}
-
-bool QVirtuosoResult::fetchLast()
-{
-    QMutexLocker resultLocker(&(d->mutex)); 
-    setPos(d->results.count() - 1);
-    return pos() >= 0;
-}
-
-
-QSparqlBinding QVirtuosoResult::bindingData(int field) const
+QSparqlBinding QVirtuosoResult::binding(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex));
 
@@ -640,7 +595,7 @@ QSparqlBinding QVirtuosoResult::bindingData(int field) const
     return d->results[pos()].binding(field);
 }
 
-QVariant QVirtuosoResult::variantData(int field) const
+QVariant QVirtuosoResult::value(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex));
 
@@ -653,7 +608,7 @@ QVariant QVirtuosoResult::variantData(int field) const
 
 int QVirtuosoResult::size() const
 {
-//    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
     return d->results.count();
 }
 
