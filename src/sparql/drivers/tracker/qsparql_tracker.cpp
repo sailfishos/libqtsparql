@@ -433,6 +433,16 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, QTrackerChangeNot
     return argument;
 }
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const QTrackerChangeNotifier::Quad &q)
+{
+    dbg.nospace() << "(" << q.graph << ", " << q.subject
+                  << ", " << q.predicate << ", " << q.object << ")";
+    return dbg.space();
+}
+#endif
+
+
 QTrackerChangeNotifier::QTrackerChangeNotifier(const QString& className,
                                                QObject* parent)
     : QObject(parent)
