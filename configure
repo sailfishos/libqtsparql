@@ -175,6 +175,7 @@ QTSPARQL_INSTALL_HEADERS=
 QTSPARQL_INSTALL_PLUGINS=
 QTSPARQL_INSTALL_LIBS=
 QTSPARQL_INSTALL_EXAMPLES=
+QTSPARQL_INSTALL_TESTS=
 
 # check how the user wants the SPARQL drivers to be built
 # options: 
@@ -192,7 +193,7 @@ while [ "$#" -gt 0 ]; do
         VAL=`echo $1 | sed "s,^-\([^-]*\).*,\1,"`
         ;;
 
-    -prefix|-docdir|-headerdir|-plugindir|-libdir|-examplesdir)
+    -prefix|-docdir|-headerdir|-plugindir|-libdir|-examplesdir|-testdir)
         VAR=`echo $1 | sed "s,^-\(.*\),\1,"`
         shift
         VAL="$1"
@@ -238,6 +239,10 @@ while [ "$#" -gt 0 ]; do
         QTSPARQL_INSTALL_EXAMPLES="$VAL"
         ;;
 
+    testdir)
+        QTSPARQL_INSTALL_TESTS="$VAL"
+        ;;
+
     sparql-*)
         OPT="$VAL"
         VAL=`echo $VAR | sed "s,^[^-]*-\([^-]*\).*,\1,"`
@@ -280,6 +285,8 @@ Installation options:
                          (default PREFIX/lib)
     -examplesdir <dir> . Examples will be installed to <dir>
                          (default QT_EXAMPLES_DIR)
+    -testdir <dir> ..... Tests will be installed to <dir>
+                         (default PREFIX/lib/qtsparql-tests)
 EOF
 
    [ "x$ERROR" = "xyes" ] && exit 1
@@ -318,6 +325,11 @@ QTSPARQL_INSTALL_LIBS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_L
 if [ -n "$QTSPARQL_INSTALL_EXAMPLES" ]; then
     QTSPARQL_INSTALL_EXAMPLES=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_EXAMPLES"`
 fi
+
+if [ -z "$QTSPARQL_INSTALL_TESTS" ]; then
+    QTSPARQL_INSTALL_TESTS="$QTSPARQL_INSTALL_PREFIX/lib/libqtsparql-tests"
+fi
+QTSPARQL_INSTALL_TESTS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_TESTS"`
 
 # detect which SPARQL drivers we can build
 # CFG_SPARQL_driver=plugin -> we'll build the driver as a plugin
@@ -447,6 +459,7 @@ echo "QTSPARQL_INSTALL_HEADERS  = $QTSPARQL_INSTALL_HEADERS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_PLUGINS  = $QTSPARQL_INSTALL_PLUGINS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_LIBS     = $QTSPARQL_INSTALL_LIBS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_EXAMPLES = $QTSPARQL_INSTALL_EXAMPLES" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_TESTS    = $QTSPARQL_INSTALL_TESTS" >> "$CACHEFILE.tmp"
 
 # replace .qmake.cache if it differs from the newly created temp file
 if cmp -s "$CACHEFILE.tmp" "$CACHEFILE"; then
