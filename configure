@@ -297,7 +297,7 @@ fi
 QTSPARQL_INSTALL_PREFIX=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_PREFIX"`
 
 if [ -z "$QTSPARQL_INSTALL_DOCS" ]; then
-    QTSPARQL_INSTALL_DOCS="$QTSPARQL_INSTALL_PREFIX/share/docs"
+    QTSPARQL_INSTALL_DOCS="$QTSPARQL_INSTALL_PREFIX/share/doc"
 fi
 QTSPARQL_INSTALL_DOCS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_DOCS"`
 

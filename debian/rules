@@ -28,11 +28,6 @@ install: build
 	dh_installdirs
 	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
 
-	# copying docs
-	mkdir -p `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
-	rm -rf `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc/html
-	cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
-
 	# copying headers from include/ (created by syncqt)
 	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
 
