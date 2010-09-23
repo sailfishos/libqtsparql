@@ -496,7 +496,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
             break;
         }
     }
-    
+
     b.setName(p->bindingNames[colNum - 1]);
     return b;
 }
@@ -608,6 +608,9 @@ QVariant QVirtuosoResult::value(int field) const
 
 int QVirtuosoResult::size() const
 {
+    // TODO: this lock sometimes seg fault here. Is that because
+    // size() can be called before the QSparqlResult is fully
+    // constructed?
     QMutexLocker resultLocker(&(d->mutex));
     return d->results.count();
 }
