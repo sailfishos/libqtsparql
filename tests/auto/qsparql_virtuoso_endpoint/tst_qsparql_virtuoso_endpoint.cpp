@@ -389,7 +389,8 @@ void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
 
                     "CONSTRUCT { ?x  vcard:N _:v ."
                     "_:v vcard:givenName ?gname ."
-                    "_:v vcard:familyName ?fname }"
+                    "_:v vcard:familyName ?fname } "
+                    "FROM <http://virtuoso_endpoint/testgraph>"
                     "WHERE"
                     "{"
                     "   { ?x foaf:firstname ?gname } UNION  { ?x foaf:givenname   ?gname } ."
@@ -460,7 +461,6 @@ void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
 
 void tst_QSparqlVirtuosoEndpoint::iterateResults(int totalResults)
 {
-    // qDebug() << "total results:" << totalResults;
     QSparqlResult *r = qobject_cast<QSparqlResult *>(sender());
     r->setPos(previousTotalResults - 1);
     int resultsRead = 0;
