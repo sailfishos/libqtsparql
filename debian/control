@@ -26,7 +26,7 @@ Description: Library for accessing RDF stores.
 
 Package: libqtsparql-doc
 Section: doc
-Architecture: any
+Architecture: all
 Description: Library for accessing RDF stores.
  .
  This package contains the documentation.
