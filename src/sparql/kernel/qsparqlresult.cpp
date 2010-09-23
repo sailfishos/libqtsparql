@@ -424,6 +424,8 @@ bool QSparqlResult::last()
 */
 
 /*!
+    \fn QSparqlBinding QSparqlResult::binding(int index) const
+
     Returns the binding \a index in the current result row.
 
     The bindings are numbered from left to right using the text of the
@@ -442,12 +444,9 @@ bool QSparqlResult::last()
     \sa value() previous() next() first() last() setPos() isValid()
 */
 
-QSparqlBinding QSparqlResult::binding(int i) const
-{
-    return QSparqlBinding();
-}
-
 /*!
+    \fn QVariant QSparqlResult::value(int index) const
+
     Returns the value of binding \a index in the current result row.
 
     The binding values are numbered from left to right using the text of the
@@ -466,21 +465,17 @@ QSparqlBinding QSparqlResult::binding(int i) const
     \sa binding() previous() next() first() last() setPos() isValid()
 */
 
-QVariant QSparqlResult::value(int i) const
-{
-    return QVariant();
-}
-
 /*!
-    This function is provided for derived classes to set the
-    internal (zero-based) row position to \a index.
+    This function is provided to set the internal (zero-based) row position
+    to \a index. If the index is within the range of result rows retrieved
+    the function returns true, otherwise false.
 
     \sa pos()
 */
 
 bool QSparqlResult::setPos(int index)
 {
-    if (index >= size())
+    if (index < 0 || index >= size())
         return false;
 
     d->idx = index;
@@ -537,6 +532,8 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
+  \fn QSparqlResultRow QSparqlResult::current()
+
   Returns a QSparqlResultRow containing the binding values information for the
   current query. If the query points to a valid row (isValid() returns
   true), the result row is populated.  An empty
@@ -553,12 +550,7 @@ QSparqlError QSparqlResult::lastError() const
 
   \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 1
 
-  \sa value() pos() setPos()
+  \sa value() binding() pos() setPos()
 */
-
-QSparqlResultRow QSparqlResult::current() const
-{
-    return QSparqlResultRow();
-}
 
 QT_END_NAMESPACE
