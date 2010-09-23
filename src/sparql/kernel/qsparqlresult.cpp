@@ -289,95 +289,13 @@ bool QSparqlResult::isFinished() const
     return false;
 }
 
-/*!
-  Retrieves the result row at position \a index, if available, and
-  positions the query on the retrieved row. The first result row is at
-  position 0. Note that the query must be in an \l{finished()}
-  {finished} state and isSelect() must return true before calling this
-  function.
-
-  If \a relative is false (the default), the following rules apply:
-
-  \list
-
-  \o If \a index is negative, the result is positioned before the
-  first row and false is returned.
-
-  \o Otherwise, an attempt is made to move to the row at position
-  \a index. If the row at position \a index could not be retrieved,
-  the result is positioned after the last row and false is
-  returned. If the row is successfully retrieved, true is returned.
-
-  \endlist
-
-  If \a relative is true, the following rules apply:
-
-  \list
-
-  \o If the result is currently positioned before the first row or
-  on the first row, and \a index is negative, there is no change,
-  and false is returned.
-
-  \o If the result is currently located after the last row, and \a
-  index is positive, there is no change, and false is returned.
-
-  \o If the result is currently located somewhere in the middle, and
-  the relative offset \a index moves the result below zero, the result
-  is positioned before the first row and false is returned.
-
-  \o Otherwise, an attempt is made to move to the row \a index
-  rows ahead of the current row (or \a index rows behind the
-  current row if \a index is negative). If the row at offset \a
-  index could not be retrieved, the result is positioned after the
-  last row if \a index >= 0, (or before the first row if \a
-  index is negative), and false is returned. If the row is
-  successfully retrieved, true is returned.
-
-  \endlist
-
-  \sa next() previous() first() last() pos() isFinished() isValid()
-*/
-
-/*
-bool QSparqlResult::seek(int index)
-{
-//    if (!isFinished())
-//        return false;
-    int actualIdx;
-    if (index < 0) {
-        setPos(QSparql::BeforeFirstRow);
-        return false;
-    }
-    actualIdx = index;
-    // let drivers optimize
-    if (actualIdx == (pos() + 1) && pos() != QSparql::BeforeFirstRow) {
-        if (!fetchNext()) {
-            setPos(QSparql::AfterLastRow);
-            return false;
-        }
-        return true;
-    }
-    if (actualIdx == (pos() - 1)) {
-        if (!fetchPrevious()) {
-            setPos(QSparql::BeforeFirstRow);
-            return false;
-        }
-        return true;
-    }
-    if (!fetch(actualIdx)) {
-        setPos(QSparql::AfterLastRow);
-        return false;
-    }
-    return true;
-}
-*/
 
 /*!
 
   Retrieves the next row in the result, if available, and positions
-  the query on the retrieved row. Note that the result must be in
-  the \l{isFinished()}{finished} state and isSelect() must return true
-  before calling this function or it will do nothing and return false.
+  the query on the retrieved row. Note that the isTable() or isGraph()
+  must return true before calling this function or it will do nothing
+  and return false.
 
   The following rules apply:
 
@@ -399,7 +317,7 @@ bool QSparqlResult::seek(int index)
   the last row and false is returned. If the row is successfully
   retrieved, true is returned.
 
-  \sa previous() first() last() seek() pos() isFinished() isValid()
+  \sa previous() first() last() setPos() pos() isFinished() isValid()
 */
 bool QSparqlResult::next()
 {
@@ -420,9 +338,7 @@ bool QSparqlResult::next()
 /*!
 
   Retrieves the previous row in the result, if available, and
-  positions the query on the retrieved row. Note that the result
-  must be in the \l{isFinished()}{finished} state before calling this
-  function or it will do nothing and return false.
+  positions the query on the retrieved row.
 
   The following rules apply:
 
@@ -443,7 +359,7 @@ bool QSparqlResult::next()
   before the first row and false is returned. If the row is
   successfully retrieved, true is returned.
 
-  \sa next() first() last() seek() pos() isFinished() isValid()
+  \sa next() first() last() setPos() pos() isFinished() isValid()
 */
 
 bool QSparqlResult::previous()
@@ -456,24 +372,17 @@ bool QSparqlResult::previous()
         b = last();
         return b;
     default:
-        setPos(pos() - 1);
-        if (pos() < 0) {
-            setPos(QSparql::BeforeFirstRow);
-            return false;
-        }
-        return true;
+        return setPos(pos() - 1);
     }
 }
 
 /*!
   Retrieves the first row in the result, if available, and
-  positions the query on the retrieved row. Note that the result
-  must be in the \l{isFinished()}{finished} state before calling this
-  function or it will do nothing and return false.  Returns true if
+  positions the query on the retrieved row. Returns true if
   successful. If unsuccessful the query position is set to an invalid
   position and false is returned.
 
-  \sa next() previous() last() seek() pos() isFinished() isValid()
+  \sa next() previous() last() setPos() pos() isFinished() isValid()
  */
 
 bool QSparqlResult::first()
@@ -494,7 +403,7 @@ bool QSparqlResult::first()
   unsuccessful the query position is set to an invalid position and
   false is returned.
 
-  \sa next() previous() first() seek() pos() isFinished() isValid()
+  \sa next() previous() first() setPos() pos() isFinished() isValid()
 */
 
 bool QSparqlResult::last()
@@ -515,6 +424,30 @@ bool QSparqlResult::last()
 */
 
 /*!
+    Returns the binding \a index in the current result row.
+
+    The bindings are numbered from left to right using the text of the
+    \c SELECT statement, e.g. in
+
+    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 0
+
+    binding 0 is \c forename and binding 1 is \c
+    surname. Using \c{SELECT *} is not recommended because the order
+    of the fields in the query is undefined.
+
+    An invalid QSparqlBinding is returned if binding \a index does not
+    exist, if the query is inactive, or if the query is positioned on
+    an invalid result row.
+
+    \sa value() previous() next() first() last() setPos() isValid()
+*/
+
+QSparqlBinding QSparqlResult::binding(int i) const
+{
+    return QSparqlBinding();
+}
+
+/*!
     Returns the value of binding \a index in the current result row.
 
     The binding values are numbered from left to right using the text of the
@@ -530,13 +463,8 @@ bool QSparqlResult::last()
     exist, if the query is inactive, or if the query is positioned on
     an invalid result row.
 
-    \sa previous() next() first() last() seek() isValid()
+    \sa binding() previous() next() first() last() setPos() isValid()
 */
-
-QSparqlBinding QSparqlResult::binding(int i) const
-{
-    return QSparqlBinding();
-}
 
 QVariant QSparqlResult::value(int i) const
 {
@@ -550,12 +478,12 @@ QVariant QSparqlResult::value(int i) const
     \sa pos()
 */
 
-bool QSparqlResult::setPos(int pos)
+bool QSparqlResult::setPos(int index)
 {
-    if (pos >= size())
+    if (index >= size())
         return false;
 
-    d->idx = pos;
+    d->idx = index;
     return true;
 }
 
@@ -606,59 +534,6 @@ QSparqlError QSparqlResult::lastError() const
     This signal is emitted when a query has fetched data. The \a
     totalRows is the row count of the data set after the new data has
     arrived.
-*/
-
-/*!
-    \fn QVariant QSparqlResult::data(int index) const
-
-    Returns the data for field \a index in the current row as
-    a QVariant. This function is only called if the result is in
-    a finished state and is positioned on a valid row and \a index is
-    non-negative. Derived classes must reimplement this function and
-    return the value of field \a index, or QVariant() if it cannot be
-    determined.
-*/
-
-/*!
-    \fn bool QSparqlResult::fetch(int index)
-
-    Positions the result to an arbitrary (zero-based) row \a index.
-
-    This function is only called if the result is in a finished state.
-    Derived classes must reimplement this function and position the
-    result to the row \a index, and call setPos() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa isFinished(), fetchFirst(), fetchLast(), fetchNext(), fetchPrevious()
-*/
-
-/*!
-    \fn bool QSparqlResult::fetchFirst()
-
-    Positions the result to the first row (row 0) in the result.
-
-    This function is only called if the result is in a finished state.
-    Derived classes must reimplement this function and position the
-    result to the first row, and call setPos() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa fetch(), fetchLast()
-*/
-
-/*!
-    \fn bool QSparqlResult::fetchLast()
-
-    Positions the result to the last row (last row) in the result.
-
-    This function is only called if the result is in an finished state.
-    Derived classes must reimplement this function and position the
-    result to the last row, and call setPos() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa fetch(), fetchFirst()
 */
 
 /*!
