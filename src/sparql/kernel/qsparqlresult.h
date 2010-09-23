@@ -66,7 +66,7 @@ class Q_SPARQL_EXPORT QSparqlResult : public QObject
 public:
     virtual ~QSparqlResult();
 
-    // Iterating the result set
+    // Iterating through the result set
     int pos() const;
     bool setPos(int pos);
     bool next();
@@ -85,7 +85,7 @@ public:
     virtual QSparqlBinding binding(int i) const = 0;
     virtual QVariant value(int i) const = 0;
     // For ASK results
-    bool boolValue() const;
+    virtual bool boolValue() const;
 
     // Asynchronous operations
     virtual void waitForFinished();
