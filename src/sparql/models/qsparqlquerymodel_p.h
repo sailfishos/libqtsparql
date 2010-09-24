@@ -72,7 +72,7 @@ class QSparqlQueryModelPrivate : public QObject
     Q_OBJECT
 public:
     QSparqlQueryModelPrivate(QSparqlQueryModel* q_)
-        : q(q_), result(0), connection(0), atEnd(false) {}
+        : q(q_), result(0), connection(0), atEnd(false), newQuery(false) {}
     ~QSparqlQueryModelPrivate();
     void prefetch(int);
     void initColOffsets(int size);
@@ -87,9 +87,10 @@ public:
     uint atEnd : 1;
     QVector<QHash<int, QVariant> > headers;
     QVarLengthArray<int, 56> colOffsets; // used to calculate indexInQuery of columns
-    void _q_queryFinished();
+    bool newQuery;
+    void beginQuery(int totalResults);
 public slots:
-    void queryFinished();
+    void addData(int totalResults);
 };
 
 QT_END_NAMESPACE

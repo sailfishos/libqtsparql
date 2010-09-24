@@ -49,22 +49,31 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QSPARQL_PREFETCH 255
+// #define QSPARQL_PREFETCH 255
 
-void QSparqlQueryModelPrivate::queryFinished()
+void QSparqlQueryModelPrivate::addData(int totalResults)
+{
+    if (newQuery) {
+        beginQuery(totalResults);
+        newQuery = false;
+    } else {
+        prefetch(totalResults);
+    }
+}
+
+void QSparqlQueryModelPrivate::beginQuery(int totalResults)
 {
     // This function will only be called when result is a valid
     // pointer.
     result->first();
     QSparqlResultRow newResultRow = result->current();
     bool columnsChanged = (newResultRow != resultRow);
-    bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
+    // bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
     bool hasNewData = (newResultRow != QSparqlResultRow()) || !result->hasError();
 
     if (colOffsets.size() != newResultRow.count() || columnsChanged)
         initColOffsets(newResultRow.count());
 
-    
     bool mustClearModel = bottom.isValid();
     if (mustClearModel) {
         atEnd = true;
@@ -82,28 +91,14 @@ void QSparqlQueryModelPrivate::queryFinished()
     if (columnsChanged && hasNewData)
         q->reset();
 
-//    if (!result->isActive()) {
-//        atEnd = true;
-//        bottom = QModelIndex();
-//        error = result->error();
-//        return;
-//    }
     QModelIndex newBottom;
-    if (hasQuerySize && result->size() > 0) {
-        newBottom = q->createIndex(result->size() - 1, resultRow.count() - 1);
-        q->beginInsertRows(QModelIndex(), 0, qMax(0, newBottom.row()));
-        bottom = q->createIndex(result->size() - 1, columnsChanged ? 0 : resultRow.count() - 1);
-        atEnd = true;
-        q->endInsertRows();
-    } else {
-        newBottom = q->createIndex(-1, resultRow.count() - 1);
-    }
+    newBottom = q->createIndex(totalResults - 1, resultRow.count() - 1);
+    q->beginInsertRows(QModelIndex(), 0, qMax(0, newBottom.row()));
+    bottom = q->createIndex(totalResults - 1, columnsChanged ? 0 : resultRow.count() - 1);
+    q->endInsertRows();
     bottom = newBottom;
 
     q->queryChange();
-
-    // fetchMore does the rowsInserted stuff for incremental models
-    q->fetchMore();
 }
 
 void QSparqlQueryModelPrivate::prefetch(int limit)
@@ -114,22 +109,9 @@ void QSparqlQueryModelPrivate::prefetch(int limit)
     QModelIndex newBottom;
     const int oldBottomRow = qMax(bottom.row(), 0);
 
-    // try to set the postion directly
-    if (result->setPos(limit)) {
-        newBottom = q->createIndex(limit, bottom.column());
-    } else {
-        // have to seek back to our old position for MS Access
-        int i = oldBottomRow;
-        if (result->setPos(i)) {
-            while (result->next())
-                ++i;
-            newBottom = q->createIndex(i, bottom.column());
-        } else {
-            // empty or invalid query
-            newBottom = q->createIndex(-1, bottom.column());
-        }
-        atEnd = true; // this is the end.
-    }
+    result->setPos(limit - 1);
+    newBottom = q->createIndex(limit - 1, bottom.column());
+
     if (newBottom.row() >= 0 && newBottom.row() > bottom.row()) {
         q->beginInsertRows(QModelIndex(), bottom.row() + 1, newBottom.row());
         bottom = newBottom;
@@ -215,40 +197,6 @@ QSparqlQueryModel::QSparqlQueryModel(QObject *parent)
 QSparqlQueryModel::~QSparqlQueryModel()
 {
     delete d;
-}
-
-/*!
-    Fetches more rows from a connection.
-    This only affects connections that don't report back the size of a query
-    (see QSparqlConnection::hasFeature()).
-
-    To force fetching of the entire connection, you can use the following:
-
-    \snippet doc/src/snippets/code/src_sparql_models_qsparqlquerymodel.cpp 0
-
-    \a parent should always be an invalid QModelIndex.
-
-    \sa canFetchMore()
-*/
-void QSparqlQueryModel::fetchMore(const QModelIndex &parent)
-{
-    if (parent.isValid())
-        return;
-    d->prefetch(qMax(d->bottom.row(), 0) + QSPARQL_PREFETCH);
-}
-
-/*!
-    Returns true if it is possible to read more rows from the connection.
-    This only affects connections that don't report back the size of a query
-    (see QSparqlDriver::hasFeature()).
-
-    \a parent should always be an invalid QModelIndex.
-
-    \sa fetchMore()
- */
-bool QSparqlQueryModel::canFetchMore(const QModelIndex &parent) const
-{
-    return (!parent.isValid() && !d->atEnd);
 }
 
 /*! \fn int QSparqlQueryModel::rowCount(const QModelIndex &parent) const
@@ -357,7 +305,9 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnect
 //        delete d->result;
     d->connection = &connection;
     d->result = connection.exec(query);
-    connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
+    d->newQuery = true;
+    // connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
+    connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
 }
 
 /*!

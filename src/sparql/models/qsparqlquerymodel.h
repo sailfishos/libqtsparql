@@ -86,9 +86,6 @@ public:
 
     QSparqlError lastError() const;
 
-    void fetchMore(const QModelIndex &parent = QModelIndex());
-    bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
-
 protected:
     virtual void queryChange();
 
