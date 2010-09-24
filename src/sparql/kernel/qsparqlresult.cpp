@@ -331,7 +331,12 @@ bool QSparqlResult::next()
     case QSparql::AfterLastRow:
         return false;
     default:
-        return setPos(pos() + 1);
+        if (pos() + 1 < size()) {
+            return setPos(pos() + 1);
+        } else {
+            d->idx = QSparql::AfterLastRow;
+            return false;
+        }
     }
 }
 
@@ -371,6 +376,9 @@ bool QSparqlResult::previous()
     case QSparql::AfterLastRow:
         b = last();
         return b;
+    case 0:
+        d->idx = QSparql::BeforeFirstRow;
+        return false;
     default:
         return setPos(pos() - 1);
     }
@@ -390,8 +398,7 @@ bool QSparqlResult::first()
     if (pos() == 0)
         return true;
 
-    setPos(0);
-    return size() > 0;
+    return setPos(0);
 }
 
 /*!
@@ -408,8 +415,7 @@ bool QSparqlResult::first()
 
 bool QSparqlResult::last()
 {
-    setPos(size() - 1);
-    return pos() >= 0;
+    return setPos(size() - 1);
 }
 
 /*!
