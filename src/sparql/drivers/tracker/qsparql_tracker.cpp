@@ -195,6 +195,10 @@ void QTrackerResult::cleanup()
 
 QSparqlBinding QTrackerResult::binding(int field) const
 {
+    if (!isValid()) {
+        return QSparqlBinding();
+    }
+
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
     int i = pos();
@@ -209,6 +213,10 @@ QSparqlBinding QTrackerResult::binding(int field) const
 
 QVariant QTrackerResult::value(int field) const
 {
+    if (!isValid()) {
+        return QVariant();
+    }
+
     // The upper layer calls this function only when this Result is positioned
     // in a valid position, so we don't need to check that.
     int i = pos();
@@ -239,6 +247,10 @@ int QTrackerResult::size() const
 
 QSparqlResultRow QTrackerResult::current() const
 {
+    if (!isValid()) {
+        return QSparqlResultRow();
+    }
+
     QSparqlResultRow info;
     if (pos() >= d->data.count() || pos() < 0)
         return info;

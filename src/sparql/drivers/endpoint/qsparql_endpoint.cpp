@@ -363,6 +363,10 @@ void EndpointResult::cleanup()
 
 QSparqlBinding EndpointResult::binding(int field) const
 {
+    if (!isValid()) {
+        return QSparqlBinding();
+    }
+
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
         return QSparqlBinding();
@@ -373,6 +377,10 @@ QSparqlBinding EndpointResult::binding(int field) const
 
 QVariant EndpointResult::value(int field) const
 {
+    if (!isValid()) {
+        return QVariant();
+    }
+
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "EndpointResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
@@ -465,8 +473,13 @@ int EndpointResult::size() const
 
 QSparqlResultRow EndpointResult::current() const
 {
-    if (pos() < 0 || pos() >= d->results.count())
+    if (!isValid()) {
         return QSparqlResultRow();
+    }
+
+    if (pos() < 0 || pos() >= d->results.count()) {
+        return QSparqlResultRow();
+    }
 
     return d->results[pos()];
 }

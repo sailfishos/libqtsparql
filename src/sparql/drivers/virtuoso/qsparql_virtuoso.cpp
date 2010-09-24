@@ -587,6 +587,10 @@ QSparqlBinding QVirtuosoResult::binding(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex));
 
+    if (!isValid()) {
+        return QSparqlBinding();
+    }
+
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
         return QSparqlBinding();
@@ -598,6 +602,10 @@ QSparqlBinding QVirtuosoResult::binding(int field) const
 QVariant QVirtuosoResult::value(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex));
+
+    if (!isValid()) {
+        return QVariant();
+    }
 
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QVirtuosoResult::data[" << pos() << "]: column" << field << "out of range";
@@ -618,6 +626,10 @@ int QVirtuosoResult::size() const
 QSparqlResultRow QVirtuosoResult::current() const
 {
     QMutexLocker resultLocker(&(d->mutex));
+
+    if (!isValid()) {
+        return QSparqlResultRow();
+    }
 
     if (pos() < 0 || pos() >= d->results.count())
         return QSparqlResultRow();
