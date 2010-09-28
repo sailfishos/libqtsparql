@@ -88,7 +88,6 @@ public:
     QString password() const;
     QString hostName() const;
     QString path() const;
-    QString driverName() const;
     int port() const;
 
 #ifndef QT_NO_NETWORKPROXY
