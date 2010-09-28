@@ -53,16 +53,14 @@ class QSparqlBindingPrivate
 public:
     enum NodeType { Invalid, Uri, Literal, Blank };
                          
-    QSparqlBindingPrivate(const QString &name,
-              QVariant::Type type) :
-        ref(1), nm(name), type(type), nodetype(QSparqlBindingPrivate::Invalid)
+    QSparqlBindingPrivate(const QString &name) :
+        ref(1), nm(name), nodetype(QSparqlBindingPrivate::Invalid)
     {
     }
 
     QSparqlBindingPrivate(const QSparqlBindingPrivate &other)
         : ref(1),
           nm(other.nm),
-          type(other.type),
           dataType(other.dataType),
           lang(other.lang),
           nodetype(other.nodetype)
@@ -70,15 +68,13 @@ public:
 
     bool operator==(const QSparqlBindingPrivate& other) const
     {
-        return (type == other.type
-                && nodetype == other.nodetype
+        return (nodetype == other.nodetype
                 && dataType == other.dataType
                 && lang == other.lang);
     }
 
     QAtomicInt ref;
     QString nm;
-    QVariant::Type type;
     QUrl dataType;
     QString lang;
     NodeType nodetype;
@@ -135,9 +131,9 @@ public:
 
     \sa setDataTypeUri() setLanguageTag() setBlankNodeLabel()
 */
-QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
+QSparqlBinding::QSparqlBinding(const QString& name)
 {
-    d = new QSparqlBindingPrivate(name, type);
+    d = new QSparqlBindingPrivate(name);
 }
 
 /*!
@@ -147,7 +143,7 @@ QSparqlBinding::QSparqlBinding(const QString& name, QVariant::Type type)
 */
 QSparqlBinding::QSparqlBinding(const QString& name, const QVariant& value)
 {
-    d = new QSparqlBindingPrivate(name, value.type());
+    d = new QSparqlBindingPrivate(name);
     setValue(value);
 }
 
@@ -584,7 +580,7 @@ QString QSparqlBinding::languageTag() const
 */
 bool QSparqlBinding::isValid() const
 {
-    return d->type != QVariant::Invalid;
+    return val.type() != QVariant::Invalid;
 }
 
 #ifndef QT_NO_DEBUG_STREAM

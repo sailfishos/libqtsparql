@@ -58,8 +58,7 @@ class QSparqlBindingPrivate;
 class Q_SPARQL_EXPORT QSparqlBinding
 {
 public:
-    QSparqlBinding(const QString& name = QString(),
-              QVariant::Type type = QVariant::Invalid);
+    QSparqlBinding(const QString& name = QString());
     QSparqlBinding(const QString& name, const QVariant& value);
 
     QSparqlBinding(const QSparqlBinding& other);
