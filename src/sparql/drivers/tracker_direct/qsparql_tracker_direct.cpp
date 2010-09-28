@@ -96,7 +96,6 @@ async_cursor_next_callback( GObject *source_object,
     }
 
     for (int i = 0; i < n_columns; i++) {
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, 0));
         QSparqlBinding binding;
         binding.setName(data->columnNames[i]);
         TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(data->cursor, i);
