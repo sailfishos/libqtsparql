@@ -1,0 +1,8 @@
+<aegis>
+   <request>
+      <credential name="TrackerReadAccess" />
+      <credential name="TrackerWriteAccess" />
+      <for path="/usr/lib/libqtsparql-tests/tst_qsparql_tracker" />
+      <for path="/usr/lib/libqtsparql-tests/tst_qsparql_tracker_signals" />
+   </request>
+</aegis>

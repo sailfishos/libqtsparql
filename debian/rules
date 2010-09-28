@@ -28,11 +28,6 @@ install: build
 	dh_installdirs
 	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
 
-	# copying docs
-	mkdir -p `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
-	rm -rf `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc/html
-	cp -a doc/html `pwd`/debian/tmp/usr/share/doc/libqtsparql-doc
-
 	# copying headers from include/ (created by syncqt)
 	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
 
@@ -79,6 +74,7 @@ binary-arch: build install
 	dh_gencontrol -a
 	dh_md5sums -a
 	dh_builddeb -a
+	aegis-deb-add -control debian/libqtsparql-tests/DEBIAN/control .. debian/libqtsparql-tests.aegis=_aegis
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install

@@ -2,7 +2,11 @@ Source: libqtsparql
 Section: libs
 Priority: optional
 Maintainer: Marja Hassinen <marja.hassinen@nokia.com>
-Build-Depends: debhelper (>= 5), libqt4-dev (>= 4.7), doxygen, libtracker-sparql-dev
+Build-Depends: debhelper (>= 5),
+               libqt4-dev (>= 4.7),
+               doxygen,
+               libtracker-sparql-dev,
+               aegis-builder (>= 1.4)
 Standards-Version: 3.8.0
 
 Package: libqtsparql0
@@ -26,7 +30,7 @@ Description: Library for accessing RDF stores.
 
 Package: libqtsparql-doc
 Section: doc
-Architecture: any
+Architecture: all
 Description: Library for accessing RDF stores.
  .
  This package contains the documentation.

@@ -78,6 +78,10 @@ private:
     friend class QTrackerChangeNotifierPrivate;
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+Q_EXPORT_SPARQLDRIVER_TRACKER QDebug operator<<(QDebug, const QTrackerChangeNotifier::Quad &);
+#endif
+
 QT_END_NAMESPACE
 
 QT_END_HEADER

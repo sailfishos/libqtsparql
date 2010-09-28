@@ -8,7 +8,7 @@ SUBDIRS       = simple \
                 asynctracker \
                 contacts
 
-# install-- FIXME
-sources.files = sparql.pro README
-sources.path = $$[QT_INSTALL_EXAMPLES]/sparql
-INSTALLS += sources
+# install -- FIXME: install + package examples later
+#sources.files = sparql.pro README
+#sources.path = $$[QT_INSTALL_EXAMPLES]/sparql
+#INSTALLS += sources

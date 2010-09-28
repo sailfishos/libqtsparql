@@ -83,6 +83,7 @@ public slots:
 
 private slots:
     void contact_added();
+    void contact_deleted();
 private:
     QString className;
     int typeId, personContactId, nameGivenId;
@@ -120,10 +121,16 @@ void tst_QSparqlTrackerSignals::initTestCase()
         typeId = r->value(1).toInt();
         personContactId = r->value(2).toInt();
         nameGivenId = r->value(3).toInt();
+        // Useful prints for debugging
+        //qDebug() << "PersonContact" << personContactId;
+        //qDebug() << "type" << typeId;
+        //qDebug() << "nameGiven" << nameGivenId;
     }
     else
         qFatal("Initial query: not enough data");
     delete r;
+    // For QSignalSpy
+    qRegisterMetaType<QList<QTrackerChangeNotifier::Quad> >("QList<QTrackerChangeNotifier::Quad>");
 }
 
 void tst_QSparqlTrackerSignals::cleanupTestCase()
@@ -144,9 +151,6 @@ Q_DECLARE_METATYPE(QList<QTrackerChangeNotifier::Quad>)
 void tst_QSparqlTrackerSignals::contact_added()
 {
     QTrackerChangeNotifier notifier(className);
-
-    // For QSignalSpy
-    qRegisterMetaType<QList<QTrackerChangeNotifier::Quad> >("QList<QTrackerChangeNotifier::Quad>");
 
     QSignalSpy spy(&notifier,
                    SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
@@ -171,6 +175,8 @@ void tst_QSparqlTrackerSignals::contact_added()
     QVERIFY(!r->hasError());
     r->waitForFinished();
     QVERIFY(!r->hasError());
+    delete r;
+    r = 0;
 
     // And process the events so that
     // 1) tracker sends the signal through D-Bus
@@ -208,6 +214,107 @@ void tst_QSparqlTrackerSignals::contact_added()
         if (receiver.inserts[i].predicate == typeId && receiver.inserts[i].object == personContactId)
             typeFound = true;
         else if (receiver.inserts[i].predicate == nameGivenId && receiver.inserts[i].object == 0)
+            nameFound = true;
+    }
+    QVERIFY(typeFound);
+    QVERIFY(nameFound);
+}
+
+void tst_QSparqlTrackerSignals::contact_deleted()
+{
+    // First insert some data so that we can delete it. We need to make sure
+    // that it was properly inserted (and the appropriate signal was sent)
+    // before starting the real test.
+    QTrackerChangeNotifier dummyNotifier(className);
+    QSignalSpy dummySpy(&dummyNotifier,
+                        SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
+                                       QList<QTrackerChangeNotifier::Quad>)));
+
+    QSparqlQuery q("insert { <uri.to.delete> a nco:PersonContact ;"
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven \"temp.name\" .}", QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QVERIFY(!r->hasError());
+    r->waitForFinished();
+    QVERIFY(!r->hasError());
+    delete r;
+    r = 0;
+
+    QTime timer;
+    timer.start();
+    while(timer.elapsed() < 5000 && !dummySpy.count())
+        QCoreApplication::processEvents();
+
+    // Then start listening to changes
+    QTrackerChangeNotifier notifier(className);
+    QSignalSpy spy(&notifier,
+                   SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
+                                  QList<QTrackerChangeNotifier::Quad>)));
+
+    // TODO: also read the parameters from the spy.
+    Receiver receiver;
+    QObject::connect(&notifier,
+                     SIGNAL(changed(QList<QTrackerChangeNotifier::Quad>,
+                                    QList<QTrackerChangeNotifier::Quad>)),
+                     &receiver,
+                     SLOT(changed(QList<QTrackerChangeNotifier::Quad>,
+                                  QList<QTrackerChangeNotifier::Quad>)));
+
+    // Then do the deletion. Delete in this order so that we will get all the
+    // triples in the delete array. If we delete "<uri.to.delete> a
+    // nco:PersonContact" first, we'll get only that triple.
+    QSparqlQuery q2("delete { <uri.to.delete> nie:isLogicalPartOf ?lp ;"
+                   "nco:nameGiven ?n ;"
+                    "a nco:PersonContact .} where"
+                   "{ <uri.to.delete> nie:isLogicalPartOf ?lp ;"
+                   "nco:nameGiven ?n .}", QSparqlQuery::DeleteStatement);
+
+    r = conn.exec(q2);
+    QVERIFY(r != 0);
+    QVERIFY(!r->hasError());
+    r->waitForFinished();
+    QVERIFY(!r->hasError());
+    delete r;
+
+    // And process the events so that
+    // 1) tracker sends the signal through D-Bus
+    // 2) QTrackerChangeNotifier gets the signal and sends it to the spy
+
+    timer.start();
+    while(timer.elapsed() < 5000 && !spy.count())
+        QCoreApplication::processEvents();
+
+    QCOMPARE(spy.count(), 1);
+
+    //qDebug() << receiver.inserts;
+    //qDebug() << receiver.deletes;
+
+    QVERIFY(receiver.deletes.size() == 3);
+    QVERIFY(receiver.inserts.size() == 0);
+
+
+    // The triples that are deleted:
+    // someid rdf:type nco:PersonContact
+    // someid nie:isLogicalPartOf testcontext
+    // someid nameGiven 0
+
+    // The graph is the default graph
+    QCOMPARE(receiver.deletes[0].graph, 0);
+    QCOMPARE(receiver.deletes[1].graph, 0);
+    QCOMPARE(receiver.deletes[2].graph, 0);
+
+    // The someid is the same for all rows
+    QCOMPARE(receiver.deletes[0].subject, receiver.deletes[1].subject);
+    QCOMPARE(receiver.deletes[0].subject, receiver.deletes[2].subject);
+
+    bool typeFound = false;
+    bool nameFound = false;
+    for (int i=0; i<3; ++i) {
+        if (receiver.deletes[i].predicate == typeId && receiver.deletes[i].object == personContactId)
+            typeFound = true;
+        else if (receiver.deletes[i].predicate == nameGivenId && receiver.deletes[i].object == 0)
             nameFound = true;
     }
     QVERIFY(typeFound);
