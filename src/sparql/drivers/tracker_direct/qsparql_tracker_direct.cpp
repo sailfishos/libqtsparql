@@ -89,11 +89,16 @@ async_cursor_next_callback( GObject *source_object,
     QSparqlResultRow resultRow;
     gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
 
+    if (data->columnNames.empty()) {
+        for (int i = 0; i < n_columns; i++) {
+            data->columnNames.append(QString::fromUtf8(tracker_sparql_cursor_get_variable_name(data->cursor, i)));
+        }
+    }
+
     for (int i = 0; i < n_columns; i++) {
-        QString name = QString::fromUtf8(tracker_sparql_cursor_get_variable_name(data->cursor, i));
         QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, 0));
         QSparqlBinding binding;
-        binding.setName(name);
+        binding.setName(data->columnNames[i]);
         TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(data->cursor, i);
 
         switch (type) {

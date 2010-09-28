@@ -45,7 +45,7 @@
 #include <qsparqlquery.h>
 #include <qsparqlerror.h>
 
-#include <QtCore/QList>
+#include <QtCore/QVector>
 #include <QtCore/QEventLoop>
 
 // The gdbusintrospection.h header has a variable called 'signals', which
@@ -80,9 +80,10 @@ public:
     void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
     void dataReady(int totalCount);
-    
+
     TrackerSparqlCursor * cursor;
-    QList<QSparqlResultRow> results;
+    QVector<QString> columnNames;
+    QVector<QSparqlResultRow> results;
     bool isFinished;
     QEventLoop *loop;
 
