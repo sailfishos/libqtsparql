@@ -1,13 +1,7 @@
 TARGET	 = sparqlresultslist
-
-# HEADERS		= ../../../sparql/models/qsparqlconnectionoptionswrapper_p.h \
-#                 ../../../sparql/models/qsparqlresultslist_p.h
-
 SOURCES		= main.cpp
 
-qdeclarativesources.files += qmldir
-
-LIBS += -lQtSparql
+DESTDIR = $$QT_BUILD_TREE/imports/QSparql
+target.path = $$QTSPARQL_INSTALL_LIBS/imports/QSparql
 
 include(../declarativebase.pri)
-QT += declarative

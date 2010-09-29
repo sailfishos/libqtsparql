@@ -1,17 +1,16 @@
 #include <qdeclarative.h>
 #include <QDeclarativeView>
+#include <QDeclarativeEngine>
 #include <QApplication>
-#include "sparqlresultmodel.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    app.addLibraryPath("../../../../qsparql/plugins");
-
-    qmlRegisterType<SparqlResultModel>("Test", 1, 0, "SparqlModel");
+    app.addLibraryPath("../../../plugins");
 
     QDeclarativeView view;
-    view.setSource(QUrl::fromLocalFile("/home/rdale/src/qsparql/examples/sparql/qmlquerymodel/albums.qml"));
+    view.engine()->addImportPath("../../../imports");
+    view.setSource(QUrl::fromLocalFile("albums.qml"));
     view.show();
     return app.exec();
 }
