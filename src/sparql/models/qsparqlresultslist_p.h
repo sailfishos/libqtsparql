@@ -50,7 +50,7 @@
 #include <QtSparql/QSparqlConnectionOptions>
 #include <QtSparql/QSparqlConnection>
 
-#include "qsparqlconnectionoptionswrapper.h"
+#include "qsparqlconnectionoptionswrapper_p.h"
 
 QT_BEGIN_HEADER
 

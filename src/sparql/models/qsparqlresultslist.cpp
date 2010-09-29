@@ -43,7 +43,7 @@
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
 
-#include "qsparqlresultslist.h"
+#include "qsparqlresultslist_p.h"
 
 QSparqlResultsList::QSparqlResultsList(QObject *parent) :
     QAbstractListModel(parent),
@@ -51,14 +51,12 @@ QSparqlResultsList::QSparqlResultsList(QObject *parent) :
 {
 }
 
-int
-QSparqlResultsList::rowCount(const QModelIndex &) const
+int QSparqlResultsList::rowCount(const QModelIndex &) const
 {
     return m_result->size();
 }
 
-QVariant
-QSparqlResultsList::data(const QModelIndex &index, int role) const
+QVariant QSparqlResultsList::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
@@ -73,14 +71,19 @@ QSparqlResultsList::data(const QModelIndex &index, int role) const
         return row.value(i);
 }
 
-void
-QSparqlResultsList::reload()
+void QSparqlResultsList::reload()
 {
     if (m_options == 0 || m_query.isEmpty())
         return;
 
-    if (m_result != 0)
-        delete m_result;
+    if (m_result != 0) {
+        if (!m_result->isFinished())
+            return;
+        else
+            delete m_result;
+    }
+
+    delete m_connection;
 
     /* Create and run the sparql query */
     m_connection = new QSparqlConnection(m_options->driverName(), m_options->options());
@@ -137,15 +140,3 @@ QSparqlResultsList::setQuery(const QString &query)
     m_query = query;
     reload();
 }
-
-class SparqlPlugin : public QDeclarativeExtensionPlugin
-{
-public:
-    void registerTypes(const char *uri)
-    {
-        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
-        qmlRegisterType<QSparqlConnectionOptionsWrapper>(uri, 0, 1, "SparqlConnectionOptions");
-    }
-};
-
-Q_EXPORT_PLUGIN2(sparqlplugin, SparqlPlugin);

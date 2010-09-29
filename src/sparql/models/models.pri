@@ -1,14 +1,8 @@
 HEADERS +=      models/qsparqlquerymodel.h \
-                models/qsparqlquerymodel_p.h \
-                models/qsparqlconnectionoptionswrapper.h \
-                models/qsparqlresultslist.h
+                models/qsparqlquerymodel_p.h
 
 install_headers.files += \
-                models/qsparqlquerymodel.h \
-                models/qsparqlconnectionoptionswrapper.h \
-                models/qsparqlresultslist.h
+                models/qsparqlquerymodel.h
 
-SOURCES +=      models/qsparqlquerymodel.cpp \
-		models/qsparqlconnectionoptionswrapper.cpp \
-		models/qsparqlresultslist.cpp
+SOURCES +=      models/qsparqlquerymodel.cpp
 

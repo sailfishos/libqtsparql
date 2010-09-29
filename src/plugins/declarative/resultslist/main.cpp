@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (ivan.frade@nokia.com)
 **
-** This file is part of the QtSparql module (not yet part of the Qt Toolkit).
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -39,79 +39,23 @@
 **
 ****************************************************************************/
 
-#include "qsparqlconnectionoptionswrapper_p.h"
+#include <QtDeclarative/QDeclarativeExtensionPlugin>
+#include <QtDeclarative/qdeclarative.h>
 
-QSparqlConnectionOptions QSparqlConnectionOptionsWrapper::options() const
-{
-    return opts;
-}
+#include <QtSparql/private/qsparqlresultslist_p.h>
 
-QString QSparqlConnectionOptionsWrapper::databaseName() const
-{
-    return opts.databaseName();
-}
+QT_BEGIN_NAMESPACE
 
-void QSparqlConnectionOptionsWrapper::setDatabaseName(const QString &databaseName)
+class SparqlResultsListPlugin : public QDeclarativeExtensionPlugin
 {
-    opts.setDatabaseName(databaseName);
-}
+public:
+    void registerTypes(const char *uri)
+    {
+        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
+        qmlRegisterType<QSparqlConnectionOptionsWrapper>(uri, 0, 1, "SparqlConnectionOptions");
+    }
+};
 
-QString QSparqlConnectionOptionsWrapper::userName() const
-{
-    return opts.hostName();
-}
+Q_EXPORT_PLUGIN2(sparqlresultslist, SparqlResultsListPlugin);
 
-void QSparqlConnectionOptionsWrapper::setUserName(const QString &userName)
-{
-    opts.setUserName(userName);
-}
-
-QString QSparqlConnectionOptionsWrapper::password() const
-{
-    return opts.password();
-}
-
-void QSparqlConnectionOptionsWrapper::setPassword(const QString &password)
-{
-    opts.setPassword(password);
-}
-
-QString QSparqlConnectionOptionsWrapper::hostName() const
-{
-    return opts.hostName();
-}
-
-void QSparqlConnectionOptionsWrapper::setHostName(const QString &hostName)
-{
-    opts.setHostName(hostName);
-}
-
-QString QSparqlConnectionOptionsWrapper::path() const
-{
-    return opts.path();
-}
-
-void QSparqlConnectionOptionsWrapper::setPath(const QString &path)
-{
-    opts.setPath(path);
-}
-
-QString QSparqlConnectionOptionsWrapper::driverName() const
-{
-    return driver;
-}
-
-void QSparqlConnectionOptionsWrapper::setDriverName(const QString &name)
-{
-    driver = name;
-}
-
-int QSparqlConnectionOptionsWrapper::port() const
-{
-    return opts.port();
-}
-
-void QSparqlConnectionOptionsWrapper::setPort(int port)
-{
-    opts.setPort(port);
-}
+QT_END_NAMESPACE
