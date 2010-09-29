@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qglobal.h>
+
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
 
@@ -51,6 +53,7 @@ class SparqlResultsListPlugin : public QDeclarativeExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
+        Q_ASSERT(uri == QLatin1String("QSparql"));
         qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
         qmlRegisterType<QSparqlConnectionOptionsWrapper>(uri, 0, 1, "SparqlConnectionOptions");
     }

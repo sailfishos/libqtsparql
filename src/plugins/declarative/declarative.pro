@@ -1,9 +1,9 @@
 TEMPLATE = subdirs
 
-SUBDIRS += resultslist
+SUBDIRS += sparqlresultslist
 
 coverage {
 	coverage.CONFIG = recursive
-	# coverage.recurse = resultslist
+	# coverage.recurse = sparqlresultslist
 	QMAKE_EXTRA_TARGETS += coverage
 }
