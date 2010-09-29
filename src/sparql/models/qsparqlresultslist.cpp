@@ -40,8 +40,6 @@
 ****************************************************************************/
 
 #include <QtCore/QDebug>
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
-#include <QtDeclarative/qdeclarative.h>
 
 #include "qsparqlresultslist_p.h"
 
