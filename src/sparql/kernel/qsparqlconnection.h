@@ -76,6 +76,7 @@ public:
     bool hasFeature(Feature feature) const;
 
     void addPrefix(const QString& prefix, const QUrl& uri);
+    void clearPrefixes();
 
     static QStringList drivers();
 

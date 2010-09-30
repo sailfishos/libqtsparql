@@ -89,6 +89,7 @@ public:
 
     void addPrefix(const QString& prefix, const QUrl& uri);
     QString prefixes() const;
+    void clearPrefixes();
 
 protected:
     virtual void setOpen(bool o);
