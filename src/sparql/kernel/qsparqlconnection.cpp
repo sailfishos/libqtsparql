@@ -401,6 +401,11 @@ bool QSparqlConnection::isValid() const
     return d->driver && d->driver != d->shared_null()->driver;
 }
 
+/*!
+    Adds a prefix/uri pair to the connection. Each SPARQL query made
+    with the connection will have the prefixes prepended to it.
+*/
+
 void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
 {
     d->driver->addPrefix(prefix, uri);

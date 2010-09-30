@@ -271,10 +271,23 @@ QVariant QSparqlDriver::handle() const
     return QVariant();
 }
 
+/*!
+    Adds a prefix/uri pair to the connection. Each SPARQL query made
+    with the connection will have the prefixes prepended to it.
+
+    \sa prefixes()
+*/
 void QSparqlDriver::addPrefix(const QString& prefix, const QUrl& uri)
 {
     d->prefixes.insert(prefix, uri);
 }
+
+/*!
+    Returns the text of the prefix/uri pairs added with addPrefix(),
+    in a form suitable for prepending to a SPARQL query.
+
+    \sa addPrefix()
+*/
 
 QString QSparqlDriver::prefixes() const
 {
