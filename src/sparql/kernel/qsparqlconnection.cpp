@@ -171,6 +171,10 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
     if (type == QLatin1String("QTRACKER"))
         driver = new QTrackerDriver();
 #endif
+#ifdef QT_SPARQL_TRACKER_DIRECT
+    if (type == QLatin1String("QTRACKER_DIRECT"))
+        driver = new QTrackerDirectDriver();
+#endif
 #ifdef QT_SPARQL_ENDPOINT
     if (type == QLatin1String("QSPARQL_ENDPOINT"))
         driver = new EndpointDriver();
