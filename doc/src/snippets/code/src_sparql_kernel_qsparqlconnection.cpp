@@ -71,7 +71,7 @@ if (!conn.isValid())
 // SPARQL endpoint connection
 QSparqlConnectionOptions options;
 options.setHostName("dbpedia.org");
-QSparqlConnection conn("QENDPOINT", options);
+QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 if (!conn.isValid())
     ...
 }

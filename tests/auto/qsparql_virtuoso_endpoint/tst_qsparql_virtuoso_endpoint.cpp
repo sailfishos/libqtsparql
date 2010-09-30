@@ -108,7 +108,7 @@ void tst_QSparqlVirtuosoEndpoint::query_contacts()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
@@ -142,7 +142,7 @@ void tst_QSparqlVirtuosoEndpoint::construct_contacts()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
@@ -173,7 +173,7 @@ void tst_QSparqlVirtuosoEndpoint::ask_contact()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
@@ -213,7 +213,7 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     options.setUserName("dba");
     options.setPassword("dba");
     options.setPath("sparql-auth");
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
@@ -279,7 +279,7 @@ void tst_QSparqlVirtuosoEndpoint::query_with_error()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("this is not a valid query");
     QSparqlResult* r = conn.exec(q);
@@ -297,7 +297,7 @@ void tst_QSparqlVirtuosoEndpoint::select_datatypes()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("select * from <http://virtuoso_endpoint/testgraph> where { <thing001> ?p ?o . }");
     QSparqlResult* r = conn.exec(q);
@@ -353,7 +353,7 @@ void tst_QSparqlVirtuosoEndpoint::select_blanknode()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("foaf", QUrl("http://xmlns.com/foaf/0.1/"));
 
     // Example from section 2.10.1 of the SPARQL spec
@@ -377,7 +377,7 @@ void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
     conn.addPrefix("foaf", QUrl("http://xmlns.com/foaf/0.1/"));
     conn.addPrefix("vcard", QUrl("http://www.w3.org/2001/vcard-rdf/3.0#"));
 
@@ -474,7 +474,7 @@ void tst_QSparqlVirtuosoEndpoint::iterate_on_dataready()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     // Example from section 2.10.1 of the SPARQL spec
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");

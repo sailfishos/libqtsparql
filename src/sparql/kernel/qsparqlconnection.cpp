@@ -172,7 +172,7 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
         driver = new QTrackerDriver();
 #endif
 #ifdef QT_SPARQL_ENDPOINT
-    if (type == QLatin1String("QENDPOINT"))
+    if (type == QLatin1String("QSPARQL_ENDPOINT"))
         driver = new EndpointDriver();
 #endif
 #ifdef QT_SPARQL_VIRTUOSO
@@ -428,7 +428,7 @@ QStringList QSparqlConnection::drivers()
     list << QLatin1String("QTRACKER_DIRECT");
 #endif
 #ifdef QT_SPARQL_ENDPOINT
-    list << QLatin1String("QENDPOINT");
+    list << QLatin1String("QSPARQL_ENDPOINT");
 #endif
 
 #if !defined(QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)

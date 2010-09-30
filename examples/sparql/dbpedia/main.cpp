@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     QSparqlConnectionOptions options;
     options.setHostName("dbpedia.org");
-    QSparqlConnection connection("QENDPOINT", options);
+    QSparqlConnection connection("QSPARQL_ENDPOINT", options);
 
     QWidget mainWidget;
     SparqlQueryText queryText(connection);

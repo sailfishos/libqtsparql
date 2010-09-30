@@ -99,7 +99,7 @@ void tst_QSparqlEndpoint::query_places_of_birth()
 {
     QSparqlConnectionOptions options;
     options.setHostName("dbpedia.org");
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("SELECT DISTINCT ?Object ?PlaceOfBirth "
                    "WHERE { "
@@ -128,7 +128,7 @@ void tst_QSparqlEndpoint::construct_current_members()
 {
     QSparqlConnectionOptions options;
     options.setHostName("dbpedia.org");
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("CONSTRUCT { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object } "
                    "WHERE { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object . }",
@@ -165,7 +165,7 @@ void tst_QSparqlEndpoint::ask_current_member()
 {
     QSparqlConnectionOptions options;
     options.setHostName("dbpedia.org");
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery add1("ASK { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> <http://dbpedia.org/resource/Ringo_Starr> . }",
                      QSparqlQuery::AskStatement);
@@ -195,7 +195,7 @@ void tst_QSparqlEndpoint::query_with_error()
 {
     QSparqlConnectionOptions options;
     options.setHostName("dbpedia.org");
-    QSparqlConnection conn("QENDPOINT", options);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("this is not a valid query");
     QSparqlResult* r = conn.exec(q);

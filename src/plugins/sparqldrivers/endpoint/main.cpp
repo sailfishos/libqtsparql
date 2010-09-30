@@ -45,37 +45,37 @@
 
 QT_BEGIN_NAMESPACE
 
-class QENDPOINTDriverPlugin : public QSparqlDriverPlugin
+class QSPARQL_ENDPOINTDriverPlugin : public QSparqlDriverPlugin
 {
 public:
-    QENDPOINTDriverPlugin();
+    QSPARQL_ENDPOINTDriverPlugin();
 
     QSparqlDriver* create(const QString &);
     QStringList keys() const;
 };
 
-QENDPOINTDriverPlugin::QENDPOINTDriverPlugin()
+QSPARQL_ENDPOINTDriverPlugin::QSPARQL_ENDPOINTDriverPlugin()
     : QSparqlDriverPlugin()
 {
 }
 
-QSparqlDriver* QENDPOINTDriverPlugin::create(const QString &name)
+QSparqlDriver* QSPARQL_ENDPOINTDriverPlugin::create(const QString &name)
 {
-    if (name == QLatin1String("QENDPOINT")) {
+    if (name == QLatin1String("QSPARQL_ENDPOINT")) {
         EndpointDriver* driver = new EndpointDriver();
         return driver;
     }
     return 0;
 }
 
-QStringList QENDPOINTDriverPlugin::keys() const
+QStringList QSPARQL_ENDPOINTDriverPlugin::keys() const
 {
     QStringList l;
-    l << QLatin1String("QENDPOINT");
+    l << QLatin1String("QSPARQL_ENDPOINT");
     return l;
 }
 
-Q_EXPORT_STATIC_PLUGIN(QENDPOINTDriverPlugin)
-Q_EXPORT_PLUGIN2(qsparqlendpoint, QENDPOINTDriverPlugin)
+Q_EXPORT_STATIC_PLUGIN(QSPARQL_ENDPOINTDriverPlugin)
+Q_EXPORT_PLUGIN2(qsparqlendpoint, QSPARQL_ENDPOINTDriverPlugin)
 
 QT_END_NAMESPACE

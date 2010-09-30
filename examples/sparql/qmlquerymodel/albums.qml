@@ -6,7 +6,7 @@ ListView {
 
     model: SparqlResultsList {
         options: SparqlConnectionOptions {
-            driverName: "QENDPOINT"
+            driverName: "QSPARQL_ENDPOINT"
             hostName: "dbpedia.org"
         }
 

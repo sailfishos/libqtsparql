@@ -74,7 +74,7 @@ void QSparqlConnection_snippets()
 
 void QSparqlBinding_snippets()
 {
-    QSparqlConnection connection("QENDPOINT");
+    QSparqlConnection connection("QSPARQL_ENDPOINT");
 #if 0
     {
 //! [2]
@@ -109,7 +109,7 @@ void doSomething(const QString &)
 
 void QSparqlQuery_snippets()
 {
-    QSparqlConnection connection("QENDPOINT");
+    QSparqlConnection connection("QSPARQL_ENDPOINT");
     {
     // typical loop
 //! [7]
@@ -161,7 +161,7 @@ void QSparqlQuery_snippets()
 
 void QSparqlQueryModel_snippets()
 {
-    QSparqlConnection connection("QENDPOINT");
+    QSparqlConnection connection("QSPARQL_ENDPOINT");
     {
 //! [16]
     QSparqlQueryModel *model = new QSparqlQueryModel;

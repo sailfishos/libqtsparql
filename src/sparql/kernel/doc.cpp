@@ -36,7 +36,7 @@
     E.g., to use DBpedia:
     \dontinclude dbpedia/main.cpp
     \skip QSparqlConnectionOptions
-    \until QENDPOINT
+    \until QSPARQL_ENDPOINT
 
     - Construct a QSparqlQuery with the SPARQL query string.  Specify the query
       type, if needed.

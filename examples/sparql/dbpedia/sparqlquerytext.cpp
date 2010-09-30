@@ -48,6 +48,7 @@
 SparqlQueryText::SparqlQueryText(QSparqlConnection& conn, QWidget *parent)
     : QTextEdit(parent), connection(conn)
 {
+    connection.addPrefix("foaf", QUrl::fromEncoded("http://xmlns.com/foaf/0.1/"));
     setText(QLatin1String("SELECT ?Predicate ?Object \nWHERE { <http://dbpedia.org/resource/The_Beatles> ?Predicate ?Object . }"));
     model = new QSparqlQueryModel();
 
