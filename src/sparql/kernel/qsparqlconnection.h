@@ -75,6 +75,8 @@ public:
     QString driverName() const;
     bool hasFeature(Feature feature) const;
 
+    void addPrefix(const QString& prefix, const QUrl& uri);
+
     static QStringList drivers();
 
 private:

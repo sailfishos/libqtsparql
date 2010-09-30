@@ -43,11 +43,15 @@
 #ifndef QSPARQLDRIVER_H
 #define QSPARQLDRIVER_H
 
+#include <QtCore/qurl.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qstringlist.h>
+
 #include <QtSparql/qsparqlconnection.h>
 #include <QtSparql/qsparqlconnectionoptions.h>
 #include <QtSparql/qsparqlquery.h>
 
-#include <QtCore/qobject.h>
 
 QT_BEGIN_HEADER
 
@@ -82,6 +86,9 @@ public:
     virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType) = 0;
 
     virtual bool open(const QSparqlConnectionOptions& options = QSparqlConnectionOptions()) = 0;
+
+    void addPrefix(const QString& prefix, const QUrl& uri);
+    QStringList prefixes() const;
 
 protected:
     virtual void setOpen(bool o);

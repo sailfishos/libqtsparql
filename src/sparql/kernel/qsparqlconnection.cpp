@@ -401,6 +401,11 @@ bool QSparqlConnection::isValid() const
     return d->driver && d->driver != d->shared_null()->driver;
 }
 
+void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
+{
+    d->driver->addPrefix(prefix, uri);
+}
+
 QStringList QSparqlConnection::drivers()
 {
     QStringList list;

@@ -41,7 +41,9 @@
 
 #include "qsparqldriver_p.h"
 
-#include "qdatetime.h"
+#include <QtCore/qmap.h>
+#include <QtCore/qdatetime.h>
+
 #include "qsparqlerror.h"
 #include "qsparqlbinding.h"
 
@@ -59,6 +61,7 @@ public:
     uint isOpen : 1;
     uint isOpenError : 1;
     QSparqlError error;
+    QMap<QString, QUrl> prefixes;
 };
 
 inline QSparqlDriverPrivate::QSparqlDriverPrivate()
@@ -267,5 +270,26 @@ QVariant QSparqlDriver::handle() const
 {
     return QVariant();
 }
+
+void QSparqlDriver::addPrefix(const QString& prefix, const QUrl& uri)
+{
+    d->prefixes.insert(prefix, uri);
+}
+
+QStringList QSparqlDriver::prefixes() const
+{
+    QStringList result;
+    QMap<QString, QUrl>::const_iterator i = d->prefixes.constBegin();
+
+    while (i != d->prefixes.constEnd()) {
+        QString prefix = QString::fromLatin1("PREFIX %1: <%2>\n");
+        result.append(prefix.arg(i.key()).arg(QString::fromUtf8(i.value().toEncoded())));
+
+        ++i;
+    }
+
+    return result;
+}
+
 
 QT_END_NAMESPACE
