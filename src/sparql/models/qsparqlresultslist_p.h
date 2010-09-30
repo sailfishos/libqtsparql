@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef SPARQLRESULTMODEL_H
-#define SPARQLRESULTMODEL_H
+#ifndef QSPARQLRESULTSLIST_H
+#define QSPARQLRESULTSLIST_H
 
 #include <QAbstractListModel>
 
@@ -92,4 +92,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // SPARQLRESULTMODEL_H
+#endif // QSPARQLRESULTSLIST_H

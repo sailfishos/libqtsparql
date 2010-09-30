@@ -83,7 +83,6 @@ void QSparqlResultsList::reload()
 
     delete m_connection;
 
-    /* Create and run the sparql query */
     m_connection = new QSparqlConnection(m_options->driverName(), m_options->options());
     m_result = m_connection->exec(QSparqlQuery(m_query));
     connect(m_result, SIGNAL(finished()), this, SLOT(queryFinished()));
@@ -97,7 +96,7 @@ void QSparqlResultsList::queryFinished()
     if (m_result->first()) {
         QSparqlResultRow resultRow = m_result->current();
 
-        // Create two set of declarative variables from the variable names used
+        // Create two sets of declarative variables from the variable names used
         // in the select statement
         // 'foo' is just a literal like 1234, but '$foo' is "1234"^^xsd:integer
         // 'bar' is a string 'http://www.w3.org/2002/07/owl#sameAs', but '$bar'
