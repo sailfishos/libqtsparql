@@ -72,7 +72,7 @@ public:
 
     QVariant handle() const;
     // TODO: this should be removed
-    bool exec(const QString& query, QSparqlQuery::StatementType type);
+    bool exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes);
 
     QSparqlBinding binding(int field) const;
     QVariant value(int field) const;

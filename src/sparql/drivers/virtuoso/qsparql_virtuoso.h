@@ -89,7 +89,7 @@ public:
     virtual ~QVirtuosoResult();
 
     QVariant handle() const;
-    void exec(const QString& query, QSparqlQuery::StatementType type);
+    void exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes);
     bool exec();
 
     bool boolValue() const;

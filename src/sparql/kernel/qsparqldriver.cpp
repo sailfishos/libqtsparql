@@ -276,9 +276,9 @@ void QSparqlDriver::addPrefix(const QString& prefix, const QUrl& uri)
     d->prefixes.insert(prefix, uri);
 }
 
-QStringList QSparqlDriver::prefixes() const
+QString QSparqlDriver::prefixes() const
 {
-    QStringList result;
+    QString result;
     QMap<QString, QUrl>::const_iterator i = d->prefixes.constBegin();
 
     while (i != d->prefixes.constEnd()) {

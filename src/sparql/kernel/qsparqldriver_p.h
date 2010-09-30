@@ -88,7 +88,7 @@ public:
     virtual bool open(const QSparqlConnectionOptions& options = QSparqlConnectionOptions()) = 0;
 
     void addPrefix(const QString& prefix, const QUrl& uri);
-    QStringList prefixes() const;
+    QString prefixes() const;
 
 protected:
     virtual void setOpen(bool o);

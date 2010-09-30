@@ -109,10 +109,10 @@ void tst_QSparqlVirtuosoEndpoint::query_contacts()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
-    QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   "select ?u ?ng "
+    QSparqlQuery q("select ?u ?ng "
                    "from <http://virtuoso_endpoint/testgraph> "
                    " {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;"
@@ -143,10 +143,10 @@ void tst_QSparqlVirtuosoEndpoint::construct_contacts()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
-    QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   "construct { ?u <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#nameGiven> ?ng } where {?u a nco:PersonContact; "
+    QSparqlQuery q("construct { ?u <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#nameGiven> ?ng } where {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;"
                    "nco:nameGiven ?ng .}", QSparqlQuery::ConstructStatement);
     QSparqlResult* r = conn.exec(q);
@@ -174,10 +174,10 @@ void tst_QSparqlVirtuosoEndpoint::ask_contact()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
-    QSparqlQuery q1("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   " ask from <http://virtuoso_endpoint/testgraph> { "
+    QSparqlQuery q1(" ask from <http://virtuoso_endpoint/testgraph> { "
                    " ?u a nco:PersonContact; "
                    " nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ; "
                    "nco:nameGiven \"name001\" . }", QSparqlQuery::AskStatement);
@@ -190,9 +190,7 @@ void tst_QSparqlVirtuosoEndpoint::ask_contact()
     QCOMPARE(r->boolValue(), true);
     delete r;
 
-    QSparqlQuery q2("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   " ask from <http://virtuoso_endpoint/testgraph> { "
+    QSparqlQuery q2("ask from <http://virtuoso_endpoint/testgraph> { "
                    " ?u a nco:PersonContact; "
                    " nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ; "
                    "nco:nameGiven \"name005\" . }", QSparqlQuery::AskStatement);
@@ -216,10 +214,10 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     options.setPassword("dba");
     options.setPath("sparql-auth");
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
-    QSparqlQuery add("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                     "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                     "insert into <http://virtuoso_endpoint/testgraph> "
+    QSparqlQuery add("insert into <http://virtuoso_endpoint/testgraph> "
                      "{ <addeduri001> a nco:PersonContact; "
                      "nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;"
                      "nco:nameGiven \"addedname001\" . }",
@@ -233,9 +231,7 @@ void tst_QSparqlVirtuosoEndpoint::insert_and_delete_contact()
     delete r;
 
     // Verify that the insertion succeeded
-    QSparqlQuery q("prefix nco: <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#> "
-                   "prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#> "
-                   "select ?u ?ng from <http://virtuoso_endpoint/testgraph> { "
+    QSparqlQuery q("select ?u ?ng from <http://virtuoso_endpoint/testgraph> { "
                    "?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;"
                    "nco:nameGiven ?ng .}");
@@ -358,10 +354,10 @@ void tst_QSparqlVirtuosoEndpoint::select_blanknode()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("foaf", QUrl("http://xmlns.com/foaf/0.1/"));
 
     // Example from section 2.10.1 of the SPARQL spec
-    QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
-                   "SELECT ?a FROM <http://virtuoso_endpoint/testgraph> WHERE {"
+    QSparqlQuery q("SELECT ?a FROM <http://virtuoso_endpoint/testgraph> WHERE {"
                    "?a    foaf:givenname   \"Alice\" ."
                    "?a    foaf:family_name \"Hacker\" . }");
     QSparqlResult* r = conn.exec(q);
@@ -382,12 +378,11 @@ void tst_QSparqlVirtuosoEndpoint::construct_with_blanknodes()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QENDPOINT", options);
+    conn.addPrefix("foaf", QUrl("http://xmlns.com/foaf/0.1/"));
+    conn.addPrefix("vcard", QUrl("http://www.w3.org/2001/vcard-rdf/3.0#"));
 
     // Example from section 2.10.1 of the SPARQL spec
-    QSparqlQuery q("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>"
-                   "PREFIX vcard:   <http://www.w3.org/2001/vcard-rdf/3.0#>"
-
-                    "CONSTRUCT { ?x  vcard:N _:v ."
+    QSparqlQuery q("CONSTRUCT { ?x  vcard:N _:v ."
                     "_:v vcard:givenName ?gname ."
                     "_:v vcard:familyName ?fname } "
                     "FROM <http://virtuoso_endpoint/testgraph>"

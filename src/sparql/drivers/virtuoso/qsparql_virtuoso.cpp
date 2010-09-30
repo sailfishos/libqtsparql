@@ -292,11 +292,11 @@ QVirtuosoResult::~QVirtuosoResult()
 QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
 {
     QVirtuosoResult* res = createResult();
-    res->exec(query, type);
+    res->exec(query, type, prefixes());
     return res;
 }
 
-void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type)
+void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type, const QString& prefixes)
 {
     setQuery(sparqlQuery);
     setStatementType(type);
@@ -307,7 +307,8 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
     // of OpenLink software. It should be in the next release (ie after 6.1.2)
     if (isGraph())
         d->query.append("define output:format \"NT\" ");
-    
+
+    d->query.append(prefixes.toUtf8());
     d->query.append(sparqlQuery.toUtf8());
 
     setPos(QSparql::BeforeFirstRow);

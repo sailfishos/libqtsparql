@@ -394,16 +394,16 @@ QVariant EndpointResult::value(int field) const
 EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::StatementType type)
 {
     EndpointResult* res = createResult();
-    res->exec(query, type);
+    res->exec(query, type, prefixes());
     return res;
 }
 
-bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type)
+bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes)
 {
     cleanup();
 
     QUrl queryUrl(d->driverPrivate->url);
-    queryUrl.addQueryItem(QLatin1String("query"), query);
+    queryUrl.addQueryItem(QLatin1String("query"), prefixes + query);
     setQuery(query);
     setStatementType(type);
 
