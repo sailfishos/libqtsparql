@@ -15,8 +15,10 @@ lessThan(QT_MAJOR_VER, 4) | lessThan(QT_MINOR_VER, 7) {
    error("QtSparql requires Qt 4.7 or newer but Qt $$[QT_VERSION] was detected.")
 }
 
+
 TEMPLATE = subdirs
 
+CONFIG += ordered
 SUBDIRS = src tests examples
 
 xclean.commands = rm -rf lib plugins include
