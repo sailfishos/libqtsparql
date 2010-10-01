@@ -318,7 +318,7 @@ QSparqlResultRow QSparqlNTriples::parseStatement()
     return resultRow;
 }
 
-QList<QSparqlResultRow> QSparqlNTriples::parse() 
+QVector<QSparqlResultRow> QSparqlNTriples::parse()
 {
     skipWhiteSpace();
     

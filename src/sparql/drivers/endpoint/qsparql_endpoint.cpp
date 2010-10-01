@@ -159,7 +159,7 @@ public:
     XmlInputSource *xml;
     XmlResultsParser *parser;
     QXmlSimpleReader *reader;
-    QList<QSparqlResultRow> results;
+    QVector<QSparqlResultRow> results;
     bool isFinished;
     QEventLoop *loop;
     EndpointResult *q;

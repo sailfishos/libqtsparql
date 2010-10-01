@@ -161,7 +161,7 @@ public:
     SQLHDESC hdesc;
 
     QByteArray query;
-    QList<QSparqlResultRow> results;
+    QVector<QSparqlResultRow> results;
     QStringList bindingNames;
     int resultColIdx;
     int disconnectCount;

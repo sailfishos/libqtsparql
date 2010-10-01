@@ -55,7 +55,7 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qlist.h>
+#include <QtCore/qvector.h>
 
 #include <QtSparql/qsparqlbinding.h>
 #include <QtSparql/qsparqlresultrow.h>
@@ -75,12 +75,12 @@ public:
     QString parseLanguageTag();
     QSparqlBinding parseLiteral(QString name); 
     QSparqlResultRow parseStatement();
-    QList<QSparqlResultRow> parse();
-    
+    QVector<QSparqlResultRow> parse();
+
     QByteArray buffer;
     int i;
     int lineNumber;
-    QList<QSparqlResultRow> results;
+    QVector<QSparqlResultRow> results;
 };
 
 QT_END_NAMESPACE
