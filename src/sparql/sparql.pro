@@ -13,13 +13,18 @@ DEFINES += QT_NO_CAST_FROM_ASCII
 install_headers.path = $$QTSPARQL_INSTALL_HEADERS
 install_headers.files = 
 
+install_prf.path = $$[QT_INSTALL_DATA]/mkspecs/features
+install_prf.files = \
+    $$QT_SOURCE_TREE/mkspecs/features/qtsparql.prf
+
 include(kernel/kernel.pri)
 include(drivers/drivers.pri)
 include(models/models.pri)
 
 INSTALLS += \
         target \
-        install_headers
+        install_headers \
+        install_prf
 target.path = $$QTSPARQL_INSTALL_LIBS
 
 QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
