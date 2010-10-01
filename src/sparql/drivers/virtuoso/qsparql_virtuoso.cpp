@@ -578,12 +578,6 @@ bool QVirtuosoResult::fetchGraphResult()
     return true;
 }
 
-bool QVirtuosoResult::boolValue() const
-{
-    QMutexLocker resultLocker(&(d->mutex));
-    return QSparqlResult::boolValue();
-}
-
 QSparqlBinding QVirtuosoResult::binding(int field) const
 {
     QMutexLocker resultLocker(&(d->mutex));

@@ -92,7 +92,6 @@ public:
     void exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes);
     bool exec();
 
-    bool boolValue() const;
     QSparqlBinding binding(int field) const;
     QVariant value(int field) const;
 

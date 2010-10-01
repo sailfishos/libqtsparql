@@ -85,7 +85,7 @@ public:
     virtual QSparqlBinding binding(int i) const = 0;
     virtual QVariant value(int i) const = 0;
     // For ASK results
-    virtual bool boolValue() const;
+    bool boolValue() const;
 
     // Asynchronous operations
     virtual void waitForFinished();
