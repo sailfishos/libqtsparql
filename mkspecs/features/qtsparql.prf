@@ -1,0 +1,4 @@
+INCLUDEPATH += /usr/include/QtSparql
+DEPENDPATH += /usr/include/QtSparql
+LIBS += -L/usr/lib -lQtSparql
+QT += core network
