@@ -102,6 +102,9 @@ public:
     static DriverDict &driverDict();
     static QSparqlDriver* findDriver(const QString& type);
     static QSparqlDriver* findDriverWithFactoryLoader(const QString& type);
+    static void initKeys();
+    static QStringList allKeys;
+    static QHash<QString, QSparqlDriverPlugin*> plugins;
     static QSparqlDriver* findDriverWithPluginLoader(const QString& type);
     static void registerConnectionCreator(const QString &type,
                                           QSparqlDriverCreatorBase* creator);
@@ -218,37 +221,50 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QStri
 #endif
 }
 
+QStringList QSparqlConnectionPrivate::allKeys;
+QHash<QString, QSparqlDriverPlugin*> QSparqlConnectionPrivate::plugins;
+
+void QSparqlConnectionPrivate::initKeys()
+{
+    static bool keysRead = false;
+
+    if (keysRead)
+        return;
+
+    QStringList paths = QCoreApplication::libraryPaths();
+    foreach(const QString& path, paths) {
+        QString realPath = path + QLatin1String("/sparqldrivers");
+        QStringList pluginNames = QDir(realPath).entryList(QDir::Files);
+        for (int j = 0; j < pluginNames.count(); ++j) {
+            QString fileName = QDir::cleanPath(realPath +
+                                                QLatin1Char('/') +
+                                                pluginNames.at(j));
+            QPluginLoader loader(fileName);
+            QObject* instance = loader.instance();
+            QFactoryInterface *factory = qobject_cast<QFactoryInterface*>(instance);
+            QSparqlDriverPlugin* driPlu = dynamic_cast<QSparqlDriverPlugin*>(factory);
+            if (instance && factory && driPlu) {
+                QStringList keys = factory->keys();
+                for (int k = 0; k < keys.size(); ++k) {
+                    plugins[keys[k]] = driPlu;
+                }
+
+                allKeys.append(keys);
+            }
+        }
+    }
+
+    keysRead = true;
+    return;
+}
+
 QSparqlDriver* QSparqlConnectionPrivate::findDriverWithPluginLoader(const QString &type)
 {
 #if WE_ARE_QT
     return 0;
 #else
-    static bool keysRead = false;
-    static QHash<QString, QSparqlDriverPlugin*> plugins;
+    initKeys();
 
-    if (!keysRead) {
-        keysRead = true;
-        QStringList paths = QCoreApplication::libraryPaths();
-        foreach(const QString& path, paths) {
-            QString realPath = path + QLatin1String("/sparqldrivers");
-            QStringList pluginNames = QDir(realPath).entryList(QDir::Files);
-            for (int j = 0; j < pluginNames.count(); ++j) {
-                QString fileName = QDir::cleanPath(realPath +
-                                                   QLatin1Char('/') +
-                                                   pluginNames.at(j));
-                QPluginLoader loader(fileName);
-                QObject* instance = loader.instance();
-                QFactoryInterface *factory = qobject_cast<QFactoryInterface*>(instance);
-                QSparqlDriverPlugin* driPlu = dynamic_cast<QSparqlDriverPlugin*>(factory);
-                if (instance && factory && driPlu) {
-                    QStringList keys = factory->keys();
-                    for (int k = 0; k < keys.size(); ++k) {
-                        plugins[keys[k]] = driPlu;
-                    }
-                }
-            }
-        }
-    }
     if (plugins.contains(type))
         return plugins[type]->create(type);
     return QSparqlConnectionPrivate::shared_null()->driver;
@@ -418,12 +434,9 @@ void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
 QStringList QSparqlConnection::drivers()
 {
     QStringList list;
-    return list; // a hack
 
-#if WE_ARE_QT
-#ifdef QT_SPARQL_ODBC
-    list << QLatin1String("QODBC3");
-    list << QLatin1String("QODBC");
+#ifdef QT_SPARQL_VIRTUOSO
+    list << QLatin1String("QVIRTUOSO");
 #endif
 #ifdef QT_SPARQL_TRACKER
     list << QLatin1String("QTRACKER");
@@ -435,6 +448,7 @@ QStringList QSparqlConnection::drivers()
     list << QLatin1String("QSPARQL_ENDPOINT");
 #endif
 
+#if WE_ARE_QT
 #if !defined(QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
     if (QFactoryLoader *fl = loader()) {
         QStringList keys = fl->keys();
@@ -445,6 +459,15 @@ QStringList QSparqlConnection::drivers()
     }
 #endif
 
+#else
+    QSparqlConnectionPrivate::initKeys();
+    QStringList keys = QSparqlConnectionPrivate::allKeys;
+    for (QStringList::const_iterator i = keys.constBegin(); i != keys.constEnd(); ++i) {
+        if (!list.contains(*i))
+            list << *i;
+    }
+#endif
+
     DriverDict dict = QSparqlConnectionPrivate::driverDict();
     for (DriverDict::const_iterator i = dict.constBegin(); i != dict.constEnd(); ++i) {
         if (!list.contains(i.key()))
@@ -452,7 +475,6 @@ QStringList QSparqlConnection::drivers()
     }
 
     return list;
-#endif
 }
 
 #ifndef QT_NO_DEBUG_STREAM
