@@ -3,6 +3,7 @@ TEMPLATE = lib
 CONFIG += qt plugin
 QT = core
 DESTDIR = $$QT_BUILD_TREE/plugins/sparqldrivers
+LIBS += -lQtSparql
 
 isEmpty($$QTSPARQL_INSTALL_PLUGINS) {
     target.path = $$[QT_INSTALL_PLUGINS]/sparqldrivers
