@@ -52,6 +52,8 @@
 
 #include <QtSparql/QtSparql>
 
+#define TEST_PORT 1111
+
 class Thread : public QThread
 {
     Q_OBJECT
@@ -61,13 +63,16 @@ public:
     void run();
 
     using QThread::exec;
+
+public Q_SLOTS:
+    void queryFinished();
 };
 int Thread::counter;
 
-class tst_QSparqlEndpointThreading : public QObject
+class tst_QSparqlThreading : public QObject
 {
     Q_OBJECT
-    static tst_QSparqlEndpointThreading *_self;
+    static tst_QSparqlThreading *_self;
     QAtomicInt threadJoinCount;
     QSemaphore threadJoin;
 public:
@@ -78,8 +83,8 @@ public:
     QThread *threadSpy;
     int signalSpy;
 
-    tst_QSparqlEndpointThreading();
-    static inline tst_QSparqlEndpointThreading *self() { return _self; }
+    tst_QSparqlThreading();
+    static inline tst_QSparqlThreading *self() { return _self; }
 
     void joinThreads();
     bool waitForSignal(QObject *obj, const char *signal, int delay = 1);
@@ -90,13 +95,15 @@ public Q_SLOTS:
     void threadStarted() { threadJoinCount.ref(); }
     void threadFinished() { threadJoin.release(); }
 
-    void concurrentCreation_thread();
+    void concurrentEndpointQueries_thread();
+    void concurrentVirtuosoQueries_thread();
 
 private Q_SLOTS:
     void initTestCase();
-    void concurrentCreation();
+    void concurrentEndpointQueries();
+    void concurrentVirtuosoQueries();
 };
-tst_QSparqlEndpointThreading *tst_QSparqlEndpointThreading::_self;
+tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
 
 
@@ -116,8 +123,8 @@ public:
 public Q_SLOTS:
     void method()
     {
-        tst_QSparqlEndpointThreading::self()->functionSpy = Q_FUNC_INFO;
-        tst_QSparqlEndpointThreading::self()->threadSpy = QThread::currentThread();
+        tst_QSparqlThreading::self()->functionSpy = Q_FUNC_INFO;
+        tst_QSparqlThreading::self()->threadSpy = QThread::currentThread();
         emit signal();
         deleteLater();
     }
@@ -129,8 +136,8 @@ Q_SIGNALS:
 Thread::Thread(bool automatic)
 {
     setObjectName(QString::fromLatin1("Aux thread %1").arg(++counter));
-    connect(this, SIGNAL(started()), tst_QSparqlEndpointThreading::self(), SLOT(threadStarted()));
-    connect(this, SIGNAL(finished()), tst_QSparqlEndpointThreading::self(), SLOT(threadFinished()),
+    connect(this, SIGNAL(started()), tst_QSparqlThreading::self(), SLOT(threadStarted()));
+    connect(this, SIGNAL(finished()), tst_QSparqlThreading::self(), SLOT(threadFinished()),
             Qt::DirectConnection);
     connect(this, SIGNAL(finished()), this, SLOT(deleteLater()), Qt::DirectConnection);
     if (automatic)
@@ -142,23 +149,33 @@ void Thread::run()
     QVarLengthArray<char, 56> name;
     name.append(QTest::currentTestFunction(), qstrlen(QTest::currentTestFunction()));
     name.append("_thread", sizeof "_thread");
-    QMetaObject::invokeMethod(tst_QSparqlEndpointThreading::self(), name.constData(), Qt::DirectConnection);
+    QMetaObject::invokeMethod(tst_QSparqlThreading::self(), name.constData(), Qt::DirectConnection);
+
+    qDebug() << "Thread::run() about to call exec()";
+    exec();
+    qDebug() << "Thread::run() returned from exec()";
 }
 
-tst_QSparqlEndpointThreading::tst_QSparqlEndpointThreading()
+void Thread::queryFinished()
+{
+    qDebug() << "In queryFinished";
+    quit();
+}
+
+tst_QSparqlThreading::tst_QSparqlThreading()
     : loop(0), functionSpy(0), threadSpy(0)
 {
     _self = this;
     QCoreApplication::instance()->thread()->setObjectName("Main thread");
 }
 
-void tst_QSparqlEndpointThreading::joinThreads()
+void tst_QSparqlThreading::joinThreads()
 {
     threadJoin.acquire(threadJoinCount);
     threadJoinCount = 0;
 }
 
-bool tst_QSparqlEndpointThreading::waitForSignal(QObject *obj, const char *signal, int delay)
+bool tst_QSparqlThreading::waitForSignal(QObject *obj, const char *signal, int delay)
 {
     QObject::connect(obj, signal, &QTestEventLoop::instance(), SLOT(exitLoop()));
     QPointer<QObject> safe = obj;
@@ -169,7 +186,7 @@ bool tst_QSparqlEndpointThreading::waitForSignal(QObject *obj, const char *signa
     return QTestEventLoop::instance().timeout();
 }
 
-void tst_QSparqlEndpointThreading::cleanup()
+void tst_QSparqlThreading::cleanup()
 {
     joinThreads();
 
@@ -184,14 +201,14 @@ void tst_QSparqlEndpointThreading::cleanup()
     QTest::qWait(500);
 }
 
-void tst_QSparqlEndpointThreading::initTestCase()
+void tst_QSparqlThreading::initTestCase()
 {
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
 }
 
-void tst_QSparqlEndpointThreading::concurrentCreation_thread()
+void tst_QSparqlThreading::concurrentEndpointQueries_thread()
 {
     sem1.acquire();
     QSparqlConnectionOptions options;
@@ -201,27 +218,62 @@ void tst_QSparqlEndpointThreading::concurrentCreation_thread()
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
     QSparqlResult* r = conn.exec(q);
+    connect(r, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     sem2.release();
+    qDebug() << "EXIT tst_QSparqlThreading::concurrentEndpointQueries_thread()";
 }
 
-void tst_QSparqlEndpointThreading::concurrentCreation()
+void tst_QSparqlThreading::concurrentEndpointQueries()
 {
     Thread *th = new Thread;
 
-    {
-        sem1.release();
-        QSparqlConnectionOptions options;
-        options.setHostName("localhost");
-        options.setPort(8890);
-        QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+    sem1.release();
+    QSparqlConnectionOptions options;
+    options.setHostName("localhost");
+    options.setPort(8890);
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
-        QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
-        QSparqlResult* r = conn.exec(q);
-        sem2.acquire();
-    }
+    QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    sem2.acquire();
 
+    qDebug() << "About to waitForFinished";
+    r->waitForFinished();
+    qDebug() << "About to waitForSignal";
     waitForSignal(th, SIGNAL(finished()));
 }
 
-QTEST_MAIN(tst_QSparqlEndpointThreading)
-#include "tst_qsparql_endpoint_threading.moc"
+void tst_QSparqlThreading::concurrentVirtuosoQueries_thread()
+{
+    sem1.acquire();
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    options.setPort(TEST_PORT);
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    connect(r, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    sem2.release();
+}
+
+void tst_QSparqlThreading::concurrentVirtuosoQueries()
+{
+    Thread *th = new Thread;
+
+    sem1.release();
+    QSparqlConnectionOptions options;
+    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
+    options.setPort(TEST_PORT);
+    QSparqlConnection conn("QVIRTUOSO", options);
+
+    QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    QSparqlResult* r = conn.exec(q);
+    sem2.acquire();
+
+    r->waitForFinished();
+    waitForSignal(th, SIGNAL(finished()));
+}
+
+QTEST_MAIN(tst_QSparqlThreading)
+#include "tst_qsparql_threading.moc"

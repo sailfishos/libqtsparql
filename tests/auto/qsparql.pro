@@ -4,7 +4,7 @@ SUBDIRS = \
     qsparqlbinding \
     qsparql \
     qsparql_endpoint \
-    qsparql_endpoint_threading \
+    qsparql_threading \
     qsparql_tracker \
     qsparql_tracker_direct \
     qsparql_tracker_signals \
