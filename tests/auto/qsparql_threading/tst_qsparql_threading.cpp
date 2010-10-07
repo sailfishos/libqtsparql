@@ -52,8 +52,7 @@
 
 #include <QtSparql/QtSparql>
 
-// #define TEST_PORT 1111
-#define TEST_PORT 1234
+#define TEST_PORT 1111
 
 class Thread : public QThread
 {
@@ -67,6 +66,7 @@ public:
 
 public Q_SLOTS:
     void queryFinished();
+    void resultsReturned(int count);
 };
 int Thread::counter;
 
@@ -101,6 +101,9 @@ public Q_SLOTS:
 
     void concurrentEndpointQueries_thread();
     void concurrentVirtuosoQueries_thread();
+
+    void queryFinished();
+    void resultsReturned(int count);
 
 private Q_SLOTS:
     void initTestCase();
@@ -158,8 +161,22 @@ void Thread::run()
 
 void Thread::queryFinished()
 {
-    qDebug() << "In queryFinished";
-    quit();
+    qDebug() << "Thread::queryFinished()";
+}
+
+void Thread::resultsReturned(int totalCount)
+{
+    qDebug() << "Thread::resultsReturned(" << totalCount << ")";
+}
+
+void tst_QSparqlThreading::queryFinished()
+{
+    qDebug() << "tst_QSparqlThreading::queryFinished()";
+}
+
+void tst_QSparqlThreading::resultsReturned(int totalCount)
+{
+    qDebug() << "tst_QSparqlThreading::resultsReturned(" << totalCount << ")";
 }
 
 tst_QSparqlThreading::tst_QSparqlThreading()
@@ -171,16 +188,12 @@ tst_QSparqlThreading::tst_QSparqlThreading()
 
 void tst_QSparqlThreading::joinThreads()
 {
-    qDebug() << "ENTER joinThreads() threadJoinCount:" << threadJoinCount;
     threadJoin.acquire(threadJoinCount);
     threadJoinCount = 0;
 }
 
 bool tst_QSparqlThreading::waitForSignal(QObject *obj, const char *signal, int delay)
 {
-    qDebug() << "tst_QSparqlThreading::waitForSignal() &QTestEventLoop::instance():" << &QTestEventLoop::instance();
-    qDebug() << "tst_QSparqlThreading::waitForSignal() QTestEventLoop::instance().timeout():" << QTestEventLoop::instance().timeout();
-
     QObject::connect(obj, signal, &QTestEventLoop::instance(), SLOT(exitLoop()));
     QPointer<QObject> safe = obj;
 
@@ -223,14 +236,14 @@ void tst_QSparqlThreading::concurrentEndpointQueries_thread()
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
     r2 = conn.exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
-    qDebug() << "EXIT tst_QSparqlThreading::concurrentEndpointQueries_thread()";
-    static_cast<Thread *>(QThread::currentThread())->exec();
+    r2->waitForFinished();
 }
 
 void tst_QSparqlThreading::concurrentEndpointQueries()
 {
-    Thread *th = new Thread;
+    QPointer<Thread> th = new Thread;
 
     sem1.release();
     QSparqlConnectionOptions options;
@@ -240,13 +253,13 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
     r1 = conn.exec(q);
+    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
+    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
 
-    qDebug() << "About to waitForFinished";
     r1->waitForFinished();
 
-    if (!th->isFinished()) {
-        qDebug() << "About to waitForSignal";
+    if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
     }
 }
@@ -262,13 +275,14 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries_thread()
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
     r2 = conn.exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
-    static_cast<Thread *>(QThread::currentThread())->exec();
+    r2->waitForFinished();
 }
 
 void tst_QSparqlThreading::concurrentVirtuosoQueries()
 {
-    Thread *th = new Thread;
+    QPointer<Thread> th = new Thread;
 
     sem1.release();
     QSparqlConnectionOptions options;
@@ -278,12 +292,13 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
     r1 = conn.exec(q);
+    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
+    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
 
     r1->waitForFinished();
 
-    if (!th->isFinished()) {
-        qDebug() << "About to waitForSignal";
+    if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
     }
 }
