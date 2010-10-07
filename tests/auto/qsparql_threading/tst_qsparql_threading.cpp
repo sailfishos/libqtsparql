@@ -180,6 +180,7 @@ bool tst_QSparqlThreading::waitForSignal(QObject *obj, const char *signal, int d
 {
     qDebug() << "tst_QSparqlThreading::waitForSignal() &QTestEventLoop::instance():" << &QTestEventLoop::instance();
     qDebug() << "tst_QSparqlThreading::waitForSignal() QTestEventLoop::instance().timeout():" << QTestEventLoop::instance().timeout();
+
     QObject::connect(obj, signal, &QTestEventLoop::instance(), SLOT(exitLoop()));
     QPointer<QObject> safe = obj;
 
@@ -242,9 +243,12 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
     sem2.acquire();
 
     qDebug() << "About to waitForFinished";
-    // r1->waitForFinished();
-    qDebug() << "About to waitForSignal";
-    waitForSignal(th, SIGNAL(finished()));
+    r1->waitForFinished();
+
+    if (!th->isFinished()) {
+        qDebug() << "About to waitForSignal";
+        waitForSignal(th, SIGNAL(finished()));
+    }
 }
 
 void tst_QSparqlThreading::concurrentVirtuosoQueries_thread()
@@ -276,8 +280,12 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
     r1 = conn.exec(q);
     sem2.acquire();
 
-    // r1->waitForFinished();
-    waitForSignal(th, SIGNAL(finished()));
+    r1->waitForFinished();
+
+    if (!th->isFinished()) {
+        qDebug() << "About to waitForSignal";
+        waitForSignal(th, SIGNAL(finished()));
+    }
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
