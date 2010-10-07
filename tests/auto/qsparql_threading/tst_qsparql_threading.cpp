@@ -101,6 +101,8 @@ public Q_SLOTS:
 
     void concurrentEndpointQueries_thread();
     void concurrentVirtuosoQueries_thread();
+    void concurrentTrackerQueries_thread();
+    void concurrentTrackerDirectQueries_thread();
 
     void queryFinished();
     void resultsReturned(int count);
@@ -109,6 +111,8 @@ private Q_SLOTS:
     void initTestCase();
     void concurrentEndpointQueries();
     void concurrentVirtuosoQueries();
+    void concurrentTrackerQueries();
+    void concurrentTrackerDirectQueries();
 };
 tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
@@ -180,7 +184,7 @@ void tst_QSparqlThreading::resultsReturned(int totalCount)
 }
 
 tst_QSparqlThreading::tst_QSparqlThreading()
-    : loop(0), functionSpy(0), threadSpy(0)
+    : loop(0), functionSpy(0), threadSpy(0), r1(0), r2(0)
 {
     _self = this;
     QCoreApplication::instance()->thread()->setObjectName("Main thread");
@@ -295,6 +299,81 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
     QSparqlConnection conn("QVIRTUOSO", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
+    r1 = conn.exec(q);
+    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
+    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
+    sem2.acquire();
+
+    r1->waitForFinished();
+
+    if (!th.isNull()) {
+        waitForSignal(th, SIGNAL(finished()));
+    }
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r1->size(), r2->size());
+}
+
+
+void tst_QSparqlThreading::concurrentTrackerQueries_thread()
+{
+    sem1.acquire();
+    QSparqlConnection conn("QTRACKER");
+
+    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    r2 = conn.exec(q);
+    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
+    sem2.release();
+    r2->waitForFinished();
+}
+
+void tst_QSparqlThreading::concurrentTrackerQueries()
+{
+    QPointer<Thread> th = new Thread;
+
+    sem1.release();
+    QSparqlConnection conn("QTRACKER");
+
+    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    r1 = conn.exec(q);
+    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
+    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
+    sem2.acquire();
+
+    r1->waitForFinished();
+
+    if (!th.isNull()) {
+        waitForSignal(th, SIGNAL(finished()));
+    }
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r1->size(), r2->size());
+}
+
+void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
+{
+    sem1.acquire();
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    r2 = conn.exec(q);
+    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
+    sem2.release();
+    r2->waitForFinished();
+}
+
+void tst_QSparqlThreading::concurrentTrackerDirectQueries()
+{
+    QPointer<Thread> th = new Thread;
+
+    sem1.release();
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
     r1 = conn.exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
