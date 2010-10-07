@@ -262,6 +262,10 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
     if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
     }
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r1->size(), r2->size());
 }
 
 void tst_QSparqlThreading::concurrentVirtuosoQueries_thread()
@@ -301,6 +305,10 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
     if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
     }
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r1->size(), r2->size());
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
