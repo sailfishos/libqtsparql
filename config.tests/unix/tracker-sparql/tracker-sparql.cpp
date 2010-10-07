@@ -47,6 +47,6 @@ int main(int, char **)
     int i = TRACKER_SPARQL_VALUE_TYPE_URI;
     g_type_init();
     GError *error = NULL;
-    TrackerSparqlConnection *connection = tracker_sparql_connection_get(&error);
+    TrackerSparqlConnection *connection = tracker_sparql_connection_get(0, &error);
     return 0;
 }

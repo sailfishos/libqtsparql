@@ -1,4 +1,4 @@
-libqtsparql (0.0.8~unreleased) unstable; urgency=low
+libqtsparql (0.0.8) unstable; urgency=low
 
   * Fixes: NB#192935
   * Linking plugins against libQtSparql

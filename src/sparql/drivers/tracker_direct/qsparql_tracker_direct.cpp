@@ -380,7 +380,8 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
         close();
 
     GError *error = 0;
-    d->connection = tracker_sparql_connection_get(&error);
+    d->connection = tracker_sparql_connection_get(0, &error);
+    // maybe-TODO: Add the GCancellable
     if (!d->connection) {
         qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
                     error ? error->message : "unknown error");
