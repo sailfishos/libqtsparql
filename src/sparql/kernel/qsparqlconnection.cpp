@@ -295,12 +295,6 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 
 */
 
-/*!
-    Destroys the object and frees any allocated resources.
-
-    \sa close()
-*/
-
 QSparqlConnection::QSparqlConnection(QObject* parent)
     : QObject(parent)
 {
@@ -309,6 +303,14 @@ QSparqlConnection::QSparqlConnection(QObject* parent)
                                      QSparqlConnectionOptions());
 }
 
+/*!
+
+Constructs a QSparqlConnection of the given \a type with the given \a options.
+The \a type is a string which identifies the driver.  To get a list of available
+drivers, use drivers().  The accepted connection options depend on the selected
+driver.  The drivers ignore unneeded connection options.
+
+*/
 QSparqlConnection::QSparqlConnection(const QString& type,
                                      const QSparqlConnectionOptions& options,
                                      QObject* parent)
@@ -319,6 +321,9 @@ QSparqlConnection::QSparqlConnection(const QString& type,
     d->driver->open(d->options);
 }
 
+/*!
+    Destroys the object and frees any allocated resources.
+*/
 QSparqlConnection::~QSparqlConnection()
 {
     d->driver->close();
