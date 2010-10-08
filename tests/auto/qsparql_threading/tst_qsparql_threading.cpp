@@ -321,7 +321,7 @@ void tst_QSparqlThreading::concurrentTrackerQueries_thread()
     sem1.acquire();
     QSparqlConnection conn("QTRACKER");
 
-    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
     r2 = conn.exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
@@ -336,7 +336,7 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
     sem1.release();
     QSparqlConnection conn("QTRACKER");
 
-    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
     r1 = conn.exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
@@ -358,7 +358,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
     sem1.acquire();
     QSparqlConnection conn("QTRACKER_DIRECT");
 
-    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
     r2 = conn.exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
@@ -373,7 +373,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
     sem1.release();
     QSparqlConnection conn("QTRACKER_DIRECT");
 
-    QSparqlQuery q("select ?r ?a { ?r a rdfs:Resource . ?a a rdfs:Resource }");
+    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
     r1 = conn.exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
