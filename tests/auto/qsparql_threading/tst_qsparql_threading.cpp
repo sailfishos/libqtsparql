@@ -81,9 +81,6 @@ public:
     QSemaphore sem1, sem2;
     volatile bool success;
     QEventLoop *loop;
-    const char *functionSpy;
-    QThread *threadSpy;
-    int signalSpy;
 
     QSparqlResult * r1;
     QSparqlResult * r2;
@@ -96,7 +93,6 @@ public:
 
 public Q_SLOTS:
     void cleanup();
-    void signalSpySlot() { ++signalSpy; }
     void threadStarted() { threadJoinCount.ref(); }
     void threadFinished() { threadJoin.release(); }
 
@@ -158,7 +154,7 @@ void tst_QSparqlThreading::resultsReturned(int totalCount)
 }
 
 tst_QSparqlThreading::tst_QSparqlThreading()
-    : loop(0), functionSpy(0), threadSpy(0), r1(0), r2(0)
+    : loop(0), r1(0), r2(0)
 {
     _self = this;
     QCoreApplication::instance()->thread()->setObjectName("Main thread");
