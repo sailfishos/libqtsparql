@@ -70,7 +70,7 @@ public:
                       QObject* parent = 0);
     ~QSparqlConnection();
 
-    QSparqlResult* exec(const QSparqlQuery& query) const;
+    QSparqlResult* exec(const QSparqlQuery& query);
     bool isValid() const;
     QString driverName() const;
     bool hasFeature(Feature feature) const;

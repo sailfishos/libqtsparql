@@ -322,10 +322,16 @@ QSparqlConnection::QSparqlConnection(const QString& type,
 }
 
 /*!
-    Destroys the object and frees any allocated resources.
+    Destroys the QSparqlConnection object and frees up any
+    resources. Note that QSparqlResult objects that are returned from
+    this class have this object set as their parents, which means that
+    they will be deleted along with it if you don't call
+    QObject::setParent() on them.
 */
 QSparqlConnection::~QSparqlConnection()
 {
+    // Delete the QSparqlResult children first.
+    qDeleteAll(findChildren<QSparqlResult *>());
     d->driver->close();
     delete d;
 }
@@ -346,32 +352,35 @@ QSparqlConnection::~QSparqlConnection()
 // finished() signal when the main loop is entered the next time,
 // so that the user has a change to connect to it?
 
-QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query) const
+QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
 {
+    QSparqlResult * result;
+
     if (d->driver->isOpenError()) {
         qWarning("QSparqlConnection::exec: connection not open");
 
-        QSparqlResult* result = new QSparqlNullResult();
+        result = new QSparqlNullResult();
         result->setLastError(d->driver->lastError());
-        return result;
-    }
-    if (!d->driver->isOpen()) {
+    } else if (!d->driver->isOpen()) {
         qWarning("QSparqlConnection::exec: connection not open");
 
-        QSparqlResult* result = new QSparqlNullResult();
+        result = new QSparqlNullResult();
         result->setLastError(QSparqlError(QLatin1String("Connection not open"),
                                           QSparqlError::ConnectionError));
-        return result;
+    } else {
+        QString queryText = query.preparedQueryText();
+        if (queryText.isEmpty()) {
+            qWarning("QSparqlConnection::exec: empty query");
+            result = new QSparqlNullResult();
+            result->setLastError(QSparqlError(QLatin1String("Query is empty"),
+                                            QSparqlError::ConnectionError));
+        } else {
+            result = d->driver->exec(queryText, query.type());
+        }
     }
-    QString queryText = query.preparedQueryText();
-    if (queryText.isEmpty()) {
-        qWarning("QSparqlConnection::exec: empty query");
-        QSparqlResult* result = new QSparqlNullResult();
-        result->setLastError(QSparqlError(QLatin1String("Query is empty"),
-                                          QSparqlError::ConnectionError));
-        return result;
-    }
-    return d->driver->exec(queryText, query.type());
+
+    result->setParent(this);
+    return result;
 }
 
 /*!
