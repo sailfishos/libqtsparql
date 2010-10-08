@@ -69,17 +69,6 @@ public:
     QDBusConnection connection;
     QDBusInterface* iface;
 
-    QString service;
-    QString basePath;
-
-    QString searchInterface;
-    QString searchPath;
-
-    QString resourcesInterface;
-    QString resourcesPath;
-
-    QString resourcesClassPath;
-    QString resourcesClassInterface;
 };
 
 class QTrackerResultPrivate : public QObject {
