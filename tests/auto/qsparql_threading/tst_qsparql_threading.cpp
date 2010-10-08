@@ -52,7 +52,8 @@
 
 #include <QtSparql/QtSparql>
 
-#define TEST_PORT 1111
+// #define TEST_PORT 1111
+#define TEST_PORT 1234
 
 class Thread : public QThread
 {
@@ -116,33 +117,6 @@ private Q_SLOTS:
 };
 tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
-
-
-class Object : public QObject
-{
-    Q_OBJECT
-public:
-    Object()
-    {
-    }
-
-    ~Object()
-    {
-        QMetaObject::invokeMethod(QThread::currentThread(), "quit", Qt::QueuedConnection);
-    }
-
-public Q_SLOTS:
-    void method()
-    {
-        tst_QSparqlThreading::self()->functionSpy = Q_FUNC_INFO;
-        tst_QSparqlThreading::self()->threadSpy = QThread::currentThread();
-        emit signal();
-        deleteLater();
-    }
-
-Q_SIGNALS:
-    void signal();
-};
 
 Thread::Thread(bool automatic)
 {
