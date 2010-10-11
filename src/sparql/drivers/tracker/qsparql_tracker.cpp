@@ -240,20 +240,23 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type)
 {
     QTrackerResult* res = new QTrackerResult(type);
+
+    QString funcToCall;
     switch (type) {
     case QSparqlQuery::SelectStatement:
     {
-        QDBusPendingCall call = d->iface->asyncCall(QString::fromLatin1("SparqlQuery"),
-                                   QVariant(query));
-        res->d->setCall(call);
+        funcToCall = QString::fromLatin1("SparqlQuery");
         break;
     }
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
-        QDBusPendingCall call = d->iface->asyncCall(QString::fromLatin1("SparqlUpdateBlank"),
-                                   QVariant(query));
-        res->d->setCall(call);
+        if (d->doBatch) {
+            funcToCall = QString::fromLatin1("BatchSparqlUpdate");
+        }
+        else {
+            funcToCall = QString::fromLatin1("SparqlUpdateBlank");
+        }
         break;
     }
     default:
@@ -261,8 +264,12 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
         res->setLastError(QSparqlError(
                               QLatin1String("Non-supported statement type"),
                               QSparqlError::BackendError));
+        return res;
         break;
     }
+    QDBusPendingCall call = d->iface->asyncCall(funcToCall,
+                                                QVariant(query));
+    res->d->setCall(call);
     return res;
 }
 
@@ -345,7 +352,7 @@ QSparqlResultRow QTrackerResult::current() const
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
-    : connection(QString::fromLatin1("")), iface(0)
+    : connection(QString::fromLatin1("")), iface(0),  doBatch(false)
 {
 }
 
@@ -398,7 +405,10 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
-    Q_UNUSED(options);
+    QVariant batchOption = options.option(QString::fromLatin1("batch"));
+    if (!batchOption.isNull()) {
+        d->doBatch = batchOption.toBool();
+    }
 
     if (isOpen())
         close();

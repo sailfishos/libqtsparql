@@ -68,7 +68,8 @@ public:
     ~QTrackerDriverPrivate();
     QDBusConnection connection;
     QDBusInterface* iface;
-
+    bool doBatch; // true: call BatchSparqlUpdate on Tracker instead of
+                  // SparqlUpdateBlank
 };
 
 class QTrackerResultPrivate : public QObject {
