@@ -7,7 +7,6 @@ SUBDIRS = \
     qsparql_threading \
     qsparql_tracker \
     qsparql_tracker_direct \
-    qsparql_tracker_signals \
     qsparql_virtuoso \
     qsparql_virtuoso_endpoint
 

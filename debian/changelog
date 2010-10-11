@@ -1,6 +1,7 @@
 libqtsparql (0.0.9~unreleased) unstable; urgency=low
 
   * Fixes: NB#196962
+  * Removed QTrackerChangeNotifier; use libqtsparql-tracker instead.
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Fri, 08 Oct 2010 08:47:49 +0300
 

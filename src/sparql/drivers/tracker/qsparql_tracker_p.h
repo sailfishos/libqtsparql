@@ -42,8 +42,6 @@
 #ifndef QSPARQL_TRACKER_P_H
 #define QSPARQL_TRACKER_P_H
 
-#include "qsparql_tracker_signals.h"
-
 #include <qsparqlquery.h>
 
 #include <QObject>
@@ -88,28 +86,6 @@ private slots:
     void onDBusCallFinished();
 private:
     QTrackerResult* q; // public part
-};
-
-QDBusArgument& operator<<(QDBusArgument& argument,
-                          const QTrackerChangeNotifier::Quad &t);
-const QDBusArgument& operator>>(const QDBusArgument& argument,
-                                QTrackerChangeNotifier::Quad &t);
-
-class QTrackerChangeNotifierPrivate : public QObject
-{
-    Q_OBJECT
-public:
-    QTrackerChangeNotifierPrivate(const QString& className,
-                                  QDBusConnection c,
-                                  QTrackerChangeNotifier* q);
-public slots:
-    void changed(QString className,
-                 QList<QTrackerChangeNotifier::Quad> deleted,
-                 QList<QTrackerChangeNotifier::Quad> inserted);
-public:
-    QTrackerChangeNotifier* q; // public part
-    QString className; // which class is watched
-    QDBusConnection connection;
 };
 
 QT_END_NAMESPACE
