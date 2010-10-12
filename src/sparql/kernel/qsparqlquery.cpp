@@ -176,6 +176,7 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
 QSparqlQuery::QSparqlQuery(const QString& query, StatementType type)
 {
     d = new QSparqlQueryPrivate(query, type);
+    d->ref.ref();
 }
 
 /*!
