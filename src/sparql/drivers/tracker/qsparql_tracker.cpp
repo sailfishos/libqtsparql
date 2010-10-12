@@ -169,8 +169,9 @@ void dropConnection()
 } // end of unnamed namespace
 
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
-                                             QSparqlQuery::StatementType tp)
-: watcher(0), type(tp), q(res)
+                                             QSparqlQuery::StatementType tp,
+                                             bool doBatch)
+    : watcher(0), type(tp), doBatch(doBatch), q(res)
 {
 }
 
@@ -214,15 +215,41 @@ void QTrackerResultPrivate::onDBusCallFinished()
         break;
     }
     default:
-        // TODO: handle update results here
+    {
+        // SparqlUpdateBlank gives back update results, but the
+        // BatchSparqlUpdate doesn't.
+        if (doBatch)
+            break;
+
+        QDBusPendingReply<QVector<QVector<QMap<QString, QString> > > > reply = *watcher;
+        const QVector<QVector<QMap<QString, QString> > > updateResults =
+            reply.value();
+
+        for (int i = 0; i < updateResults.size(); ++i) {
+            for (int j = 0; j < updateResults[i].size(); ++j) {
+                QMap<QString, QString>::const_iterator it
+                    = updateResults[i][j].begin();
+                QMap<QString, QString>::const_iterator itEnd
+                    = updateResults[i][j].end();
+                while (it != itEnd) {
+                    data.push_back(QStringList()
+                                   << QString::number(i)
+                                   << QString::number(j)
+                                   << it.key() << it.value());
+                    ++it;
+                }
+            }
+        }
+        emit q->dataReady(data.size());
         break;
+    }
     }
     emit q->finished();
 }
 
-QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp)
+QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp, bool doBatch)
 {
-    d = new QTrackerResultPrivate(this, tp);
+    d = new QTrackerResultPrivate(this, tp, doBatch);
 }
 
 QTrackerResult::~QTrackerResult()
@@ -233,7 +260,7 @@ QTrackerResult::~QTrackerResult()
 QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type)
 {
-    QTrackerResult* res = new QTrackerResult(type);
+    QTrackerResult* res = new QTrackerResult(type, d->doBatch);
 
     QString funcToCall;
     switch (type) {
@@ -363,9 +390,9 @@ QTrackerDriver::QTrackerDriver(QObject* parent)
     qRegisterMetaType<QVector<QStringList> >();
     qDBusRegisterMetaType<QVector<QStringList> >();
 
-    qRegisterMetaType<QMap<QString, QString> >();
-    qRegisterMetaType<QVector<QMap<QString, QString> > >();
+    qDBusRegisterMetaType<QMap<QString, QString> >();
     qDBusRegisterMetaType<QVector<QMap<QString, QString> > >();
+    qDBusRegisterMetaType<QVector<QVector<QMap<QString, QString> > > >();
 
     /*
     if(!trackerBus().interface()->isServiceRegistered(service_g)

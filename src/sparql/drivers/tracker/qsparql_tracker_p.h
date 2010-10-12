@@ -74,7 +74,8 @@ class QTrackerResultPrivate : public QObject {
     Q_OBJECT
 public:
     QTrackerResultPrivate(QTrackerResult* res,
-                          QSparqlQuery::StatementType tp);
+                          QSparqlQuery::StatementType tp,
+                          bool doBatch);
 
     ~QTrackerResultPrivate();
     QDBusPendingCallWatcher* watcher;
@@ -85,6 +86,7 @@ public:
 private slots:
     void onDBusCallFinished();
 private:
+    bool doBatch;
     QTrackerResult* q; // public part
 };
 
