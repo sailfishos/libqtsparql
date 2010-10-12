@@ -492,7 +492,7 @@ else
     echo QtSparql will be installed into $QTSPARQL_INSTALL_PREFIX
 fi
 echo
-echo To reconfigure, run \'$MAKE confclean\' and \'configure\'.
+echo To reconfigure, run \'$MAKE distclean\' and \'configure\'.
 echo
 
 
