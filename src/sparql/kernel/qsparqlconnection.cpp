@@ -330,8 +330,13 @@ QSparqlConnection::QSparqlConnection(const QString& type,
 */
 QSparqlConnection::~QSparqlConnection()
 {
-    // Delete the QSparqlResult children first.
-    qDeleteAll(findChildren<QSparqlResult *>());
+    QList<QSparqlResult*> children = findChildren<QSparqlResult *>();
+    foreach (QSparqlResult *result, children) {
+        if (!result->isFinished())
+            qWarning() << "QSparqlConnection: Deleting active query:" << result->lastQuery();
+    }
+
+    qDeleteAll(children);
     d->driver->close();
     delete d;
 }
