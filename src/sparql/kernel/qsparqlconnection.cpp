@@ -439,15 +439,24 @@ void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
 }
 
 /*!
+    Creates a new Urn based Uri
+*/
+
+QUrl QSparqlConnection::createUrn() const
+{
+    QByteArray uuid = QUuid::createUuid().toString().toLatin1();
+    QByteArray urn = "urn:uuid:" + uuid.mid(1, uuid.size() - 2);
+    return QUrl::fromEncoded(urn);
+}
+
+/*!
     Creates a Urn for use in an insert query. The given name can be
     used to substitute the value into the query string.
 */
 
-QSparqlBinding QSparqlConnection::createUrn(const QString& name)
+QSparqlBinding QSparqlConnection::createUrn(const QString& name) const
 {
-    QByteArray uuid = QUuid::createUuid().toString().toLatin1();
-    QByteArray urn = "urn:uuid:" + uuid.mid(1, uuid.size() - 2);
-    return QSparqlBinding(name, QUrl::fromEncoded(urn));
+    return QSparqlBinding(name, createUrn());
 }
 
 QStringList QSparqlConnection::drivers()

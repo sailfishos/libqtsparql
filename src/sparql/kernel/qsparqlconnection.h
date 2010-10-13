@@ -79,7 +79,8 @@ public:
     void addPrefix(const QString& prefix, const QUrl& uri);
     void clearPrefixes();
 
-    QSparqlBinding createUrn(const QString& name);
+    QUrl createUrn() const;
+    QSparqlBinding createUrn(const QString& name) const;
 
     static QStringList drivers();
 
