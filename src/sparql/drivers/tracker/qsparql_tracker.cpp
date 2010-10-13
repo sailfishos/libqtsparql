@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qsparql_tracker.h"
-#include "qsparql_tracker_signals.h"
 #include "qsparql_tracker_p.h"
 
 #include <qsparqlerror.h>
@@ -83,9 +82,6 @@ Q_DECLARE_METATYPE_COMMA(QMap<QString, QString>)
 Q_DECLARE_METATYPE_COMMA(QVector<QMap<QString, QString> >)
 Q_DECLARE_METATYPE_COMMA(QVector<QVector<QMap<QString, QString> > >)
 
-Q_DECLARE_METATYPE(QTrackerChangeNotifier::Quad)
-Q_DECLARE_METATYPE(QList<QTrackerChangeNotifier::Quad>)
-
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -95,8 +91,6 @@ QLatin1String service("org.freedesktop.Tracker1");
 QLatin1String basePath("/org/freedesktop/Tracker1");
 QLatin1String resourcesInterface("org.freedesktop.Tracker1.Resources");
 QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
-QLatin1String changedSignal("GraphUpdated");
-QLatin1String changedSignature("sa(iiii)a(iiii)");
 
 /*
 
@@ -175,8 +169,9 @@ void dropConnection()
 } // end of unnamed namespace
 
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
-                                             QSparqlQuery::StatementType tp)
-: watcher(0), type(tp), q(res)
+                                             QSparqlQuery::StatementType tp,
+                                             bool doBatch)
+    : watcher(0), type(tp), doBatch(doBatch), q(res)
 {
 }
 
@@ -220,15 +215,41 @@ void QTrackerResultPrivate::onDBusCallFinished()
         break;
     }
     default:
-        // TODO: handle update results here
+    {
+        // SparqlUpdateBlank gives back update results, but the
+        // BatchSparqlUpdate doesn't.
+        if (doBatch)
+            break;
+
+        QDBusPendingReply<QVector<QVector<QMap<QString, QString> > > > reply = *watcher;
+        const QVector<QVector<QMap<QString, QString> > > updateResults =
+            reply.value();
+
+        for (int i = 0; i < updateResults.size(); ++i) {
+            for (int j = 0; j < updateResults[i].size(); ++j) {
+                QMap<QString, QString>::const_iterator it
+                    = updateResults[i][j].begin();
+                QMap<QString, QString>::const_iterator itEnd
+                    = updateResults[i][j].end();
+                while (it != itEnd) {
+                    data.push_back(QStringList()
+                                   << QString::number(i)
+                                   << QString::number(j)
+                                   << it.key() << it.value());
+                    ++it;
+                }
+            }
+        }
+        emit q->dataReady(data.size());
         break;
+    }
     }
     emit q->finished();
 }
 
-QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp)
+QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp, bool doBatch)
 {
-    d = new QTrackerResultPrivate(this, tp);
+    d = new QTrackerResultPrivate(this, tp, doBatch);
 }
 
 QTrackerResult::~QTrackerResult()
@@ -239,21 +260,24 @@ QTrackerResult::~QTrackerResult()
 QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type)
 {
-    QTrackerResult* res = new QTrackerResult(type);
+    QTrackerResult* res = new QTrackerResult(type, d->doBatch);
+
+    QString funcToCall;
     switch (type) {
     case QSparqlQuery::SelectStatement:
     {
-        QDBusPendingCall call = d->iface->asyncCall(QString::fromLatin1("SparqlQuery"),
-                                   QVariant(query));
-        res->d->setCall(call);
+        funcToCall = QString::fromLatin1("SparqlQuery");
         break;
     }
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
-        QDBusPendingCall call = d->iface->asyncCall(QString::fromLatin1("SparqlUpdateBlank"),
-                                   QVariant(query));
-        res->d->setCall(call);
+        if (d->doBatch) {
+            funcToCall = QString::fromLatin1("BatchSparqlUpdate");
+        }
+        else {
+            funcToCall = QString::fromLatin1("SparqlUpdateBlank");
+        }
         break;
     }
     default:
@@ -261,8 +285,12 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
         res->setLastError(QSparqlError(
                               QLatin1String("Non-supported statement type"),
                               QSparqlError::BackendError));
+        return res;
         break;
     }
+    QDBusPendingCall call = d->iface->asyncCall(funcToCall,
+                                                QVariant(query));
+    res->d->setCall(call);
     return res;
 }
 
@@ -345,7 +373,7 @@ QSparqlResultRow QTrackerResult::current() const
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
-    : connection(QString::fromLatin1("")), iface(0)
+    : connection(QString::fromLatin1("")), iface(0),  doBatch(false)
 {
 }
 
@@ -362,9 +390,9 @@ QTrackerDriver::QTrackerDriver(QObject* parent)
     qRegisterMetaType<QVector<QStringList> >();
     qDBusRegisterMetaType<QVector<QStringList> >();
 
-    qRegisterMetaType<QMap<QString, QString> >();
-    qRegisterMetaType<QVector<QMap<QString, QString> > >();
+    qDBusRegisterMetaType<QMap<QString, QString> >();
     qDBusRegisterMetaType<QVector<QMap<QString, QString> > >();
+    qDBusRegisterMetaType<QVector<QVector<QMap<QString, QString> > > >();
 
     /*
     if(!trackerBus().interface()->isServiceRegistered(service_g)
@@ -398,7 +426,10 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
-    Q_UNUSED(options);
+    QVariant batchOption = options.option(QString::fromLatin1("batch"));
+    if (!batchOption.isNull()) {
+        d->doBatch = batchOption.toBool();
+    }
 
     if (isOpen())
         close();
@@ -421,83 +452,6 @@ void QTrackerDriver::close()
         setOpen(false);
         setOpenError(false);
     }
-}
-
-// D-Bus marshalling
-QDBusArgument &operator<<(QDBusArgument &argument, const QTrackerChangeNotifier::Quad &t)
-{
-    argument.beginStructure();
-    argument << t.graph << t.subject << t.predicate << t.object;
-    argument.endStructure();
-    return argument;
-}
-
-// D-Bus demarshalling
-const QDBusArgument &operator>>(const QDBusArgument &argument, QTrackerChangeNotifier::Quad &t)
-{
-    argument.beginStructure();
-    argument >> t.graph >> t.subject >> t.predicate >> t.object;
-    argument.endStructure();
-    return argument;
-}
-
-#ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug dbg, const QTrackerChangeNotifier::Quad &q)
-{
-    dbg.nospace() << "(" << q.graph << ", " << q.subject
-                  << ", " << q.predicate << ", " << q.object << ")";
-    return dbg.space();
-}
-#endif
-
-
-QTrackerChangeNotifier::QTrackerChangeNotifier(const QString& className,
-                                               QObject* parent)
-    : QObject(parent)
-{
-    qDBusRegisterMetaType<QTrackerChangeNotifier::Quad>();
-    qDBusRegisterMetaType<QList<QTrackerChangeNotifier::Quad> >();
-
-    d = new QTrackerChangeNotifierPrivate(className, getConnection(), this);
-}
-
-QTrackerChangeNotifier::~QTrackerChangeNotifier()
-{
-    dropConnection();
-}
-
-QTrackerChangeNotifierPrivate::QTrackerChangeNotifierPrivate(
-    const QString& className,
-    QDBusConnection c,
-    QTrackerChangeNotifier* q)
-    : QObject(q), q(q), className(className), connection(c)
-{
-    // Start listening to the actual signal
-    bool ok = connection.connect(service, resourcesPath,
-                                 resourcesInterface, changedSignal,
-                                 QStringList() << className,
-                                 changedSignature,
-                                 this, SLOT(changed(QString,
-                                                    QList<QTrackerChangeNotifier::Quad>,
-                                                    QList<QTrackerChangeNotifier::Quad>)));
-
-    if (!ok) {
-        qWarning() << "Cannot connect to signal from Tracker";
-    }
-}
-
-QString QTrackerChangeNotifier::watchedClass() const
-{
-    return d->className;
-}
-
-void QTrackerChangeNotifierPrivate::changed(QString,
-                                            QList<QTrackerChangeNotifier::Quad> deleted,
-                                            QList<QTrackerChangeNotifier::Quad> inserted)
-{
-    // D-Bus will filter based on the class name, so we only get relevant
-    // signals here.
-    emit q->changed(deleted, inserted);
 }
 
 QT_END_NAMESPACE

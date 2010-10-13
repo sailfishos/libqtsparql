@@ -1,8 +1,7 @@
 TARGET	 = qsparqltracker
 
 HEADERS		= ../../../sparql/drivers/tracker/qsparql_tracker.h \
-                  ../../../sparql/drivers/tracker/qsparql_tracker_p.h \
-                  ../../../sparql/drivers/tracker/qsparql_tracker_signals.h
+                  ../../../sparql/drivers/tracker/qsparql_tracker_p.h
 
 SOURCES		= main.cpp \
 		  ../../../sparql/drivers/tracker/qsparql_tracker.cpp
@@ -14,13 +13,6 @@ unix: {
 
 include(../qsparqldriverbase.pri)
 QT += dbus
-
-install_headers.path = $$QTSPARQL_INSTALL_HEADERS
-install_headers.files = ../../../sparql/drivers/tracker/qsparql_tracker_signals.h
-
-
-INSTALLS += \
-        install_headers
 
 coverage {
 	LIBS += -lgcov

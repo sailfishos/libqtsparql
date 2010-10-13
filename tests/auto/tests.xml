@@ -48,6 +48,22 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker query_with_error
         </step>
       </case>
+      <case name="test-batch-update" description="Batch update">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker batch_update ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
+      <case name="test-update-results" description="Update results">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker update_results ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
 
       <post_steps>
 	<step expected_result="0">
