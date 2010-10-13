@@ -71,7 +71,9 @@
 # include "qpluginloader.h"
 #endif
 #include "qsparqlnulldriver_p.h"
-#include "qhash.h"
+
+#include <QtCore/qhash.h>
+#include <QtCore/quuid.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -434,6 +436,18 @@ bool QSparqlConnection::isValid() const
 void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
 {
     d->driver->addPrefix(prefix, uri);
+}
+
+/*!
+    Creates a Urn for use in an insert query. The given name can be
+    used to substitute the value into the query string.
+*/
+
+QSparqlBinding QSparqlConnection::createUrn(const QString& name)
+{
+    QByteArray uuid = QUuid::createUuid().toString().toLatin1();
+    QByteArray urn = "urn:uuid:" + uuid.mid(1, uuid.size() - 2);
+    return QSparqlBinding(name, QUrl::fromEncoded(urn));
 }
 
 QStringList QSparqlConnection::drivers()

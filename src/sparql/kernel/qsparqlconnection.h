@@ -45,6 +45,7 @@
 #include <QtCore/qstring.h>
 #include <QtSparql/qsparql.h>
 #include <QtSparql/qsparqlconnectionoptions.h>
+#include <QtSparql/qsparqlbinding.h>
 
 QT_BEGIN_HEADER
 
@@ -77,6 +78,8 @@ public:
 
     void addPrefix(const QString& prefix, const QUrl& uri);
     void clearPrefixes();
+
+    QSparqlBinding createUrn(const QString& name);
 
     static QStringList drivers();
 
