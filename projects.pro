@@ -29,7 +29,7 @@ include(doc/doc.pri)
 check.CONFIG = recursive
 check.recurse = tests
 
-QMAKE_EXTRA_TARGETS += xclean foocheck
+QMAKE_EXTRA_TARGETS += xclean
 
 # To measure code coverage:
 # 1) build the plugins into the libqtsparql.so
