@@ -297,7 +297,7 @@ void QSparqlQueryModel::queryChange()
 
     \sa query(), queryChange(), lastError()
 */
-void QSparqlQueryModel::setQuery(const QSparqlQuery &query, const QSparqlConnection &connection)
+void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &connection)
 {
     // FIXME: the old result needs to be deleted after the new results are displayed
     // so not here..

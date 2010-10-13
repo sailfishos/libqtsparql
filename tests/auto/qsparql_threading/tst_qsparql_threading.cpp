@@ -52,8 +52,7 @@
 
 #include <QtSparql/QtSparql>
 
-// #define TEST_PORT 1111
-#define TEST_PORT 1234
+#define TEST_PORT 1111
 
 class Thread : public QThread
 {
@@ -82,8 +81,11 @@ public:
     volatile bool success;
     QEventLoop *loop;
 
-    QSparqlResult * r1;
-    QSparqlResult * r2;
+    QSparqlConnection *conn1;
+    QSparqlResult *r1;
+
+    QSparqlConnection *conn2;
+    QSparqlResult *r2;
 
     tst_QSparqlThreading();
     static inline tst_QSparqlThreading *self() { return _self; }
@@ -190,6 +192,8 @@ void tst_QSparqlThreading::cleanup()
     loop = 0;
 
     QTest::qWait(500);
+    delete conn1;
+    delete conn2;
 }
 
 void tst_QSparqlThreading::initTestCase()
@@ -205,10 +209,10 @@ void tst_QSparqlThreading::concurrentEndpointQueries_thread()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+    conn2 = new QSparqlConnection("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
-    r2 = conn.exec(q);
+    r2 = conn2->exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
@@ -223,10 +227,10 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
     QSparqlConnectionOptions options;
     options.setHostName("localhost");
     options.setPort(8890);
-    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+    conn1 = new QSparqlConnection("QSPARQL_ENDPOINT", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
-    r1 = conn.exec(q);
+    r1 = conn1->exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
@@ -248,10 +252,10 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries_thread()
     QSparqlConnectionOptions options;
     options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
     options.setPort(TEST_PORT);
-    QSparqlConnection conn("QVIRTUOSO", options);
+    conn2 = new QSparqlConnection("QVIRTUOSO", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
-    r2 = conn.exec(q);
+    r2 = conn2->exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
@@ -266,10 +270,10 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
     QSparqlConnectionOptions options;
     options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
     options.setPort(TEST_PORT);
-    QSparqlConnection conn("QVIRTUOSO", options);
+    conn1 = new QSparqlConnection("QVIRTUOSO", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");
-    r1 = conn.exec(q);
+    r1 = conn1->exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
@@ -289,10 +293,10 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
 void tst_QSparqlThreading::concurrentTrackerQueries_thread()
 {
     sem1.acquire();
-    QSparqlConnection conn("QTRACKER");
+    conn2 = new QSparqlConnection("QTRACKER");
 
     QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r2 = conn.exec(q);
+    r2 = conn2->exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
@@ -304,10 +308,10 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
     QPointer<Thread> th = new Thread;
 
     sem1.release();
-    QSparqlConnection conn("QTRACKER");
+    conn1 = new QSparqlConnection("QTRACKER");
 
     QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r1 = conn.exec(q);
+    r1 = conn1->exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
@@ -326,10 +330,10 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
 void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
 {
     sem1.acquire();
-    QSparqlConnection conn("QTRACKER_DIRECT");
+    conn2 = new QSparqlConnection("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r2 = conn.exec(q);
+    r2 = conn2->exec(q);
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
@@ -341,10 +345,10 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
     QPointer<Thread> th = new Thread;
 
     sem1.release();
-    QSparqlConnection conn("QTRACKER_DIRECT");
+    conn1 = new QSparqlConnection("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r1 = conn.exec(q);
+    r1 = conn1->exec(q);
     connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
     connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
     sem2.acquire();
