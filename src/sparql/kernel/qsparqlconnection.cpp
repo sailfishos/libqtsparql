@@ -297,6 +297,9 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 
 */
 
+/*!
+    Constructs and invalid QSparqlConnection.
+*/
 QSparqlConnection::QSparqlConnection(QObject* parent)
     : QObject(parent)
 {
@@ -473,6 +476,10 @@ QSparqlBinding QSparqlConnection::createUrn(const QString& name) const
     return QSparqlBinding(name, createUrn());
 }
 
+/*!
+     Returns the list of available drivers.  The list contains driver names
+     which can be passed to QSparqlConnection constructor.
+*/
 QStringList QSparqlConnection::drivers()
 {
     QStringList list;
