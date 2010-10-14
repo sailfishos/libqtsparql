@@ -456,6 +456,15 @@ void QSparqlConnection::addPrefix(const QString& prefix, const QUrl& uri)
 }
 
 /*!
+    Removes any prefix/uri pairs which have been added to the connection.
+*/
+
+void QSparqlConnection::clearPrefixes()
+{
+    d->driver->clearPrefixes();
+}
+
+/*!
     Creates a new Urn based Uri
 */
 
