@@ -35,10 +35,10 @@ install: build
 	mkdir -p `pwd`/debian/tmp/usr/share/libqtsparql-tests
 	cp -a tests/auto/tests.xml `pwd`/debian/tmp/usr/share/libqtsparql-tests
 	cp -a tests/auto/qsparql_tracker/testdata_tracker.ttl `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_tracker/clean_data_tracker.query `pwd`/debian/tmp/usr/share/libqtsparql-tests
+	cp -a tests/auto/qsparql_tracker/clean_data_tracker.rq `pwd`/debian/tmp/usr/share/libqtsparql-tests
 
 	cp -a tests/auto/qsparql_tracker_direct/testdata_tracker_direct.ttl `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_tracker_direct/clean_data_tracker_direct.query `pwd`/debian/tmp/usr/share/libqtsparql-tests
+	cp -a tests/auto/qsparql_tracker_direct/clean_data_tracker_direct.rq `pwd`/debian/tmp/usr/share/libqtsparql-tests
 
 	dh_install --sourcedir=`pwd`/debian/tmp/
 
