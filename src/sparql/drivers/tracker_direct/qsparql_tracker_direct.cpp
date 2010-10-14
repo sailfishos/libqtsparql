@@ -397,11 +397,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
 void QTrackerDirectDriver::close()
 {
-    // This is commented out because of a bug in tracker (requesting a
-    // connection twice fails). However, connections are singletons so this
-    // leaks only one connection.  TODO: enable this when the tracker bug is
-    // fixed.
-    // g_object_unref(d->connection);
+    g_object_unref(d->connection);
 
     if (isOpen()) {
         setOpen(false);
