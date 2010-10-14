@@ -26,7 +26,7 @@
       <pre_steps>
 	<step expected_result="0">
           . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query;
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl
         </step>
       </pre_steps>
@@ -38,7 +38,7 @@
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query &amp;&amp;
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
 	  exit $i )
         </step>
@@ -51,7 +51,7 @@
       <case name="test-batch-update" description="Batch update">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker batch_update ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query &amp;&amp;
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
 	  exit $i )
         </step>
@@ -59,7 +59,7 @@
 
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.query
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq
         </step>
       </post_steps>
       <environments>
@@ -74,7 +74,7 @@
       <pre_steps>
 	<step expected_result="0">
           . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query;
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl
         </step>
       </pre_steps>
@@ -91,7 +91,7 @@
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query &amp;&amp;
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
 	  exit $i )
         </step>
@@ -103,7 +103,7 @@
       </case>
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.query
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
         </step>
       </post_steps>
       <environments>
