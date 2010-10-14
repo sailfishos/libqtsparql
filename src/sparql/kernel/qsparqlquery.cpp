@@ -310,8 +310,8 @@ QString QSparqlQuery::preparedQueryText() const
 }
 
 /*!
-  Set the placeholder \a placeholder to be bound to value \a val in
-  the query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be included
+  Set the placeholder \a placeholder to be bound to value \a val in the
+  query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be included
   when specifying the placeholder name.
 
   \sa addBindValue(), boundValue() boundValues()
@@ -321,6 +321,12 @@ void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
     bindValue(QSparqlBinding(placeholder, val));
 }
 
+
+/*!
+  Set the placeholder \a binding.name() to be bound to value \a binding.value()
+  in the query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be
+  included when specifying the placeholder name.
+*/
 void QSparqlQuery::bindValue(const QSparqlBinding& binding)
 {
     // indexes: QString (placeholder) -> int

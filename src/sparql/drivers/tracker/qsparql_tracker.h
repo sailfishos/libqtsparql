@@ -71,7 +71,7 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerResult : public QSparqlResult
     friend class QTrackerDriver;
     friend class QTrackerResultPrivate; // for emitting signals
 public:
-    explicit QTrackerResult(QSparqlQuery::StatementType type, bool doBatch);
+    explicit QTrackerResult(QSparqlQuery::StatementType type);
     ~QTrackerResult();
 
     // Implementation of the QSparqlResult interface
