@@ -64,6 +64,7 @@ private slots:
     void query_contacts();
     void ask_contacts();
     void insert_and_delete_contact();
+    void insert_new_urn();
 
     void query_with_error();
 };
@@ -104,7 +105,7 @@ void tst_QSparqlTrackerDirect::query_contacts()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
@@ -128,7 +129,7 @@ void tst_QSparqlTrackerDirect::ask_contacts()
     QSparqlResult* r = conn.exec(q1);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->boolValue(), true);
     delete r;
@@ -139,7 +140,7 @@ void tst_QSparqlTrackerDirect::ask_contacts()
     r = conn.exec(q2);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->boolValue(), false);
     delete r;
@@ -147,7 +148,7 @@ void tst_QSparqlTrackerDirect::ask_contacts()
 
 void tst_QSparqlTrackerDirect::insert_and_delete_contact()
 {
-    // This test will leave unclean test data into tracker if it crashes.
+    // This test will leave unclean test data in tracker if it crashes.
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
@@ -157,7 +158,7 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     delete r;
 
@@ -184,7 +185,7 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     r = conn.exec(del);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
     delete r;
 
@@ -201,6 +202,66 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     delete r;
 }
 
+void tst_QSparqlTrackerDirect::insert_new_urn()
+{
+    // This test will leave unclean test data in tracker if it crashes.
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery add("insert { ?:addeduri a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname006\" .}",
+                     QSparqlQuery::InsertStatement);
+    add.bindValue(conn.createUrn("addeduri"));
+    QSparqlResult* r = conn.exec(add);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
+
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QSparqlBinding> contactNames;
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    QCOMPARE(r->size(), 4);
+    while (r->next()) {
+        // qDebug() << r->binding(0).toString() << r->binding(1).toString();
+        contactNames[r->binding(1).value().toString()] = r->binding(0);
+    }
+    QCOMPARE(contactNames.size(), 4);
+    // We can only compare the first 9 chars because the rest is a new uuid string
+    QCOMPARE(contactNames["addedname006"].value().toString().mid(0, 9), QString("urn:uuid:"));
+    delete r;
+
+    // Delete the uri
+    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    del.bindValue(contactNames["addedname006"]);
+    r = conn.exec(del);
+    qDebug() << r->lastQuery();
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
+
+    // Verify that it got deleted
+    contactNames.clear();
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    QCOMPARE(r->size(), 3);
+    while (r->next()) {
+        contactNames[r->binding(1).value().toString()] = r->binding(0);
+    }
+    QCOMPARE(contactNames.size(), 3);
+    delete r;
+}
+
 void tst_QSparqlTrackerDirect::query_with_error()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
@@ -208,7 +269,7 @@ void tst_QSparqlTrackerDirect::query_with_error()
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is syncronous only
+    r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;

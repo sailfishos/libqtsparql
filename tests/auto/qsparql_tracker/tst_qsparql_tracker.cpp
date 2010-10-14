@@ -63,6 +63,7 @@ public slots:
 private slots:
     void query_contacts();
     void insert_and_delete_contact();
+    void insert_new_urn();
 
     void query_with_error();
 
@@ -171,6 +172,69 @@ void tst_QSparqlTracker::insert_and_delete_contact()
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
+    }
+    QCOMPARE(contactNames.size(), 3);
+    delete r;
+}
+
+void tst_QSparqlTracker::insert_new_urn()
+{
+    // This test will leave unclean test data in tracker if it crashes.
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery add("insert { ?:addeduri a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                     "nco:nameGiven \"addedname006\" .}",
+                     QSparqlQuery::InsertStatement);
+    add.bindValue(conn.createUrn("addeduri"));
+    QSparqlResult* r = conn.exec(add);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
+
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QSparqlBinding> contactNames;
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    QCOMPARE(r->size(), 4);
+    while (r->next()) {
+        // qDebug() << r->binding(0).toString() << r->binding(1).toString();
+        contactNames[r->binding(1).value().toString()] = r->binding(0);
+    }
+    QCOMPARE(contactNames.size(), 4);
+    // We can only compare the first 9 chars because the rest is a new uuid string
+    QCOMPARE(contactNames["addedname006"].value().toString().mid(0, 9), QString("urn:uuid:"));
+    delete r;
+
+    // Delete the uri.
+    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    // Note that the tracker driver only returns strings, and so we can't just
+    // substitute the binding returned by the select query into the delete query,
+    // and need to do a bit of hackery here
+    del.bindValue("addeduri", QUrl(contactNames["addedname006"].value().toString()));
+    r = conn.exec(del);
+    qDebug() << r->lastQuery();
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
+
+    // Verify that it got deleted
+    contactNames.clear();
+    r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    QCOMPARE(r->size(), 3);
+    while (r->next()) {
+        contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 3);
     delete r;
