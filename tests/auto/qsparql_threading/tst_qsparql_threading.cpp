@@ -52,7 +52,8 @@
 
 #include <QtSparql/QtSparql>
 
-#define TEST_PORT 1111
+// #define TEST_PORT 1111
+#define TEST_PORT 1234
 
 class Thread : public QThread
 {
@@ -102,6 +103,7 @@ public Q_SLOTS:
     void concurrentVirtuosoQueries_thread();
     void concurrentTrackerQueries_thread();
     void concurrentTrackerDirectQueries_thread();
+    void concurrentTrackerDirectInserts_thread();
 
     void queryFinished();
     void resultsReturned(int count);
@@ -112,6 +114,7 @@ private Q_SLOTS:
     void concurrentVirtuosoQueries();
     void concurrentTrackerQueries();
     void concurrentTrackerDirectQueries();
+    void concurrentTrackerDirectInserts();
 };
 tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
@@ -362,6 +365,126 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
     QCOMPARE(r1->hasError(), false);
     QCOMPARE(r2->hasError(), false);
     QCOMPARE(r1->size(), r2->size());
+}
+
+void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
+{
+    sem1.acquire();
+    conn2 = new QSparqlConnection("QTRACKER_DIRECT");
+
+    QSparqlQuery q("insert { ?:addeduri a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-threading-tests> ;"
+                     "nco:nameGiven \"addedname007\" .}",
+                     QSparqlQuery::InsertStatement);
+    q.bindValue(conn2->createUrn("addeduri"));
+
+    r2 = conn2->exec(q);
+    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
+    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
+    sem2.release();
+    r2->waitForFinished();
+
+    QCOMPARE(r2->hasError(), false);
+
+    delete r2;
+
+    // Verify that the insertion succeeded
+    QSparqlQuery q2("select ?addeduri {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-threading-tests> ;"
+                   "nco:nameGiven \"addedname007\" .}");
+    r2 = conn2->exec(q2);
+    QVERIFY(r2 != 0);
+    r2->waitForFinished();
+    QCOMPARE(r2->size(), 1);
+    if (r2->next()) {
+        // We can only compare the first 9 chars because the rest is a new uuid string
+        QCOMPARE(r2->value(0).toString().mid(0, 9), QString("urn:uuid:"));
+    }
+
+    // Delete the uri
+    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    del.bindValue(r2->binding(0));
+    delete r2;
+    r2 = conn2->exec(del);
+    qDebug() << "r2 delete query:" << r2->lastQuery();
+    QVERIFY(r2 != 0);
+    QCOMPARE(r2->hasError(), false);
+    r2->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r2->hasError(), false);
+    delete r2;
+
+    // Verify that it got deleted
+    r2 = conn2->exec(q2);
+    QVERIFY(r2 != 0);
+    r2->waitForFinished();
+    QCOMPARE(r2->size(), 0);
+    delete r2;
+
+}
+
+void tst_QSparqlThreading::concurrentTrackerDirectInserts()
+{
+    QPointer<Thread> th = new Thread;
+
+    sem1.release();
+    conn1 = new QSparqlConnection("QTRACKER_DIRECT");
+
+    QSparqlQuery q1("insert { ?:addeduri a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-threading-tests> ;"
+                     "nco:nameGiven \"addedname008\" .}",
+                     QSparqlQuery::InsertStatement);
+    q1.bindValue(conn1->createUrn("addeduri"));
+
+    r1 = conn1->exec(q1);
+    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
+    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
+    sem2.acquire();
+
+    r1->waitForFinished();
+
+    QCOMPARE(r1->hasError(), false);
+
+    delete r1;
+
+    // Verify that the insertion succeeded
+    QSparqlQuery q2("select ?addeduri {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-threading-tests> ;"
+                   "nco:nameGiven \"addedname008\" .}");
+    r1 = conn1->exec(q2);
+    QVERIFY(r1 != 0);
+    r1->waitForFinished();
+    QCOMPARE(r1->size(), 1);
+    if (r1->next()) {
+        // We can only compare the first 9 chars because the rest is a new uuid string
+        QCOMPARE(r1->value(0).toString().mid(0, 9), QString("urn:uuid:"));
+    }
+
+    // Delete the uri
+    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    del.bindValue(r1->binding(0));
+    delete r1;
+    r1 = conn1->exec(del);
+    qDebug() << "r1 delete query:" << r1->lastQuery();
+    QVERIFY(r1 != 0);
+    QCOMPARE(r1->hasError(), false);
+    r1->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r1->hasError(), false);
+    delete r1;
+
+    // Verify that it got deleted
+    r1 = conn1->exec(q2);
+    QVERIFY(r1 != 0);
+    r1->waitForFinished();
+    QCOMPARE(r1->size(), 0);
+    delete r1;
+
+    if (!th.isNull()) {
+        waitForSignal(th, SIGNAL(finished()));
+    }
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
