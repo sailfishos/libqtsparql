@@ -232,6 +232,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
 {
     QTrackerDirectResult* res = new QTrackerDirectResult(d);
     res->setStatementType(type);
+    res->setQuery(query);
 
     switch (type) {
     case QSparqlQuery::AskStatement:
