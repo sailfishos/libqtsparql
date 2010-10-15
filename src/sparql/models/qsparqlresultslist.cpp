@@ -43,15 +43,34 @@
 
 #include "qsparqlresultslist_p.h"
 
-QSparqlResultsList::QSparqlResultsList(QObject *parent) :
-    QAbstractListModel(parent),
-    m_connection(0), m_result(0), m_options(0)
+class QSparqlResultsListPrivate
 {
+public:
+    QSparqlResultsListPrivate(QSparqlResultsList* _q) : q(_q), connection(0), result(0), options(0)
+    {
+    }
+
+    QSparqlResultsList *q;
+    QSparqlConnection *connection;
+    QSparqlResult *result;
+    QString query;
+    QSparqlConnectionOptionsWrapper *options;
+};
+
+QSparqlResultsList::QSparqlResultsList(QObject *parent) :
+    QAbstractListModel(parent)
+{
+    d = new QSparqlResultsListPrivate(this);
+}
+
+QSparqlResultsList::~QSparqlResultsList()
+{
+    delete d;
 }
 
 int QSparqlResultsList::rowCount(const QModelIndex &) const
 {
-    return m_result->size();
+    return d->result->size();
 }
 
 QVariant QSparqlResultsList::data(const QModelIndex &index, int role) const
@@ -59,8 +78,8 @@ QVariant QSparqlResultsList::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    m_result->setPos(index.row());
-    QSparqlResultRow row = m_result->current();
+    d->result->setPos(index.row());
+    QSparqlResultRow row = d->result->current();
     int i = role - (Qt::UserRole + 1);
 
     if (i >= row.count())
@@ -71,30 +90,29 @@ QVariant QSparqlResultsList::data(const QModelIndex &index, int role) const
 
 void QSparqlResultsList::reload()
 {
-    if (m_options == 0 || m_query.isEmpty())
+    if (d->options == 0 || d->query.isEmpty())
         return;
 
-    if (m_result != 0) {
-        if (!m_result->isFinished())
+    if (d->result != 0) {
+        if (!d->result->isFinished())
             return;
         else
-            delete m_result;
+            delete d->result;
     }
 
-    delete m_connection;
+    delete d->connection;
 
-    m_connection = new QSparqlConnection(m_options->driverName(), m_options->options());
-    m_result = m_connection->exec(QSparqlQuery(m_query));
-    connect(m_result, SIGNAL(finished()), this, SLOT(queryFinished()));
+    d->connection = new QSparqlConnection(d->options->driverName(), d->options->options());
+    d->result = d->connection->exec(QSparqlQuery(d->query));
+    connect(d->result, SIGNAL(finished()), this, SLOT(queryFinished()));
 }
 
 void QSparqlResultsList::queryFinished()
 {
-    QHash<int, QByteArray> roleNames;
-    roleNames = QAbstractItemModel::roleNames();
+    QHash<int, QByteArray> roleNames = QAbstractItemModel::roleNames();
 
-    if (m_result->first()) {
-        QSparqlResultRow resultRow = m_result->current();
+    if (d->result->first()) {
+        QSparqlResultRow resultRow = d->result->current();
 
         // Create two sets of declarative variables from the variable names used
         // in the select statement
@@ -117,23 +135,23 @@ void QSparqlResultsList::queryFinished()
 
 QSparqlConnectionOptionsWrapper* QSparqlResultsList::options() const
 {
-    return m_options;
+    return d->options;
 }
 
 void QSparqlResultsList::setOptions(QSparqlConnectionOptionsWrapper *options)
 {
-    m_options = options;
+    d->options = options;
     reload();
 }
 
 QString QSparqlResultsList::query() const
 {
-    return m_query;
+    return d->query;
 }
 
 void
 QSparqlResultsList::setQuery(const QString &query)
 {
-    m_query = query;
+    d->query = query;
     reload();
 }

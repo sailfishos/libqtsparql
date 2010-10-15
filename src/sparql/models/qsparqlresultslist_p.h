@@ -58,6 +58,8 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
+class QSparqlResultsListPrivate;
+
 class QSparqlResultsList : public QAbstractListModel
 {
     Q_OBJECT
@@ -66,6 +68,7 @@ class QSparqlResultsList : public QAbstractListModel
     Q_CLASSINFO("DefaultProperty", "query")
 public:
     QSparqlResultsList(QObject *parent = 0);
+    ~QSparqlResultsList();
 
     void reload();
 
@@ -82,10 +85,7 @@ private slots:
     void queryFinished();
 
 private:
-    QSparqlConnection *m_connection;
-    QSparqlResult *m_result;
-    QString m_query;
-    QSparqlConnectionOptionsWrapper *m_options;
+    QSparqlResultsListPrivate* d;
 };
 
 QT_END_NAMESPACE
