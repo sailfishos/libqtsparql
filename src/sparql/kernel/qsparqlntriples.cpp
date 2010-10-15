@@ -209,7 +209,7 @@ QSparqlBinding QSparqlNTriples::parseLiteral(QString name)
             } else {
                 i++;
                 if (i < buffer.size()) {
-                    if (buffer[i] == '"' || buffer[i] == 'n' || buffer[i] == 'r' || buffer[i] == 't') {
+                    if (buffer[i] == '"' || buffer[i] == 'n' || buffer[i] == 'r' || buffer[i] == 't' || buffer[i] == '\\') {
                         literal.append(buffer[i - 1]);
                         literal.append(buffer[i]);
                     } else if (buffer[i] == 'u') {
