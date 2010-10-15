@@ -145,6 +145,7 @@ private slots:
     void wrong_creation();
     void open_fails();
     void connection_scope();
+    void drivers_list();
 };
 
 tst_QSparql::tst_QSparql()
@@ -158,6 +159,10 @@ tst_QSparql::~tst_QSparql()
 void tst_QSparql::initTestCase()
 {
     qSparqlRegisterConnectionCreator("MOCK", new MockDriverCreator());
+
+    // For running the test without installing the plugins. Should work in
+    // normal and vpath builds.
+    QCoreApplication::addLibraryPath("../../../plugins");
 }
 
 void tst_QSparql::cleanupTestCase()
@@ -207,6 +212,17 @@ void tst_QSparql::connection_scope()
     QCOMPARE(MockDriver::closeCount, 1);
 }
 
+void tst_QSparql::drivers_list()
+{
+    QStringList expectedDrivers;
+    expectedDrivers << "QSPARQL_ENDPOINT" << "QTRACKER" << "QTRACKER_DIRECT" << "QVIRTUOSO" << "MOCK";
+
+    QStringList drivers = QSparqlConnection::drivers();
+    foreach (QString driver, drivers) {
+        QCOMPARE(expectedDrivers.indexOf(driver) != -1, true);
+        // qDebug() << driver;
+    }
+}
 
 QTEST_MAIN(tst_QSparql)
 #include "tst_qsparql.moc"
