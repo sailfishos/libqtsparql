@@ -109,15 +109,25 @@ void tst_QSparqlVirtuosoEndpoint::query_contacts()
     options.setHostName("localhost");
     options.setPort(8890);
     QSparqlConnection conn("QSPARQL_ENDPOINT", options);
-    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
-    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
     QSparqlQuery q("select ?u ?ng "
                    "from <http://virtuoso_endpoint/testgraph> "
                    " {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-endpoint-tests> ;"
                    "nco:nameGiven ?ng .}");
+
     QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    // No prefixes were added and so the query will give an error
+    QCOMPARE(r->hasError(), true);
+    delete r;
+
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
+
+    r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only

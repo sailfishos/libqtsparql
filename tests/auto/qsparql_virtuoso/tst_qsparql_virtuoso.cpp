@@ -110,15 +110,25 @@ void tst_QSparqlVirtuoso::query_contacts()
     options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
     options.setPort(TEST_PORT);
     QSparqlConnection conn("QVIRTUOSO", options);
-    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
-    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
 
     QSparqlQuery q("select ?u ?ng "
                    "from <http://virtuoso/testgraph> "
                    " {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
                    "nco:nameGiven ?ng .}");
+
     QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    // No prefixes were added and so the query will give an error
+    QCOMPARE(r->hasError(), true);
+    delete r;
+
+    conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
+
+    r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
