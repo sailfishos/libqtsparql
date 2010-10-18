@@ -78,7 +78,6 @@ struct QSparqlQueryPrivate
     }
 
     ~QSparqlQueryPrivate();
-    static QSparqlQueryPrivate* shared_null();
 
     void findPlaceholders();
 
@@ -101,13 +100,6 @@ static bool qIsAlnum(QChar ch)
 }
 
 Q_GLOBAL_STATIC(QSparqlQueryPrivate, nullQueryPrivate)
-
-QSparqlQueryPrivate* QSparqlQueryPrivate::shared_null()
-{
-    QSparqlQueryPrivate *null = nullQueryPrivate();
-    null->ref.ref();
-    return null;
-}
 
 /*!
 \internal
