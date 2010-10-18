@@ -218,10 +218,12 @@ void tst_QSparql::drivers_list()
     expectedDrivers << "QSPARQL_ENDPOINT" << "QTRACKER" << "QTRACKER_DIRECT" << "QVIRTUOSO" << "MOCK";
 
     QStringList drivers = QSparqlConnection::drivers();
-    foreach (QString driver, drivers) {
-        QCOMPARE(expectedDrivers.indexOf(driver) != -1, true);
+    foreach (const QString& driver, drivers) {
+        QVERIFY(expectedDrivers.contains(driver));
         // qDebug() << driver;
     }
+    QVERIFY(drivers.size() >= 1);
+    QVERIFY(drivers.contains("MOCK"));
 }
 
 QTEST_MAIN(tst_QSparql)
