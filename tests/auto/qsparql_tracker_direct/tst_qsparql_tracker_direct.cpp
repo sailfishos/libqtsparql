@@ -67,6 +67,8 @@ private slots:
     void insert_new_urn();
 
     void query_with_error();
+
+    void iterate_result();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -272,6 +274,53 @@ void tst_QSparqlTrackerDirect::query_with_error()
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::iterate_result()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+
+    QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+    // This is not a valid position
+    for (int i=-1; i <= 2; ++i) {
+        QCOMPARE(r->binding(i), QSparqlBinding());
+        QVERIFY(r->value(i).isNull());
+    }
+    QCOMPARE(r->current(), QSparqlResultRow());
+
+    for (int i=0; i<3; ++i) {
+        QVERIFY(r->next());
+        QCOMPARE(r->pos(), i);
+
+        QVERIFY(r->binding(-1).value().isNull());
+        QVERIFY(r->binding(0).value().isNull() == false);
+        QVERIFY(r->binding(1).value().isNull() == false);
+        QVERIFY(r->binding(2).value().isNull());
+
+        QVERIFY(r->value(-1).isNull());
+        QVERIFY(r->value(0).isNull() == false);
+        QVERIFY(r->value(1).isNull() == false);
+        QVERIFY(r->value(2).isNull());
+    }
+    QVERIFY(!r->next());
+    QVERIFY(r->pos() == QSparql::AfterLastRow);
+    // This is not a valid position
+    for (int i=-1; i <= 2; ++i) {
+        QCOMPARE(r->binding(i), QSparqlBinding());
+        QVERIFY(r->value(i).isNull());
+    }
+    QCOMPARE(r->current(), QSparqlResultRow());
+
     delete r;
 }
 
