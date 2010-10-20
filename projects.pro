@@ -33,7 +33,7 @@ QMAKE_EXTRA_TARGETS += xclean
 
 # To measure code coverage:
 # 1) build the plugins into the libqtsparql.so
-# ./configure -qt-sparql-endpoint -qt-sparql-tracker -qt-sparql-tracker-direct
+# ./configure -qt-sparql-endpoint -qt-sparql-tracker -qt-sparql-tracker_direct
 # 2) compile with coverage flags
 # qmake CONFIG+=coverage
 # make
