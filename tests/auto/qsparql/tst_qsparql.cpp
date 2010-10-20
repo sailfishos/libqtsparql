@@ -57,7 +57,7 @@ class MockResult : public QSparqlResult
     MockResult(const MockDriver* d);
     int size() const
     {
-        return 0;
+        return size_;
     }
 
     QSparqlResultRow current() const
@@ -74,6 +74,8 @@ class MockResult : public QSparqlResult
     {
         return QVariant();
     }
+public:
+    static int size_;
 };
 
 class MockDriver : public QSparqlDriver
@@ -89,8 +91,10 @@ class MockDriver : public QSparqlDriver
     bool open(const QSparqlConnectionOptions&)
     {
         ++openCount;
+        setOpen(openRetVal);
         return openRetVal;
     }
+
     void close()
     {
         ++closeCount;
@@ -107,6 +111,8 @@ class MockDriver : public QSparqlDriver
     static int closeCount;
     static bool openRetVal;
 };
+
+int MockResult::size_ = 0;
 
 int MockDriver::openCount = 0;
 int MockDriver::closeCount = 0;
@@ -146,6 +152,10 @@ private slots:
     void open_fails();
     void connection_scope();
     void drivers_list();
+
+    void iterate_empty_result();
+    void iterate_nonempty_result();
+    void iterate_nonempty_result_backwards();
 };
 
 tst_QSparql::tst_QSparql()
@@ -174,6 +184,7 @@ void tst_QSparql::init()
     MockDriver::openCount = 0;
     MockDriver::closeCount = 0;
     MockDriver::openRetVal = true;
+    MockResult::size_ = 0;
 }
 
 void tst_QSparql::cleanup()
@@ -224,6 +235,57 @@ void tst_QSparql::drivers_list()
     }
     QVERIFY(drivers.size() >= 1);
     QVERIFY(drivers.contains("MOCK"));
+}
+
+void tst_QSparql::iterate_empty_result()
+{
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    QVERIFY(!res->next());
+    // QVERIFY(res->pos() == QSparql::AfterLastRow); // fails
+    delete res;
+}
+
+void tst_QSparql::iterate_nonempty_result()
+{
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+    MockResult::size_ = 2;
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    QVERIFY(res->next());
+    QCOMPARE(res->pos(), 0);
+    QVERIFY(res->next());
+    QCOMPARE(res->pos(), 1);
+    QVERIFY(!res->next());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    res->first();
+    QVERIFY(res->pos() == 0);
+    res->last();
+    QVERIFY(res->pos() == 1);
+    delete res;
+}
+
+void tst_QSparql::iterate_nonempty_result_backwards()
+{
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+    MockResult::size_ = 2;
+    // Get the result to the last position
+    QVERIFY(res->last());
+    QVERIFY(!res->next());
+    // And then iterate
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    QVERIFY(res->previous());
+    QCOMPARE(res->pos(), 1);
+    QVERIFY(res->previous());
+    QCOMPARE(res->pos(), 0);
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    delete res;
 }
 
 QTEST_MAIN(tst_QSparql)
