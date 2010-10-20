@@ -68,6 +68,8 @@ private slots:
     void query_with_error();
 
     void batch_update();
+
+    void iterate_result();
 };
 
 tst_QSparqlTracker::tst_QSparqlTracker()
@@ -310,6 +312,54 @@ void tst_QSparqlTracker::batch_update()
     QCOMPARE(contactNames.size(), 3);
     delete r;
 }
+
+void tst_QSparqlTracker::iterate_result()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+
+    QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+    // This is not a valid position
+    for (int i=-1; i <= 2; ++i) {
+        QCOMPARE(r->binding(i), QSparqlBinding());
+        QVERIFY(r->value(i).isNull());
+    }
+    QCOMPARE(r->current(), QSparqlResultRow());
+
+    for (int i=0; i<3; ++i) {
+        QVERIFY(r->next());
+        QCOMPARE(r->pos(), i);
+
+        QVERIFY(r->binding(-1).value().isNull());
+        QVERIFY(r->binding(0).value().isNull() == false);
+        QVERIFY(r->binding(1).value().isNull() == false);
+        QVERIFY(r->binding(2).value().isNull());
+
+        QVERIFY(r->value(-1).isNull());
+        QVERIFY(r->value(0).isNull() == false);
+        QVERIFY(r->value(1).isNull() == false);
+        QVERIFY(r->value(2).isNull());
+    }
+    QVERIFY(!r->next());
+    QVERIFY(r->pos() == QSparql::AfterLastRow);
+    // This is not a valid position
+    for (int i=-1; i <= 2; ++i) {
+        QCOMPARE(r->binding(i), QSparqlBinding());
+        QVERIFY(r->value(i).isNull());
+    }
+    QCOMPARE(r->current(), QSparqlResultRow());
+
+    delete r;
+}
+
 
 QTEST_MAIN( tst_QSparqlTracker )
 #include "tst_qsparql_tracker.moc"

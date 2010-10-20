@@ -56,6 +56,11 @@
 	  exit $i )
         </step>
       </case>
+      <case name="test-iterating-result" description="Iterating a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker iterate_result
+        </step>
+      </case>
 
       <post_steps>
 	<step expected_result="0">
