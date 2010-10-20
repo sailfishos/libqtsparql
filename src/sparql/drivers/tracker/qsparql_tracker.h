@@ -83,7 +83,6 @@ public:
     virtual QVariant value(int i) const;
 
 protected:
-    void cleanup();
     int size() const;
 
 private:

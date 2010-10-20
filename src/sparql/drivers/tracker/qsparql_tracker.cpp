@@ -267,19 +267,12 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
     return res;
 }
 
-void QTrackerResult::cleanup()
-{
-    setPos(QSparql::BeforeFirstRow);
-}
-
 QSparqlBinding QTrackerResult::binding(int field) const
 {
     if (!isValid()) {
         return QSparqlBinding();
     }
 
-    // The upper layer calls this function only when this Result is positioned
-    // in a valid position, so we don't need to check that.
     int i = pos();
     if (field >= d->data[i].count() || field < 0) {
         qWarning() << "QTrackerResult::data: column" << field << "out of range";
