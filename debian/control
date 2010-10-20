@@ -15,6 +15,7 @@ Depends: ${shlibs:Depends}
 Description: Library for accessing RDF stores.
 
 Package: libqtsparql0-dbg
+Section: debug
 Priority: extra
 Architecture: any
 Depends: libqtsparql0 (= ${binary:Version})
@@ -53,6 +54,7 @@ Depends: ${shlibs:Depends}
 Description: Endpoint driver for QtSparql.
 
 Package: libqtsparql-endpoint-dbg
+Section: debug
 Priority: extra
 Architecture: any
 Depends: libqtsparql-endpoint (= ${binary:Version})
@@ -66,6 +68,7 @@ Depends: ${shlibs:Depends}
 Description: Tracker driver for QtSparql.
 
 Package: libqtsparql-tracker-dbg
+Section: debug
 Priority: extra
 Architecture: any
 Depends: libqtsparql-tracker (= ${binary:Version})
@@ -79,6 +82,7 @@ Depends: ${shlibs:Depends}
 Description: Tracker direct access driver for QtSparql.
 
 Package: libqtsparql-tracker-direct-dbg
+Section: debug
 Priority: extra
 Architecture: any
 Depends: libqtsparql-tracker-direct (= ${binary:Version})
