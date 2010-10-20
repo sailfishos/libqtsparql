@@ -101,9 +101,51 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error
         </step>
       </case>
+      <case name="test-insert-new-urn" description="Inserting a created urn">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_new_urn
+        </step>
+      </case>
       <post_steps>
 	<step expected_result="0">
 	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
+        </step>
+      </post_steps>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+      <get>
+	<file>/home/user/.local/share/tracker/tracker-store.log</file>
+      </get>
+    </set>
+    <set name="qsparql-threding" description="Multithreading tests">
+      <pre_steps>
+	<step expected_result="0">
+          . /tmp/session_bus_address.user;
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq;
+        </step>
+      </pre_steps>
+      <case name="test-tracker-queries" description="Tracker queries">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries
+        </step>
+      </case>
+      <case name="test-tracker-direct-queries" description="Tracker direct queries">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries
+        </step>
+      </case>
+      <case name="test-tracker-direct-inserts" description="Tracker direct inserts">
+
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_threading.rq &amp;&amp; exit $i )
+        </step>
+      </case>
+      <post_steps>
+	<step expected_result="0">
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq
         </step>
       </post_steps>
       <environments>
