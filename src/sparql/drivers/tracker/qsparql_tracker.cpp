@@ -451,3 +451,5 @@ void QTrackerDriver::close()
 }
 
 QT_END_NAMESPACE
+
+#include "qsparql_tracker.moc"

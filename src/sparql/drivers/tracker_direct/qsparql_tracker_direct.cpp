@@ -442,3 +442,5 @@ void QTrackerDirectDriver::close()
 }
 
 QT_END_NAMESPACE
+
+#include "qsparql_tracker_direct.moc"
