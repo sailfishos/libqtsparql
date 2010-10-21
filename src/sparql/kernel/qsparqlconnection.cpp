@@ -74,6 +74,7 @@
 
 #include <QtCore/qhash.h>
 #include <QtCore/quuid.h>
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,13 +106,15 @@ public:
     static QSparqlDriver* findDriver(const QString& type);
     static QSparqlDriver* findDriverWithFactoryLoader(const QString& type);
     static void initKeys();
-    static QStringList allKeys;
-    static QHash<QString, QSparqlDriverPlugin*> plugins;
     static QSparqlDriver* findDriverWithPluginLoader(const QString& type);
     static void registerConnectionCreator(const QString &type,
                                           QSparqlDriverCreatorBase* creator);
 
     static QSparqlConnectionPrivate* shared_null();
+
+    static QStringList allKeys;
+    static QHash<QString, QSparqlDriverPlugin*> plugins;
+    static QMutex pluginMutex; // protexts allKeys, plugins and driverDict
 
     QSparqlDriver* driver;
     QString drvName;
@@ -159,6 +162,7 @@ DriverDict &QSparqlConnectionPrivate::driverDict()
 
 QSparqlDriver* QSparqlConnectionPrivate::findDriver(const QString &type)
 {
+    QMutexLocker locker(&pluginMutex);
     // separately defined drivers (e.g., for tests)
     QSparqlDriver * driver = 0;
     DriverDict dict = QSparqlConnectionPrivate::driverDict();
@@ -220,11 +224,12 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QStri
     return driver;
 #else
     return 0;
-#endif
+#endif // WE_ARE_QT
 }
 
 QStringList QSparqlConnectionPrivate::allKeys;
 QHash<QString, QSparqlDriverPlugin*> QSparqlConnectionPrivate::plugins;
+QMutex QSparqlConnectionPrivate::pluginMutex(QMutex::Recursive);
 
 void QSparqlConnectionPrivate::initKeys()
 {
@@ -511,6 +516,7 @@ QSparqlBinding QSparqlConnection::createUrn(const QString& name) const
 */
 QStringList QSparqlConnection::drivers()
 {
+    QMutexLocker locker(&(QSparqlConnectionPrivate::pluginMutex));
     QStringList list;
 
 #ifdef QT_SPARQL_VIRTUOSO
