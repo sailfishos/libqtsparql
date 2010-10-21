@@ -62,12 +62,17 @@
 
 QT_BEGIN_NAMESPACE
 
+// The default for how often the result will emit the dataReady signal.  Can be
+// customized via QSparqlConnectionOptions.
+#define DEFAULT_DATA_READY_INTERVAL 100
+
 class QTrackerDirectDriverPrivate {
 public:
     QTrackerDirectDriverPrivate();
     ~QTrackerDirectDriverPrivate();
 
     TrackerSparqlConnection *connection;
+    int dataReadyInterval;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -86,6 +91,7 @@ public:
     QVector<QSparqlResultRow> results;
     bool isFinished;
     QEventLoop *loop;
+    int lastDataReady;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -217,8 +223,11 @@ async_update_callback( GObject *source_object,
     data->terminate();
 }
 
-QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp)
-: cursor(0), isFinished(false), loop(0), q(result), driverPrivate(dpp)
+QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(
+    QTrackerDirectResult* result,
+    QTrackerDirectDriverPrivate *dpp)
+: cursor(0), isFinished(false), loop(0), lastDataReady(0),
+  q(result), driverPrivate(dpp)
 {
 }
 
@@ -231,6 +240,7 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 void QTrackerDirectResultPrivate::terminate()
 {
     isFinished = true;
+    dataReady(results.count());
     q->emit finished();
 
     if (loop != 0)
@@ -249,7 +259,18 @@ void QTrackerDirectResultPrivate::setBoolValue(bool v)
 
 void QTrackerDirectResultPrivate::dataReady(int totalCount)
 {
-    emit q->dataReady(totalCount);
+    bool doEmit = false;
+    if (isFinished && totalCount > lastDataReady) {
+        // emit the last dataChanged signal even if there is 1 additional item
+        doEmit = true;
+    }
+    else if (totalCount >= lastDataReady + driverPrivate->dataReadyInterval) {
+        doEmit = true;
+    }
+    if (doEmit) {
+        emit q->dataReady(totalCount);
+        lastDataReady = totalCount;
+    }
 }
 
 QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
@@ -368,6 +389,7 @@ QSparqlResultRow QTrackerDirectResult::current() const
 }
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate()
+    : dataReadyInterval(DEFAULT_DATA_READY_INTERVAL)
 {
 }
 
@@ -410,7 +432,9 @@ QAtomicInt connectionCounter = 0;
 
 bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 {
-    Q_UNUSED(options);
+    QVariant dataReadyInterval = options.option(QLatin1String("dataReadyInterval"));
+    if (!dataReadyInterval.isNull() && dataReadyInterval.type() == QVariant::Int)
+        d->dataReadyInterval = dataReadyInterval.toInt();
 
     if (isOpen())
         close();
