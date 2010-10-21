@@ -1,6 +1,6 @@
 TARGET	 = qsparqlendpoint
 
-HEADERS		= ../../../sparql/drivers/endpoint/qsparql_endpoint.h
+HEADERS		= ../../../sparql/drivers/endpoint/qsparql_endpoint_p.h
 SOURCES		= main.cpp \
 		  ../../../sparql/drivers/endpoint/qsparql_endpoint.cpp
 
@@ -13,6 +13,7 @@ include(../qsparqldriverbase.pri)
 
 QT += xml
 QT += network
+CONFIG += debug
 
 coverage {
 	LIBS += -lgcov

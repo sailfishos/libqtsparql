@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qsparql_tracker.h"
+// #include "qsparql_tracker.h"
 #include "qsparql_tracker_p.h"
 
 #include <qsparqlerror.h>
@@ -82,7 +82,37 @@ Q_DECLARE_METATYPE_COMMA(QMap<QString, QString>)
 Q_DECLARE_METATYPE_COMMA(QVector<QMap<QString, QString> >)
 Q_DECLARE_METATYPE_COMMA(QVector<QVector<QMap<QString, QString> > >)
 
+class QTrackerDriver;
+
 QT_BEGIN_NAMESPACE
+
+class QTrackerDriverPrivate {
+public:
+    QTrackerDriverPrivate();
+    ~QTrackerDriverPrivate();
+    QDBusConnection connection;
+    QDBusInterface* iface;
+    bool doBatch; // true: call BatchSparqlUpdate on Tracker instead of
+                  // SparqlUpdateBlank
+};
+
+class QTrackerResultPrivate : public QObject {
+    Q_OBJECT
+public:
+    QTrackerResultPrivate(QTrackerResult* res,
+                          QSparqlQuery::StatementType tp);
+
+    ~QTrackerResultPrivate();
+    QDBusPendingCallWatcher* watcher;
+    QVector<QStringList> data;
+    QSparqlQuery::StatementType type;
+    void setCall(QDBusPendingCall& call);
+
+private slots:
+    void onDBusCallFinished();
+private:
+    QTrackerResult* q; // public part
+};
 
 namespace {
 

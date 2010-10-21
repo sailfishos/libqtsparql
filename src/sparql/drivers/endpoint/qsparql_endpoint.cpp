@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qsparql_endpoint.h"
+#include "qsparql_endpoint_p.h"
 
 #include <qcoreapplication.h>
 #include <qvariant.h>

@@ -12,16 +12,6 @@ HEADERS +=      kernel/qsparql.h \
                 kernel/qsparqlntriples_p.h \
                 kernel/qsparqlresult.h 
 
-install_headers.files += \
-                kernel/qsparql.h \
-                kernel/qsparqlquery.h \
-                kernel/qsparqlconnection.h \
-                kernel/qsparqlconnectionoptions.h \
-                kernel/qsparqlbinding.h \
-                kernel/qsparqlresultrow.h \
-                kernel/qsparqlerror.h \
-                kernel/qsparqlresult.h 
-
 SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqlconnection.cpp \
                 kernel/qsparqlconnectionoptions.cpp \

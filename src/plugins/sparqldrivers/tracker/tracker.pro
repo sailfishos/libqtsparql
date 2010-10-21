@@ -1,7 +1,6 @@
 TARGET	 = qsparqltracker
 
-HEADERS		= ../../../sparql/drivers/tracker/qsparql_tracker.h \
-                  ../../../sparql/drivers/tracker/qsparql_tracker_p.h
+HEADERS		= ../../../sparql/drivers/tracker/qsparql_tracker_p.h
 
 SOURCES		= main.cpp \
 		  ../../../sparql/drivers/tracker/qsparql_tracker.cpp

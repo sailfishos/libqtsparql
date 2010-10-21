@@ -2,7 +2,7 @@ TARGET	 = qsparqlvirtuoso
 
 CONFIG += debug_and_release
 
-HEADERS		= ../../../sparql/drivers/virtuoso/qsparql_virtuoso.h
+HEADERS		= ../../../sparql/drivers/virtuoso/qsparql_virtuoso_p.h
 SOURCES		= main.cpp \
 		  ../../../sparql/drivers/virtuoso/qsparql_virtuoso.cpp
 

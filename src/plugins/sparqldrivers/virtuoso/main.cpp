@@ -41,7 +41,7 @@
 
 #include <QtSparql/private/qsparqldriverplugin_p.h>
 #include <qstringlist.h>
-#include "../../../sparql/drivers/virtuoso/qsparql_virtuoso.h"
+#include "../../../sparql/drivers/virtuoso/qsparql_virtuoso_p.h"
 
 QT_BEGIN_NAMESPACE
 

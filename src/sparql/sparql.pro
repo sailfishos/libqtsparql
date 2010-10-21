@@ -15,6 +15,10 @@ install_headers.files =
 
 include($$QT_BUILD_TREE/include/QtSparql/headers.pri)
 
+include_headers.files = $$SYNCQT.HEADER_FILES
+include_headers.path = $$QTSPARQL_INSTALL_HEADERS
+INSTALLS += include_headers
+
 class_headers.files = $$SYNCQT.HEADER_CLASSES
 class_headers.path = $$QTSPARQL_INSTALL_HEADERS
 INSTALLS += class_headers

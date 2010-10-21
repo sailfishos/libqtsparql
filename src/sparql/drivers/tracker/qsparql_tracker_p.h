@@ -39,53 +39,71 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_P_H
-#define QSPARQL_TRACKER_P_H
+#ifndef QSPARQL_TRACKER_H
+#define QSPARQL_TRACKER_H
 
-#include <qsparqlquery.h>
+#include <QtSparql/private/qsparqldriver_p.h>
+#include <QtSparql/qsparqlresult.h>
+#include <QtSparql/qsparqlquery.h>
 
-#include <QObject>
-#include <QVector>
-#include <QStringList>
-#include <QDBusConnection>
-#include <QDBusArgument>
+#include <QtDBus/QtDBus>
 
-class QDBusInterface;
-class QDBusPendingCallWatcher;
-class QString;
-class QTrackerResult;
-class QTrackerDriver;
+#if defined (Q_OS_WIN32)
+#include <QtCore/qt_windows.h>
+#endif
+
+#ifdef QT_PLUGIN
+#define Q_EXPORT_SPARQLDRIVER_TRACKER
+#else
+#define Q_EXPORT_SPARQLDRIVER_TRACKER Q_SPARQL_EXPORT
+#endif
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QTrackerDriverPrivate {
+class QTrackerDriverPrivate;
+class QTrackerResultPrivate;
+class QTrackerDriver;
+
+class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerResult : public QSparqlResult
+{
+    friend class QTrackerDriver;
+    friend class QTrackerResultPrivate; // for emitting signals
 public:
-    QTrackerDriverPrivate();
-    ~QTrackerDriverPrivate();
-    QDBusConnection connection;
-    QDBusInterface* iface;
-    bool doBatch; // true: call BatchSparqlUpdate on Tracker instead of
-                  // SparqlUpdateBlank
+    explicit QTrackerResult(QSparqlQuery::StatementType type);
+    ~QTrackerResult();
+
+    // Implementation of the QSparqlResult interface
+    virtual void waitForFinished();
+    virtual bool isFinished() const;
+
+    virtual QSparqlResultRow current() const;
+    virtual QSparqlBinding binding(int i) const;
+    virtual QVariant value(int i) const;
+
+protected:
+    int size() const;
+
+private:
+    QTrackerResultPrivate* d;
 };
 
-class QTrackerResultPrivate : public QObject {
+class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerDriver : public QSparqlDriver
+{
     Q_OBJECT
 public:
-    QTrackerResultPrivate(QTrackerResult* res,
-                          QSparqlQuery::StatementType tp);
+    explicit QTrackerDriver(QObject *parent=0);
+    ~QTrackerDriver();
 
-    ~QTrackerResultPrivate();
-    QDBusPendingCallWatcher* watcher;
-    QVector<QStringList> data;
-    QSparqlQuery::StatementType type;
-    void setCall(QDBusPendingCall& call);
-
-private slots:
-    void onDBusCallFinished();
+    // Implementation of the QSparqlDriver interface
+    bool hasFeature(QSparqlConnection::Feature f) const;
+    bool open(const QSparqlConnectionOptions& options);
+    void close();
+    QTrackerResult* exec(const QString& query,
+                         QSparqlQuery::StatementType type);
 private:
-    QTrackerResult* q; // public part
+    QTrackerDriverPrivate* d;
 };
 
 QT_END_NAMESPACE

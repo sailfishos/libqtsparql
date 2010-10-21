@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qsparql_virtuoso.h"
+#include "qsparql_virtuoso_p.h"
 #include "sparqlext_p.h"
 
 #if defined (Q_OS_WIN32)

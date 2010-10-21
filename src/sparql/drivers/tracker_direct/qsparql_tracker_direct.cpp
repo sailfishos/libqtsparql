@@ -39,13 +39,13 @@
 **
 ****************************************************************************/
 
-#include "qsparql_tracker_direct.h"
 #include "qsparql_tracker_direct_p.h"
 
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
 #include <qsparqlresultrow.h>
+#include <qsparqlconnection.h>
 
 #include <qcoreapplication.h>
 #include <qvariant.h>
@@ -54,7 +54,42 @@
 
 #include <qdebug.h>
 
+// The gdbusintrospection.h header has a variable called 'signals', which
+// gets substituted with the Qt 'signals' macro. So work round the
+// problem by undefining it here.
+#undef signals
+#include <tracker-sparql.h>
+
 QT_BEGIN_NAMESPACE
+
+class QTrackerDirectDriverPrivate {
+public:
+    QTrackerDirectDriverPrivate();
+    ~QTrackerDirectDriverPrivate();
+
+    TrackerSparqlConnection *connection;
+};
+
+class QTrackerDirectResultPrivate : public QObject {
+    Q_OBJECT
+public:
+    QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp);
+
+    ~QTrackerDirectResultPrivate();
+    void terminate();
+    void setLastError(const QSparqlError& e);
+    void setBoolValue(bool v);
+    void dataReady(int totalCount);
+
+    TrackerSparqlCursor * cursor;
+    QVector<QString> columnNames;
+    QVector<QSparqlResultRow> results;
+    bool isFinished;
+    QEventLoop *loop;
+
+    QTrackerDirectResult* q;
+    QTrackerDirectDriverPrivate *driverPrivate;
+};
 
 static void
 async_cursor_next_callback( GObject *source_object,

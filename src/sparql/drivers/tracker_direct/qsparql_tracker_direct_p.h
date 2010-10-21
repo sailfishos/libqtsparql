@@ -39,61 +39,76 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_P_H
-#define QSPARQL_TRACKER_DIRECT_P_H
+#ifndef QSPARQL_TRACKER_DIRECT_H
+#define QSPARQL_TRACKER_DIRECT_H
 
-#include <qsparqlquery.h>
-#include <qsparqlerror.h>
+#include <QtSparql/private/qsparqldriver_p.h>
+#include <QtSparql/qsparqlresult.h>
+#include <QtSparql/qsparqlquery.h>
 
-#include <QtCore/QVector>
-#include <QtCore/QEventLoop>
+#include <QtDBus/QtDBus>
 
-// The gdbusintrospection.h header has a variable called 'signals', which
-// gets substituted with the Qt 'signals' macro. So work round the 
-// problem by undefining it here.
-#undef signals
-#include <tracker-sparql.h>
+#if defined (Q_OS_WIN32)
+#include <QtCore/qt_windows.h>
+#endif
 
-class QString;
-class QTrackerDirectResult;
-class QTrackerDirectDriver;
+#ifdef QT_PLUGIN
+#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
+#else
+#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
+#endif
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QTrackerDirectDriverPrivate {
+class QTrackerDirectDriverPrivate;
+class QTrackerDirectResultPrivate;
+class QTrackerDirectDriver;
+
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
+{
+    friend class QTrackerDirectDriver;
+    friend class QTrackerDirectResultPrivate; // for emitting signals
 public:
-    QTrackerDirectDriverPrivate();
-    ~QTrackerDirectDriverPrivate();
-    
-    TrackerSparqlConnection *connection;
+    explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p);
+    ~QTrackerDirectResult();
+
+    // Implementation of the QSparqlResult interface
+    virtual void waitForFinished();
+    virtual bool isFinished() const;
+
+    virtual QSparqlResultRow current() const;
+    virtual QSparqlBinding binding(int i) const;
+    virtual QVariant value(int i) const;
+    virtual int size() const;
+
+protected:
+    void cleanup();
+
+private:
+    QTrackerDirectResultPrivate* d;
 };
 
-class QTrackerDirectResultPrivate : public QObject {
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectDriver : public QSparqlDriver
+{
     Q_OBJECT
 public:
-    QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp);
+    explicit QTrackerDirectDriver(QObject *parent=0);
+    ~QTrackerDirectDriver();
 
-    ~QTrackerDirectResultPrivate();
-    void terminate();
-    void setLastError(const QSparqlError& e);
-    void setBoolValue(bool v);
-    void dataReady(int totalCount);
-
-    TrackerSparqlCursor * cursor;
-    QVector<QString> columnNames;
-    QVector<QSparqlResultRow> results;
-    bool isFinished;
-    QEventLoop *loop;
-
-    QTrackerDirectResult* q;
-    QTrackerDirectDriverPrivate *driverPrivate;
+    // Implementation of the QSparqlDriver interface
+    bool hasFeature(QSparqlConnection::Feature f) const;
+    bool open(const QSparqlConnectionOptions& options);
+    void close();
+    QTrackerDirectResult* exec(const QString& query,
+                         QSparqlQuery::StatementType type);
+private:
+    QTrackerDirectDriverPrivate* d;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_DIRECT_P_H
-
+#endif // QSPARQL_TRACKER_DIRECT_H
