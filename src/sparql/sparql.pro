@@ -13,6 +13,12 @@ DEFINES += QT_NO_CAST_FROM_ASCII
 install_headers.path = $$QTSPARQL_INSTALL_HEADERS
 install_headers.files = 
 
+include($$QT_BUILD_TREE/include/QtSparql/headers.pri)
+
+class_headers.files = $$SYNCQT.HEADER_CLASSES
+class_headers.path = $$QTSPARQL_INSTALL_HEADERS
+INSTALLS += class_headers
+
 install_prf.path = $$[QT_INSTALL_DATA]/mkspecs/features
 install_prf.files = \
     $$QT_SOURCE_TREE/mkspecs/features/qtsparql.prf
