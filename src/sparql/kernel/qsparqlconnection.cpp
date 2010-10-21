@@ -254,7 +254,13 @@ void QSparqlConnectionPrivate::initKeys()
             if (instance && factory && driPlu) {
                 QStringList keys = factory->keys();
                 for (int k = 0; k < keys.size(); ++k) {
-                    plugins[keys[k]] = driPlu;
+                    // Don't override values in plugins; this prefers plugins
+                    // that are found first.  E.g.,
+                    // QCoreApplication::addLibraryPath() prepends a path to the
+                    // list of library paths, and this say custom plugins are
+                    // found first.
+                    if (!plugins.contains(keys[k]))
+                        plugins[keys[k]] = driPlu;
                 }
                 allKeys.append(keys);
                 if (debugLevel) {
