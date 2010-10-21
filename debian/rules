@@ -28,9 +28,6 @@ install: build
 	dh_installdirs
 	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
 
-	# copying headers from include/ (created by syncqt)
-	cp -a include/QtSparql/Q* `pwd`/debian/tmp/usr/include/QtSparql
-
 	# copy the tests definition and data from the src dir
 	mkdir -p `pwd`/debian/tmp/usr/share/libqtsparql-tests
 	cp -a tests/auto/tests.xml `pwd`/debian/tmp/usr/share/libqtsparql-tests

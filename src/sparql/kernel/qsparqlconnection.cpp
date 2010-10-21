@@ -233,6 +233,8 @@ void QSparqlConnectionPrivate::initKeys()
     if (keysRead)
         return;
 
+    int debugLevel = QString::fromLatin1(getenv("QT_DEBUG_PLUGINS")).toInt();
+
     QStringList paths = QCoreApplication::libraryPaths();
     foreach(const QString& path, paths) {
         QString realPath = path + QLatin1String("/sparqldrivers");
@@ -241,6 +243,10 @@ void QSparqlConnectionPrivate::initKeys()
             QString fileName = QDir::cleanPath(realPath +
                                                 QLatin1Char('/') +
                                                 pluginNames.at(j));
+            if (debugLevel) {
+                qDebug() << "QSparqlConnection looking at" << fileName;
+            }
+
             QPluginLoader loader(fileName);
             QObject* instance = loader.instance();
             QFactoryInterface *factory = qobject_cast<QFactoryInterface*>(instance);
@@ -250,9 +256,17 @@ void QSparqlConnectionPrivate::initKeys()
                 for (int k = 0; k < keys.size(); ++k) {
                     plugins[keys[k]] = driPlu;
                 }
-
                 allKeys.append(keys);
+                if (debugLevel) {
+                    qDebug() << "keys" << keys;
+                }
             }
+            else {
+                if (debugLevel) {
+                    qDebug() << "not a plugin";
+                }
+            }
+
         }
     }
 
