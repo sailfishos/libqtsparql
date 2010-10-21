@@ -5,8 +5,7 @@ contains(sparql-drivers, all ) {
 }
 
 contains(sparql-drivers, tracker) {
-    HEADERS +=      drivers/tracker/qsparql_tracker.h \
-                    drivers/tracker/qsparql_tracker_p.h
+    HEADERS +=      drivers/tracker/qsparql_tracker_p.h
     SOURCES +=      drivers/tracker/qsparql_tracker.cpp
     DEFINES += QT_SPARQL_TRACKER
 
@@ -14,8 +13,7 @@ contains(sparql-drivers, tracker) {
 }
 
 contains(sparql-drivers, tracker_direct) {
-    HEADERS +=      drivers/tracker_direct/qsparql_tracker_direct.h \
-                    drivers/tracker_direct/qsparql_tracker_direct_p.h
+    HEADERS +=      drivers/tracker_direct/qsparql_tracker_direct_p.h
     SOURCES +=      drivers/tracker_direct/qsparql_tracker_direct.cpp
     DEFINES += QT_SPARQL_TRACKER_DIRECT
     LIBS *= $$QT_LFLAGS_TRACKER_DIRECT

@@ -44,16 +44,16 @@
 #include "qsparqlquery.h"
 
 #ifdef QT_SPARQL_VIRTUOSO
-#include "../drivers/virtuoso/qsparql_virtuoso.h"
+#include "../drivers/virtuoso/qsparql_virtuoso_p.h"
 #endif
 #ifdef QT_SPARQL_TRACKER
-#include "../drivers/tracker/qsparql_tracker.h"
+#include "../drivers/tracker/qsparql_tracker_p.h"
 #endif
 #ifdef QT_SPARQL_TRACKER_DIRECT
-#include "../drivers/tracker_direct/qsparql_tracker_direct.h"
+#include "../drivers/tracker_direct/qsparql_tracker_direct_p.h"
 #endif
 #ifdef QT_SPARQL_ENDPOINT
-#include "../drivers/endpoint/qsparql_endpoint.h"
+#include "../drivers/endpoint/qsparql_endpoint_p.h"
 #endif
 
 #include "qdebug.h"
