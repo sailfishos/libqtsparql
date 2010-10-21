@@ -261,6 +261,8 @@ void tst_QSparql::iterate_nonempty_result()
     QCOMPARE(res->pos(), 1);
     QVERIFY(!res->next());
     QVERIFY(res->pos() == QSparql::AfterLastRow);
+    QVERIFY(!res->next());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
     res->first();
     QVERIFY(res->pos() == 0);
     res->last();
@@ -283,6 +285,8 @@ void tst_QSparql::iterate_nonempty_result_backwards()
     QCOMPARE(res->pos(), 1);
     QVERIFY(res->previous());
     QCOMPARE(res->pos(), 0);
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     QVERIFY(!res->previous());
     QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     delete res;
