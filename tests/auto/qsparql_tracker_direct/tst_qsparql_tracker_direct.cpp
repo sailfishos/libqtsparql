@@ -69,6 +69,9 @@ private slots:
     void query_with_error();
 
     void iterate_result();
+
+    void delete_unfinished_result();
+    void delete_partially_iterated_result();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -322,6 +325,42 @@ void tst_QSparqlTrackerDirect::iterate_result()
     QCOMPARE(r->current(), QSparqlResultRow());
 
     delete r;
+}
+
+void tst_QSparqlTrackerDirect::delete_unfinished_result()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    delete r;
+    // Spin the event loop so that the async callback is called.
+    QTest::qWait(1000);
+}
+
+void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
+{
+    QSparqlConnectionOptions opts;
+    opts.setOption("dataReadyInterval", 1);
+
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+
+    // Wait for some dataReady signals
+    QSignalSpy spy(r, SIGNAL(dataReady(int)));
+    while (spy.count() < 2)
+        QTest::qWait(100);
+    delete r;
+    // And then spin the event loop so that the async callback is called...
+    QTest::qWait(1000);
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
