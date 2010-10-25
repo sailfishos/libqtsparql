@@ -166,16 +166,21 @@ QString QSparqlResult::query() const
     return d->sparql;
 }
 
+/// Sets the information about the query whose results this QSparqlResult object
+/// represents.
 void QSparqlResult::setQuery(const QString &query)
 {
     d->sparql = query;
 }
 
+/// Sets the statement type of this QSparqlResult object.
 void QSparqlResult::setStatementType(QSparqlQuery::StatementType type)
 {
     d->statementType = type;
 }
 
+/// Returns true if this QSparqlResult object represents results that are in the
+/// tabular format, e.g., the results of a SELECT query.
 bool QSparqlResult::isTable() const
 {
     return d->statementType == QSparqlQuery::SelectStatement;
@@ -540,7 +545,7 @@ QSparqlError QSparqlResult::lastError() const
 */
 
 /*!
-  \fn QSparqlResultRow QSparqlResult::current()
+  \fn QSparqlResultRow QSparqlResult::current() const
 
   Returns a QSparqlResultRow containing the binding values information for the
   current query. If the query points to a valid row (isValid() returns
