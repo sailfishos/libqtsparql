@@ -3,6 +3,7 @@ libqtsparql (0.0.11~unreleased) unstable; urgency=low
   * Fixes: NB#197299
   * API break: QSparqlResult::lastQuery() -> QSparqlResult::query()
   * Fixes: NB#199584
+  * Fix: deleting a QSparqlResult before data was retrieved caused a segfault
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Wed, 20 Oct 2010 14:41:44 +0300
 
