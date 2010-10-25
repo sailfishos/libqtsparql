@@ -247,7 +247,7 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
 
     del.bindValue(contactNames["addedname006"]);
     r = conn.exec(del);
-    qDebug() << r->lastQuery();
+    qDebug() << r->query();
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only

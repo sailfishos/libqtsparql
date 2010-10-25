@@ -222,7 +222,7 @@ void tst_QSparqlTracker::insert_new_urn()
     // and need to do a bit of hackery here
     del.bindValue("addeduri", QUrl(contactNames["addedname006"].value().toString()));
     r = conn.exec(del);
-    qDebug() << r->lastQuery();
+    qDebug() << r->query();
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only

@@ -94,7 +94,7 @@ public:
     bool hasError() const;
     QSparqlError lastError() const;
 
-    QString lastQuery() const;
+    QString query() const;
 
     bool isTable() const;
     bool isGraph() const;

@@ -363,7 +363,8 @@ QSparqlConnection::~QSparqlConnection()
     QList<QSparqlResult*> children = findChildren<QSparqlResult *>();
     foreach (QSparqlResult *result, children) {
         if (!result->isFinished())
-            qWarning() << "QSparqlConnection: Deleting active query:" << result->lastQuery();
+            qWarning() << "QSparqlConnection: Deleting active query:" <<
+                result->query();
     }
 
     qDeleteAll(children);

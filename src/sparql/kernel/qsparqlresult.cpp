@@ -159,7 +159,9 @@ QSparqlResult::~QSparqlResult()
     delete d;
 }
 
-QString QSparqlResult::lastQuery() const
+/// Returns the query which was executed for creating this QSparqlResult. Useful
+/// for debugging purposes.
+QString QSparqlResult::query() const
 {
     return d->sparql;
 }

@@ -409,7 +409,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
     del.bindValue(r2->binding(0));
     delete r2;
     r2 = conn2->exec(del);
-    qDebug() << "r2 delete query:" << r2->lastQuery();
+    qDebug() << "r2 delete query:" << r2->query();
     QVERIFY(r2 != 0);
     QCOMPARE(r2->hasError(), false);
     r2->waitForFinished(); // this test is synchronous only
@@ -469,7 +469,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
     del.bindValue(r1->binding(0));
     delete r1;
     r1 = conn1->exec(del);
-    qDebug() << "r1 delete query:" << r1->lastQuery();
+    qDebug() << "r1 delete query:" << r1->query();
     QVERIFY(r1 != 0);
     QCOMPARE(r1->hasError(), false);
     r1->waitForFinished(); // this test is synchronous only
