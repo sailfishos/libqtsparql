@@ -123,16 +123,22 @@ QSparqlConnectionOptions::~QSparqlConnectionOptions()
     // QSharedDataPointer takes care of deleting for us
 }
 
+/// Returns true if the QSparqlConnection objects are equal. The objects are
+/// equal if they describe the same set of key-value pairs.
 bool QSparqlConnectionOptions::operator==(const QSparqlConnectionOptions &other) const
 {
     return d == other.d || (d && other.d && *d == *other.d);
 }
 
+/// Creates a QSparqlConnectionOptions object based on \a other, copying all
+/// key-value pairs from it.
 QSparqlConnectionOptions::QSparqlConnectionOptions(const QSparqlConnectionOptions& other)
     : d(other.d)
 {
 }
 
+/// Assigns the QSparqlConnectionOptions object. Copies all key-value pairs from
+/// \a other.
 QSparqlConnectionOptions& QSparqlConnectionOptions::operator=(const QSparqlConnectionOptions& other)
 {
     d = other.d;
