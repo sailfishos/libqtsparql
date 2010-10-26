@@ -61,6 +61,11 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker iterate_result
         </step>
       </case>
+      <case name="test-delete-unfinished-result" description="Deleting a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker delete_unfinished_result
+        </step>
+      </case>
 
       <post_steps>
 	<step expected_result="0">
@@ -114,6 +119,16 @@
       <case name="test-iterating-result" description="Iterating a QSparqlResult">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result
+        </step>
+      </case>
+      <case name="test-delete-unfinished-result" description="Deleting a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_unfinished_result
+        </step>
+      </case>
+      <case name="test-delete-partially-iterated-result" description="Deleting a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_partially_iterated_result
         </step>
       </case>
       <post_steps>
