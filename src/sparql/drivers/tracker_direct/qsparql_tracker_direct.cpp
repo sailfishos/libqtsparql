@@ -262,7 +262,10 @@ void QTrackerDirectResultPrivate::terminate()
     isFinished = true;
     dataReady(results.count());
     q->emit finished();
-
+    if (cursor != 0) {
+        g_object_unref(cursor);
+        cursor = 0;
+    }
     if (loop != 0)
         loop->exit();
 }
