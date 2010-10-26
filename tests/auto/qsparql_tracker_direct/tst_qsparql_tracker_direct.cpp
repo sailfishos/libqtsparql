@@ -74,6 +74,31 @@ private slots:
     void delete_partially_iterated_result();
 };
 
+namespace {
+int testLogLevel = QtWarningMsg;
+void myMessageOutput(QtMsgType type, const char *msg)
+{
+    switch (type) {
+    case QtDebugMsg:
+        if (testLogLevel <= 0)
+            fprintf(stderr, "QDEBUG : %s\n", msg);
+        break;
+    case QtWarningMsg:
+        if (testLogLevel <= 1)
+            fprintf(stderr, "QWARN  : %s\n", msg);
+        break;
+    case QtCriticalMsg:
+        if (testLogLevel <= 2)
+            fprintf(stderr, "QCRITICAL: %s\n", msg);
+        break;
+    case QtFatalMsg:
+        if (testLogLevel <= 3)
+            fprintf(stderr, "QFATAL : %s\n", msg);
+        abort();
+    }
+}
+} // end unnamed namespace
+
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
 {
 }
@@ -87,6 +112,7 @@ void tst_QSparqlTrackerDirect::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+    qInstallMsgHandler(myMessageOutput);
 }
 
 void tst_QSparqlTrackerDirect::cleanupTestCase()
@@ -95,6 +121,7 @@ void tst_QSparqlTrackerDirect::cleanupTestCase()
 
 void tst_QSparqlTrackerDirect::init()
 {
+    testLogLevel = QtDebugMsg;
 }
 
 void tst_QSparqlTrackerDirect::cleanup()
@@ -282,6 +309,8 @@ void tst_QSparqlTrackerDirect::query_with_error()
 
 void tst_QSparqlTrackerDirect::iterate_result()
 {
+    // This test will print out warnings
+    testLogLevel = QtCriticalMsg;
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"

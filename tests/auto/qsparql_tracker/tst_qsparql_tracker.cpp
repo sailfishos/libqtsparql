@@ -74,6 +74,31 @@ private slots:
     void delete_unfinished_result();
 };
 
+namespace {
+int testLogLevel = QtWarningMsg;
+void myMessageOutput(QtMsgType type, const char *msg)
+{
+    switch (type) {
+    case QtDebugMsg:
+        if (testLogLevel <= 0)
+            fprintf(stderr, "QDEBUG : %s\n", msg);
+        break;
+    case QtWarningMsg:
+        if (testLogLevel <= 1)
+            fprintf(stderr, "QWARN  : %s\n", msg);
+        break;
+    case QtCriticalMsg:
+        if (testLogLevel <= 2)
+            fprintf(stderr, "QCRITICAL: %s\n", msg);
+        break;
+    case QtFatalMsg:
+        if (testLogLevel <= 3)
+            fprintf(stderr, "QFATAL : %s\n", msg);
+        abort();
+    }
+}
+} // end unnamed namespace
+
 tst_QSparqlTracker::tst_QSparqlTracker()
 {
 }
@@ -87,6 +112,7 @@ void tst_QSparqlTracker::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+    qInstallMsgHandler(myMessageOutput);
 }
 
 void tst_QSparqlTracker::cleanupTestCase()
@@ -95,6 +121,7 @@ void tst_QSparqlTracker::cleanupTestCase()
 
 void tst_QSparqlTracker::init()
 {
+    testLogLevel = QtDebugMsg;
 }
 
 void tst_QSparqlTracker::cleanup()
@@ -246,6 +273,8 @@ void tst_QSparqlTracker::insert_new_urn()
 
 void tst_QSparqlTracker::query_with_error()
 {
+    // This test will print out warnings
+    testLogLevel = QtCriticalMsg;
     QSparqlConnection conn("QTRACKER");
     QSparqlQuery q("this is not a valid query");
     QSparqlResult* r = conn.exec(q);
@@ -317,6 +346,8 @@ void tst_QSparqlTracker::batch_update()
 
 void tst_QSparqlTracker::iterate_result()
 {
+    // This test will print out warnings
+    testLogLevel = QtCriticalMsg;
     QSparqlConnection conn("QTRACKER");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
