@@ -70,6 +70,8 @@ private slots:
     void batch_update();
 
     void iterate_result();
+
+    void delete_unfinished_result();
 };
 
 tst_QSparqlTracker::tst_QSparqlTracker()
@@ -360,6 +362,18 @@ void tst_QSparqlTracker::iterate_result()
     delete r;
 }
 
+void tst_QSparqlTracker::delete_unfinished_result()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    delete r;
+    QTest::qWait(1000);
+}
 
 QTEST_MAIN( tst_QSparqlTracker )
 #include "tst_qsparql_tracker.moc"
