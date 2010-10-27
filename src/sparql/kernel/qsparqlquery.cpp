@@ -306,7 +306,7 @@ QString QSparqlQuery::preparedQueryText() const
   query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be included
   when specifying the placeholder name.
 
-  \sa addBindValue(), boundValue() boundValues()
+  \sa bindValue(), boundValue() boundValues()
 */
 void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
 {
@@ -359,7 +359,7 @@ void QSparqlQuery::unbindValues()
 /*!
   Returns the value for the \a placeholder.
 
-  \sa boundValues() bindValue() addBindValue()
+  \sa boundValues() bindValue()
 */
 QVariant QSparqlQuery::boundValue(const QString& placeholder) const
 {
