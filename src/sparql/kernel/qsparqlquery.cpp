@@ -99,8 +99,6 @@ static bool qIsAlnum(QChar ch)
     return u - 'a' < 26 || u - 'A' < 26 || u - '0' < 10 || u == '_';
 }
 
-Q_GLOBAL_STATIC(QSparqlQueryPrivate, nullQueryPrivate)
-
 /*!
 \internal
 */
