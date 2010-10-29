@@ -230,6 +230,7 @@ QString QSparqlQuery::query() const
 void QSparqlQuery::setQuery(const QString& query)
 {
     d->query = query;
+    d->findPlaceholders();
 }
 
 /*!
@@ -239,6 +240,7 @@ void QSparqlQuery::setQuery(const QString& query)
 
 void QSparqlQueryPrivate::findPlaceholders()
 {
+    holders.clear();
     int n = query.size();
 
     QChar quoteChar = QChar::Null;
