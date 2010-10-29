@@ -273,6 +273,10 @@ bool QSparqlResult::isValid() const
     have arrived. After this function returns, isFinished() should return true, 
     indicating the result's contents are ready to be processed.
 
+    \warning Calling this function from the main thread (the thread that
+    calls QApplication::exec()) may cause your user interface to
+    freeze.
+
     \sa isFinished()
 */
 void QSparqlResult::waitForFinished()
