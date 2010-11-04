@@ -48,11 +48,61 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace XSD {
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Int,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#int")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, NonNegativeInteger,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#nonNegativeInteger")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, UnsignedInt,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#unsignedInt")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Decimal,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#decimal")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Short,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#short")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Long,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#long")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, UnsignedLong,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#unsignedLong")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Boolean,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#boolean")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Double,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#double")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Float,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#float")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, String,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#string")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Date,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#date")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Time,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#time")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Base64Binary,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#base64Binary")))
+}
+
 class QSparqlBindingPrivate
 {
 public:
     enum NodeType { Invalid, Uri, Literal, Blank };
-                         
+
     QSparqlBindingPrivate(const QString &name) :
         ref(1), nm(name), nodetype(QSparqlBindingPrivate::Invalid)
     {
@@ -115,11 +165,11 @@ public:
 
     A QSparqlBinding object can provide some meta-data about the
     binding, for example, its name(), variant type(), languageTag(),
-    and dataTypeUri(). The RDF node type is given with the isUri(), 
+    and dataTypeUri(). The RDF node type is given with the isUri(),
     isLiteral() and isBlank() methods. The
     binding's data can be checked to see if it isValid(), and its
-    value() retrieved, or a string representation toString(). When 
-    editing the data can be set with setValue() or set to an invalid 
+    value() retrieved, or a string representation toString(). When
+    editing the data can be set with setValue() or set to an invalid
     type with clear().
 
     \sa QSparqlResultRow
@@ -218,13 +268,15 @@ void QSparqlBinding::setLanguageTag(const QString &languageTag)
     d->lang = languageTag;
 }
 
+Q_GLOBAL_STATIC_WITH_ARGS(QRegExp, zone,
+                          (QLatin1String("([-+])(\\d\\d:\\d\\d)")))
+
 static int extractTimezone(QString& str)
 {
-    QRegExp zone(QString::fromLatin1("([-+])(\\d\\d:\\d\\d)"));
-    int ix = zone.indexIn(str);
+    int ix = zone()->indexIn(str);
     if (ix != -1) {
-        int sign = (zone.cap(1) == QLatin1String("-") ? -1 : 1);
-        QTime adjustment = QTime::fromString(zone.cap(2), QString::fromLatin1("hh':'mm"));
+        int sign = (zone()->cap(1) == QLatin1String("-") ? -1 : 1);
+        QTime adjustment = QTime::fromString(zone()->cap(2), QString::fromLatin1("hh':'mm"));
         str.remove(ix, 6);
         return ((adjustment.hour() * 3600) + (adjustment.minute() * 60)) * sign;
     }
@@ -240,48 +292,68 @@ static int extractTimezone(QString& str)
 void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
-    d->dataType = dataTypeUri;
     QByteArray s = dataTypeUri.toString().toLatin1();
 
     if (s == "http://www.w3.org/2001/XMLSchema#int") {
+        d->dataType = *XSD::Int();
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
+        d->dataType = *XSD::Integer();
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger") {
+        d->dataType = *XSD::NonNegativeInteger();
+        setValue(value.toUInt());
+    } else if (s == "http://www.w3.org/2001/XMLSchema#unsignedInt") {
+        d->dataType = *XSD::UnsignedInt();
         setValue(value.toUInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#decimal") {
+        d->dataType = *XSD::Decimal();
         setValue(value.toDouble());
     } else if (s == "http://www.w3.org/2001/XMLSchema#short") {
+        d->dataType = *XSD::Short();
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#long") {
+        d->dataType = *XSD::Long();
         setValue(value.toLongLong());
+    } else if (s == "http://www.w3.org/2001/XMLSchema#Unsignedlong") {
+        d->dataType = *XSD::UnsignedLong();
+        setValue(value.toULongLong());
     } else if (s == "http://www.w3.org/2001/XMLSchema#boolean") {
+        d->dataType = *XSD::Boolean();
         setValue(value.toLower() == QLatin1String("true") || value.toLower() == QLatin1String("yes") || value.toInt() != 0);
     } else if (s == "http://www.w3.org/2001/XMLSchema#double") {
+        d->dataType = *XSD::Float();
         setValue(value.toDouble());
     } else if (s == "http://www.w3.org/2001/XMLSchema#float") {
+        d->dataType = *XSD::Float();
         setValue(value.toDouble());
     } else if (s == "http://www.w3.org/2001/XMLSchema#string") {
+        d->dataType = *XSD::String();
         setValue(value);
     } else if (s == "http://www.w3.org/2001/XMLSchema#date") {
+        d->dataType = *XSD::Date();
         setValue(QDate::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#time") {
+        d->dataType = *XSD::Time();
         QString v(value);
         int adjustment = extractTimezone(v);
         setValue(QTime::fromString(v, Qt::ISODate).addSecs(adjustment));
     } else if (s == "http://www.w3.org/2001/XMLSchema#dateTime") {
+        d->dataType = *XSD::DateTime();
         QString v(value);
         int adjustment = extractTimezone(v);
         setValue(QDateTime::fromString(v, Qt::ISODate).addSecs(adjustment));
     } else if (s == "http://www.w3.org/2001/XMLSchema#base64Binary") {
+        d->dataType = *XSD::Base64Binary();
         setValue(QByteArray::fromBase64(value.toAscii()));
     } else {
+        d->dataType = dataTypeUri;
         setValue(value);
     }
 }
 
 /*!
-    Returns a string representation of the node in a form suitable for 
+    Returns a string representation of the node in a form suitable for
     using in a SPARQL query.
 */
 
@@ -499,27 +571,27 @@ QUrl QSparqlBinding::dataTypeUri() const
 
     switch (val.type()) {
     case QVariant::Int:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer");
+        return *XSD::Integer();
     case QVariant::LongLong:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#long");
+        return *XSD::Long();
     case QVariant::UInt:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#unsignedInt");
+        return *XSD::NonNegativeInteger();
     case QVariant::ULongLong:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#unsignedLong");
+        return *XSD::UnsignedLong();
     case QVariant::Bool:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean");
+        return *XSD::Boolean();
     case QVariant::Double:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double");
+        return *XSD::Double();
     case QVariant::String:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string");
+        return *XSD::String();
     case QVariant::Date:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#date");
+        return *XSD::Date();
     case QVariant::Time:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#time");
+        return *XSD::Time();
     case QVariant::DateTime:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime");
+        return *XSD::DateTime();
     case QVariant::ByteArray:
-        return QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#base64Binary");
+        return *XSD::Base64Binary();
     default:
         return QUrl();
     }
