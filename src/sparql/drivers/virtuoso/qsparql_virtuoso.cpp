@@ -77,11 +77,25 @@ QT_BEGIN_NAMESPACE
 # define QSQLULEN SQLULEN
 #endif
 
+namespace XSD {
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Decimal,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#decimal")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Date,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#date")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Time,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#time")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
+}
+
 static const int COLNAMESIZE = 256;
 
 class QVirtuosoFetcherPrivate : public QThread
 {
-public:    
+public:
     QVirtuosoFetcherPrivate(QVirtuosoResult *res) : result(res) { }
 
     void run()
@@ -105,7 +119,7 @@ public:
     }
 
 private:
-    QVirtuosoResult *result; 
+    QVirtuosoResult *result;
 };
 
 class QVirtuosoDriverPrivate
@@ -130,7 +144,7 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        resultColIdx(0), driverPrivate(dpp), fetcher(f), 
+        resultColIdx(0), driverPrivate(dpp), fetcher(f),
         mutex(QMutex::Recursive), isFinished(false), loop(0)
     {
     }
@@ -146,10 +160,10 @@ public:
     }
 
     inline void clearValues()
-    { 
-        QSparqlResultRow resultRow;                        
+    {
+        QSparqlResultRow resultRow;
         results.append(resultRow);
-        resultColIdx = 0; 
+        resultColIdx = 0;
     }
 
     SQLHANDLE dpEnv() const { return driverPrivate ? driverPrivate->hEnv : 0;}
@@ -275,7 +289,7 @@ QVirtuosoResult::QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPriv
 
 QVirtuosoResult::~QVirtuosoResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
     if (d->hstmt && d->isStmtHandleValid(d->driver) && d->driver->isOpen()) {
         SQLRETURN r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
@@ -318,7 +332,7 @@ void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementTy
 
 bool QVirtuosoResult::exec()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
     // Always reallocate the statement handle - the statement attributes
     // are not reset if SQLFreeStmt() is called which causes some problems.
@@ -343,8 +357,8 @@ bool QVirtuosoResult::exec()
 
     r = SQLExecDirect(d->hstmt, (UCHAR*) d->query.data(), d->query.length());
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r!= SQL_NO_DATA) {
-        setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult", "Unable to execute statement"), 
-                                QSparqlError::StatementError, 
+        setLastError(qMakeError(QCoreApplication::translate("QVirtuosoResult", "Unable to execute statement"),
+                                QSparqlError::StatementError,
                                 d));
         terminate();
         return false;
@@ -425,19 +439,19 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     case VIRTUOSO_DV_TIMESTAMP_OBJ:
     case VIRTUOSO_DV_DATE:
     case VIRTUOSO_DV_TIME:
-    case VIRTUOSO_DV_DATETIME: 
+    case VIRTUOSO_DV_DATETIME:
         {
             SQLINTEGER dv_dt_type = 0;
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_DT_DT_TYPE, &dv_dt_type, SQL_IS_INTEGER, NULL);
             switch (dv_dt_type) {
             case VIRTUOSO_DT_TYPE_DATETIME:
-                b.setValue(QString::fromUtf8(buffer.constData()), QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
+                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::DateTime());
                 break;
             case VIRTUOSO_DT_TYPE_DATE:
-                b.setValue(QString::fromUtf8(buffer.constData()), QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#date"));
+                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::Date());
                 break;
             case VIRTUOSO_DT_TYPE_TIME:
-                b.setValue(QString::fromUtf8(buffer.constData()), QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#time"));
+                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::Time());
                 break;
             default:
                 break;
@@ -454,9 +468,9 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
         break;
     case VIRTUOSO_DV_NUMERIC:
         b.setValue(QString::fromUtf8(buffer.constData()).toDouble());
-        b.setDataTypeUri(QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#decimal"));
+        b.setDataTypeUri(*XSD::Decimal());
         break;
-    case VIRTUOSO_DV_RDF: 
+    case VIRTUOSO_DV_RDF:
         {
             SQLCHAR langBuf[100];
             SQLCHAR typeBuf[100];
@@ -464,9 +478,9 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
             SQLINTEGER typeBufLen = 0;
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_LITERAL_LANG, langBuf, sizeof(langBuf), &langBufLen);
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_LITERAL_TYPE, typeBuf, sizeof(typeBuf), &typeBufLen);
-            b.setValue(QString::fromUtf8(buffer.constData()), 
+            b.setValue(QString::fromUtf8(buffer.constData()),
                        QUrl::fromEncoded(QByteArray::fromRawData(reinterpret_cast<const char*>(typeBuf), typeBufLen)));
-                       
+
             if (langBufLen > 0)
                 b.setLanguageTag(QString::fromLatin1(reinterpret_cast<const char*>(langBuf), langBufLen));
             break;
@@ -474,7 +488,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
     case VIRTUOSO_DV_SINGLE_FLOAT:
         b.setValue(QVariant(QString::fromUtf8(buffer.constData()).toDouble()));
         break;
-    case VIRTUOSO_DV_STRING: 
+    case VIRTUOSO_DV_STRING:
         {
             int boxFlags = 0;
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_BOX_FLAGS, &boxFlags, SQL_IS_INTEGER, 0);
@@ -504,7 +518,7 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
 
 bool QVirtuosoResult::fetchNextResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     SQLRETURN r;
     r = SQLFetch(d->hstmt);
 
@@ -517,7 +531,7 @@ bool QVirtuosoResult::fetchNextResult()
 
     }
 
-    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
     d->clearValues();
 
     for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
@@ -530,9 +544,9 @@ bool QVirtuosoResult::fetchNextResult()
 
 bool QVirtuosoResult::fetchBoolResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     SQLRETURN r = SQLFetch(d->hstmt);
-    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
         if (r != SQL_NO_DATA)
@@ -552,9 +566,9 @@ bool QVirtuosoResult::fetchBoolResult()
 
 bool QVirtuosoResult::fetchGraphResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex)); 
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     SQLRETURN r = SQLFetch(d->hstmt);
-    QMutexLocker resultLocker(&(d->mutex)); 
+    QMutexLocker resultLocker(&(d->mutex));
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
         if (r != SQL_NO_DATA)
@@ -686,7 +700,7 @@ bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     if (isOpen())
       close();
@@ -775,7 +789,7 @@ void QVirtuosoDriver::close()
 
 void QVirtuosoDriver::cleanup()
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     SQLRETURN r;
     if (!d)
@@ -812,7 +826,7 @@ QVirtuosoResult *QVirtuosoDriver::createResult() const
 
 bool QVirtuosoDriver::beginTransaction()
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::beginTransaction: Database not open";
@@ -833,7 +847,7 @@ bool QVirtuosoDriver::beginTransaction()
 
 bool QVirtuosoDriver::commitTransaction()
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::commitTransaction: Database not open";
@@ -852,7 +866,7 @@ bool QVirtuosoDriver::commitTransaction()
 
 bool QVirtuosoDriver::rollbackTransaction()
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     if (!isOpen()) {
         qWarning() << "QVirtuosoDriver::rollbackTransaction: Database not open";
@@ -871,7 +885,7 @@ bool QVirtuosoDriver::rollbackTransaction()
 
 bool QVirtuosoDriver::endTrans()
 {
-    QMutexLocker connectionLocker(&(d->mutex)); 
+    QMutexLocker connectionLocker(&(d->mutex));
 
     SQLUINTEGER ac(SQL_AUTOCOMMIT_ON);
     SQLRETURN r  = SQLSetConnectAttr(d->hDbc,
