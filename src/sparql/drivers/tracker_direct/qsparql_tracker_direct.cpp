@@ -62,6 +62,17 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace XSD {
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Boolean,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#boolean")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Double,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#double")))
+}
+
 // The default for how often the result will emit the dataReady signal.  Can be
 // customized via QSparqlConnectionOptions.
 #define DEFAULT_DATA_READY_INTERVAL 100
@@ -157,23 +168,23 @@ async_cursor_next_callback( GObject *source_object,
             binding.setValue(QUrl(value));
             break;
         case TRACKER_SPARQL_VALUE_TYPE_STRING:
-            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+            binding.setValue(value);
             break;
         case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
-            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+            binding.setValue(value.toInt());
             break;
         case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
-            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+            binding.setValue(value, *XSD::Double());
             break;
         case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
-            binding.setValue(value, QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
+            binding.setValue(value, *XSD::DateTime());
             break;
         case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
             binding.setBlankNodeLabel(value);
             break;
         case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
             binding.setValue(value == QLatin1String("1") ? QString::fromLatin1("true") : QString::fromLatin1("false"),
-                             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+                             *XSD::Boolean());
             break;
         default:
             break;
