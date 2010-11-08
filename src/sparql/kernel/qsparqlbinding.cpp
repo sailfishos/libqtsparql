@@ -322,7 +322,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         d->dataType = *XSD::Boolean();
         setValue(value.toLower() == QLatin1String("true") || value.toLower() == QLatin1String("yes") || value.toInt() != 0);
     } else if (s == "http://www.w3.org/2001/XMLSchema#double") {
-        d->dataType = *XSD::Float();
+        d->dataType = *XSD::Double();
         setValue(value.toDouble());
     } else if (s == "http://www.w3.org/2001/XMLSchema#float") {
         d->dataType = *XSD::Float();
