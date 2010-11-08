@@ -1,5 +1,5 @@
 import Qt 4.7
-import QSparql 1.0
+import QtSparql 1.0
 
 ListView {
     width: 1000; height: 600
