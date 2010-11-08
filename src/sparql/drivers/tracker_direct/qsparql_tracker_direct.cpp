@@ -71,6 +71,9 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
 
 Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Double,
                           (QLatin1String("http://www.w3.org/2001/XMLSchema#double")))
+
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
 }
 
 // The default for how often the result will emit the dataReady signal.  Can be
@@ -171,7 +174,7 @@ async_cursor_next_callback( GObject *source_object,
             binding.setValue(value);
             break;
         case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
-            binding.setValue(value.toInt());
+            binding.setValue(value, *XSD::Integer());
             break;
         case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
             binding.setValue(value, *XSD::Double());

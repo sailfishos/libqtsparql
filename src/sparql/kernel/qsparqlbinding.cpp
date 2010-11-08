@@ -299,7 +299,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         setValue(value.toInt());
     } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
         d->dataType = *XSD::Integer();
-        setValue(value.toInt());
+        setValue(value.toLongLong());
     } else if (s == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger") {
         d->dataType = *XSD::NonNegativeInteger();
         setValue(value.toULongLong());
@@ -571,9 +571,9 @@ QUrl QSparqlBinding::dataTypeUri() const
 
     switch (val.type()) {
     case QVariant::Int:
-        return *XSD::Integer();
+        return *XSD::Int();
     case QVariant::LongLong:
-        return *XSD::Long();
+        return *XSD::Integer();
     case QVariant::UInt:
         return *XSD::UnsignedInt();
     case QVariant::ULongLong:
