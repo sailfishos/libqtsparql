@@ -74,6 +74,7 @@ private slots:
     void delete_partially_iterated_result();
 
     void concurrent_queries();
+    void concurrent_queries_2();
 };
 
 namespace {
@@ -397,10 +398,7 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
     QSKIP("Hangs in r2->waitForFinished()", SkipAll);
-    QSparqlConnectionOptions opts;
-    opts.setOption("dataReadyInterval", 1);
-
-    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    QSparqlConnection conn("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
@@ -417,6 +415,33 @@ void tst_QSparqlTrackerDirect::concurrent_queries()
     r1->waitForFinished();
     qDebug() << "waiting 2";
     r2->waitForFinished();
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r1->size(), 3);
+    delete r1;
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r2->size(), 3);
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirect::concurrent_queries_2()
+{
+    QSKIP("Hangs in while()", SkipAll);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r1 = conn.exec(q);
+    QVERIFY(r1 != 0);
+    QCOMPARE(r1->hasError(), false);
+
+    QSparqlResult* r2 = conn.exec(q);
+    QVERIFY(r2 != 0);
+    QCOMPARE(r2->hasError(), false);
+
+    while (r1->size() < 3 || r2->size() < 3)
+        QTest::qWait(1000);
 
     QCOMPARE(r1->hasError(), false);
     QCOMPARE(r1->size(), 3);
