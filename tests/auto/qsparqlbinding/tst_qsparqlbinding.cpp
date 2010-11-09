@@ -75,6 +75,12 @@ private slots:
     void equality_operator();
     void assignment_operator();
     void clear();
+
+private:
+    void add_toString_data_rows(const char* dataTag,
+                                const QVariant& value,
+                                const QString& as_string,
+                                const QUrl& datatype);
 };
 
 tst_QSparqlBinding::tst_QSparqlBinding()
@@ -101,6 +107,28 @@ void tst_QSparqlBinding::cleanup()
 {
 }
 
+void tst_QSparqlBinding::add_toString_data_rows(const char* dataTag,
+                                                const QVariant& value,
+                                                const QString& as_string,
+                                                const QUrl& datatype)
+{
+    QTest::newRow(dataTag) <<
+        value <<
+        QVariant() <<
+        QVariant() <<
+        as_string <<
+        as_string <<
+        datatype;
+
+    QTest::newRow((QByteArray(dataTag) + "_with_datatype").data()) <<
+        value <<
+        QVariant() <<
+        QVariant(datatype) <<
+        (QString("\"") + as_string + "\"^^<" + datatype.toString() + ">") <<
+        as_string <<
+        datatype;
+}
+
 void tst_QSparqlBinding::toString_data()
 {
     QTest::addColumn<QVariant>("value");
@@ -109,6 +137,12 @@ void tst_QSparqlBinding::toString_data()
     QTest::addColumn<QString>("toString");
     QTest::addColumn<QString>("as_string");
     QTest::addColumn<QUrl>("get_datatype");
+
+    const QUrl xsd_int("http://www.w3.org/2001/XMLSchema#int");
+    add_toString_data_rows("int_null",             QVariant(int(0)),           "0", xsd_int);
+    add_toString_data_rows("int_typical",         QVariant(int(54)),          "54", xsd_int);
+    add_toString_data_rows("int_max",     QVariant(int(2147483647)),  "2147483647", xsd_int);
+    add_toString_data_rows("int_min",  QVariant(int(-2147483647-1)), "-2147483648", xsd_int);
 
     QTest::newRow("int") <<
         QVariant(static_cast<int>(54)) <<
