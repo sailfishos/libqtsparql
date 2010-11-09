@@ -245,7 +245,8 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                      "nco:nameGiven \"addedname006\" .}",
                      QSparqlQuery::InsertStatement);
-    add.bindValue(conn.createUrn("addeduri"));
+	const QSparqlBinding addeduri(conn.createUrn("addeduri"));
+	add.bindValue(addeduri);
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
@@ -267,15 +268,14 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 4);
-    // We can only compare the first 9 chars because the rest is a new uuid string
-    QCOMPARE(contactNames["addedname006"].value().toString().mid(0, 9), QString("urn:uuid:"));
+	QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
     delete r;
 
     // Delete the uri
     QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    del.bindValue(contactNames["addedname006"]);
+	del.bindValue(addeduri);
     r = conn.exec(del);
     qDebug() << r->query();
     QVERIFY(r != 0);
