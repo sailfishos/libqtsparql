@@ -573,7 +573,7 @@ QUrl QSparqlBinding::dataTypeUri() const
     case QVariant::Int:
         return *XSD::Int();
     case QVariant::LongLong:
-        return *XSD::Integer();
+        return *XSD::Long();
     case QVariant::UInt:
         return *XSD::UnsignedInt();
     case QVariant::ULongLong:
