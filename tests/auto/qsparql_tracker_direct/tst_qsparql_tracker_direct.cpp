@@ -74,6 +74,9 @@ private slots:
     void delete_partially_iterated_result();
 
     void concurrent_queries();
+    void concurrent_queries_2();
+
+	void insert_with_dbus_read_with_direct();
 };
 
 namespace {
@@ -244,7 +247,8 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                      "nco:nameGiven \"addedname006\" .}",
                      QSparqlQuery::InsertStatement);
-    add.bindValue(conn.createUrn("addeduri"));
+	const QSparqlBinding addeduri(conn.createUrn("addeduri"));
+	add.bindValue(addeduri);
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
@@ -266,15 +270,14 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 4);
-    // We can only compare the first 9 chars because the rest is a new uuid string
-    QCOMPARE(contactNames["addedname006"].value().toString().mid(0, 9), QString("urn:uuid:"));
+	QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
     delete r;
 
     // Delete the uri
     QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    del.bindValue(contactNames["addedname006"]);
+	del.bindValue(addeduri);
     r = conn.exec(del);
     qDebug() << r->query();
     QVERIFY(r != 0);
@@ -397,10 +400,7 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
     QSKIP("Hangs in r2->waitForFinished()", SkipAll);
-    QSparqlConnectionOptions opts;
-    opts.setOption("dataReadyInterval", 1);
-
-    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    QSparqlConnection conn("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
@@ -424,6 +424,122 @@ void tst_QSparqlTrackerDirect::concurrent_queries()
     QCOMPARE(r2->hasError(), false);
     QCOMPARE(r2->size(), 3);
     delete r2;
+}
+
+void tst_QSparqlTrackerDirect::concurrent_queries_2()
+{
+    QSKIP("Hangs in while()", SkipAll);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r1 = conn.exec(q);
+    QVERIFY(r1 != 0);
+    QCOMPARE(r1->hasError(), false);
+
+    QSparqlResult* r2 = conn.exec(q);
+    QVERIFY(r2 != 0);
+    QCOMPARE(r2->hasError(), false);
+
+    while (r1->size() < 3 || r2->size() < 3)
+        QTest::qWait(1000);
+
+    QCOMPARE(r1->hasError(), false);
+    QCOMPARE(r1->size(), 3);
+    delete r1;
+    QCOMPARE(r2->hasError(), false);
+    QCOMPARE(r2->size(), 3);
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
+{
+	// This test will leave unclean test data in tracker if it crashes.
+	QSparqlConnection writeConn("QTRACKER");
+	QSparqlConnection readConn("QTRACKER_DIRECT");
+
+	// Insert data with writeconn
+	QSparqlQuery add("insert { ?:addeduri a nco:PersonContact; "
+					 "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+					 "nco:nameGiven \"addedname006\" .}",
+					 QSparqlQuery::InsertStatement);
+	const QSparqlBinding addeduri(writeConn.createUrn("addeduri"));
+	add.bindValue(addeduri);
+	QSparqlResult* r = writeConn.exec(add);
+	QVERIFY(r);
+	QVERIFY(!r->hasError());
+	r->waitForFinished(); // this test is synchronous only
+	QVERIFY(!r->hasError());
+	delete r;
+
+	r = writeConn.exec(add);
+	QVERIFY(r);
+	QVERIFY(!r->hasError());
+	r->waitForFinished(); // this test is synchronous only
+	QVERIFY(!r->hasError());
+	delete r;
+
+	// Verify that the insertion succeeded with readConn
+	QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
+				   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+				   "nco:nameGiven ?ng .}");
+	{
+		QHash<QString, QSparqlBinding> contactNames;
+		r = readConn.exec(q);
+		QVERIFY(r);
+		r->waitForFinished();
+		QCOMPARE(r->size(), 4);
+		while (r->next()) {
+			contactNames[r->binding(1).value().toString()] = r->binding(0);
+		}
+		QCOMPARE(contactNames.size(), 4);
+		QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+		delete r;
+	}
+
+	// Delete and re-insert data with writeConn
+	QSparqlQuery deleteAndAdd("delete { ?:addeduri a rdfs:Resource. } "
+					 "insert { ?:addeduri a nco:PersonContact; "
+					 "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+					 "nco:nameGiven \"addedname006\" .}",
+					 QSparqlQuery::InsertStatement);
+	deleteAndAdd.bindValue(addeduri);
+	r = writeConn.exec(add);
+	QVERIFY(r);
+	QVERIFY(!r->hasError());
+	r->waitForFinished(); // this test is synchronous only
+	QVERIFY(!r->hasError());
+	delete r;
+
+	// Verify once more that the insertion succeeded with readConn
+	{
+		QHash<QString, QSparqlBinding> contactNames;
+		r = readConn.exec(q);
+		QVERIFY(r);
+		r->waitForFinished();
+		QCOMPARE(r->size(), 4);
+		while (r->next()) {
+			// qDebug() << r->binding(0).toString() << r->binding(1).toString();
+			contactNames[r->binding(1).value().toString()] = r->binding(0);
+		}
+		QCOMPARE(contactNames.size(), 4);
+		QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+		delete r;
+	}
+
+	// Delete the uri
+	QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+					 QSparqlQuery::DeleteStatement);
+
+	del.bindValue(addeduri);
+	r = writeConn.exec(del);
+	qDebug() << r->query();
+	QVERIFY(r);
+	QVERIFY(!r->hasError());
+	r->waitForFinished(); // this test is synchronous only
+	QVERIFY(!r->hasError());
+	delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
