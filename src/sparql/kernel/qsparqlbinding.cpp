@@ -293,40 +293,41 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
     QByteArray s = dataTypeUri.toString().toLatin1();
+    bool ok = true;
 
     if (s == "http://www.w3.org/2001/XMLSchema#int") {
         d->dataType = *XSD::Int();
-        setValue(value.toInt());
+        setValue(value.toInt(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
         d->dataType = *XSD::Integer();
-        setValue(value.toLongLong());
+        setValue(value.toLongLong(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger") {
         d->dataType = *XSD::NonNegativeInteger();
-        setValue(value.toULongLong());
+        setValue(value.toULongLong(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#unsignedInt") {
         d->dataType = *XSD::UnsignedInt();
-        setValue(value.toUInt());
+        setValue(value.toUInt(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#decimal") {
         d->dataType = *XSD::Decimal();
-        setValue(value.toDouble());
+        setValue(value.toDouble(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#short") {
         d->dataType = *XSD::Short();
-        setValue(value.toInt());
+        setValue(value.toInt(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#long") {
         d->dataType = *XSD::Long();
-        setValue(value.toLongLong());
-    } else if (s == "http://www.w3.org/2001/XMLSchema#Unsignedlong") {
+        setValue(value.toLongLong(&ok));
+    } else if (s == "http://www.w3.org/2001/XMLSchema#unsignedLong") {
         d->dataType = *XSD::UnsignedLong();
-        setValue(value.toULongLong());
+        setValue(value.toULongLong(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#boolean") {
         d->dataType = *XSD::Boolean();
-        setValue(value.toLower() == QLatin1String("true") || value.toLower() == QLatin1String("yes") || value.toInt() != 0);
+        setValue(value.toLower() == QLatin1String("true") || value.toLower() == QLatin1String("yes") || value.toInt(&ok) != 0);
     } else if (s == "http://www.w3.org/2001/XMLSchema#double") {
         d->dataType = *XSD::Double();
-        setValue(value.toDouble());
+        setValue(value.toDouble(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#float") {
         d->dataType = *XSD::Float();
-        setValue(value.toDouble());
+        setValue(value.toDouble(&ok));
     } else if (s == "http://www.w3.org/2001/XMLSchema#string") {
         d->dataType = *XSD::String();
         setValue(value);
@@ -350,6 +351,9 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         d->dataType = dataTypeUri;
         setValue(value);
     }
+
+    if (!ok)
+        qWarning() << "QSparqlBinding::setValue(): Conversion error:" << value << "type:" << d->dataType.toString();
 }
 
 /*!
