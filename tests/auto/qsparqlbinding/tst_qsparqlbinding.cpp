@@ -144,6 +144,16 @@ void tst_QSparqlBinding::toString_data()
     add_toString_data_rows("int_max",     QVariant(int(2147483647)),  "2147483647", xsd_int);
     add_toString_data_rows("int_min",  QVariant(int(-2147483647-1)), "-2147483648", xsd_int);
 
+    const QUrl xsd_long("http://www.w3.org/2001/XMLSchema#long");
+    add_toString_data_rows("long_long_null",             QVariant(qlonglong(0)),           "0", xsd_long);
+    add_toString_data_rows("long_long_typical",         QVariant(qlonglong(54)),          "54", xsd_long);
+    add_toString_data_rows("long_long_max",     QVariant(qlonglong(9223372036854775807)),  "9223372036854775807", xsd_long);
+    add_toString_data_rows("long_long_min",  QVariant(qlonglong(-9223372036854775807-1)), "-9223372036854775808", xsd_long);
+
+    // The gcc compiler gives a warning, but these literal values don't seem to get truncated
+    // qWarning() << "long_long_max" << QVariant(qlonglong(9223372036854775807)).toString() << "9223372036854775807";
+    // qWarning() << "long_long_min" << QVariant(qlonglong(-9223372036854775807-1)).toString() << "-9223372036854775808";
+
     QTest::newRow("int") <<
         QVariant(static_cast<int>(54)) <<
         QVariant() <<
