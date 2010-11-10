@@ -13,7 +13,6 @@ include(../qsparqldriverbase.pri)
 
 QT += xml
 QT += network
-CONFIG += debug
 
 coverage {
 	LIBS += -lgcov
