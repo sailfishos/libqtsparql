@@ -186,8 +186,10 @@ async_cursor_next_callback( GObject *source_object,
             binding.setBlankNodeLabel(value);
             break;
         case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
-            binding.setValue(value == QLatin1String("1") ? QString::fromLatin1("true") : QString::fromLatin1("false"),
-                             *XSD::Boolean());
+            if (value == QLatin1String("1") || value.toLower() == QLatin1String("true"))
+                binding.setValue(QString::fromLatin1("true"), *XSD::Boolean());
+            else
+                binding.setValue(QString::fromLatin1("false"), *XSD::Boolean());
             break;
         default:
             break;
