@@ -256,6 +256,22 @@ void tst_QSparqlBinding::toString_data()
         QString("2000-01-30T12:05:59") <<
         QUrl("http://www.w3.org/2001/XMLSchema#dateTime");
 
+    QTest::newRow("empty_string") <<
+        QVariant("") <<
+        QVariant() <<
+        QVariant() <<
+        QString("\"\"") <<
+        QString("") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#string");
+
+    QTest::newRow("empty_string_with_datatype") <<
+        QVariant("") <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#string")) <<
+        QString("\"\"^^<http://www.w3.org/2001/XMLSchema#string>") <<
+        QString("") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#string");
+
     QTest::newRow("string") <<
         QVariant("foo") <<
         QVariant() <<
