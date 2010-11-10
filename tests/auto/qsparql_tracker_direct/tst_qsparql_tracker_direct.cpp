@@ -77,6 +77,8 @@ private slots:
     void concurrent_queries_2();
 
 	void insert_with_dbus_read_with_direct();
+
+    void result_type_bool();
 };
 
 namespace {
@@ -396,6 +398,49 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     // And then spin the event loop so that the async callback is called...
     QTest::qWait(1000);
 }
+
+void tst_QSparqlTrackerDirect::result_type_bool()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    // Boolean result
+    QSparqlResult* r = conn.exec(QSparqlQuery("select 1 > 0 { }"));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QVERIFY(r->next());
+    QVERIFY(r->value(0).toBool() == true);
+    QVERIFY(r->value(0).type() == QVariant::Bool);
+    delete r;
+    r = conn.exec(QSparqlQuery("select 0 > 1 { }"));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QVERIFY(r->next());
+    QVERIFY(r->value(0).toBool() == false);
+    QVERIFY(r->value(0).type() == QVariant::Bool);
+    delete r;
+
+    // Another type of boolean result
+    r = conn.exec(QSparqlQuery("select ?b { <uri004> tracker:available ?b . }"));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QVERIFY(r->next());
+    QVERIFY(r->value(0).toBool() == true);
+    QVERIFY(r->value(0).type() == QVariant::Bool);
+    delete r;
+
+    r = conn.exec(QSparqlQuery("select ?b { <uri005> tracker:available ?b . }"));
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QVERIFY(r->next());
+    QVERIFY(r->value(0).toBool() == false);
+    QVERIFY(r->value(0).type() == QVariant::Bool);
+    delete r;
+}
+
 
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
