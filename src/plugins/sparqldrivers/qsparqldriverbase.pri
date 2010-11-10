@@ -5,7 +5,7 @@ QT = core
 DESTDIR = $$QT_BUILD_TREE/plugins/sparqldrivers
 LIBS += -lQtSparql
 
-isEmpty($$QTSPARQL_INSTALL_PLUGINS) {
+isEmpty(QTSPARQL_INSTALL_PLUGINS) {
     target.path = $$[QT_INSTALL_PLUGINS]/sparqldrivers
 } else {
     target.path = $$QTSPARQL_INSTALL_PLUGINS/sparqldrivers
