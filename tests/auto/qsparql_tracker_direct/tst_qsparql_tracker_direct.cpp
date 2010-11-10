@@ -473,13 +473,6 @@ void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
     QVERIFY(!r->hasError());
     delete r;
 
-    r = writeConn.exec(add);
-    QVERIFY(r);
-    QVERIFY(!r->hasError());
-    r->waitForFinished(); // this test is synchronous only
-    QVERIFY(!r->hasError());
-    delete r;
-
     // Verify that the insertion succeeded with readConn
     QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
