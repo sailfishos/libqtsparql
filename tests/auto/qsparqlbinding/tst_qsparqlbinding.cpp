@@ -143,36 +143,24 @@ void tst_QSparqlBinding::toString_data()
     add_toString_data_rows("int_typical",         QVariant(int(54)),          "54", xsd_int);
     add_toString_data_rows("int_max",     QVariant(int(2147483647)),  "2147483647", xsd_int);
     add_toString_data_rows("int_min",  QVariant(int(-2147483647-1)), "-2147483648", xsd_int);
-    // add_toString_data_rows("int_max_error",     QVariant(int(2147483648)),  "0", xsd_int);
-    // add_toString_data_rows("int_min_error",  QVariant(int(-2147483647-2)), "0", xsd_int);
 
     const QUrl xsd_uint("http://www.w3.org/2001/XMLSchema#unsignedInt");
     add_toString_data_rows("uint_null",             QVariant(uint(0)),           "0", xsd_uint);
     add_toString_data_rows("uint_typical",         QVariant(uint(54)),          "54", xsd_uint);
     add_toString_data_rows("uint_max",     QVariant(uint(4294967295)),  "4294967295", xsd_uint);
     add_toString_data_rows("uint_min",  QVariant(uint(0)), "0", xsd_uint);
-    // add_toString_data_rows("uint_max_error",     QVariant(uint(4294967296)),  "0", xsd_uint);
-    // add_toString_data_rows("uint_min_error",  QVariant(uint(-1)), "0", xsd_uint);
 
     const QUrl xsd_long("http://www.w3.org/2001/XMLSchema#long");
     add_toString_data_rows("long_long_null",             QVariant(qlonglong(0)),           "0", xsd_long);
     add_toString_data_rows("long_long_typical",         QVariant(qlonglong(54)),          "54", xsd_long);
     add_toString_data_rows("long_long_max",     QVariant(qlonglong(9223372036854775807L)),  "9223372036854775807", xsd_long);
     add_toString_data_rows("long_long_min",  QVariant(qlonglong(-9223372036854775807-1)), "-9223372036854775808", xsd_long);
-    // add_toString_data_rows("long_long_max_error",     QVariant(qlonglong(9223372036854775808)),  "0", xsd_long);
-    // add_toString_data_rows("long_long_min_error",  QVariant(qlonglong(-9223372036854775807-2)), "0", xsd_long);
 
     const QUrl xsd_ulong("http://www.w3.org/2001/XMLSchema#unsignedLong");
     add_toString_data_rows("ulong_long_null",             QVariant(qulonglong(0)),           "0", xsd_ulong);
     add_toString_data_rows("ulong_long_typical",         QVariant(qulonglong(54)),          "54", xsd_ulong);
     add_toString_data_rows("ulong_long_max",     QVariant(qulonglong(18446744073709551615UL)),  "18446744073709551615", xsd_ulong);
     add_toString_data_rows("ulong_long_min",  QVariant(qulonglong(0)), "0", xsd_ulong);
-    // add_toString_data_rows("ulong_long_max_error",     QVariant(qulonglong(18446744073709551616UL)),  "0", xsd_ulong);
-    // add_toString_data_rows("ulong_long_min_error",  QVariant(qulonglong(-1)), "0", xsd_ulong);
-
-    // The gcc compiler gives a warning, but these literal values don't seem to get truncated
-    // qWarning() << "long_long_max" << QVariant(qlonglong(9223372036854775807)).toString() << "9223372036854775807";
-    // qWarning() << "long_long_min" << QVariant(qlonglong(-9223372036854775807-1)).toString() << "-9223372036854775808";
 
     QTest::newRow("double") <<
         QVariant(static_cast<double>(54.0)) <<
