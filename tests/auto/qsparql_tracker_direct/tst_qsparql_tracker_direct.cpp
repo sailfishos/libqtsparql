@@ -455,91 +455,91 @@ void tst_QSparqlTrackerDirect::concurrent_queries_2()
 
 void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
 {
-	// This test will leave unclean test data in tracker if it crashes.
-	QSparqlConnection writeConn("QTRACKER");
-	QSparqlConnection readConn("QTRACKER_DIRECT");
+    // This test will leave unclean test data in tracker if it crashes.
+    QSparqlConnection writeConn("QTRACKER");
+    QSparqlConnection readConn("QTRACKER_DIRECT");
 
-	// Insert data with writeconn
-	QSparqlQuery add("insert { ?:addeduri a nco:PersonContact; "
-					 "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-					 "nco:nameGiven \"addedname006\" .}",
-					 QSparqlQuery::InsertStatement);
-	const QSparqlBinding addeduri(writeConn.createUrn("addeduri"));
-	add.bindValue(addeduri);
-	QSparqlResult* r = writeConn.exec(add);
-	QVERIFY(r);
-	QVERIFY(!r->hasError());
-	r->waitForFinished(); // this test is synchronous only
-	QVERIFY(!r->hasError());
-	delete r;
+    // Insert data with writeconn
+    QSparqlQuery add("insert { ?:addeduri a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname006\" .}",
+                     QSparqlQuery::InsertStatement);
+    const QSparqlBinding addeduri(writeConn.createUrn("addeduri"));
+    add.bindValue(addeduri);
+    QSparqlResult* r = writeConn.exec(add);
+    QVERIFY(r);
+    QVERIFY(!r->hasError());
+    r->waitForFinished(); // this test is synchronous only
+    QVERIFY(!r->hasError());
+    delete r;
 
-	r = writeConn.exec(add);
-	QVERIFY(r);
-	QVERIFY(!r->hasError());
-	r->waitForFinished(); // this test is synchronous only
-	QVERIFY(!r->hasError());
-	delete r;
+    r = writeConn.exec(add);
+    QVERIFY(r);
+    QVERIFY(!r->hasError());
+    r->waitForFinished(); // this test is synchronous only
+    QVERIFY(!r->hasError());
+    delete r;
 
-	// Verify that the insertion succeeded with readConn
-	QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
-				   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-				   "nco:nameGiven ?ng .}");
-	{
-		QHash<QString, QSparqlBinding> contactNames;
-		r = readConn.exec(q);
-		QVERIFY(r);
-		r->waitForFinished();
-		QCOMPARE(r->size(), 4);
-		while (r->next()) {
-			contactNames[r->binding(1).value().toString()] = r->binding(0);
-		}
-		QCOMPARE(contactNames.size(), 4);
-		QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
-		delete r;
-	}
+    // Verify that the insertion succeeded with readConn
+    QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    {
+        QHash<QString, QSparqlBinding> contactNames;
+        r = readConn.exec(q);
+        QVERIFY(r);
+        r->waitForFinished();
+        QCOMPARE(r->size(), 4);
+        while (r->next()) {
+            contactNames[r->binding(1).value().toString()] = r->binding(0);
+        }
+        QCOMPARE(contactNames.size(), 4);
+        QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+        delete r;
+    }
 
-	// Delete and re-insert data with writeConn
-	QSparqlQuery deleteAndAdd("delete { ?:addeduri a rdfs:Resource. } "
-					 "insert { ?:addeduri a nco:PersonContact; "
-					 "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-					 "nco:nameGiven \"addedname006\" .}",
-					 QSparqlQuery::InsertStatement);
-	deleteAndAdd.bindValue(addeduri);
-	r = writeConn.exec(add);
-	QVERIFY(r);
-	QVERIFY(!r->hasError());
-	r->waitForFinished(); // this test is synchronous only
-	QVERIFY(!r->hasError());
-	delete r;
+    // Delete and re-insert data with writeConn
+    QSparqlQuery deleteAndAdd("delete { ?:addeduri a rdfs:Resource. } "
+                              "insert { ?:addeduri a nco:PersonContact; "
+                              "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                              "nco:nameGiven \"addedname006\" .}",
+                              QSparqlQuery::InsertStatement);
+    deleteAndAdd.bindValue(addeduri);
+    r = writeConn.exec(add);
+    QVERIFY(r);
+    QVERIFY(!r->hasError());
+    r->waitForFinished(); // this test is synchronous only
+    QVERIFY(!r->hasError());
+    delete r;
 
-	// Verify once more that the insertion succeeded with readConn
-	{
-		QHash<QString, QSparqlBinding> contactNames;
-		r = readConn.exec(q);
-		QVERIFY(r);
-		r->waitForFinished();
-		QCOMPARE(r->size(), 4);
-		while (r->next()) {
-			// qDebug() << r->binding(0).toString() << r->binding(1).toString();
-			contactNames[r->binding(1).value().toString()] = r->binding(0);
-		}
-		QCOMPARE(contactNames.size(), 4);
-		QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
-		delete r;
-	}
+    // Verify once more that the insertion succeeded with readConn
+    {
+        QHash<QString, QSparqlBinding> contactNames;
+        r = readConn.exec(q);
+        QVERIFY(r);
+        r->waitForFinished();
+        QCOMPARE(r->size(), 4);
+        while (r->next()) {
+            // qDebug() << r->binding(0).toString() << r->binding(1).toString();
+            contactNames[r->binding(1).value().toString()] = r->binding(0);
+        }
+        QCOMPARE(contactNames.size(), 4);
+        QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+        delete r;
+    }
 
-	// Delete the uri
-	QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
-					 QSparqlQuery::DeleteStatement);
+    // Delete the uri
+    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
 
-	del.bindValue(addeduri);
-	r = writeConn.exec(del);
-	qDebug() << r->query();
-	QVERIFY(r);
-	QVERIFY(!r->hasError());
-	r->waitForFinished(); // this test is synchronous only
-	QVERIFY(!r->hasError());
-	delete r;
+    del.bindValue(addeduri);
+    r = writeConn.exec(del);
+    qDebug() << r->query();
+    QVERIFY(r);
+    QVERIFY(!r->hasError());
+    r->waitForFinished(); // this test is synchronous only
+    QVERIFY(!r->hasError());
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
