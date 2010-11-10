@@ -176,7 +176,7 @@ void tst_QSparqlBinding::toString_data()
         QString("5.4000000000e+01") <<
         QUrl("http://www.w3.org/2001/XMLSchema#double");
 
-    QTest::newRow("boolean") <<
+    QTest::newRow("boolean(true)") <<
         QVariant(true) <<
         QVariant() <<
         QVariant() <<
@@ -184,12 +184,28 @@ void tst_QSparqlBinding::toString_data()
         QString("true") <<
         QUrl("http://www.w3.org/2001/XMLSchema#boolean");
 
-    QTest::newRow("boolean_with_datatype") <<
+    QTest::newRow("boolean(false") <<
+        QVariant(false) <<
+        QVariant() <<
+        QVariant() <<
+        QString("false") <<
+        QString("false") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#boolean");
+
+    QTest::newRow("boolean_with_datatype(true)") <<
         QVariant(true) <<
         QVariant() <<
         QVariant(QUrl("http://www.w3.org/2001/XMLSchema#boolean")) <<
         QString("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>") <<
         QString("true") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#boolean");
+
+    QTest::newRow("boolean_with_datatype(false)") <<
+        QVariant(false) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#boolean")) <<
+        QString("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>") <<
+        QString("false") <<
         QUrl("http://www.w3.org/2001/XMLSchema#boolean");
 
     QTest::newRow("date") <<
