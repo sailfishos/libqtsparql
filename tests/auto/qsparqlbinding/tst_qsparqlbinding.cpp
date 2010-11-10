@@ -160,21 +160,11 @@ void tst_QSparqlBinding::toString_data()
     add_toString_data_rows("ulong_long_typical", QVariant(Q_UINT64_C(                  54)),                    "54", xsd_ulong);
     add_toString_data_rows("ulong_long_max",     QVariant(Q_UINT64_C(18446744073709551615)),  "18446744073709551615", xsd_ulong);
 
-    QTest::newRow("double") <<
-        QVariant(static_cast<double>(54.0)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("5.4000000000e+01") <<
-        QString("5.4000000000e+01") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#double");
-
-    QTest::newRow("double_with_datatype") <<
-        QVariant(static_cast<double>(54.0)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#double")) <<
-        QString("\"5.4000000000e+01\"^^<http://www.w3.org/2001/XMLSchema#double>") <<
-        QString("5.4000000000e+01") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#double");
+    const QUrl xsd_double("http://www.w3.org/2001/XMLSchema#double");
+    add_toString_data_rows("double_null",        QVariant(double(    0)),  "0.0000000000e+00", xsd_double);
+    add_toString_data_rows("double_typical_pos", QVariant(double( 54.0)),  "5.4000000000e+01", xsd_double);
+    add_toString_data_rows("double_typical_neg", QVariant(double(-54.0)), "-5.4000000000e+01", xsd_double);
+    // double min and max are not fixed and thus hard to test
 
     QTest::newRow("boolean(true)") <<
         QVariant(true) <<
