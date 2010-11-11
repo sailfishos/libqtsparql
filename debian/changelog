@@ -1,3 +1,9 @@
+libqtsparql (0.0.13~unreleased) unstable; urgency=low
+
+  *
+
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 11 Nov 2010 15:21:58 +0200
+
 libqtsparql (0.0.12) unstable; urgency=low
 
   * Tracker direct driver: fixing bool handing.
