@@ -1,6 +1,8 @@
 libqtsparql (0.0.12~unreleased) unstable; urgency=low
 
-  *
+  * Tracker direct driver: fixing bool handing.
+  * Enabling easier installation to a custom directory.
+  * Fixed xsd:integer handling (maps to long long).
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 28 Oct 2010 11:14:39 +0300
 
