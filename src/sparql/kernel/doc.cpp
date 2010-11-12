@@ -13,9 +13,15 @@
     QtSparql can connect to different backends.  Currently the following backends
     exist:
 
-    - tracker backend for accessing <a href="http://projects.gnome.org/tracker/">Tracker</a>
-    - endpoint backend of accessing online RDF stores, e.g., <a href="http://dbpedia.org">DBpedia</a>
-    - virtuoso backend for accessing <a href="http://docs.openlinksw.com/virtuoso/">Virtuoso</a>
+    - QTRACKER for accessing <a
+      href="http://projects.gnome.org/tracker/">Tracker</a> over D-Bus
+    - QTRACKER_DIRECT for accessing <a
+      href="http://projects.gnome.org/tracker/">Tracker</a> via direct database
+      access and D-Bus
+    - QSPARQL_ENDPOINT for accessing online RDF stores, e.g., <a
+      href="http://dbpedia.org">DBpedia</a>
+    - QVIRTUOSO backend for accessing <a
+      href="http://docs.openlinksw.com/virtuoso/">Virtuoso</a>
 
     \section gettingstarted Getting started
 
@@ -82,6 +88,38 @@
     \section querymodels Query models
 
     TODO: QSparlQueryModel
+
+    \section connectionoptions Connection options supported by drivers
+
+    QTRACKER driver supports the following connection options:
+    - custom: "batch" (bool), use BatchUpdate when writing data to
+      Tracker. BatchUpdate will schedule the data to be written at a suitable
+      moment, so it is not necessarity written when the query is finished.
+
+    QTRACKER_DIRECT driver supports the following connection options:
+    - custom: "dataReadyInterval" (int, default 100), controls the interval for
+      emitting the dataReady signal.
+
+    QENDPOINT driver supports the following connection options:
+    - hostName (QString)
+    - path (QString)
+    - port (int)
+    - userName (QString)
+    - password (QString)
+    - networkAccessManager (QNetworkAccessManager*)
+    - proxy (const QNetworkProxy&)
+
+    QVIRTUOSO driver supports the following connection options:
+    - hostName (QString)
+    - port (int)
+    - userName (QString)
+    - password (QString)
+    - databaseName (QString)
+    - custom: "timeout" (int)
+    - custom: "maxrows" (int)
+
+    For setting custom options, use QSparqlConnectionOptions::setOption() and
+    give the option name as a string.
 
     \section backendspecific Accessing backend-specific functionalities
 
