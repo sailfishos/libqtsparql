@@ -69,7 +69,7 @@
 
     - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),
-      QSparqlResult::previous(), QSparqlResult::seek(). The caller is
+      QSparqlResult::previous(), QSparqlResult::setPos(). The caller is
       responsible for deleting the QSparqlResult.
 
     E.g.,
