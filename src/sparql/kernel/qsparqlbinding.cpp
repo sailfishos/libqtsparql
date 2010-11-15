@@ -268,22 +268,6 @@ void QSparqlBinding::setLanguageTag(const QString &languageTag)
     d->lang = languageTag;
 }
 
-Q_GLOBAL_STATIC_WITH_ARGS(QRegExp, zone,
-                          (QLatin1String("([-+])(\\d\\d:\\d\\d)")))
-
-static int extractTimezone(QString& str)
-{
-    int ix = zone()->indexIn(str);
-    if (ix != -1) {
-        int sign = (zone()->cap(1) == QLatin1String("-") ? -1 : 1);
-        QTime adjustment = QTime::fromString(zone()->cap(2), QString::fromLatin1("hh':'mm"));
-        str.remove(ix, 6);
-        return ((adjustment.hour() * 3600) + (adjustment.minute() * 60)) * sign;
-    }
-
-    return 0;
-}
-
 /*!
     Sets the binding's value and the URI of its data type
 
@@ -336,14 +320,17 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         setValue(QDate::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#time") {
         d->dataType = *XSD::Time();
-        QString v(value);
-        int adjustment = extractTimezone(v);
-        setValue(QTime::fromString(v, Qt::ISODate).addSecs(adjustment));
+        QTime time = QTime::fromString(value, Qt::ISODate);
+        QDateTime date = QDateTime(QDate(), time);
+        date.addSecs(date.utcOffset());
+        date.setUtcOffset(0);
+        setValue(date.time());
     } else if (s == "http://www.w3.org/2001/XMLSchema#dateTime") {
         d->dataType = *XSD::DateTime();
-        QString v(value);
-        int adjustment = extractTimezone(v);
-        setValue(QDateTime::fromString(v, Qt::ISODate).addSecs(adjustment));
+        QDateTime date = QDateTime::fromString(value, Qt::ISODate);
+        date.addSecs(date.utcOffset());
+        date.setUtcOffset(0);
+        setValue(date);
     } else if (s == "http://www.w3.org/2001/XMLSchema#base64Binary") {
         d->dataType = *XSD::Base64Binary();
         setValue(QByteArray::fromBase64(value.toAscii()));
