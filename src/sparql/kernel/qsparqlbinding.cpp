@@ -320,17 +320,10 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         setValue(QDate::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#time") {
         d->dataType = *XSD::Time();
-        QTime time = QTime::fromString(value, Qt::ISODate);
-        QDateTime date = QDateTime(QDate(), time);
-        date.addSecs(date.utcOffset());
-        date.setUtcOffset(0);
-        setValue(date.time());
+        setValue(QTime::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#dateTime") {
         d->dataType = *XSD::DateTime();
-        QDateTime date = QDateTime::fromString(value, Qt::ISODate);
-        date.addSecs(date.utcOffset());
-        date.setUtcOffset(0);
-        setValue(date);
+        setValue(QDateTime::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#base64Binary") {
         d->dataType = *XSD::Base64Binary();
         setValue(QByteArray::fromBase64(value.toAscii()));
@@ -427,15 +420,28 @@ QString QSparqlBinding::toString() const
         case QVariant::DateTime:
         {
             quoted = true;
-            QDate dt = val.toDateTime().date();
-            QTime tm = val.toDateTime().time();
+            QDateTime dt = val.toDateTime();
+            int offset = dt.utcOffset();
+            QDate date = val.toDateTime().date();
+            QTime time = val.toDateTime().time();
             // DateTime format has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
-            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
-                QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
+            literal = QLatin1Char('\"') + QString::number(date.year()) + QLatin1Char('-') +
+                QString::number(date.month()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('-') +
-                QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) +
+                QString::number(date.day()).rightJustified(2, QLatin1Char('0'), true) +
                 QLatin1Char('T') +
-                tm.toString() + QLatin1Char('\"');
+                time.toString();
+
+            if (offset != 0) {
+                QTime zone(0, 0, 0);
+                zone.addSecs(offset);
+                if (offset > 0)
+                    literal.append(zone.toString(QLatin1String("+HH:mm")));
+                else
+                    literal.append(zone.toString(QLatin1String("-HH:mm")));
+            }
+
+            literal.append(QLatin1Char('\"'));
             break;
         }
         case QVariant::ByteArray:
