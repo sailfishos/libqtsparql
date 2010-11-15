@@ -268,6 +268,20 @@ void QSparqlBinding::setLanguageTag(const QString &languageTag)
     d->lang = languageTag;
 }
 
+static int extractTimezone(QString& str)
+{
+    QRegExp zone(QLatin1String("([-+])(\\d\\d:\\d\\d)"));
+    int ix = zone.indexIn(str);
+    if (ix != -1) {
+        int sign = (zone.cap(1) == QLatin1String("-") ? -1 : 1);
+        QTime adjustment = QTime::fromString(zone.cap(2), QString::fromLatin1("hh':'mm"));
+        str.remove(ix, 6);
+        return ((adjustment.hour() * 3600) + (adjustment.minute() * 60)) * sign;
+    }
+
+    return 0;
+}
+
 /*!
     Sets the binding's value and the URI of its data type
 
@@ -317,10 +331,20 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         setValue(value);
     } else if (s == "http://www.w3.org/2001/XMLSchema#date") {
         d->dataType = *XSD::Date();
-        setValue(QDate::fromString(value, Qt::ISODate));
+        // xsd:dates can have timezones which aren't supported by QDate,
+        // so convert to UTC time and use the derived date
+        QString v(value);
+        int adjustment = extractTimezone(v);
+        QDateTime dt = QDateTime::fromString(v, Qt::ISODate);
+        dt = dt.addSecs(adjustment);
+        setValue(dt.date());
     } else if (s == "http://www.w3.org/2001/XMLSchema#time") {
         d->dataType = *XSD::Time();
-        setValue(QTime::fromString(value, Qt::ISODate));
+        // xsd:times can have timezones which aren't supported by QTime,
+        // so convert to UTC time and use that
+        QString v(value);
+        int adjustment = extractTimezone(v);
+        setValue(QTime::fromString(v, Qt::ISODate).addSecs(adjustment));
     } else if (s == "http://www.w3.org/2001/XMLSchema#dateTime") {
         d->dataType = *XSD::DateTime();
         setValue(QDateTime::fromString(value, Qt::ISODate));
