@@ -74,18 +74,7 @@ void QSparqlQueryModelPrivate::beginQuery(int totalResults)
     if (colOffsets.size() != newResultRow.count() || columnsChanged)
         initColOffsets(newResultRow.count());
 
-    bool mustClearModel = bottom.isValid();
-    if (mustClearModel) {
-        atEnd = true;
-        q->beginRemoveRows(QModelIndex(), 0, qMax(bottom.row(), 0));
-        bottom = QModelIndex();
-    }
-
     resultRow = newResultRow;
-
-    if (mustClearModel)
-        q->endRemoveRows();
-
     atEnd = false;
 
     if (columnsChanged && hasNewData)
@@ -299,15 +288,21 @@ void QSparqlQueryModel::queryChange()
 */
 void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &connection)
 {
-    // FIXME: the old result needs to be deleted after the new results are displayed
-    // so not here..
-//    if (d->result != 0)
-//        delete d->result;
+    bool mustClearModel = d->bottom.isValid();
+    if (mustClearModel) {
+        d->atEnd = true;
+        beginRemoveRows(QModelIndex(), 0, qMax(d->bottom.row(), 0));
+        d->bottom = QModelIndex();
+        endRemoveRows();
+    }
+
     d->connection = &connection;
+    delete d->result;
     d->result = connection.exec(query);
     d->newQuery = true;
     // connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
+
 }
 
 /*!
