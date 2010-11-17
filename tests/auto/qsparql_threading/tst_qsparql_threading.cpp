@@ -160,7 +160,7 @@ void tst_QSparqlThreading::resultsReturned(int totalCount)
 }
 
 tst_QSparqlThreading::tst_QSparqlThreading()
-    : loop(0), r1(0), r2(0)
+    : loop(0), conn1(0), r1(0), conn2(0), r2(0)
 {
     _self = this;
     QCoreApplication::instance()->thread()->setObjectName("Main thread");
@@ -197,7 +197,9 @@ void tst_QSparqlThreading::cleanup()
 
     QTest::qWait(500);
     delete conn1;
+    conn1 = 0;
     delete conn2;
+    conn2 = 0;
 }
 
 void tst_QSparqlThreading::initTestCase()
@@ -507,8 +509,6 @@ void tst_QSparqlThreading::subThreadTrackerDirectQuery()
 
     sem1.release();
     sem2.acquire();
-
-    r1->waitForFinished();
 
     if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
