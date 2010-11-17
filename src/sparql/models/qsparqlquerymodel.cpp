@@ -170,6 +170,13 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
 */
 
 /*!
+    \fn void QSparqlQueryModel::finished()
+
+    This signal is emitted when the QSparqlResult, used by the model, has
+    finished retrieving its data or when there was an error.
+*/
+
+/*!
     Creates an empty QSparqlQueryModel with the given \a parent.
  */
 QSparqlQueryModel::QSparqlQueryModel(QObject *parent)
@@ -300,7 +307,7 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
     delete d->result;
     d->result = connection.exec(query);
     d->newQuery = true;
-    // connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
+    connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
 
 }

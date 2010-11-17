@@ -86,6 +86,9 @@ public:
 
     QSparqlError lastError() const;
 
+Q_SIGNALS:
+    void finished();
+
 protected:
     virtual void queryChange();
 
