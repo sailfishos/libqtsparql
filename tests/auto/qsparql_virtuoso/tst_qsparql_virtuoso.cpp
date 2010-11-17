@@ -46,7 +46,8 @@
 
 //TESTED_FILES=
 
-#define TEST_PORT 1111
+#define TEST_PORT 1234
+// #define TEST_PORT 1111
 
 class tst_QSparqlVirtuoso : public QObject
 {
@@ -313,7 +314,7 @@ void tst_QSparqlVirtuoso::select_datatypes()
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
     QCOMPARE(r->hasError(), false);
-    QCOMPARE(r->size(), 23);
+    QCOMPARE(r->size(), 29);
     QHash<QString, QSparqlBinding> results;
 
     while (r->next()) {
@@ -334,9 +335,18 @@ void tst_QSparqlVirtuoso::select_datatypes()
     QCOMPARE(results["<integer_property>"].toString(), QString("-1234"));
     QCOMPARE(results["<int_property>"].toString(), QString("\"5678\"^^<http://www.w3.org/2001/XMLSchema#int>"));
     QCOMPARE(results["<nonNegativeInteger_property>"].toString(), QString("9012"));
+
+    // Note that the date and time tests for timezones don't work as Virtuoso doesn't return the timezone
     QCOMPARE(results["<date_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
+    QCOMPARE(results["<date_negative_timezone_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
+    QCOMPARE(results["<date_positive_timezone_property>"].toString(), QString("\"2010-11-30\"^^<http://www.w3.org/2001/XMLSchema#date>"));
     QCOMPARE(results["<time_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
+    QCOMPARE(results["<time_negative_timezone_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
+    QCOMPARE(results["<time_positive_timezone_property>"].toString(), QString("\"12:30:59\"^^<http://www.w3.org/2001/XMLSchema#time>"));
     QCOMPARE(results["<dateTime_property>"].toString(), QString("\"2010-11-30T12:30:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"));
+    QCOMPARE(results["<dateTime_negative_timezone_property>"].toString(), QString("\"2010-11-30T12:30:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"));
+    QCOMPARE(results["<dateTime_positive_timezone_property>"].toString(), QString("\"2010-11-30T12:30:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"));
+
     QCOMPARE(results["<decimal_property>"].toString(), QString("\"1234.56\"^^<http://www.w3.org/2001/XMLSchema#decimal>"));
     QCOMPARE(results["<short_property>"].toString(), QString("\"4567\"^^<http://www.w3.org/2001/XMLSchema#short>"));
     QCOMPARE(results["<long_property>"].toString(), QString("\"123456789\"^^<http://www.w3.org/2001/XMLSchema#long>"));

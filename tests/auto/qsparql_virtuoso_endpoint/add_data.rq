@@ -34,8 +34,14 @@ insert into <http://virtuoso_endpoint/testgraph>
         <int_property> "5678"^^<http://www.w3.org/2001/XMLSchema#int> ;
         <nonNegativeInteger_property> "9012"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger> ;
         <date_property> "2010-11-30T12:30:59"^^<http://www.w3.org/2001/XMLSchema#date> ;
+        <date_negative_timezone_property> "2010-11-30T12:30:59-01:00"^^<http://www.w3.org/2001/XMLSchema#date> ;
+        <date_positive_timezone_property> "2010-11-30T12:30:59+01:00"^^<http://www.w3.org/2001/XMLSchema#date> ;
         <time_property> "12:30:59"^^<http://www.w3.org/2001/XMLSchema#time> ;
+        <time_negative_timezone_property> "12:30:59-01:00"^^<http://www.w3.org/2001/XMLSchema#time> ;
+        <time_positive_timezone_property> "12:30:59+01:00"^^<http://www.w3.org/2001/XMLSchema#time> ;
         <dateTime_property> "2010-11-30T12:30:59"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <dateTime_negative_timezone_property> "2010-11-30T12:30:59-01:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <dateTime_positive_timezone_property> "2010-11-30T12:30:59+01:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         <decimal_property> "1234.56"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
         <short_property> "4567"^^<http://www.w3.org/2001/XMLSchema#short> ;
         <long_property> "123456789"^^<http://www.w3.org/2001/XMLSchema#long> ;
