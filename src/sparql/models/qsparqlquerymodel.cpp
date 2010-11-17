@@ -198,8 +198,8 @@ QSparqlQueryModel::~QSparqlQueryModel()
 /*! \fn int QSparqlQueryModel::rowCount(const QModelIndex &parent) const
 
     If the connection supports returning the size of a query
-    (see QSparqlConnection::hasFeature()), the amount of rows of the current
-    query is returned. Otherwise, returns the amount of rows
+    (see QSparqlConnection::hasFeature()), the number of rows of the current
+    query is returned. Otherwise, returns the number of rows
     currently cached on the client.
 
     \a parent should always be an invalid QModelIndex.
@@ -211,11 +211,13 @@ int QSparqlQueryModel::rowCount(const QModelIndex &index) const
     return index.isValid() ? 0 : d->bottom.row() + 1;
 }
 
-/*! \reimp
+/*!
+ *  Returns the number of columns, which is the number of variables
+ *  in the select part of the query
  */
-int QSparqlQueryModel::columnCount(const QModelIndex &index) const
+int QSparqlQueryModel::columnCount(const QModelIndex &parent) const
 {
-    return index.isValid() ? 0 : d->resultRow.count();
+    return parent.isValid() ? 0 : d->resultRow.count();
 }
 
 /*!
