@@ -197,7 +197,9 @@ void tst_QSparqlThreading::cleanup()
 
     QTest::qWait(500);
     delete conn1;
+    conn1 = 0;
     delete conn2;
+    conn2 = 0;
 }
 
 void tst_QSparqlThreading::initTestCase()
@@ -507,8 +509,6 @@ void tst_QSparqlThreading::subThreadTrackerDirectQuery()
 
     sem1.release();
     sem2.acquire();
-
-    r1->waitForFinished();
 
     if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
