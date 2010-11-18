@@ -139,125 +139,34 @@ void tst_QSparqlBinding::toString_data()
     QTest::addColumn<QUrl>("get_datatype");
 
     const QUrl xsd_int("http://www.w3.org/2001/XMLSchema#int");
-    add_toString_data_rows("int_null",             QVariant(int(0)),           "0", xsd_int);
-    add_toString_data_rows("int_typical",         QVariant(int(54)),          "54", xsd_int);
-    add_toString_data_rows("int_max",     QVariant(int(2147483647)),  "2147483647", xsd_int);
-    add_toString_data_rows("int_min",  QVariant(int(-2147483647-1)), "-2147483648", xsd_int);
-    // add_toString_data_rows("int_max_error",     QVariant(int(2147483648)),  "0", xsd_int);
-    // add_toString_data_rows("int_min_error",  QVariant(int(-2147483647-2)), "0", xsd_int);
+    add_toString_data_rows("int_null",    QVariant(int(            0)),           "0", xsd_int);
+    add_toString_data_rows("int_typical", QVariant(int(           54)),          "54", xsd_int);
+    add_toString_data_rows("int_max",     QVariant(int(   2147483647)),  "2147483647", xsd_int);
+    add_toString_data_rows("int_min",     QVariant(int(-2147483647-1)), "-2147483648", xsd_int);
 
     const QUrl xsd_uint("http://www.w3.org/2001/XMLSchema#unsignedInt");
-    add_toString_data_rows("uint_null",             QVariant(uint(0)),           "0", xsd_uint);
-    add_toString_data_rows("uint_typical",         QVariant(uint(54)),          "54", xsd_uint);
-    add_toString_data_rows("uint_max",     QVariant(uint(4294967295)),  "4294967295", xsd_uint);
-    add_toString_data_rows("uint_min",  QVariant(uint(0)), "0", xsd_uint);
-    // add_toString_data_rows("uint_max_error",     QVariant(uint(4294967296)),  "0", xsd_uint);
-    // add_toString_data_rows("uint_min_error",  QVariant(uint(-1)), "0", xsd_uint);
+    add_toString_data_rows("uint_null",    QVariant(uint(         0u)),           "0", xsd_uint);
+    add_toString_data_rows("uint_typical", QVariant(uint(        54u)),          "54", xsd_uint);
+    add_toString_data_rows("uint_max",     QVariant(uint(4294967295u)),  "4294967295", xsd_uint);
 
     const QUrl xsd_long("http://www.w3.org/2001/XMLSchema#long");
-    add_toString_data_rows("long_long_null",             QVariant(qlonglong(0)),           "0", xsd_long);
-    add_toString_data_rows("long_long_typical",         QVariant(qlonglong(54)),          "54", xsd_long);
-    add_toString_data_rows("long_long_max",     QVariant(qlonglong(9223372036854775807L)),  "9223372036854775807", xsd_long);
-    add_toString_data_rows("long_long_min",  QVariant(qlonglong(-9223372036854775807-1)), "-9223372036854775808", xsd_long);
-    // add_toString_data_rows("long_long_max_error",     QVariant(qlonglong(9223372036854775808)),  "0", xsd_long);
-    // add_toString_data_rows("long_long_min_error",  QVariant(qlonglong(-9223372036854775807-2)), "0", xsd_long);
+    add_toString_data_rows("long_long_null",    QVariant(Q_INT64_C(                      0)),                    "0", xsd_long);
+    add_toString_data_rows("long_long_typical", QVariant(Q_INT64_C(                     54)),                   "54", xsd_long);
+    add_toString_data_rows("long_long_max",     QVariant(Q_INT64_C(    9223372036854775807)),  "9223372036854775807", xsd_long);
+    add_toString_data_rows("long_long_min",     QVariant(Q_INT64_C(-9223372036854775807)-1), "-9223372036854775808", xsd_long);
 
     const QUrl xsd_ulong("http://www.w3.org/2001/XMLSchema#unsignedLong");
-    add_toString_data_rows("ulong_long_null",             QVariant(qulonglong(0)),           "0", xsd_ulong);
-    add_toString_data_rows("ulong_long_typical",         QVariant(qulonglong(54)),          "54", xsd_ulong);
-    add_toString_data_rows("ulong_long_max",     QVariant(qulonglong(18446744073709551615UL)),  "18446744073709551615", xsd_ulong);
-    add_toString_data_rows("ulong_long_min",  QVariant(qulonglong(0)), "0", xsd_ulong);
-    // add_toString_data_rows("ulong_long_max_error",     QVariant(qulonglong(18446744073709551616UL)),  "0", xsd_ulong);
-    // add_toString_data_rows("ulong_long_min_error",  QVariant(qulonglong(-1)), "0", xsd_ulong);
+    add_toString_data_rows("ulong_long_null",    QVariant(Q_UINT64_C(                   0)),                     "0", xsd_ulong);
+    add_toString_data_rows("ulong_long_typical", QVariant(Q_UINT64_C(                  54)),                    "54", xsd_ulong);
+    add_toString_data_rows("ulong_long_max",     QVariant(Q_UINT64_C(18446744073709551615)),  "18446744073709551615", xsd_ulong);
 
-    // The gcc compiler gives a warning, but these literal values don't seem to get truncated
-    // qWarning() << "long_long_max" << QVariant(qlonglong(9223372036854775807)).toString() << "9223372036854775807";
-    // qWarning() << "long_long_min" << QVariant(qlonglong(-9223372036854775807-1)).toString() << "-9223372036854775808";
+    const QUrl xsd_double("http://www.w3.org/2001/XMLSchema#double");
+    add_toString_data_rows("double_null",        QVariant(double(    0)),  "0.0000000000e+00", xsd_double);
+    add_toString_data_rows("double_typical_pos", QVariant(double( 54.0)),  "5.4000000000e+01", xsd_double);
+    add_toString_data_rows("double_typical_neg", QVariant(double(-54.0)), "-5.4000000000e+01", xsd_double);
+    // double min and max are not fixed and thus hard to test
 
-    QTest::newRow("int") <<
-        QVariant(static_cast<int>(54)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("54") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
-
-    QTest::newRow("int_with_datatype") <<
-        QVariant(static_cast<int>(54)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#int")) <<
-        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#int>") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
-
-    QTest::newRow("unsigned_int") <<
-        QVariant(static_cast<unsigned int>(54)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("54") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#unsignedInt");
-
-    QTest::newRow("unsigned_int_with_datatype") <<
-        QVariant(static_cast<unsigned int>(54)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#unsignedInt")) <<
-        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#unsignedInt");
-
-    // Note that a QVariant can't be constructed with a long
-    QTest::newRow("long") <<
-        QVariant(static_cast<int>(54)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("54") <<
-        QString("54") <<
-        // It isn't possible to create a QVariant from a long
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
-
-    QTest::newRow("long_with_datatype") <<
-        QVariant(static_cast<int>(54)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#long")) <<
-        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#long>") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#long");
-
-    QTest::newRow("unsigned_long") <<
-        QVariant(static_cast<int>(54)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("54") <<
-        QString("54") <<
-        // It isn't possible to create a QVariant from a long
-        QUrl("http://www.w3.org/2001/XMLSchema#int");
-
-    QTest::newRow("unsigned_long_with_datatype") <<
-        QVariant(static_cast<unsigned int>(54)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#unsignedLong")) <<
-        QString("\"54\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>") <<
-        QString("54") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#unsignedLong");
-
-    QTest::newRow("double") <<
-        QVariant(static_cast<double>(54.0)) <<
-        QVariant() <<
-        QVariant() <<
-        QString("5.4000000000e+01") <<
-        QString("5.4000000000e+01") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#double");
-
-    QTest::newRow("double_with_datatype") <<
-        QVariant(static_cast<double>(54.0)) <<
-        QVariant() <<
-        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#double")) <<
-        QString("\"5.4000000000e+01\"^^<http://www.w3.org/2001/XMLSchema#double>") <<
-        QString("5.4000000000e+01") <<
-        QUrl("http://www.w3.org/2001/XMLSchema#double");
-
-    QTest::newRow("boolean") <<
+    QTest::newRow("boolean(true)") <<
         QVariant(true) <<
         QVariant() <<
         QVariant() <<
@@ -265,12 +174,28 @@ void tst_QSparqlBinding::toString_data()
         QString("true") <<
         QUrl("http://www.w3.org/2001/XMLSchema#boolean");
 
-    QTest::newRow("boolean_with_datatype") <<
+    QTest::newRow("boolean(false") <<
+        QVariant(false) <<
+        QVariant() <<
+        QVariant() <<
+        QString("false") <<
+        QString("false") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#boolean");
+
+    QTest::newRow("boolean_with_datatype(true)") <<
         QVariant(true) <<
         QVariant() <<
         QVariant(QUrl("http://www.w3.org/2001/XMLSchema#boolean")) <<
         QString("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>") <<
         QString("true") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#boolean");
+
+    QTest::newRow("boolean_with_datatype(false)") <<
+        QVariant(false) <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#boolean")) <<
+        QString("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>") <<
+        QString("false") <<
         QUrl("http://www.w3.org/2001/XMLSchema#boolean");
 
     QTest::newRow("date") <<
@@ -320,6 +245,22 @@ void tst_QSparqlBinding::toString_data()
         QString("\"2000-01-30T12:05:59\"^^<http://www.w3.org/2001/XMLSchema#dateTime>") <<
         QString("2000-01-30T12:05:59") <<
         QUrl("http://www.w3.org/2001/XMLSchema#dateTime");
+
+    QTest::newRow("empty_string") <<
+        QVariant("") <<
+        QVariant() <<
+        QVariant() <<
+        QString("\"\"") <<
+        QString("") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#string");
+
+    QTest::newRow("empty_string_with_datatype") <<
+        QVariant("") <<
+        QVariant() <<
+        QVariant(QUrl("http://www.w3.org/2001/XMLSchema#string")) <<
+        QString("\"\"^^<http://www.w3.org/2001/XMLSchema#string>") <<
+        QString("") <<
+        QUrl("http://www.w3.org/2001/XMLSchema#string");
 
     QTest::newRow("string") <<
         QVariant("foo") <<
