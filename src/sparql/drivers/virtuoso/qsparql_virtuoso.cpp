@@ -137,6 +137,7 @@ public:
     // This mutex is for ensuring that only one thread at a time
     // is using the connection to make odbc queries
     QMutex mutex;
+    int dataReadyInterval;
 };
 
 class QVirtuosoResultPrivate
@@ -412,6 +413,10 @@ bool QVirtuosoResult::isFinished() const
 void QVirtuosoResult::terminate()
 {
     d->isFinished = true;
+    if (d->results.count() % d->driverPrivate->dataReadyInterval != 0) {
+        emit dataReady(d->results.count());
+    }
+
     emit finished();
     if (d->loop != 0)
         d->loop->exit();
@@ -538,7 +543,9 @@ bool QVirtuosoResult::fetchNextResult()
         d->results[d->results.count() - 1].append(qMakeBinding(d, d->resultColIdx));
     }
 
-    emit dataReady(d->results.count());
+    if (d->results.count() % d->driverPrivate->dataReadyInterval == 0) {
+        emit dataReady(d->results.count());
+    }
     return true;
 }
 
@@ -774,6 +781,8 @@ bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
         setOpenError(true);
         return false;
     }
+
+    d->dataReadyInterval = options.dataReadyInterval();
 
     setOpen(true);
     setOpenError(false);

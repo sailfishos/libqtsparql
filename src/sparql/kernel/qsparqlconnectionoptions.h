@@ -76,6 +76,7 @@ public:
     void setHostName(const QString& host);
     void setPath(const QString& path);
     void setPort(int p);
+    void setDataReadyInterval(int p);
 
 #ifndef QT_NO_NETWORKPROXY
     void setProxy(const QNetworkProxy& proxy);
@@ -89,6 +90,7 @@ public:
     QString hostName() const;
     QString path() const;
     int port() const;
+    int dataReadyInterval() const;
 
 #ifndef QT_NO_NETWORKPROXY
     QNetworkProxy proxy () const;

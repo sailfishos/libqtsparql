@@ -76,6 +76,7 @@ public:
 static QString hostKey = QString::fromLatin1("host");
 static QString pathKey = QString::fromLatin1("path");
 static QString portKey = QString::fromLatin1("port");
+static QString dataReadyIntervalKey = QString::fromLatin1("dataReadyInterval");
 static QString userKey = QString::fromLatin1("user");
 static QString passwordKey = QString::fromLatin1("password");
 static QString databaseKey = QString::fromLatin1("database");
@@ -216,6 +217,17 @@ void QSparqlConnectionOptions::setPort(int p)
     setOption(portKey, p);
 }
 
+/*!
+    Convenience function for setting the interval between when
+    dataReady(int) signals are emitted
+
+    \sa setOption()
+*/
+void QSparqlConnectionOptions::setDataReadyInterval(int interval)
+{
+    setOption(dataReadyIntervalKey, interval);
+}
+
 #ifndef QT_NO_NETWORKPROXY
 /*!
     Convenience function for setting the QNetworkProxy. Valid
@@ -301,6 +313,18 @@ int QSparqlConnectionOptions::port() const
 {
     QVariant v = option(portKey);
     return v.canConvert(QVariant::Int) ? v.toInt() : -1;
+}
+
+/*!
+    Convenience function for getting the interval between when
+    dataReady(int) signals are emitted.
+
+    \sa option()
+*/
+int QSparqlConnectionOptions::dataReadyInterval() const
+{
+    QVariant v = option(dataReadyIntervalKey);
+    return v.canConvert(QVariant::Int) ? v.toInt() : 1;
 }
 
 /*!
