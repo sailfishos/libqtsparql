@@ -412,11 +412,11 @@ bool QVirtuosoResult::isFinished() const
 
 void QVirtuosoResult::terminate()
 {
-    d->isFinished = true;
     if (d->results.count() % d->driverPrivate->dataReadyInterval != 0) {
         emit dataReady(d->results.count());
     }
 
+    d->isFinished = true;
     emit finished();
     if (d->loop != 0)
         d->loop->exit();

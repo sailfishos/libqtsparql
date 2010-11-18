@@ -269,11 +269,11 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 
 void QTrackerDirectResultPrivate::terminate()
 {
-    isFinished = true;
     if (results.count() % driverPrivate->dataReadyInterval != 0) {
         dataReady(results.count());
     }
 
+    isFinished = true;
     q->emit finished();
     if (cursor != 0) {
         g_object_unref(cursor);
