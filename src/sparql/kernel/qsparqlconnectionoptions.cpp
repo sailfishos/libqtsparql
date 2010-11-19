@@ -317,7 +317,9 @@ int QSparqlConnectionOptions::port() const
 
 /*!
     Convenience function for getting the interval between when
-    dataReady(int) signals are emitted.
+    dataReady(int) signals are emitted. The default value is 1,
+    which means that a dataReady() signal is emitted as soon as
+    a driver has some results.
 
     \sa option()
 */
