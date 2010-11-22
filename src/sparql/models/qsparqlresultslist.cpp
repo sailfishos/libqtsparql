@@ -53,7 +53,8 @@
 class QSparqlResultsListPrivate
 {
 public:
-    QSparqlResultsListPrivate(QSparqlResultsList* _q) : q(_q), connection(0), result(0), options(0)
+    QSparqlResultsListPrivate(QSparqlResultsList* _q) :
+        q(_q), connection(0), result(0), options(0), lastRowCount(0)
     {
     }
 
@@ -62,6 +63,7 @@ public:
     QSparqlResult *result;
     QString query;
     QSparqlConnectionOptionsWrapper *options;
+    int lastRowCount;
 };
 
 QSparqlResultsList::QSparqlResultsList(QObject *parent) :
@@ -113,13 +115,15 @@ void QSparqlResultsList::reload()
     d->result = d->connection->exec(QSparqlQuery(d->query));
     connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
     connect(d->result, SIGNAL(finished()), this, SLOT(queryFinished()));
+    connect(d->result, SIGNAL(dataReady(int)), this, SLOT(queryData(int)));
 }
 
-void QSparqlResultsList::queryFinished()
+void QSparqlResultsList::queryData(int rowCount)
 {
-    QHash<int, QByteArray> roleNames = QAbstractItemModel::roleNames();
+    QAbstractItemModel::beginInsertRows(QModelIndex(), d->lastRowCount, rowCount - 1);
 
-    if (d->result->first()) {
+    if (d->lastRowCount == 0 && d->result->first()) {
+        QHash<int, QByteArray> roleNames = QAbstractItemModel::roleNames();
         QSparqlResultRow resultRow = d->result->current();
 
         // Create two sets of declarative variables from the variable names used
@@ -138,6 +142,12 @@ void QSparqlResultsList::queryFinished()
         setRoleNames(roleNames);
     }
 
+    d->lastRowCount = rowCount;
+    QAbstractItemModel::endInsertRows();
+}
+
+void QSparqlResultsList::queryFinished()
+{
     reset();
 }
 

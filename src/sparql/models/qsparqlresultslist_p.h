@@ -85,6 +85,7 @@ Q_SIGNALS:
     void finished();
 
 private slots:
+    void queryData(int totalResults);
     void queryFinished();
 
 private:
