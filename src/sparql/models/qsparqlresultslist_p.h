@@ -81,6 +81,9 @@ public:
     QString query() const;
     void setQuery(const QString &query);
 
+Q_SIGNALS:
+    void finished();
+
 private slots:
     void queryFinished();
 

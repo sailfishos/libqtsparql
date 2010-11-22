@@ -43,6 +43,13 @@
 
 #include "qsparqlresultslist_p.h"
 
+/*!
+    \fn void QSparqlQueryModel::finished()
+
+    This signal is emitted when the QSparqlResult, used by the model, has
+    finished retrieving its data or when there was an error.
+*/
+
 class QSparqlResultsListPrivate
 {
 public:
@@ -104,6 +111,7 @@ void QSparqlResultsList::reload()
 
     d->connection = new QSparqlConnection(d->options->driverName(), d->options->options());
     d->result = d->connection->exec(QSparqlQuery(d->query));
+    connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
     connect(d->result, SIGNAL(finished()), this, SLOT(queryFinished()));
 }
 
