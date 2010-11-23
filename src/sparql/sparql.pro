@@ -25,7 +25,9 @@ INSTALLS += class_headers
 
 install_prf.path = $$[QT_INSTALL_DATA]/mkspecs/features
 install_prf.files = \
-    $$QT_SOURCE_TREE/mkspecs/features/qtsparql.prf
+    $$QT_BUILD_TREE/mkspecs/features/qtsparql.prf
+install_prf.commands = \
+    sed "\"s,QTSPARQL_INSTALL_HEADERS,$$QTSPARQL_INSTALL_HEADERS,g;s,QTSPARQL_INSTALL_LIBS,$$QTSPARQL_INSTALL_LIBS,g\"" $$QT_SOURCE_TREE/mkspecs/features/qtsparql.prf.in > $$QT_BUILD_TREE/mkspecs/features/qtsparql.prf
 
 include(kernel/kernel.pri)
 include(drivers/drivers.pri)
