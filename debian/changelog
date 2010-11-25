@@ -1,4 +1,4 @@
-libqtsparql (0.0.13~unreleased) unstable; urgency=low
+libqtsparql (0.0.13) unstable; urgency=low
 
   * Fixes: NB#200359
   * dataReadyInterval connection option
