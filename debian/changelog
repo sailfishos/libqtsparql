@@ -1,9 +1,12 @@
 libqtsparql (0.0.13~unreleased) unstable; urgency=low
 
   * Fixes: NB#200359
+  * dataReadyInterval connection option
+  * QSparqlQueryModel: added signal finished()
+  * QSparqlResultList now adds rows as the come in
+  * Fixes for QDateTime handling
 
-
- -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 11 Nov 2010 15:21:58 +0200
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 25 Nov 2010 14:58:23 +0200
 
 libqtsparql (0.0.12) unstable; urgency=low
 
