@@ -452,12 +452,6 @@ fi
 if [ -n "$QT_CFLAGS_TRACKER" ]; then
     echo "QT_CFLAGS_TRACKER   = $QT_CFLAGS_TRACKER" >> "$CACHEFILE.tmp"
 fi
-if [ -n "$QT_CFLAGS_TRACKER_DIRECT" ]; then
-    echo "QT_CFLAGS_TRACKER_DIRECT   = $QT_CFLAGS_TRACKER_DIRECT" >> "$CACHEFILE.tmp"
-fi
-if [ -n "$QT_LFLAGS_TRACKER_DIRECT" ]; then
-    echo "QT_LFLAGS_TRACKER_DIRECT   = $QT_LFLAGS_TRACKER_DIRECT" >> "$CACHEFILE.tmp"
-fi
 if [ -n "$QT_LFLAGS_ODBC" ]; then
     echo "QT_LFLAGS_ODBC   = $QT_LFLAGS_ODBC" >> "$CACHEFILE.tmp"
 fi
