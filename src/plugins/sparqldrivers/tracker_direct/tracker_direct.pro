@@ -5,8 +5,8 @@ SOURCES		= main.cpp \
 		  ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct.cpp
 
 unix: {
-    LIBS *= $$QT_LFLAGS_TRACKER_DIRECT
-    QMAKE_CXXFLAGS *= $$QT_CFLAGS_TRACKER_DIRECT
+    CONFIG += link_pkgconfig
+    PKGCONFIG += tracker-sparql-0.9
 }
 
 include(../qsparqldriverbase.pri)

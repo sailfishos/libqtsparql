@@ -65,8 +65,6 @@ QMAKE_VARS_FILE=.qmake.vars
 # default flags for SPARQL drivers (can get changed later)
 QT_CFLAGS_ENDPOINT=
 QT_CFLAGS_TRACKER=
-QT_CFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --cflags tracker-sparql-0.9  2>/dev/null`
-QT_LFLAGS_TRACKER_DIRECT=`$PKG_CONFIG --libs tracker-sparql-0.9 2>/dev/null`
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
@@ -285,7 +283,7 @@ Installation options:
     -headerdir <dir> ... Headers will be installed to <dir>
                          (default PREFIX/include/QtSparql)
     -importdir <dir> ... QML plugins will be installed to <dir>
-                         (default PREFIX/imports)
+                         (default QT_INSTALL_IMPORTS)
     -plugindir <dir> ... Plugins will be installed to <dir>
                          (default QT_PLUGIN_DIR)
     -libdir <dir> ...... Libraries will be installed to <dir>
