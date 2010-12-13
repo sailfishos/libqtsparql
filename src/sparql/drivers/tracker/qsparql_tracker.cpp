@@ -221,6 +221,7 @@ void QTrackerResultPrivate::onDBusCallFinished()
 {
     if (watcher->isError()) {
         qWarning() << "Tracker driver error:" << watcher->error().message();
+        qWarning() << "The query was" << q->query();
 
         QSparqlError error(watcher->error().message());
         if (watcher->error().type() == QDBusError::Other) {
@@ -264,6 +265,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type)
 {
     QTrackerResult* res = new QTrackerResult(type);
+    res->setQuery(query);
 
     QString funcToCall;
     switch (type) {
