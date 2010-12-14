@@ -225,7 +225,10 @@ void QSparqlConnectionOptions::setPort(int p)
 */
 void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 {
-    setOption(dataReadyIntervalKey, interval);
+    if (interval > 0)
+        setOption(dataReadyIntervalKey, interval);
+    else
+        qWarning() << "QSparqlConnectionOptions: invalid dataReady interval:" << interval;
 }
 
 #ifndef QT_NO_NETWORKPROXY
