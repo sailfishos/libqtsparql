@@ -125,6 +125,8 @@ async_cursor_next_callback( GObject *source_object,
         e.setType(QSparqlError::BackendError);
         data->setLastError(e);
         g_error_free(error);
+        qWarning() << "Tracker direct driver error" << e.message();
+        qWarning() << "Query was:" << data->q->query();
         data->terminate();
         return;
     }
@@ -218,6 +220,8 @@ async_query_callback(   GObject *source_object,
         e.setType(QSparqlError::StatementError);
         data->setLastError(e);
         g_error_free(error);
+        qWarning() << "Tracker direct driver error" << e.message();
+        qWarning() << "Query was:" << data->q->query();
         data->terminate();
         return;
     }

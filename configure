@@ -357,7 +357,7 @@ for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
 
         tracker_direct)
             if [ "$CFG_SPARQL_tracker_direct" != "no" ]; then
-                if "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/tracker-sparql "tracker-sparql" $QT_LFLAGS_TRACKER_DIRECT $L_FLAGS $QT_CFLAGS_TRACKER_DIRECT $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
+                if "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/tracker-sparql "tracker-sparql" $L_FLAGS $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
                     if [ "$CFG_SPARQL_tracker_direct" = "auto" ]; then
                          CFG_SPARQL_tracker_direct=plugin
                     fi
