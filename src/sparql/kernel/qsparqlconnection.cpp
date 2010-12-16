@@ -373,12 +373,21 @@ QSparqlConnection::~QSparqlConnection()
 }
 
 /*!
-    Executes a SPARQL query on the database and returns a pointer to a
-    QSparqlResult object. The user is responsible for freeing it.
+    Executes a SPARQL query on the database and returns a pointer
+    to a QSparqlResult object. The user is responsible for
+    freeing it when it's no longer used (but not after the
+    QSparqlConnection is deleted). The QSparqlResult object is
+    also a child of the QSparqlConnection, so after the
+    QSparqlConnection has been deleted, the QSparqlResult is no
+    longer valid (and doesn't need to be freed).
 
     If \a query is empty or if the this QSparqlConnection is not
     valid, exec() returns a QSparqlResult which is in the error
     state. It won't emit the finished() signal.
+
+    If this function fails with "connection not open" error, the
+    most probable reason is that the required driver is not
+    installed.
 
     \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
 */
