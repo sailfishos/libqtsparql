@@ -9,17 +9,12 @@ SUBDIRS += sparqlresultslist
 # to $$QT_BUILD_TREE/imports/QSparql
 
 qmldir.files = $$PWD/qmldir
-
-isEmpty(QTSPARQL_INSTALL_IMPORTS) {
-    qmldir.path = $$[QT_INSTALL_IMPORTS]/QtSparql
-} else {
-    qmldir.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
-}
+qmldir.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
 
 INSTALLS += qmldir
 
-mytarget.commands = @echo ImportsVariable $$QTSPARQL_INSTALL_IMPORTS
-QMAKE_EXTRA_TARGETS += mytarget
+copy2build.commands = $$QMAKE_COPY $$PWD/qmldir $$QT_BUILD_TREE/imports/QtSparql
+QMAKE_EXTRA_TARGETS += copy2build
 
 coverage {
 	coverage.CONFIG = recursive
