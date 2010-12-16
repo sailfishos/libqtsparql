@@ -18,7 +18,7 @@ QMAKE_EXTRA_TARGETS += copy2build
 # So to get the qmldir copied into the build area, before doing
 # anything else we need this trickery.
 copy2buildhook.depends = copy2build
-CONFIG():copy2buildhook.target = Makefile
+copy2buildhook.target = Makefile
 QMAKE_EXTRA_TARGETS += copy2buildhook
 
 coverage {
