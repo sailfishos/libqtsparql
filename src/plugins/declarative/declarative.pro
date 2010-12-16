@@ -1,20 +1,25 @@
 include(../../../shared.pri)
 
 TEMPLATE = subdirs
-
 SUBDIRS += sparqlresultslist
-
-
-# TODO: the qmldir file needs to be copied
-# to $$QT_BUILD_TREE/imports/QSparql
 
 qmldir.files = $$PWD/qmldir
 qmldir.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
-
 INSTALLS += qmldir
 
+copy2build.target = $$QT_BUILD_TREE/imports/QtSparql/qmldir
 copy2build.commands = $$QMAKE_COPY $$PWD/qmldir $$QT_BUILD_TREE/imports/QtSparql
+copy2build.depends = $$PWD/qmldir
 QMAKE_EXTRA_TARGETS += copy2build
+
+# This doesn't seem to do anythig
+# copy2build.CONFIG += target_predeps
+#
+# So to get the qmldir copied into the build area, before doing
+# anything else we need this trickery.
+copy2buildhook.depends = copy2build
+CONFIG():copy2buildhook.target = Makefile
+QMAKE_EXTRA_TARGETS += copy2buildhook
 
 coverage {
 	coverage.CONFIG = recursive
