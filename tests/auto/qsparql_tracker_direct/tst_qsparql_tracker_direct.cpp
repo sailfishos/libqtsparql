@@ -441,7 +441,6 @@ void tst_QSparqlTrackerDirect::result_type_bool()
     delete r;
 }
 
-
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
     QSKIP("Hangs in r2->waitForFinished()", SkipAll);
@@ -473,8 +472,6 @@ void tst_QSparqlTrackerDirect::concurrent_queries()
 
 void tst_QSparqlTrackerDirect::concurrent_queries_2()
 {
-    QSKIP("Hangs in while()", SkipAll);
-
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
