@@ -23,6 +23,15 @@ class_headers.files = $$SYNCQT.HEADER_CLASSES
 class_headers.path = $$QTSPARQL_INSTALL_HEADERS
 INSTALLS += class_headers
 
+# The following creates a mkspecs/features directory at make time, instead of at install time,
+# so that it doesn't end up with root permissions in the build area
+create_mkspecs_dir.commands = $$QMAKE_MKDIR $$QT_BUILD_TREE/mkspecs/; $$QMAKE_MKDIR $$QT_BUILD_TREE/mkspecs/features
+create_mkspecs_dir.target = $$QT_BUILD_TREE/mkspecs/features
+QMAKE_EXTRA_TARGETS += create_mkspecs_dir
+create_mkspecs_dirhook.depends = create_mkspecs_dir
+create_mkspecs_dirhook.target = Makefile
+QMAKE_EXTRA_TARGETS += create_mkspecs_dirhook
+
 install_prf.path = $$[QT_INSTALL_DATA]/mkspecs/features
 install_prf.files = \
     $$QT_BUILD_TREE/mkspecs/features/qtsparql.prf
