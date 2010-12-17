@@ -64,8 +64,8 @@
     \dontinclude simple/main.cpp
     \skipline QSparqlResult
 
-    - You can use QSparqlResult::waitForFinished() to wait until the query has
-      finished, or connect to the QSparqlResult::finished() signal.
+    - You can then connect to the QSparqlResult::finished() and
+      QSparqlResult::dataReady signals.
 
     - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),

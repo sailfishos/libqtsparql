@@ -269,13 +269,16 @@ bool QSparqlResult::isValid() const
 }
 
 /*!
-    Suspends the execution of the calling thread until all the query results 
-    have arrived. After this function returns, isFinished() should return true, 
+    Suspends the execution of the calling thread until all the query results
+    have arrived. After this function returns, isFinished() should return true,
     indicating the result's contents are ready to be processed.
 
     \warning Calling this function from the main thread (the thread that
     calls QApplication::exec()) may cause your user interface to
     freeze.
+
+    \warning Calling this function may cause the events in your event queue to
+    be processed.
 
     \sa isFinished()
 */
@@ -284,13 +287,13 @@ void QSparqlResult::waitForFinished()
 }
 
 /*!
-    Returns true if the pending query has finished processing and the result has been 
-    received. If this function returns true, the hasError() and lastError() 
+    Returns true if the pending query has finished processing and the result has
+    been received. If this function returns true, the hasError() and lastError()
     methods should return valid information.
 
-    Note that this function only changes state if you call waitForFinished(),
-    or if an external event happens, which in general only happens if 
-    you return to the event loop execution.
+    Note that this function only changes state if you call waitForFinished(), or
+    if an external event happens, which in general only happens if you return to
+    the event loop execution.
 
     \sa waitForFinished() lastError() error()
 */
