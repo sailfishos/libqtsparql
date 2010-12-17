@@ -86,8 +86,8 @@ public slots:
         printResultRow(r->current());
         QCoreApplication::exit(0);
     }
-    void onResultsReadyAt(int start, int end) {
-        qDebug() << "Results ready" << start << end;
+    void onDataReady(int count) {
+        qDebug() << "Results ready" << count;
     }
 };
 
@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
     QSparqlResult* result = conn.exec(query);
     MyObject obj;
     QObject::connect(result, SIGNAL(finished()), &obj, SLOT(onFinished()));
-    QObject::connect(result, SIGNAL(resultsReadyAt(int, int)),
-                     &obj, SLOT(onResultsReadyAt(int, int)));
+    QObject::connect(result, SIGNAL(dataReady(int)),
+                     &obj, SLOT(onDataReady(int)));
 
     app.exec();
     qDebug() << "Exiting";
