@@ -74,6 +74,9 @@ public:
     explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p);
     ~QTrackerDirectResult();
 
+    void exec(const QString& query, QSparqlQuery::StatementType type);
+    bool exec();
+
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
     virtual bool isFinished() const;
@@ -87,7 +90,12 @@ protected:
     void cleanup();
 
 private:
+    void terminate();
+    bool fetchNextResult();
+    bool fetchBoolResult();
+
     QTrackerDirectResultPrivate* d;
+    friend class QTrackerDirectFetcherPrivate;
 };
 
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectDriver : public QSparqlDriver
