@@ -275,7 +275,6 @@ void QTrackerDirectResult::cleanup()
 
 bool QTrackerDirectResult::fetchNextResult()
 {
-    qDebug() << "QTrackerDirectResult::fetchNextResult()";
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
     GError * error = 0;
