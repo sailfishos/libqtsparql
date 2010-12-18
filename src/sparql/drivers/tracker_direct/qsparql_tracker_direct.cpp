@@ -275,10 +275,12 @@ void QTrackerDirectResult::cleanup()
 
 bool QTrackerDirectResult::fetchNextResult()
 {
+    qDebug() << "QTrackerDirectResult::fetchNextResult()";
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
     GError * error = 0;
-    tracker_sparql_cursor_next(d->cursor, 0, &error);
+    gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
+
     if (error != 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
         e.setType(QSparqlError::BackendError);
@@ -290,12 +292,10 @@ bool QTrackerDirectResult::fetchNextResult()
         return false;
     }
 
-    QMutexLocker resultLocker(&(d->mutex));
+    if (!active)
+        return false;
 
-    // if (!active) {
-    //     data->terminate();
-    //    return;
-    //}
+    QMutexLocker resultLocker(&(d->mutex));
 
     QSparqlResultRow resultRow;
     gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
