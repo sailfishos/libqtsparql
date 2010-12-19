@@ -290,8 +290,10 @@ bool QTrackerDirectResult::fetchNextResult()
         return false;
     }
 
-    if (!active)
+    if (!active) {
+        terminate();
         return false;
+    }
 
     QMutexLocker resultLocker(&(d->mutex));
 
