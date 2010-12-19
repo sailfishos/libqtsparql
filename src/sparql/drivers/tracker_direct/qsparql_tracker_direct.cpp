@@ -129,7 +129,6 @@ public:
     QVector<QSparqlResultRow> results;
     bool isFinished;
     bool resultAlive; // whether the corresponding Result object is still alive
-    QEventLoop *loop;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -142,7 +141,7 @@ public:
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-: cursor(0), isFinished(false), resultAlive(true), loop(0),
+: cursor(0), isFinished(false), resultAlive(true),
   q(result), driverPrivate(dpp), fetcher(f), mutex(QMutex::Recursive)
 {
 }
@@ -171,8 +170,6 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
-    if (loop != 0)
-        loop->exit();
 }
 
 void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
@@ -424,10 +421,7 @@ void QTrackerDirectResult::waitForFinished()
     if (d->isFinished)
         return;
 
-    QEventLoop loop;
-    d->loop = &loop;
-    loop.exec();
-    d->loop = 0;
+    d->fetcher->wait();
 }
 
 bool QTrackerDirectResult::isFinished() const
