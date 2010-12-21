@@ -76,7 +76,9 @@ private slots:
     void concurrent_queries();
     void concurrent_queries_2();
 
-	void insert_with_dbus_read_with_direct();
+    void insert_with_dbus_read_with_direct();
+
+    void open_connection_twice();
 
     void result_type_bool();
 };
@@ -576,6 +578,33 @@ void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
     QVERIFY(!r->hasError());
     delete r;
 }
+
+void tst_QSparqlTrackerDirect::open_connection_twice()
+{
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    {
+        QSparqlConnection conn("QTRACKER_DIRECT");
+        QSparqlResult* r = conn.exec(q);
+        QVERIFY(r != 0);
+        QCOMPARE(r->hasError(), false);
+        r->waitForFinished();
+        QCOMPARE(r->size(), 3);
+        delete r;
+    } // conn goes out of scope
+
+    {
+        QSparqlConnection conn("QTRACKER_DIRECT");
+        QSparqlResult* r = conn.exec(q);
+        QVERIFY(r != 0);
+        QCOMPARE(r->hasError(), false);
+        r->waitForFinished();
+        QCOMPARE(r->size(), 3);
+        delete r;
+    }
+}
+
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"

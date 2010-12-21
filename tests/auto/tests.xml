@@ -131,6 +131,34 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_partially_iterated_result
         </step>
       </case>
+      <case name="test-concurrent-queries" description="Concurrent queries">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries
+        </step>
+      </case>
+      <case name="test-concurrent-queries2" description="Concurrent queries 2">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries_2
+        </step>
+      </case>
+      <case name="test-insert-with-dbus-read-with-direct" description="Inserting and reading">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_with_dbus_read_with_direct ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
+      <case name="test-open-connection-twice" description="Open connection twice">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice
+        </step>
+      </case>
+      <case name="test-result-type-bool" description="Bool result type">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_type_bool
+        </step>
+      </case>
       <post_steps>
 	<step expected_result="0">
 	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
