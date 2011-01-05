@@ -334,7 +334,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
     case QSparqlQuery::SelectStatement:
     {
         tracker_sparql_connection_query_async(  d->connection,
-                                                query.toLatin1().constData(),
+                                                query.toUtf8().constData(),
                                                 0,
                                                 async_query_callback,
                                                 res->d);
@@ -343,7 +343,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
     case QSparqlQuery::InsertStatement:
     case QSparqlQuery::DeleteStatement:
         tracker_sparql_connection_update_async( d->connection,
-                                                query.toLatin1().constData(),
+                                                query.toUtf8().constData(),
                                                 0,
                                                 0,
                                                 async_update_callback,
