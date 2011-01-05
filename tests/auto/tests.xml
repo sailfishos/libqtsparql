@@ -149,7 +149,7 @@
 	  exit $i )
         </step>
       </case>
-      <case name="test-open-connection-twice" description="Open connection twice">
+      <case name="test-open-connection-twice" description="Open connection twice" insignificant="true">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice
         </step>
