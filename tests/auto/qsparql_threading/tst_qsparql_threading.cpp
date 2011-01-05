@@ -141,22 +141,22 @@ void Thread::run()
 
 void Thread::queryFinished()
 {
-    qDebug() << "Thread::queryFinished()";
+    //qDebug() << "Thread::queryFinished()";
 }
 
 void Thread::resultsReturned(int totalCount)
 {
-    qDebug() << "Thread::resultsReturned(" << totalCount << ")";
+    //qDebug() << "Thread::resultsReturned(" << totalCount << ")";
 }
 
 void tst_QSparqlThreading::queryFinished()
 {
-    qDebug() << "tst_QSparqlThreading::queryFinished()";
+    //qDebug() << "tst_QSparqlThreading::queryFinished()";
 }
 
 void tst_QSparqlThreading::resultsReturned(int totalCount)
 {
-    qDebug() << "tst_QSparqlThreading::resultsReturned(" << totalCount << ")";
+    //qDebug() << "tst_QSparqlThreading::resultsReturned(" << totalCount << ")";
 }
 
 tst_QSparqlThreading::tst_QSparqlThreading()
