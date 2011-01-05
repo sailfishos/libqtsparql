@@ -174,7 +174,7 @@ void tst_QSparqlTrackerDirect::ask_contacts()
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->boolValue(), true);
     delete r;
-    
+
     QSparqlQuery q2("ask {<uri005> a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                    "nco:nameGiven \"name005\" .}", QSparqlQuery::AskStatement);
@@ -213,7 +213,8 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     r->waitForFinished();
     QCOMPARE(r->size(), 4);
     while (r->next()) {
-        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
+        contactNames[r->binding(0).value().toString()] =
+            r->binding(1).value().toString();
     }
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
@@ -237,7 +238,8 @@ void tst_QSparqlTrackerDirect::insert_and_delete_contact()
     r->waitForFinished();
     QCOMPARE(r->size(), 3);
     while (r->next()) {
-        contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
+        contactNames[r->binding(0).value().toString()] =
+            r->binding(1).value().toString();
     }
     QCOMPARE(contactNames.size(), 3);
     delete r;
@@ -251,8 +253,8 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                      "nco:nameGiven \"addedname006\" .}",
                      QSparqlQuery::InsertStatement);
-	const QSparqlBinding addeduri(conn.createUrn("addeduri"));
-	add.bindValue(addeduri);
+    const QSparqlBinding addeduri(conn.createUrn("addeduri"));
+    add.bindValue(addeduri);
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
@@ -274,14 +276,15 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 4);
-	QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+    QCOMPARE(contactNames["addedname006"].value().toString(),
+             addeduri.value().toString());
     delete r;
 
     // Delete the uri
     QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-	del.bindValue(addeduri);
+    del.bindValue(addeduri);
     r = conn.exec(del);
     qDebug() << r->query();
     QVERIFY(r != 0);
@@ -561,7 +564,8 @@ void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
             contactNames[r->binding(1).value().toString()] = r->binding(0);
         }
         QCOMPARE(contactNames.size(), 4);
-        QCOMPARE(contactNames["addedname006"].value().toString(), addeduri.value().toString());
+        QCOMPARE(contactNames["addedname006"].value().toString(),
+                 addeduri.value().toString());
         delete r;
     }
 
