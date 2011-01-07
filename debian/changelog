@@ -1,6 +1,7 @@
 libqtsparql (0.0.14~unreleased) unstable; urgency=low
 
   * Fixes: NB#215325
+  * Added test cases to the test package
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Wed, 05 Jan 2011 16:11:53 +0200
 
