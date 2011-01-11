@@ -153,8 +153,12 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 
     if (fetcher->isRunning()) {
         fetcher->terminate();
-        if (!fetcher->wait(500))
+        if (!fetcher->wait(500)) {
+            qWarning() << "QTrackerDirectResult: unable to terminate the result fetcher thread";
+            // Does deleting the fetcher here cause a crash?
+            delete fetcher;
             return;
+        }
     }
 
     delete fetcher;
