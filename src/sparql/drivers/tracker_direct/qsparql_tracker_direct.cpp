@@ -156,6 +156,8 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
         if (!fetcher->wait(500))
             return;
     }
+
+    delete fetcher;
 }
 
 void QTrackerDirectResultPrivate::terminate()
@@ -524,7 +526,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->mutex));
-//    g_object_unref(d->connection);
+    g_object_unref(d->connection);
 
     if (isOpen()) {
         setOpen(false);
