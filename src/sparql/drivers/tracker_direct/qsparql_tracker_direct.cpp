@@ -235,7 +235,7 @@ bool QTrackerDirectResult::exec()
     GError * error = 0;
     if (isTable() || isBool()) {
         d->cursor = tracker_sparql_connection_query(    d->driverPrivate->connection,
-                                                        query().toLatin1().constData(),
+                                                        query().toUtf8().constData(),
                                                         0,
                                                         &error );
         if (error != 0 || d->cursor == 0) {
@@ -249,7 +249,7 @@ bool QTrackerDirectResult::exec()
         }
     } else {
         tracker_sparql_connection_update(   d->driverPrivate->connection,
-                                            query().toLatin1().constData(),
+                                            query().toUtf8().constData(),
                                             0,
                                             0,
                                             &error );
