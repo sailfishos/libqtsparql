@@ -72,6 +72,33 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
                           (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
 }
 
+class QTrackerDirectFetcherPrivate : public QThread
+{
+public:
+    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res) { }
+
+    void run()
+    {
+        setTerminationEnabled(false);
+        if (result->exec()) {
+            if (result->isTable()) {
+                while (result->fetchNextResult()) {
+                    setTerminationEnabled(true);
+                    setTerminationEnabled(false);
+                }
+            } else if (result->isBool()) {
+                result->fetchBoolResult();
+            } else {
+                result->terminate();
+            }
+        }
+        setTerminationEnabled(true);
+    }
+
+private:
+    QTrackerDirectResult *result;
+};
+
 class QTrackerDirectDriverPrivate {
 public:
     QTrackerDirectDriverPrivate();
@@ -79,12 +106,17 @@ public:
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;
+    // This mutex is for ensuring that only one thread at a time
+    // is using the connection to make tracker queries. This mutex
+    // probably isn't needed as a TrackerSparqlConnection is
+    // already thread safe.
+    QMutex mutex;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp);
+    QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp, QTrackerDirectFetcherPrivate *f);
 
     ~QTrackerDirectResultPrivate();
     void terminate();
@@ -97,65 +129,190 @@ public:
     QVector<QSparqlResultRow> results;
     bool isFinished;
     bool resultAlive; // whether the corresponding Result object is still alive
-    QEventLoop *loop;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
+    QTrackerDirectFetcherPrivate *fetcher;
+    // This mutex is for ensuring that only one thread at a time
+    // is accessing the results array
+    QMutex mutex;
 };
 
-static void
-async_cursor_next_callback( GObject *source_object,
-                            GAsyncResult *result,
-                            gpointer user_data)
+QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
+                                                            QTrackerDirectDriverPrivate *dpp,
+                                                            QTrackerDirectFetcherPrivate *f)
+: cursor(0), isFinished(false), resultAlive(true),
+  q(result), driverPrivate(dpp), fetcher(f), mutex(QMutex::Recursive)
 {
-    Q_UNUSED(source_object);
-    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
+}
 
-    if (!data->resultAlive) {
-        // The user has deleted the Result object before this callback was
-        // called. Just delete the ResultPrivate here and do nothing.
-        delete data;
+QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
+{
+    if (cursor != 0)
+        g_object_unref(cursor);
+
+    if (fetcher->isRunning()) {
+        fetcher->terminate();
+        if (!fetcher->wait(500)) {
+            qWarning() << "QTrackerDirectResult: unable to terminate the result fetcher thread";
+            // Does deleting the fetcher here cause a crash?
+            delete fetcher;
+            return;
+        }
+    }
+
+    delete fetcher;
+}
+
+void QTrackerDirectResultPrivate::terminate()
+{
+    if (results.count() % driverPrivate->dataReadyInterval != 0) {
+        dataReady(results.count());
+    }
+
+    isFinished = true;
+    q->emit finished();
+    if (cursor != 0) {
+        g_object_unref(cursor);
+        cursor = 0;
+    }
+}
+
+void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
+{
+    q->setLastError(e);
+}
+
+void QTrackerDirectResultPrivate::setBoolValue(bool v)
+{
+    q->setBoolValue(v);
+}
+
+void QTrackerDirectResultPrivate::dataReady(int totalCount)
+{
+    emit q->dataReady(totalCount);
+}
+
+QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
+{
+    d = new QTrackerDirectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
+}
+
+QTrackerDirectResult::~QTrackerDirectResult()
+{
+    delete d;
+}
+
+QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQuery::StatementType type)
+{
+    QTrackerDirectResult* res = new QTrackerDirectResult(d);
+    res->exec(query, type);
+    return res;
+}
+
+void QTrackerDirectResult::exec(const QString& query, QSparqlQuery::StatementType type)
+{
+    setQuery(query);
+    setStatementType(type);
+
+    if (    type != QSparqlQuery::AskStatement
+            && type != QSparqlQuery::SelectStatement
+            && type != QSparqlQuery::InsertStatement
+            && type != QSparqlQuery::DeleteStatement )
+    {
+        setLastError(QSparqlError(
+                              QLatin1String("Unsupported statement type"),
+                              QSparqlError::BackendError));
+        qWarning() << "QTrackerDirectResult:" << lastError() << query;
+        terminate();
         return;
     }
-    GError *error = 0;
-    gboolean active = tracker_sparql_cursor_next_finish(data->cursor, result, &error);
+
+    d->fetcher->start();
+}
+
+bool QTrackerDirectResult::exec()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
+
+    GError * error = 0;
+    if (isTable() || isBool()) {
+        d->cursor = tracker_sparql_connection_query(    d->driverPrivate->connection,
+                                                        query().toUtf8().constData(),
+                                                        0,
+                                                        &error );
+        if (error != 0 || d->cursor == 0) {
+            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+            e.setType(QSparqlError::StatementError);
+            setLastError(e);
+            g_error_free(error);
+            qWarning() << "QTrackerDirectResult:" << lastError() << query();
+            terminate();
+            return false;
+        }
+    } else {
+        tracker_sparql_connection_update(   d->driverPrivate->connection,
+                                            query().toUtf8().constData(),
+                                            0,
+                                            0,
+                                            &error );
+        if (error != 0) {
+            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+            g_error_free(error);
+            e.setType(QSparqlError::StatementError);
+            setLastError(e);
+            qWarning() << "QTrackerDirectResult:" << lastError() << query();
+            terminate();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void QTrackerDirectResult::cleanup()
+{
+    setPos(QSparql::BeforeFirstRow);
+}
+
+bool QTrackerDirectResult::fetchNextResult()
+{
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
+
+    GError * error = 0;
+    gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
     if (error != 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
-        e.setType(QSparqlError::BackendError);
-        data->setLastError(e);
         g_error_free(error);
-        qWarning() << "Tracker direct driver error" << e.message();
-        qWarning() << "Query was:" << data->q->query();
-        data->terminate();
-        return;
+        e.setType(QSparqlError::BackendError);
+        setLastError(e);
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        terminate();
+        return false;
     }
 
     if (!active) {
-        if (data->q->isBool()) {
-            data->setBoolValue( data->results.count() == 1
-                                && data->results[0].count() == 1
-                                && data->results[0].binding(0).value().toBool());
-        }
-
-        data->terminate();
-        return;
+        terminate();
+        return false;
     }
 
-    QSparqlResultRow resultRow;
-    gint n_columns = tracker_sparql_cursor_get_n_columns(data->cursor);
+    QMutexLocker resultLocker(&(d->mutex));
 
-    if (data->columnNames.empty()) {
+    QSparqlResultRow resultRow;
+    gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+
+    if (d->columnNames.empty()) {
         for (int i = 0; i < n_columns; i++) {
-            data->columnNames.append(QString::fromUtf8(tracker_sparql_cursor_get_variable_name(data->cursor, i)));
+            d->columnNames.append(QString::fromUtf8(tracker_sparql_cursor_get_variable_name(d->cursor, i)));
         }
     }
 
     for (int i = 0; i < n_columns; i++) {
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(data->cursor, i, 0));
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
         QSparqlBinding binding;
-        binding.setName(data->columnNames[i]);
-        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(data->cursor, i);
+        binding.setName(d->columnNames[i]);
+        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, i);
 
         switch (type) {
         case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
@@ -191,183 +348,51 @@ async_cursor_next_callback( GObject *source_object,
         resultRow.append(binding);
     }
 
-    data->results.append(resultRow);
-    if (data->results.count() % data->driverPrivate->dataReadyInterval == 0) {
-        data->dataReady(data->results.count());
+    d->results.append(resultRow);
+    if (d->results.count() % d->driverPrivate->dataReadyInterval == 0) {
+        d->dataReady(d->results.count());
     }
 
-    tracker_sparql_cursor_next_async(data->cursor, 0, async_cursor_next_callback, data);
+    return true;
 }
 
-static void
-async_query_callback(   GObject *source_object,
-                        GAsyncResult *result,
-                        gpointer user_data)
+bool QTrackerDirectResult::fetchBoolResult()
 {
-    Q_UNUSED(source_object);
-    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    if (!data->resultAlive) {
-        // The user has deleted the Result object before this callback was
-        // called. Just delete the ResultPrivate here and do nothing.
-        delete data;
-        return;
-    }
-    GError *error = 0;
-    data->cursor = tracker_sparql_connection_query_finish(data->driverPrivate->connection, result, &error);
+    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
-    if (error != 0 || data->cursor == 0) {
-        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
-        e.setType(QSparqlError::StatementError);
-        data->setLastError(e);
-        g_error_free(error);
-        qWarning() << "Tracker direct driver error" << e.message();
-        qWarning() << "Query was:" << data->q->query();
-        data->terminate();
-        return;
-    }
-
-    tracker_sparql_cursor_next_async(data->cursor, 0, async_cursor_next_callback, data);
-}
-
-static void
-async_update_callback( GObject *source_object,
-                       GAsyncResult *result,
-                       gpointer user_data)
-{
-    Q_UNUSED(source_object);
-    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    if (!data->resultAlive) {
-        // The user has deleted the Result object before this callback was
-        // called. Just delete the ResultPrivate here and do nothing.
-        delete data;
-        return;
-    }
-    GError *error = 0;
-    tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
-
+    GError * error = 0;
+    tracker_sparql_cursor_next(d->cursor, 0, &error);
     if (error != 0) {
         QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
-        e.setType(QSparqlError::StatementError);
-        data->setLastError(e);
         g_error_free(error);
-        data->terminate();
-        return;
+        e.setType(QSparqlError::BackendError);
+        setLastError(e);
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        terminate();
+        return false;
     }
 
-    data->terminate();
-}
+    QMutexLocker resultLocker(&(d->mutex));
 
-QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(
-    QTrackerDirectResult* result,
-    QTrackerDirectDriverPrivate *dpp)
-: cursor(0), isFinished(false), resultAlive(true), loop(0),
-  q(result), driverPrivate(dpp)
-{
-}
+    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1)  {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, 0, 0));
+        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, 0);
 
-QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
-{
-    if (cursor != 0)
-        g_object_unref(cursor);
-}
-
-void QTrackerDirectResultPrivate::terminate()
-{
-    if (results.count() % driverPrivate->dataReadyInterval != 0) {
-        dataReady(results.count());
+        if (    type == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN
+                && (value == QLatin1String("1") || value.toLower() == QLatin1String("true")) )
+        {
+            d->setBoolValue(true);
+        }
     }
 
-    isFinished = true;
-    q->emit finished();
-    if (cursor != 0) {
-        g_object_unref(cursor);
-        cursor = 0;
-    }
-    if (loop != 0)
-        loop->exit();
-}
-
-void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
-{
-    q->setLastError(e);
-}
-
-void QTrackerDirectResultPrivate::setBoolValue(bool v)
-{
-    q->setBoolValue(v);
-}
-
-void QTrackerDirectResultPrivate::dataReady(int totalCount)
-{
-    emit q->dataReady(totalCount);
-}
-
-QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
-{
-    d = new QTrackerDirectResultPrivate(this, p);
-}
-
-QTrackerDirectResult::~QTrackerDirectResult()
-{
-    if (!d->isFinished) {
-        // We're deleting the Result before the async data retrieval has
-        // finished. There is a pending async callback that will be called at
-        // some point, and that will have our ResultPrivate as user_data. Don't
-        // delete the ResultPrivate here, but just mark that we're no longer
-        // alive. The callback will then delete the ResultPrivate.
-        d->resultAlive = false;
-    }
-    else {
-        delete d;
-    }
-}
-
-QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query,
-                          QSparqlQuery::StatementType type)
-{
-    QTrackerDirectResult* res = new QTrackerDirectResult(d);
-    res->setStatementType(type);
-    res->setQuery(query);
-
-    switch (type) {
-    case QSparqlQuery::AskStatement:
-    case QSparqlQuery::SelectStatement:
-    {
-        tracker_sparql_connection_query_async(  d->connection,
-                                                query.toUtf8().constData(),
-                                                0,
-                                                async_query_callback,
-                                                res->d);
-        break;
-    }
-    case QSparqlQuery::InsertStatement:
-    case QSparqlQuery::DeleteStatement:
-        tracker_sparql_connection_update_async( d->connection,
-                                                query.toUtf8().constData(),
-                                                0,
-                                                0,
-                                                async_update_callback,
-                                                res->d);
-    {
-        break;
-    }
-    default:
-        qWarning() << "Tracker backend: unsupported statement type";
-        res->setLastError(QSparqlError(
-                              QLatin1String("Unsupported statement type"),
-                              QSparqlError::BackendError));
-        break;
-    }
-    return res;
-}
-
-void QTrackerDirectResult::cleanup()
-{
-    setPos(QSparql::BeforeFirstRow);
+    terminate();
+    return true;
 }
 
 QSparqlBinding QTrackerDirectResult::binding(int field) const
 {
+    QMutexLocker resultLocker(&(d->mutex));
+
     if (!isValid()) {
         return QSparqlBinding();
     }
@@ -382,6 +407,8 @@ QSparqlBinding QTrackerDirectResult::binding(int field) const
 
 QVariant QTrackerDirectResult::value(int field) const
 {
+    QMutexLocker resultLocker(&(d->mutex));
+
     if (!isValid()) {
         return QVariant();
     }
@@ -399,10 +426,7 @@ void QTrackerDirectResult::waitForFinished()
     if (d->isFinished)
         return;
 
-    QEventLoop loop;
-    d->loop = &loop;
-    loop.exec();
-    d->loop = 0;
+    d->fetcher->wait();
 }
 
 bool QTrackerDirectResult::isFinished() const
@@ -410,13 +434,21 @@ bool QTrackerDirectResult::isFinished() const
     return d->isFinished;
 }
 
+void QTrackerDirectResult::terminate()
+{
+    d->terminate();
+}
+
 int QTrackerDirectResult::size() const
 {
+    QMutexLocker resultLocker(&(d->mutex));
     return d->results.count();
 }
 
 QSparqlResultRow QTrackerDirectResult::current() const
 {
+    QMutexLocker resultLocker(&(d->mutex));
+
     if (!isValid()) {
         return QSparqlResultRow();
     }
@@ -428,7 +460,7 @@ QSparqlResultRow QTrackerDirectResult::current() const
 }
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate()
-    : dataReadyInterval(1)
+    : dataReadyInterval(1), mutex(QMutex::Recursive)
 {
 }
 
@@ -471,6 +503,8 @@ QAtomicInt connectionCounter = 0;
 
 bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 {
+    QMutexLocker connectionLocker(&(d->mutex));
+
     d->dataReadyInterval = options.dataReadyInterval();
 
     if (isOpen())
@@ -494,6 +528,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
 void QTrackerDirectDriver::close()
 {
+    QMutexLocker connectionLocker(&(d->mutex));
     g_object_unref(d->connection);
 
     if (isOpen()) {
