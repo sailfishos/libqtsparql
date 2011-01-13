@@ -146,7 +146,7 @@ public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
         resultColIdx(0), driverPrivate(dpp), fetcher(f),
-        mutex(QMutex::Recursive), isFinished(false), loop(0)
+        mutex(QMutex::Recursive), isFinished(false)
     {
     }
 
@@ -154,8 +154,10 @@ public:
     {
         if (fetcher->isRunning()) {
             fetcher->terminate();
-            if (!fetcher->wait(500))
+            if (!fetcher->wait(500)) {
+                qWarning() << "QVirtuosoResult: unable to terminate the result fetcher thread";
                 return;
+            }
         }
         delete fetcher;
     }
@@ -186,7 +188,6 @@ public:
     // is accessing the results array
     QMutex mutex;
     bool isFinished;
-    QEventLoop *loop;
 
     bool isStmtHandleValid(const QSparqlDriver *driver);
     void updateStmtHandleState(const QSparqlDriver *driver);
@@ -399,10 +400,7 @@ void QVirtuosoResult::waitForFinished()
     if (d->isFinished)
         return;
 
-    QEventLoop loop;
-    d->loop = &loop;
-    loop.exec();
-    d->loop = 0;
+    d->fetcher->wait();
 }
 
 bool QVirtuosoResult::isFinished() const
@@ -418,8 +416,6 @@ void QVirtuosoResult::terminate()
 
     d->isFinished = true;
     emit finished();
-    if (d->loop != 0)
-        d->loop->exit();
 }
 
 static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
