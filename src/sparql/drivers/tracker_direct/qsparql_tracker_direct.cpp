@@ -200,7 +200,6 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     delete d;
 }
 
