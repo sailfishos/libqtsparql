@@ -72,6 +72,7 @@ private slots:
 
     void delete_unfinished_result();
     void delete_partially_iterated_result();
+    void delete_nearly_finished_result();
 
     void concurrent_queries();
     void concurrent_queries_2();
@@ -404,6 +405,66 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     delete r;
     // And then spin the event loop so that the async callback is called...
     QTest::qWait(1000);
+}
+
+namespace {
+class DataReadyListener : public QObject
+{
+    Q_OBJECT
+public:
+    DataReadyListener(QSparqlResult* r) : result(r), received(0)
+    {
+        connect(r, SIGNAL(dataReady(int)),
+                SLOT(onDataReady(int)));
+    }
+public slots:
+    void onDataReady(int tc)
+    {
+        //qDebug() << "Ready" << tc;
+        if (result) {
+            result->deleteLater();
+            result = 0;
+        }
+        received = tc;
+    }
+public:
+    QSparqlResult* result;
+    int received;
+};
+
+}
+
+void tst_QSparqlTrackerDirect::delete_nearly_finished_result()
+{
+    // This is a regression test for a crash bug. Running this shouldn't print
+    // out warnings:
+
+    // tst_qsparql_tracker_direct[17909]: GLIB CRITICAL ** GLib-GObject -
+    // g_object_unref: assertion `G_IS_OBJECT (object)' failed
+
+    // (It doens't always crash.) Detecting the warnings is a bit of a manual
+    // work.
+
+    qDebug() << "delete_nearly_finished_result: no GLIB_CRITICALs should be printed:";
+
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1);
+
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    // A big query returning a lot of results
+    QSparqlQuery q("select ?u {?u a rdfs:Resource . }");
+
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+
+    DataReadyListener listener(r); // this will delete the result
+
+    // And then spin the event loop. Unfortunately, we don't have anything which
+    // we could use for verifying we didn't unref the same object twice (it
+    // doesn't always crash).
+    QTest::qWait(3000);
+
 }
 
 void tst_QSparqlTrackerDirect::result_type_bool()

@@ -148,20 +148,22 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
-    if (cursor != 0)
-        g_object_unref(cursor);
-
+    // The fetcher thread also accesses "cursor", so, first terminate the
+    // thread, and only after that unref the cursor.
     if (fetcher->isRunning()) {
         fetcher->terminate();
         if (!fetcher->wait(500)) {
             qWarning() << "QTrackerDirectResult: unable to terminate the result fetcher thread";
-            // Does deleting the fetcher here cause a crash?
-            delete fetcher;
-            return;
+            // Does deleting the fetcher (done next) cause a crash?
         }
     }
 
     delete fetcher;
+
+    if (cursor != 0) {
+        g_object_unref(cursor);
+        cursor = 0;
+    }
 }
 
 void QTrackerDirectResultPrivate::terminate()
