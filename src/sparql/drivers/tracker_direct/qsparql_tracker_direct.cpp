@@ -244,10 +244,12 @@ bool QTrackerDirectResult::exec()
                                                         0,
                                                         &error );
         if (error != 0 || d->cursor == 0) {
-            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
-            e.setType(QSparqlError::StatementError);
+            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"),
+                           QSparqlError::StatementError,
+                           error ? error->code : -1);
             setLastError(e);
-            g_error_free(error);
+            if (error)
+                g_error_free(error);
             qWarning() << "QTrackerDirectResult:" << lastError() << query();
             terminate();
             return false;
@@ -259,9 +261,10 @@ bool QTrackerDirectResult::exec()
                                             0,
                                             &error );
         if (error != 0) {
-            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+            QSparqlError e(QString::fromLatin1(error->message),
+                           QSparqlError::StatementError,
+                           error->code);
             g_error_free(error);
-            e.setType(QSparqlError::StatementError);
             setLastError(e);
             qWarning() << "QTrackerDirectResult:" << lastError() << query();
             terminate();
@@ -285,9 +288,10 @@ bool QTrackerDirectResult::fetchNextResult()
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
     if (error != 0) {
-        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+        QSparqlError e(QString::fromLatin1(error->message),
+                       QSparqlError::BackendError,
+                       error->code);
         g_error_free(error);
-        e.setType(QSparqlError::BackendError);
         setLastError(e);
         qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
@@ -365,9 +369,10 @@ bool QTrackerDirectResult::fetchBoolResult()
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
     if (error != 0) {
-        QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"));
+        QSparqlError e(QString::fromLatin1(error->message),
+                       QSparqlError::BackendError,
+                       error->code);
         g_error_free(error);
-        e.setType(QSparqlError::BackendError);
         setLastError(e);
         qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
