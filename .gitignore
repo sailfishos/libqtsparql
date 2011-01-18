@@ -39,6 +39,7 @@ tests/auto/qsparql_tracker_signals/tst_qsparql_tracker_signals
 tests/auto/qsparql_endpoint_threading/tst_qsparql_endpoint_threading
 tests/auto/qsparql_threading/tst_qsparql_threading
 tests/auto/qsparql_ntriples/tst_qsparql_ntriples
+tests/auto/qsparql_benchmark/tst_qsparql_benchmark
 
 # debian packaging
 debian/build-stamp
