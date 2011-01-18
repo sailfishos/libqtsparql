@@ -131,12 +131,14 @@ void tst_QSparqlBenchmark::queryBenchmark()
 
     QSparqlResult* r = 0;
     QBENCHMARK {
-        r = conn.exec(query);
-        r->waitForFinished();
+        for (int i = 0; i < 100; ++i) {
+            r = conn.exec(query);
+            r->waitForFinished();
+            QVERIFY(!r->hasError());
+            QVERIFY(r->size() > 0);
+            delete r;
+        }
     }
-    QVERIFY(!r->hasError());
-    QVERIFY(r->size() > 0);
-    delete r;
 }
 
 void tst_QSparqlBenchmark::queryBenchmark_data()
