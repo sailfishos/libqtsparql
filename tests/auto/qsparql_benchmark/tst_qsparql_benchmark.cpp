@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include <tracker-sparql.h>
+
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
@@ -57,10 +59,11 @@ public slots:
     void cleanup();
 
 private slots:
-//    void trackerDirectAllResources();
-//    void trackerDBusAllResources();
     void queryBenchmark();
     void queryBenchmark_data();
+
+    void queryWithLibtrackerSparql();
+    void queryWithLibtrackerSparql_data();
 };
 
 tst_QSparqlBenchmark::tst_QSparqlBenchmark()
@@ -131,6 +134,9 @@ void tst_QSparqlBenchmark::queryBenchmark()
 
     QSparqlResult* r = 0;
     QBENCHMARK {
+        // We run multiple queries here (and don't leave it for QBENCHMARK to
+        // run this multiple times, to be able to measure things like "how much
+        // does adding a QThreadPool help".
         for (int i = 0; i < 100; ++i) {
             r = conn.exec(query);
             r->waitForFinished();
@@ -173,6 +179,73 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
 
     QTest::newRow("TrackerDirectArtistsAndAlbums")
         << "QTRACKER_DIRECT"
+        << artistsAndAlbums;
+}
+
+void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
+{
+    QFETCH(QString, queryString);
+    GError* error = 0;
+    TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
+    QVERIFY(connection);
+    QVERIFY(error == 0);
+
+    QBENCHMARK {
+        for (int i = 0; i < 100; ++i) {
+
+            TrackerSparqlCursor* cursor =
+                tracker_sparql_connection_query(connection,
+                                                queryString.toUtf8(),
+                                                NULL,
+                                                &error);
+
+            QVERIFY(error == 0);
+            QVERIFY(cursor);
+
+            QStringList values;
+            QList<TrackerSparqlValueType> types;
+            while (tracker_sparql_cursor_next (cursor, NULL, &error)) {
+                gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
+                for (int i = 0; i < n_columns; i++) {
+                    QString value = QString::fromUtf8(
+                        tracker_sparql_cursor_get_string(cursor, i, 0));
+                    TrackerSparqlValueType type =
+                        tracker_sparql_cursor_get_value_type(cursor, i);
+                    values << value;
+                    types << type;
+                }
+            }
+            QVERIFY(values.size() > 0);
+            QVERIFY(types.size() > 0);
+
+            g_object_unref(cursor);
+        }
+    }
+
+    g_object_unref(connection);
+}
+
+void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
+{
+    QTest::addColumn<QString>("queryString");
+
+    // The query is trivial, these tests cases measure (exaggerates) other costs
+    // than running the query.
+    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
+    QTest::newRow("LibtrackerSparqlAllResources")
+        << trivialQuery;
+
+    // A bit more complicated query. Test data for running this can be found in
+    // the tracker project.
+    QString artistsAndAlbums =
+        "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
+        "WHERE "
+        "{ "
+        "?song a nmm:MusicPiece . "
+        "?song nmm:performer ?artist . "
+        "?song nmm:musicAlbum ?album . "
+        "} GROUP BY ?artist";
+    QTest::newRow("LibtrackerSparqlArtistsAndAlbums")
         << artistsAndAlbums;
 }
 
