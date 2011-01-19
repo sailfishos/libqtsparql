@@ -124,25 +124,24 @@ public:
     void setBoolValue(bool v);
     void dataReady(int totalCount);
 
-    TrackerSparqlCursor * cursor;
+    TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
     bool isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
     QTrackerDirectFetcherPrivate *fetcher;
     bool fetcherStarted;
-    // This mutex is for ensuring that only one thread at a time
-    // is accessing the results array
+    // This mutex is for ensuring that only one thread at a time is accessing
+    // the member variables of this class (mainly: "results" and "cursor").
     QMutex mutex;
 };
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-: cursor(0), isFinished(false), resultAlive(true),
+  : cursor(0), isFinished(false),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -151,7 +150,9 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
     // The fetcher thread also accesses "cursor", so, first terminate the
-    // thread, and only after that unref the cursor.
+    // thread, and only after that unref the cursor. Don't lock the mutex here,
+    // since the thread might lock the same mutex right after us, and we
+    // couldn't terminate it then.
     if (fetcher->isRunning()) {
         fetcher->terminate();
         if (!fetcher->wait(500)) {
@@ -162,6 +163,7 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 
     delete fetcher;
 
+    QMutexLocker resultLocker(&mutex);
     if (cursor != 0) {
         g_object_unref(cursor);
         cursor = 0;
@@ -170,6 +172,8 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 
 void QTrackerDirectResultPrivate::terminate()
 {
+    QMutexLocker resultLocker(&mutex);
+
     if (results.count() % driverPrivate->dataReadyInterval != 0) {
         dataReady(results.count());
     }
@@ -238,6 +242,7 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQu
 
 void QTrackerDirectResult::startFetcher()
 {
+    QMutexLocker resultLocker(&(d->mutex));
     if (!d->fetcherStarted) {
         d->fetcherStarted = true;
         d->fetcher->start();
@@ -247,6 +252,7 @@ void QTrackerDirectResult::startFetcher()
 bool QTrackerDirectResult::runQuery()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
+    QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
     if (isTable() || isBool()) {
@@ -294,6 +300,7 @@ void QTrackerDirectResult::cleanup()
 bool QTrackerDirectResult::fetchNextResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
+    QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -313,8 +320,6 @@ bool QTrackerDirectResult::fetchNextResult()
         terminate();
         return false;
     }
-
-    QMutexLocker resultLocker(&(d->mutex));
 
     QSparqlResultRow resultRow;
     gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
@@ -376,6 +381,7 @@ bool QTrackerDirectResult::fetchNextResult()
 bool QTrackerDirectResult::fetchBoolResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
+    QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -389,8 +395,6 @@ bool QTrackerDirectResult::fetchBoolResult()
         terminate();
         return false;
     }
-
-    QMutexLocker resultLocker(&(d->mutex));
 
     if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1)  {
         QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, 0, 0));
