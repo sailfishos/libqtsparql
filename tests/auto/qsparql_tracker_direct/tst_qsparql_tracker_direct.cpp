@@ -617,7 +617,6 @@ void tst_QSparqlTrackerDirect::result_type_bool()
 
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
-    QSKIP("Hangs in r2->waitForFinished()", SkipAll);
     QSparqlConnection conn("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
@@ -631,9 +630,7 @@ void tst_QSparqlTrackerDirect::concurrent_queries()
     QVERIFY(r2 != 0);
     QCOMPARE(r2->hasError(), false);
 
-    qDebug() << "waiting 1";
     r1->waitForFinished();
-    qDebug() << "waiting 2";
     r2->waitForFinished();
 
     QCOMPARE(r1->hasError(), false);
