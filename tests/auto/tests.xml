@@ -93,6 +93,11 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts
         </step>
       </case>
+      <case name="test-query-contacts-async" description="Executing a query async">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts_async
+        </step>
+      </case>
       <case name="test-ask-contacts" description="Executing an ASK query">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct ask_contacts
@@ -106,14 +111,22 @@
 	  exit $i )
         </step>
       </case>
-      <case name="test-query-with-error" description="Erroneous query">
+      <case name="test-insert-and-delete-contact-async" description="Executing an update async">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact_async ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
         </step>
       </case>
       <case name="test-insert-new-urn" description="Inserting a created urn">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_new_urn
+        </step>
+      </case>
+      <case name="test-query-with-error" description="Erroneous query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error
         </step>
       </case>
       <case name="test-iterating-result" description="Iterating a QSparqlResult">
@@ -129,6 +142,11 @@
       <case name="test-delete-partially-iterated-result" description="Deleting a QSparqlResult">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_partially_iterated_result
+        </step>
+      </case>
+      <case name="test-delete-nearly-finished-result" description="Deleting a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_nearly_finished_result
         </step>
       </case>
       <case name="test-concurrent-queries" description="Concurrent queries">
@@ -149,7 +167,7 @@
 	  exit $i )
         </step>
       </case>
-      <case name="test-open-connection-twice" description="Open connection twice" insignificant="true">
+      <case name="test-open-connection-twice" description="Open connection twice">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice
         </step>
@@ -166,6 +184,16 @@
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
 	  exit $i )
         </step>
+      <case name="test-result-immediately-finished" description="Regression test">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished
+        </step>
+      </case>
+      <case name="test-result-immediately-finished2" description="Regression test">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished2
+        </step>
+      </case>
       </case>
       <post_steps>
 	<step expected_result="0">
