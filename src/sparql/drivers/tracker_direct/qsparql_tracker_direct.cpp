@@ -155,10 +155,9 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
     // couldn't terminate it then.
     if (fetcher->isRunning()) {
         fetcher->terminate();
-        if (!fetcher->wait(500)) {
-            qWarning() << "QTrackerDirectResult: unable to terminate the result fetcher thread";
-            // Does deleting the fetcher (done next) cause a crash?
-        }
+        // This might (in theory) block forever. But the fetcher thread *should*
+        // enter a "termination enabled" point after fetching each row.
+        fetcher->wait();
     }
 
     delete fetcher;
