@@ -184,6 +184,7 @@
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
 	  exit $i )
         </step>
+      </case>
       <case name="test-result-immediately-finished" description="Regression test">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished
@@ -193,7 +194,6 @@
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished2
         </step>
-      </case>
       </case>
       <post_steps>
 	<step expected_result="0">
