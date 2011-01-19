@@ -80,7 +80,7 @@ public:
     void run()
     {
         setTerminationEnabled(false);
-        if (result->exec()) {
+        if (result->runQuery()) {
             if (result->isTable()) {
                 while (result->fetchNextResult()) {
                     setTerminationEnabled(true);
@@ -133,6 +133,7 @@ public:
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
     QTrackerDirectFetcherPrivate *fetcher;
+    bool fetcherStarted;
     // This mutex is for ensuring that only one thread at a time
     // is accessing the results array
     QMutex mutex;
@@ -142,7 +143,8 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
 : cursor(0), isFinished(false), resultAlive(true),
-  q(result), driverPrivate(dpp), fetcher(f), mutex(QMutex::Recursive)
+  q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
+  mutex(QMutex::Recursive)
 {
 }
 
@@ -195,8 +197,12 @@ void QTrackerDirectResultPrivate::dataReady(int totalCount)
     emit q->dataReady(totalCount);
 }
 
-QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p)
+QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
+                                           const QString& query,
+                                           QSparqlQuery::StatementType type)
 {
+    setQuery(query);
+    setStatementType(type);
     d = new QTrackerDirectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
 }
 
@@ -207,33 +213,38 @@ QTrackerDirectResult::~QTrackerDirectResult()
 
 QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQuery::StatementType type)
 {
-    QTrackerDirectResult* res = new QTrackerDirectResult(d);
-    res->exec(query, type);
-    return res;
-}
+    QTrackerDirectResult* res = new QTrackerDirectResult(d, query, type);
 
-void QTrackerDirectResult::exec(const QString& query, QSparqlQuery::StatementType type)
-{
-    setQuery(query);
-    setStatementType(type);
-
-    if (    type != QSparqlQuery::AskStatement
-            && type != QSparqlQuery::SelectStatement
-            && type != QSparqlQuery::InsertStatement
-            && type != QSparqlQuery::DeleteStatement )
+    if (type != QSparqlQuery::AskStatement
+        && type != QSparqlQuery::SelectStatement
+        && type != QSparqlQuery::InsertStatement
+        && type != QSparqlQuery::DeleteStatement)
     {
         setLastError(QSparqlError(
                               QLatin1String("Unsupported statement type"),
                               QSparqlError::BackendError));
         qWarning() << "QTrackerDirectResult:" << lastError() << query;
-        terminate();
-        return;
+        res->terminate();
     }
-
-    d->fetcher->start();
+    else {
+        // Queue calling exec() on the result. This way the finished() and
+        // dataReady() signals won't be emitted before the user connects to
+        // them, and the result won't be in the "finished" state before the
+        // thread that calls this function has entered its event loop.
+        QMetaObject::invokeMethod(res, "startFetcher",  Qt::QueuedConnection);
+    }
+    return res;
 }
 
-bool QTrackerDirectResult::exec()
+void QTrackerDirectResult::startFetcher()
+{
+    if (!d->fetcherStarted) {
+        d->fetcherStarted = true;
+        d->fetcher->start();
+    }
+}
+
+bool QTrackerDirectResult::runQuery()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
@@ -432,6 +443,9 @@ void QTrackerDirectResult::waitForFinished()
 {
     if (d->isFinished)
         return;
+
+    // We may have queued startFetcher, call it now.
+    startFetcher();
 
     d->fetcher->wait();
 }
