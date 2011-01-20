@@ -59,11 +59,16 @@ public slots:
     void cleanup();
 
 private slots:
+    // Actual benchmarks
     void queryBenchmark();
     void queryBenchmark_data();
 
+    // Reference benchmarks
     void queryWithLibtrackerSparql();
     void queryWithLibtrackerSparql_data();
+
+    void queryWithLibtrackerSparqlInThread();
+    void queryWithLibtrackerSparqlInThread_data();
 };
 
 tst_QSparqlBenchmark::tst_QSparqlBenchmark()
@@ -247,6 +252,75 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
         "} GROUP BY ?artist";
     QTest::newRow("LibtrackerSparqlArtistsAndAlbums")
         << artistsAndAlbums;
+}
+
+namespace {
+class QueryRunner : public QThread
+{
+public:
+    QueryRunner(TrackerSparqlConnection* c, const QString& q) : connection(c), queryString(q)
+        {
+        }
+    void run()
+        {
+            GError* error = 0;
+            TrackerSparqlCursor* cursor =
+                tracker_sparql_connection_query(connection,
+                                                queryString.toUtf8(),
+                                                NULL,
+                                                &error);
+
+            QVERIFY(error == 0);
+            QVERIFY(cursor);
+
+            QStringList values;
+            QList<TrackerSparqlValueType> types;
+
+            while (tracker_sparql_cursor_next(cursor, NULL, &error)) {
+                QSparqlResultRow resultRow;
+                gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
+                for (int i = 0; i < n_columns; i++) {
+                    QString value = QString::fromUtf8(
+                        tracker_sparql_cursor_get_string(cursor, i, 0));
+                    TrackerSparqlValueType type =
+                        tracker_sparql_cursor_get_value_type(cursor, i);
+                    values << value;
+                    types << type;
+                }
+            }
+            QVERIFY(values.size() > 0);
+            QVERIFY(types.size() > 0);
+            g_object_unref(cursor);
+
+        }
+    TrackerSparqlConnection* connection;
+    QString queryString;
+};
+
+} // unnamed namespace
+
+void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
+{
+    QFETCH(QString, queryString);
+    GError* error = 0;
+    TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
+    QVERIFY(connection);
+    QVERIFY(error == 0);
+
+    QBENCHMARK {
+        for (int i = 0; i < 100; ++i) {
+            QueryRunner runner(connection, queryString);
+            runner.start();
+            runner.wait();
+        }
+    }
+
+    g_object_unref(connection);
+}
+
+void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread_data()
+{
+    queryWithLibtrackerSparql_data();
 }
 
 QTEST_MAIN(tst_QSparqlBenchmark)
