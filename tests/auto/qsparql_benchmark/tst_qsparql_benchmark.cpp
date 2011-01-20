@@ -191,6 +191,7 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 {
+    g_type_init();
     QFETCH(QString, queryString);
     GError* error = 0;
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
@@ -239,7 +240,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
     // The query is trivial, these tests cases measure (exaggerates) other costs
     // than running the query.
     QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
-    QTest::newRow("LibtrackerSparqlAllResources")
+    QTest::newRow("AllResources")
         << trivialQuery;
 
     // A bit more complicated query. Test data for running this can be found in
@@ -252,7 +253,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
         "?song nmm:performer ?artist . "
         "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
-    QTest::newRow("LibtrackerSparqlArtistsAndAlbums")
+    QTest::newRow("ArtistsAndAlbums")
         << artistsAndAlbums;
 }
 
@@ -310,6 +311,7 @@ public:
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
 {
+    g_type_init();
     QFETCH(QString, queryString);
     GError* error = 0;
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
