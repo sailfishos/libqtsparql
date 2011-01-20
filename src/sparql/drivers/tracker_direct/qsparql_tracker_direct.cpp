@@ -527,15 +527,14 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
     case QSparqlConnection::QuerySize:
-        return true;
     case QSparqlConnection::AskQueries:
-        return true;
     case QSparqlConnection::ConstructQueries:
-        return false;
     case QSparqlConnection::UpdateQueries:
-        return true;
     case QSparqlConnection::DefaultGraph:
+    case QSparqlConnection::SyncExec:
         return true;
+    default:
+        return false;
     }
     return false;
 }
@@ -576,6 +575,12 @@ void QTrackerDirectDriver::close()
         setOpen(false);
         setOpenError(false);
     }
+}
+
+QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
+{
+    // FIXME: return something real
+    return 0;
 }
 
 QT_END_NAMESPACE

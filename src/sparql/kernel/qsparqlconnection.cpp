@@ -111,6 +111,7 @@ public:
                                           QSparqlDriverCreatorBase* creator);
 
     static QSparqlConnectionPrivate* shared_null();
+    QSparqlResult* checkErrors(const QString& queryText) const;
 
     static QStringList allKeys;
     static QHash<QString, QSparqlDriverPlugin*> plugins;
@@ -392,6 +393,33 @@ QSparqlConnection::~QSparqlConnection()
     \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
 */
 
+/// Returns a QSparqlNullResult with an appropriate error if executing a query
+/// would fail immediately (e.g., connection is not open). Otherwise returns 0.
+QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) const
+{
+    QSparqlResult* result = 0;
+    if (driver->isOpenError()) {
+        qWarning("QSparqlConnection::exec: connection not open");
+
+        result = new QSparqlNullResult();
+        result->setLastError(driver->lastError());
+    } else if (!driver->isOpen()) {
+        qWarning("QSparqlConnection::exec: connection not open");
+
+        result = new QSparqlNullResult();
+        result->setLastError(QSparqlError(QLatin1String("Connection not open"),
+                                          QSparqlError::ConnectionError));
+    } else {
+        if (queryText.isEmpty()) {
+            qWarning("QSparqlConnection::exec: empty query");
+            result = new QSparqlNullResult();
+            result->setLastError(QSparqlError(QLatin1String("Query is empty"),
+                                            QSparqlError::ConnectionError));
+        }
+    }
+    return result;
+}
+
 // TODO: isn't it quite bad that the user must check the error
 // state of the result? Or should the "error result" emit the
 // finished() signal when the main loop is entered the next time,
@@ -399,31 +427,35 @@ QSparqlConnection::~QSparqlConnection()
 
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
 {
-    QSparqlResult * result;
+    QString queryText = query.preparedQueryText();
+    QSparqlResult* result = d->checkErrors(queryText);
+    if (!result) {
+        // No error. FIXME: it's evil to return a 0 pointer to indicate "no
+        // error".
+        result = d->driver->exec(queryText, query.type());
+    }
+    result->setParent(this);
+    return result;
+}
 
-    if (d->driver->isOpenError()) {
-        qWarning("QSparqlConnection::exec: connection not open");
-
-        result = new QSparqlNullResult();
-        result->setLastError(d->driver->lastError());
-    } else if (!d->driver->isOpen()) {
-        qWarning("QSparqlConnection::exec: connection not open");
-
-        result = new QSparqlNullResult();
-        result->setLastError(QSparqlError(QLatin1String("Connection not open"),
-                                          QSparqlError::ConnectionError));
-    } else {
-        QString queryText = query.preparedQueryText();
-        if (queryText.isEmpty()) {
-            qWarning("QSparqlConnection::exec: empty query");
+QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
+{
+    QString queryText = query.preparedQueryText();
+    QSparqlResult* result = d->checkErrors(queryText);
+    if (!result) {
+        // No error. FIXME: it's evil to return a 0 pointer to indicate "no
+        // error".
+        if (d->driver->hasFeature(QSparqlConnection::SyncExec)) {
+            result = d->driver->syncExec(queryText, query.type());
+        }
+        else {
+            // TODO: insert a wrapper here
             result = new QSparqlNullResult();
-            result->setLastError(QSparqlError(QLatin1String("Query is empty"),
-                                            QSparqlError::ConnectionError));
-        } else {
-            result = d->driver->exec(queryText, query.type());
+            result->setLastError(
+                QSparqlError(QLatin1String("SyncWrapper not implemented yet"),
+                             QSparqlError::ConnectionError));
         }
     }
-
     result->setParent(this);
     return result;
 }

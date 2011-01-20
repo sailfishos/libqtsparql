@@ -62,6 +62,7 @@ class Q_SPARQL_EXPORT QSparqlResult : public QObject
     Q_OBJECT
     friend class QSparqlResultPrivate;
     friend class QSparqlConnection;
+    friend class QSparqlConnectionPrivate;
 
 public:
     virtual ~QSparqlResult();

@@ -114,6 +114,8 @@ public:
     void close();
     QTrackerDirectResult* exec(const QString& query,
                          QSparqlQuery::StatementType type);
+    QSparqlResult* syncExec(const QString& query,
+                            QSparqlQuery::StatementType type);
 private:
     QTrackerDirectDriverPrivate* d;
 };
