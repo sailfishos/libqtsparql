@@ -69,6 +69,8 @@ private slots:
 
     void queryWithLibtrackerSparqlInThread();
     void queryWithLibtrackerSparqlInThread_data();
+
+    void dummyThread();
 };
 
 tst_QSparqlBenchmark::tst_QSparqlBenchmark()
@@ -258,11 +260,16 @@ namespace {
 class QueryRunner : public QThread
 {
 public:
-    QueryRunner(TrackerSparqlConnection* c, const QString& q) : connection(c), queryString(q)
+    QueryRunner(TrackerSparqlConnection* c, const QString& q, bool d = false)
+        : connection(c), queryString(q), isDummy(d), hasRun(false)
         {
         }
     void run()
         {
+            hasRun = true;
+            if (isDummy)
+                return;
+
             GError* error = 0;
             TrackerSparqlCursor* cursor =
                 tracker_sparql_connection_query(connection,
@@ -295,6 +302,8 @@ public:
         }
     TrackerSparqlConnection* connection;
     QString queryString;
+    bool isDummy;
+    bool hasRun;
 };
 
 } // unnamed namespace
@@ -322,6 +331,21 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread_data()
 {
     queryWithLibtrackerSparql_data();
 }
+
+
+void tst_QSparqlBenchmark::dummyThread()
+{
+    QBENCHMARK {
+        for (int i = 0; i < 100; ++i) {
+            QueryRunner runner(0, "", true);
+            runner.start();
+            runner.wait();
+            QVERIFY(runner.hasRun);
+        }
+    }
+}
+
+
 
 QTEST_MAIN(tst_QSparqlBenchmark)
 #include "tst_qsparql_benchmark.moc"
