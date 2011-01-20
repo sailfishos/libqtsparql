@@ -10,7 +10,7 @@ isEmpty(PREFIX): PREFIX = $$QTSPARQL_INSTALL_PREFIX
 VERSION = 0.0.0
 
 # for documentation
-DOC_VERSION = 0.0.16
+DOC_VERSION = 0.0.17
 LIBRARYNAME = QtSparql
 PACKAGENAME = libqtsparql
 
