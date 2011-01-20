@@ -330,7 +330,6 @@ bool QTrackerDirectResult::fetchNextResult()
     }
 
     for (int i = 0; i < n_columns; i++) {
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
         QSparqlBinding binding;
         binding.setName(d->columnNames[i]);
         TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, i);
@@ -339,29 +338,47 @@ bool QTrackerDirectResult::fetchNextResult()
         case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
             break;
         case TRACKER_SPARQL_VALUE_TYPE_URI:
-            binding.setValue(QUrl(value));
+            binding.setValue(QUrl::fromEncoded(tracker_sparql_cursor_get_string(d->cursor, i, 0)));
             break;
         case TRACKER_SPARQL_VALUE_TYPE_STRING:
+        {
+            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
             binding.setValue(value);
             break;
+        }
         case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
+        {
+            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
             binding.setValue(value, *XSD::Integer());
             break;
+        }
         case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
+        {
+            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
             binding.setValue(value, *XSD::Double());
             break;
+        }
         case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
+        {
+            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
             binding.setValue(value, *XSD::DateTime());
             break;
+        }
         case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
+        {
+            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
             binding.setBlankNodeLabel(value);
             break;
+        }
         case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
-            if (value == QLatin1String("1") || value.toLower() == QLatin1String("true"))
+        {
+            QByteArray value(tracker_sparql_cursor_get_string(d->cursor, i, 0));
+            if (value == "1" || value.toLower() == "true")
                 binding.setValue(QString::fromLatin1("true"), *XSD::Boolean());
             else
                 binding.setValue(QString::fromLatin1("false"), *XSD::Boolean());
             break;
+        }
         default:
             break;
         }
