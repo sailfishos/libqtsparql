@@ -394,6 +394,11 @@ bool QSparqlResult::previous()
     case QSparql::BeforeFirstRow:
         return false;
     case QSparql::AfterLastRow:
+        // Special case: empty results
+        if (size() == 0) {
+            d->idx = QSparql::BeforeFirstRow;
+            return false;
+        }
         b = last();
         return b;
     case 0:

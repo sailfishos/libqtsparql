@@ -245,6 +245,8 @@ void tst_QSparql::iterate_empty_result()
     QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     QVERIFY(!res->next());
     QVERIFY(res->pos() == QSparql::AfterLastRow);
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     delete res;
 }
 
