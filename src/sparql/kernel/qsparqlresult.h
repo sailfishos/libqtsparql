@@ -114,7 +114,7 @@ protected:
 
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
-    virtual void setLastError(const QSparqlError& e); // FIXME: why is this virtual?
+    void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
 
     void updatePos(int index); // used by subclasses for managing the position
