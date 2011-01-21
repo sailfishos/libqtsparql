@@ -187,7 +187,7 @@ bool QSparqlResult::isTable() const
 }
 
 /*!
-    Returns true if the statement is a CONSTRUCT or DESCRIBE query 
+    Returns true if the statement is a CONSTRUCT or DESCRIBE query
     returning a graph. Each QSparqlResultRow in a graph result hasError
     three QSParqlBinding values, named 's', 'p' and 'o' corresponding
     to triples with Subject, Predicate and Object values
@@ -197,25 +197,18 @@ bool QSparqlResult::isTable() const
 
 bool QSparqlResult::isGraph() const
 {
-    return d->statementType == QSparqlQuery::ConstructStatement 
+    return d->statementType == QSparqlQuery::ConstructStatement
             || d->statementType == QSparqlQuery::DescribeStatement;
 }
 
 /*!
-    Returns true if the statement is an ASK query returning a 
-    boolean value
-
-    \sa isTable() isGraph()
-*/
-
-/*!
-    Returns true if the statement is an ASK query returning a 
+    Returns true if the statement is an ASK query returning a
     boolean value
 
     \sa isTable() isGraph() boolValue()
 */
 
-bool QSparqlResult::isBool() const 
+bool QSparqlResult::isBool() const
 {
     return d->statementType == QSparqlQuery::AskStatement;
 }
