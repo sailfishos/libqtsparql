@@ -338,14 +338,20 @@ bool QSparqlResult::next()
     // qDebug() << "QSparqlResult::next():" << pos() << " size:" << size();
 
     bool b = false;
+    int s = size();
     switch (pos()) {
     case QSparql::BeforeFirstRow:
+        // special case: empty results
+        if (s == 0) {
+            d->idx = QSparql::AfterLastRow;
+            return false;
+        }
         b = first();
         return b;
     case QSparql::AfterLastRow:
         return false;
     default:
-        if (pos() + 1 < size()) {
+        if (s < 0 || pos() + 1 < s) {
             return setPos(pos() + 1);
         } else {
             d->idx = QSparql::AfterLastRow;
@@ -429,7 +435,10 @@ bool QSparqlResult::first()
 
 bool QSparqlResult::last()
 {
-    return setPos(size() - 1);
+    int s = size();
+    if (s < 0)
+        return false;
+    return setPos(s - 1);
 }
 
 /*!
@@ -495,7 +504,8 @@ bool QSparqlResult::last()
 
 bool QSparqlResult::setPos(int index)
 {
-    if (index < 0 || index >= size())
+    int s = size();
+    if (index < 0 || (s >= 0 && index >= s))
         return false;
 
     d->idx = index;
@@ -518,7 +528,7 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 
 /*!
     Returns true if there is an error associated with the result.
-    
+
     \sa setLastError() lastError()
 */
 
@@ -546,9 +556,17 @@ QSparqlError QSparqlResult::lastError() const
 /*!
     \fn void QSparqlResult::dataReady(int totalRows)
 
-    This signal is emitted when a query has fetched data. The \a
-    totalRows is the row count of the data set after the new data has
-    arrived.
+    \deprecated Use QSparqlResult::dataReady(int start, int end) instead.
+
+    This signal is emitted when a query has fetched data. The \a totalRows is
+    the row count of the data set after the new data has arrived.
+*/
+
+/*!
+    \fn void QSparqlResult::dataReady(int start, int end)
+
+    This signal is emitted when a query has fetched data. When the signal is
+    emitted, the range [\a start, \a end[ of the data is available.
 */
 
 /*!
@@ -563,12 +581,6 @@ QSparqlError QSparqlResult::lastError() const
   its index-based lookup is faster. Use QSparqlResultRow::binding() to
   retrieve the value along with meta data, such as the data type URI
   or language tag for literals.
-
-  In the following example, a \c{SELECT * FROM} query is executed.
-  Since the order of the columns is not defined, QSparqlResultRow::indexOf()
-  is used to obtain the index of a column. FIXME: "select * from"?
-
-  \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 1
 
   \sa value() binding() pos() setPos()
 */

@@ -69,11 +69,11 @@ public:
 
     // Iterating through the result set
     int pos() const;
-    bool setPos(int pos);
-    bool next();
-    bool previous();
-    bool first();
-    bool last();
+    virtual bool setPos(int pos);
+    virtual bool next();
+    virtual bool previous();
+    virtual bool first();
+    virtual bool last();
     virtual int size() const = 0;
     bool isValid() const; // valid = positioned on a valid row
     // TODO: decide what should be the pos() of the result when the data has
@@ -102,7 +102,8 @@ public:
     bool isBool() const;
 
 Q_SIGNALS:
-    void dataReady(int totalCount);
+    void dataReady(int start, int end);
+    void dataReady(int totalCount); // Deprecated
     void finished();
 
 protected:
@@ -110,7 +111,7 @@ protected:
 
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
-    virtual void setLastError(const QSparqlError& e);
+    virtual void setLastError(const QSparqlError& e); // FIXME: why is this virtual?
     void setBoolValue(bool v);
 
 private:
