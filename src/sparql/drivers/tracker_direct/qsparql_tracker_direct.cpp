@@ -72,6 +72,85 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
                           (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+// Helper functions used both by QTrackerDirectResult and
+// QTrackerDirectSyncResult
+
+namespace {
+
+void readBindingValue(TrackerSparqlCursor* cursor, int col, QSparqlBinding& binding)
+{
+    // Note: this function doesn't read the column name, that is done by the
+    // upper layer.
+    TrackerSparqlValueType type =
+        tracker_sparql_cursor_get_value_type(cursor, col);
+
+    switch (type) {
+    case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
+        break;
+    case TRACKER_SPARQL_VALUE_TYPE_URI:
+        binding.setValue(QUrl::fromEncoded(tracker_sparql_cursor_get_string(cursor, col, 0)));
+        break;
+    case TRACKER_SPARQL_VALUE_TYPE_STRING:
+    {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(cursor, col, 0));
+        binding.setValue(value);
+        break;
+    }
+    case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
+    {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(cursor, col, 0));
+        binding.setValue(value, *XSD::Integer());
+        break;
+    }
+    case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
+    {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(cursor, col, 0));
+        binding.setValue(value, *XSD::Double());
+        break;
+    }
+    case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
+    {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(cursor, col, 0));
+        binding.setValue(value, *XSD::DateTime());
+        break;
+    }
+    case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
+    {
+        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(cursor, col, 0));
+        binding.setBlankNodeLabel(value);
+        break;
+    }
+    case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
+    {
+        QByteArray value(tracker_sparql_cursor_get_string(cursor, col, 0));
+        if (value == "1" || value.toLower() == "true")
+            binding.setValue(QString::fromLatin1("true"), *XSD::Boolean());
+        else
+            binding.setValue(QString::fromLatin1("false"), *XSD::Boolean());
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+QVariant readValue(TrackerSparqlCursor* cursor, int col)
+{
+    // The string -> value (int, etc.) conversion is done in QSparqlBinding,
+    // hence the indirection here.
+    QSparqlBinding binding;
+    readBindingValue(cursor, col, binding);
+    return binding.value();
+}
+
+}
+
+////////////////////////////////////////////////////////////////////////////
+// FIXME: refactor QTrackerDirectResult to use QTrackerDirectSyncResult +
+// sync->async wrapper.
+
 class QTrackerDirectFetcherPrivate : public QThread
 {
 public:
@@ -199,6 +278,8 @@ void QTrackerDirectResultPrivate::dataReady(int totalCount)
 {
     emit q->dataReady(totalCount);
 }
+
+////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
@@ -331,58 +412,8 @@ bool QTrackerDirectResult::fetchNextResult()
 
     for (int i = 0; i < n_columns; i++) {
         QSparqlBinding binding;
+        readBindingValue(d->cursor, i, binding);
         binding.setName(d->columnNames[i]);
-        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, i);
-
-        switch (type) {
-        case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
-            break;
-        case TRACKER_SPARQL_VALUE_TYPE_URI:
-            binding.setValue(QUrl::fromEncoded(tracker_sparql_cursor_get_string(d->cursor, i, 0)));
-            break;
-        case TRACKER_SPARQL_VALUE_TYPE_STRING:
-        {
-            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            binding.setValue(value);
-            break;
-        }
-        case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
-        {
-            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            binding.setValue(value, *XSD::Integer());
-            break;
-        }
-        case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
-        {
-            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            binding.setValue(value, *XSD::Double());
-            break;
-        }
-        case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
-        {
-            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            binding.setValue(value, *XSD::DateTime());
-            break;
-        }
-        case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
-        {
-            QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            binding.setBlankNodeLabel(value);
-            break;
-        }
-        case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
-        {
-            QByteArray value(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-            if (value == "1" || value.toLower() == "true")
-                binding.setValue(QString::fromLatin1("true"), *XSD::Boolean());
-            else
-                binding.setValue(QString::fromLatin1("false"), *XSD::Boolean());
-            break;
-        }
-        default:
-            break;
-        }
-
         resultRow.append(binding);
     }
 
@@ -500,6 +531,140 @@ QSparqlResultRow QTrackerDirectResult::current() const
     return d->results[pos()];
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+struct QTrackerDirectSyncResultPrivate {
+    QTrackerDirectSyncResultPrivate();
+    ~QTrackerDirectSyncResultPrivate();
+    TrackerSparqlCursor* cursor;
+    int n_columns;
+};
+
+QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate()
+    : cursor(0), n_columns(-1)
+{
+}
+
+QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
+{
+    if (cursor)
+        g_object_unref(cursor);
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+QTrackerDirectSyncResult::QTrackerDirectSyncResult()
+{
+    d = new QTrackerDirectSyncResultPrivate();
+}
+
+QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
+{
+    delete d;
+}
+
+bool QTrackerDirectSyncResult::next()
+{
+    if (d->cursor == 0)
+        return false;
+
+    GError * error = 0;
+    gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
+
+    if (error != 0) {
+        QSparqlError e(QString::fromLatin1(error->message),
+                       QSparqlError::BackendError,
+                       error->code);
+        g_error_free(error);
+        setLastError(e);
+        qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
+        g_object_unref(d->cursor);
+        d->cursor = 0;
+        return false;
+    }
+
+    if (!active) {
+        g_object_unref(d->cursor);
+        d->cursor = 0;
+        updatePos(QSparql::AfterLastRow);
+        return false;
+    }
+    int oldPos = pos();
+    if (oldPos == QSparql::BeforeFirstRow)
+        updatePos(0);
+    else
+        updatePos(oldPos + 1);
+    return true;
+}
+
+QSparqlResultRow QTrackerDirectSyncResult::current() const
+{
+    // Note: this function reads and constructs the data again every time it's called.
+    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+        return QSparqlResultRow();
+
+    QSparqlResultRow resultRow;
+    // get the no. of columns only once; it won't change between rows
+    if (d->n_columns < 0)
+        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+
+    for (int i = 0; i < d->n_columns; i++) {
+        resultRow.append(binding(i));
+    }
+    return resultRow;
+}
+
+QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
+{
+    // Note: this function reads and constructs the data again every time it's called.
+    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+        return QSparqlBinding();
+
+    // get the no. of columns only once; it won't change between rows
+    if (d->n_columns < 0)
+        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+
+    if (i < 0 || i >= d->n_columns)
+        return QSparqlBinding();
+
+    QSparqlBinding binding;
+    readBindingValue(d->cursor, i, binding);
+    binding.setName(QString::fromUtf8(
+                        tracker_sparql_cursor_get_variable_name(d->cursor, i)));
+    return binding;
+}
+
+QVariant QTrackerDirectSyncResult::value(int i) const
+{
+    // Note: this function re-constructs the data every time it's called.
+    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+        return QVariant();
+
+    // get the no. of columns only once; it won't change between rows
+    if (d->n_columns < 0)
+        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+
+    if (i < 0 || i >= d->n_columns)
+        return QVariant();
+
+    return readValue(d->cursor, i);
+}
+
+bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
+{
+    switch (feature) {
+    case QSparqlResult::Sync:
+    case QSparqlResult::ForwardOnly:
+        return true;
+    case QSparqlResult::QuerySize:
+        return false;
+    default:
+        return false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate()
     : dataReadyInterval(1), mutex(QMutex::Recursive)
 {
@@ -579,8 +744,48 @@ void QTrackerDirectDriver::close()
 
 QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
 {
-    // FIXME: return something real
-    return 0;
+    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult();
+    result->setQuery(query);
+    result->setStatementType(type);
+    GError * error = 0;
+    if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
+        result->d->cursor = tracker_sparql_connection_query(
+            d->connection,
+            query.toUtf8().constData(),
+            0,
+            &error);
+        if (error != 0 || result->d->cursor == 0) {
+            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"),
+                           QSparqlError::StatementError,
+                           error ? error->code : -1);
+            result->setLastError(e);
+            if (error)
+                g_error_free(error);
+            qWarning() << "QTrackerDirectResult:" << lastError() << query;
+        }
+    }
+    else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
+        tracker_sparql_connection_update(d->connection,
+                                         query.toUtf8().constData(),
+                                         0,
+                                         0,
+                                         &error);
+        if (error != 0) {
+            QSparqlError e(QString::fromLatin1(error->message),
+                           QSparqlError::StatementError,
+                           error->code);
+            g_error_free(error);
+            setLastError(e);
+            qWarning() << "QTrackerDirectResult:" << lastError() << query;
+        }
+    }
+    else {
+        result->setLastError(QSparqlError(
+                                 QLatin1String("Unsupported statement type"),
+                                 QSparqlError::BackendError));
+        qWarning() << "QTrackerDirectResult:" << lastError() << query;
+    }
+    return result;
 }
 
 QT_END_NAMESPACE
