@@ -65,6 +65,7 @@ public:
     enum Feature {  QuerySize, DefaultGraph,
                     AskQueries, ConstructQueries, UpdateQueries,
                     SyncExec, AsyncExec };
+    // TODO: QuerySize should be removed (API break).
 
     explicit QSparqlConnection(QObject* parent = 0);
     QSparqlConnection(const QString& type,

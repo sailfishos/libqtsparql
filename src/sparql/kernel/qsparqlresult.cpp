@@ -293,9 +293,13 @@ void QSparqlResult::waitForFinished()
 
 bool QSparqlResult::isFinished() const
 {
+    // Syncronously iterable results are always finished (the user can start
+    // iterating immediately).
+    if (hasFeature(Sync)) {
+        return true;
+    }
     return false;
 }
-
 
 /*!
 
@@ -329,6 +333,14 @@ bool QSparqlResult::isFinished() const
 bool QSparqlResult::next()
 {
     // qDebug() << "QSparqlResult::next():" << pos() << " size:" << size();
+
+    // Note: Forward only results should re-implement this function, otherwise
+    // they cannot work.
+    if (hasFeature(QSparqlResult::ForwardOnly)) {
+        qWarning() <<
+            "QSparqlResult: ForwardOnly QSparqlResult doesn't override next()";
+        return false;
+    }
 
     bool b = false;
     int s = size();
@@ -382,6 +394,10 @@ bool QSparqlResult::next()
 
 bool QSparqlResult::previous()
 {
+    if (hasFeature(ForwardOnly))  {
+        return false;
+    }
+
     bool b = false;
     switch (pos()) {
     case QSparql::BeforeFirstRow:
@@ -413,8 +429,18 @@ bool QSparqlResult::previous()
 
 bool QSparqlResult::first()
 {
+    // Already at the first result
     if (pos() == 0)
         return true;
+
+    if (hasFeature(ForwardOnly)) {
+        if (pos() == QSparql::BeforeFirstRow) {
+            // if the user hasn't iterated yet, calling first() is the same as
+            // calling next() once.
+            return next();
+        }
+        return false;
+    }
 
     return setPos(0);
 }
@@ -433,6 +459,12 @@ bool QSparqlResult::first()
 
 bool QSparqlResult::last()
 {
+    // With forward-only results, we don't know which row was the last before we
+    // have iterated to it. So, we cannot jump into the last row.
+    if (hasFeature(ForwardOnly)) {
+        return false;
+    }
+
     int s = size();
     if (s < 0)
         return false;
@@ -440,15 +472,20 @@ bool QSparqlResult::last()
 }
 
 /*!
-  \fn int QSparqlResult::size() const
-
   Returns the size of the result (number of rows returned), or -1 if
   the size cannot be determined or if the database does not support
   reporting information about query sizes. If the query is not
   finished (isFinished() returns false), -1 is returned.
 
-  \sa isFinished() QSparqlDriver::hasFeature()
+  \sa isFinished() QSparqlResult::hasFeature()
 */
+
+int QSparqlResult::size() const
+{
+    // The default implementation is OK for ForwardOnly Results. Other Results
+    // need to override this function.
+    return -1;
+}
 
 /*!
     \fn QSparqlBinding QSparqlResult::binding(int index) const
@@ -502,6 +539,18 @@ bool QSparqlResult::last()
 
 bool QSparqlResult::setPos(int index)
 {
+    if (hasFeature(ForwardOnly)) {
+        // For forward-only results, the only legal way to move forward is
+        // next(). We cannot say that setPos(pos() + 1) is legal and the same as
+        // calling next(), since (it causes weird cornercases when iterating
+        // past the end of the result: If the last row is 2, and the user does
+        // setPos(3), next() is called, it sets the position to AfterLastRow
+        // (and not 3). Should setPos() return true or false? We cannot satisfy
+        // these 2 rules: 1) if setPos returns false, it hasn't changed the
+        // state of the Result 2) if setPos(i) returns true, pos() returns i.
+        return false;
+    }
+
     int s = size();
     if (index < 0 || (s >= 0 && index >= s))
         return false;
@@ -510,6 +559,13 @@ bool QSparqlResult::setPos(int index)
     return true;
 }
 
+void QSparqlResult::updatePos(int index)
+{
+    // This function dummily udpates d->idx to record the current position. This
+    // is used by results which handle the position tracking themselves (e.g.,
+    // forward only results use this in their overridden version of next()).
+    d->idx = index;
+}
 
 /*!
     This function is provided for derived classes to set the last
@@ -542,6 +598,11 @@ bool QSparqlResult::hasError() const
 QSparqlError QSparqlResult::lastError() const
 {
     return d->error;
+}
+
+bool QSparqlResult::hasFeature(QSparqlResult::Feature) const
+{
+    return false;
 }
 
 /*!

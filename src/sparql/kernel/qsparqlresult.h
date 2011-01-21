@@ -65,6 +65,7 @@ class Q_SPARQL_EXPORT QSparqlResult : public QObject
     friend class QSparqlConnectionPrivate;
 
 public:
+    enum Feature { QuerySize, ForwardOnly, Sync } ;
     virtual ~QSparqlResult();
 
     // Iterating through the result set
@@ -74,7 +75,7 @@ public:
     virtual bool previous();
     virtual bool first();
     virtual bool last();
-    virtual int size() const = 0;
+    virtual int size() const;
     bool isValid() const; // valid = positioned on a valid row
     // TODO: decide what should be the pos() of the result when the data has
     // arrived; options: 1) pos() == BeforeFirstRow (like now), 2) pos() == 0
@@ -101,6 +102,8 @@ public:
     bool isGraph() const;
     bool isBool() const;
 
+    virtual bool hasFeature(QSparqlResult::Feature feature) const;
+
 Q_SIGNALS:
     void dataReady(int start, int end);
     void dataReady(int totalCount); // Deprecated
@@ -114,6 +117,7 @@ protected:
     virtual void setLastError(const QSparqlError& e); // FIXME: why is this virtual?
     void setBoolValue(bool v);
 
+    void updatePos(int index); // used by subclasses for managing the position
 private:
     QSparqlResultPrivate* d;
 
