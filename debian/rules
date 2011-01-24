@@ -28,16 +28,6 @@ install: build
 	dh_installdirs
 	$(MAKE) INSTALL_ROOT=`pwd`/debian/tmp/ install
 
-	# copy the tests definition and data from the src dir
-	mkdir -p `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/tests.xml `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_tracker/testdata_tracker.ttl `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_tracker/clean_data_tracker.rq `pwd`/debian/tmp/usr/share/libqtsparql-tests
-
-	cp -a tests/auto/qsparql_tracker_direct/testdata_tracker_direct.ttl `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_tracker_direct/clean_data_tracker_direct.rq `pwd`/debian/tmp/usr/share/libqtsparql-tests
-	cp -a tests/auto/qsparql_threading/clean_data_threading.rq `pwd`/debian/tmp/usr/share/libqtsparql-tests
-
 	dh_install --sourcedir=`pwd`/debian/tmp/
 
 binary-indep: build install
