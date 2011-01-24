@@ -646,10 +646,10 @@ bool QSparqlResult::hasFeature(QSparqlResult::Feature) const
 /*!
   \fn QSparqlResultRow QSparqlResult::current() const
 
-  Returns a QSparqlResultRow containing the binding values information for the
-  current query. If the query points to a valid row (isValid() returns
-  true), the result row is populated.  An empty
-  result row is returned when there is no result at the current position
+  Returns a QSparqlResultRow containing the binding values for the current
+  row. If the result points to a valid row (isValid() returns true), the result
+  row is populated. An empty result row is returned when there is no result at
+  the current position.
 
   To retrieve just the values from a query, value() should be used since
   its index-based lookup is faster. Use QSparqlResultRow::binding() to
