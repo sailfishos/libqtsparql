@@ -138,7 +138,8 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     \until nameFamily
     \skipline bindValue(
 
-    \attention No escaping is performed when binding values.
+    When replacing strings, the quotes surrounding strings are inserted
+    automatically. Quotes (" and ') inside the strings are escaped.
 
     \sa QSparqlConnection, QSparqlQueryModel, QSparqlResult, QSparqlResultRow, QSparqlBinding, QVariant
 */
