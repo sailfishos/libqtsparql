@@ -447,6 +447,12 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
         // error".
         if (d->driver->hasFeature(QSparqlConnection::SyncExec)) {
             result = d->driver->syncExec(queryText, query.type());
+
+            // Sync results are immediately finished. The user can start
+            // iterating immediately and the real work is done while
+            // iterating. Thus, schedule emitting the finished() signal when
+            // this thread enters its event loop the next time.
+            QMetaObject::invokeMethod(result, "finished", Qt::QueuedConnection);
         }
         else {
             // TODO: insert a wrapper here

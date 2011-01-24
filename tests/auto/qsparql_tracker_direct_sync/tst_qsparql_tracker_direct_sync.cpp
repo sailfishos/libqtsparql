@@ -76,6 +76,8 @@ private slots:
     void result_type_bool();
 
     void special_chars();
+
+    void finished_signal_sync();
 };
 
 namespace {
@@ -456,6 +458,28 @@ void tst_QSparqlTrackerDirectSync::special_chars()
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     delete r;
+}
+
+void tst_QSparqlTrackerDirectSync::finished_signal_sync()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.syncExec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+
+    // The result is immediately finished...
+    QCOMPARE(r->isFinished(), true);
+
+    // ... but still we get the finished() signal next time we enter the main
+    // loop.
+    QSignalSpy spy(r, SIGNAL(finished()));
+    while (spy.count() == 0)
+        QTest::qWait(100);
+
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
