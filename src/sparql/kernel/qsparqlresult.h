@@ -119,7 +119,7 @@ protected:
     void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
 
-    void updatePos(int index); // used by subclasses for managing the position
+    void updatePos(int pos); // used by subclasses for managing the position
 private:
     QSparqlResultPrivate* d;
 

@@ -537,7 +537,7 @@ int QSparqlResult::size() const
     \sa pos()
 */
 
-bool QSparqlResult::setPos(int index)
+bool QSparqlResult::setPos(int pos)
 {
     if (hasFeature(ForwardOnly)) {
         // For forward-only results, the only legal way to move forward is
@@ -552,10 +552,10 @@ bool QSparqlResult::setPos(int index)
     }
 
     int s = size();
-    if (index < 0 || (s >= 0 && index >= s))
+    if (pos < 0 || (s >= 0 && pos >= s))
         return false;
 
-    d->idx = index;
+    d->idx = pos;
     return true;
 }
 
