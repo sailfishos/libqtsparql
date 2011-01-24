@@ -107,8 +107,7 @@ public:
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
 Q_SIGNALS:
-    void dataReady(int start, int end);
-    void dataReady(int totalCount); // Deprecated
+    void dataReady(int totalCount);
     void finished();
 
 protected:

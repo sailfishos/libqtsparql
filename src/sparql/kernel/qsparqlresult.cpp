@@ -630,17 +630,8 @@ bool QSparqlResult::hasFeature(QSparqlResult::Feature) const
 /*!
     \fn void QSparqlResult::dataReady(int totalRows)
 
-    \deprecated Use QSparqlResult::dataReady(int start, int end) instead.
-
     This signal is emitted when a query has fetched data. The \a totalRows is
     the row count of the data set after the new data has arrived.
-*/
-
-/*!
-    \fn void QSparqlResult::dataReady(int start, int end)
-
-    This signal is emitted when a query has fetched data. When the signal is
-    emitted, the range [\a start, \a end[ of the data is available.
 */
 
 /*!
