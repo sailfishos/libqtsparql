@@ -145,6 +145,9 @@ void tst_QSparqlTrackerDirectSync::query_contacts_sync()
     QHash<QString, QString> contactNames;
     while (r->next()) {
         QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->stringValue(0), r->value(0).toString());
+        QCOMPARE(r->stringValue(1), r->value(1).toString());
+
         contactNames[r->value(0).toString()] = r->value(1).toString();
     }
     QCOMPARE(contactNames.size(), 3);

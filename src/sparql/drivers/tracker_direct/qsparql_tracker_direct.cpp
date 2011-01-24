@@ -650,6 +650,21 @@ QVariant QTrackerDirectSyncResult::value(int i) const
     return readValue(d->cursor, i);
 }
 
+QString QTrackerDirectSyncResult::stringValue(int i) const
+{
+    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+        return QString();
+
+    // get the no. of columns only once; it won't change between rows
+    if (d->n_columns < 0)
+        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+
+    if (i < 0 || i >= d->n_columns)
+        return QString();
+
+    return QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
+}
+
 bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
 {
     switch (feature) {
