@@ -559,6 +559,21 @@ bool QSparqlResult::setPos(int index)
     return true;
 }
 
+/*!
+  Returns the value on column \a column on the current result row as a
+  string. This function ignores the type of the data.
+
+  An empty QString is returned if column \a column does not exist, or if the
+  result is positioned on an invalid result row.
+
+  \sa binding() value() current()
+*/
+QString QSparqlResult::stringValue(int i) const
+{
+    // Subclasses are free to implement this more efficiently
+    return value(i).toString();
+}
+
 void QSparqlResult::updatePos(int index)
 {
     // This function dummily udpates d->idx to record the current position. This

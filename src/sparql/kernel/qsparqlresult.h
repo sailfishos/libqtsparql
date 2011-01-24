@@ -86,6 +86,8 @@ public:
     // Values from the current row
     virtual QSparqlBinding binding(int i) const = 0;
     virtual QVariant value(int i) const = 0;
+    virtual QString stringValue(int i) const;
+
     // For ASK results
     bool boolValue() const;
 
