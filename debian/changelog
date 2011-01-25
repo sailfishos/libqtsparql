@@ -1,5 +1,6 @@
 libqtsparql (0.0.17~unreleased) unstable; urgency=low
 
+  * Adding sync api: QSparqlConnection::syncExec()
   * ABI break: Functions of QSparqlResult made virtual.
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 20 Jan 2011 09:21:16 +0200
