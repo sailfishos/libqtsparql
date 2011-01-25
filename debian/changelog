@@ -1,4 +1,4 @@
-libqtsparql (0.0.17~unreleased) unstable; urgency=low
+libqtsparql (0.0.17~dummy) unstable; urgency=low
 
   * ABI break: Functions of QSparqlResult made virtual.
 
