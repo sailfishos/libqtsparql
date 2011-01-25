@@ -293,11 +293,6 @@ void QSparqlResult::waitForFinished()
 
 bool QSparqlResult::isFinished() const
 {
-    // Syncronously iterable results are always finished (the user can start
-    // iterating immediately).
-    if (hasFeature(Sync)) {
-        return true;
-    }
     return false;
 }
 

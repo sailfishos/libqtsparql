@@ -119,6 +119,9 @@ public:
     virtual QSparqlBinding binding(int i) const;
     virtual QVariant value(int i) const;
     virtual QString stringValue(int i) const;
+
+    virtual bool isFinished() const;
+
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 private:
     QTrackerDirectSyncResultPrivate* d;

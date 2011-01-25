@@ -665,6 +665,11 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
     return QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
 }
 
+bool QTrackerDirectSyncResult::isFinished() const
+{
+    return (d->cursor == 0);
+}
+
 bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
 {
     switch (feature) {
