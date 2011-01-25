@@ -10,6 +10,7 @@
       <credential name="GID::metadata-users" />
       <credential name="GRP::metadata-users" />
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct" />
+      <for path="/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync" />
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_threading" />
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_benchmark" />
    </request>
