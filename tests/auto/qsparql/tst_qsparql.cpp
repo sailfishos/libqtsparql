@@ -355,7 +355,6 @@ void tst_QSparql::iterate_empty_fwonly_result()
     QSparqlConnection conn("MOCK");
     QSparqlResult* res = conn.syncExec(QSparqlQuery("foo"));
     QVERIFY(!res->hasError());
-    QVERIFY(res->isFinished()); // sync results immediately finished
 
     MockSyncFwOnlyResult::size_ = 0;
     QVERIFY(res->pos() == QSparql::BeforeFirstRow);
