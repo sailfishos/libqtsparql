@@ -1,16 +1,10 @@
-libqtsparql (0.0.18~unreleased) unstable; urgency=low
-
-  *
-
- -- Marja Hassinen <marja.hassinen@nokia.com>  Wed, 26 Jan 2011 09:54:29 +0200
-
 libqtsparql (0.0.17) unstable; urgency=low
 
   * Adding sync api: QSparqlConnection::syncExec()
   * ABI break: Functions of QSparqlResult made virtual.
   * Fixes: NB#221377
 
- -- Marja Hassinen <marja.hassinen@nokia.com>  Tue, 25 Jan 2011 14:40:00 +0200
+ -- Marja Hassinen <marja.hassinen@nokia.com>  Wed, 26 Jan 2011 10:44:08 +0200
 
 libqtsparql (0.0.16) unstable; urgency=low
 
