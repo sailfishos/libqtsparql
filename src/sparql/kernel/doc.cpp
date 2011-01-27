@@ -97,7 +97,7 @@
       moment, so it is not necessarity written when the query is finished.
 
     QTRACKER_DIRECT driver supports the following connection options:
-    - custom: "dataReadyInterval" (int, default 100), controls the interval for
+    - custom: "dataReadyInterval" (int, default 1), controls the interval for
       emitting the dataReady signal.
 
     QENDPOINT driver supports the following connection options:
