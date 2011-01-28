@@ -62,18 +62,20 @@ class Q_SPARQL_EXPORT QSparqlResult : public QObject
     Q_OBJECT
     friend class QSparqlResultPrivate;
     friend class QSparqlConnection;
+    friend class QSparqlConnectionPrivate;
 
 public:
+    enum Feature { QuerySize, ForwardOnly, Sync } ;
     virtual ~QSparqlResult();
 
     // Iterating through the result set
     int pos() const;
-    bool setPos(int pos);
-    bool next();
-    bool previous();
-    bool first();
-    bool last();
-    virtual int size() const = 0;
+    virtual bool setPos(int pos);
+    virtual bool next();
+    virtual bool previous();
+    virtual bool first();
+    virtual bool last();
+    virtual int size() const;
     bool isValid() const; // valid = positioned on a valid row
     // TODO: decide what should be the pos() of the result when the data has
     // arrived; options: 1) pos() == BeforeFirstRow (like now), 2) pos() == 0
@@ -84,6 +86,8 @@ public:
     // Values from the current row
     virtual QSparqlBinding binding(int i) const = 0;
     virtual QVariant value(int i) const = 0;
+    virtual QString stringValue(int i) const;
+
     // For ASK results
     bool boolValue() const;
 
@@ -100,6 +104,8 @@ public:
     bool isGraph() const;
     bool isBool() const;
 
+    virtual bool hasFeature(QSparqlResult::Feature feature) const;
+
 Q_SIGNALS:
     void dataReady(int totalCount);
     void finished();
@@ -109,9 +115,10 @@ protected:
 
     void setQuery(const QString & query);
     void setStatementType(QSparqlQuery::StatementType type);
-    virtual void setLastError(const QSparqlError& e);
+    void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
 
+    void updatePos(int pos); // used by subclasses for managing the position
 private:
     QSparqlResultPrivate* d;
 

@@ -78,6 +78,50 @@ public:
     static int size_;
 };
 
+class MockSyncFwOnlyResult : public QSparqlResult
+{
+    Q_OBJECT
+    public:
+    MockSyncFwOnlyResult()
+        : pos(-1) // first row is row 0, we start BeforeFirstRow
+    {
+    }
+    // Only this is needed for iterating the result
+    bool next()
+    {
+        // Do some work to fetch the next row
+        if (++pos < size_) { // determine if the row was the last or not
+            updatePos(pos);
+            return true;
+        }
+        updatePos(QSparql::AfterLastRow);
+        return false;
+    }
+    bool hasFeature(QSparqlResult::Feature f) const
+    {
+        if (f == QSparqlResult::ForwardOnly || f == QSparqlResult::Sync)
+            return true;
+        return false;
+    }
+
+    QSparqlResultRow current() const
+    {
+        return QSparqlResultRow();
+    }
+
+    QSparqlBinding binding(int) const
+    {
+        return QSparqlBinding();
+    }
+
+    QVariant value(int) const
+    {
+        return QVariant();
+    }
+    int pos;
+    static int size_;
+};
+
 class MockDriver : public QSparqlDriver
 {
     Q_OBJECT
@@ -99,13 +143,20 @@ class MockDriver : public QSparqlDriver
     {
         ++closeCount;
     }
-    bool hasFeature(QSparqlConnection::Feature) const
+    bool hasFeature(QSparqlConnection::Feature f) const
     {
+        if (f == QSparqlConnection::SyncExec || f == QSparqlConnection::AsyncExec)
+            return true;
         return false;
     }
     MockResult* exec(const QString&, QSparqlQuery::StatementType)
     {
         return new MockResult(this);
+    }
+
+    MockSyncFwOnlyResult* syncExec(const QString&, QSparqlQuery::StatementType)
+    {
+        return new MockSyncFwOnlyResult();
     }
     static int openCount;
     static int closeCount;
@@ -113,6 +164,7 @@ class MockDriver : public QSparqlDriver
 };
 
 int MockResult::size_ = 0;
+int MockSyncFwOnlyResult::size_ = 0;
 
 int MockDriver::openCount = 0;
 int MockDriver::closeCount = 0;
@@ -122,7 +174,6 @@ MockResult::MockResult(const MockDriver*)
     : QSparqlResult()
 {
 }
-
 
 class MockDriverCreator : public QSparqlDriverCreatorBase
 {
@@ -156,6 +207,10 @@ private slots:
     void iterate_empty_result();
     void iterate_nonempty_result();
     void iterate_nonempty_result_backwards();
+
+    void iterate_empty_fwonly_result();
+    void iterate_nonempty_fwonly_result();
+    void iterate_nonempty_fwonly_result_first();
 };
 
 tst_QSparql::tst_QSparql()
@@ -185,6 +240,7 @@ void tst_QSparql::init()
     MockDriver::closeCount = 0;
     MockDriver::openRetVal = true;
     MockResult::size_ = 0;
+    MockSyncFwOnlyResult::size_ = 0;
 }
 
 void tst_QSparql::cleanup()
@@ -244,7 +300,9 @@ void tst_QSparql::iterate_empty_result()
     QVERIFY(!res->hasError());
     QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     QVERIFY(!res->next());
-    // QVERIFY(res->pos() == QSparql::AfterLastRow); // fails
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     delete res;
 }
 
@@ -290,6 +348,85 @@ void tst_QSparql::iterate_nonempty_result_backwards()
     QVERIFY(!res->previous());
     QVERIFY(res->pos() == QSparql::BeforeFirstRow);
     delete res;
+}
+
+void tst_QSparql::iterate_empty_fwonly_result()
+{
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.syncExec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+
+    MockSyncFwOnlyResult::size_ = 0;
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    QVERIFY(!res->next());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    // previous() always fails, and it doesn't change the position
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    delete res;
+}
+
+void tst_QSparql::iterate_nonempty_fwonly_result()
+{
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.syncExec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+    MockSyncFwOnlyResult::size_ = 2;
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    QVERIFY(res->next());
+    QCOMPARE(res->pos(), 0);
+
+    // previous() always fails, and it doesn't change the position
+    QVERIFY(!res->previous());
+    QCOMPARE(res->pos(), 0);
+
+    QVERIFY(res->next());
+    QCOMPARE(res->pos(), 1);
+
+    // previous() always fails, and it doesn't change the position
+    QVERIFY(!res->previous());
+    QCOMPARE(res->pos(), 1);
+
+    // first and last fail, and they don't chane the position
+    QVERIFY(!res->first());
+    QVERIFY(res->pos() == 1);
+    QVERIFY(!res->last());
+    QVERIFY(res->pos() == 1);
+
+    // also setPos fails (even if we try setPos(pos() + 1))
+    QVERIFY(!res->setPos(0));
+    QVERIFY(res->pos() == 1);
+    QVERIFY(!res->setPos(2));
+    QVERIFY(res->pos() == 1);
+
+    QVERIFY(!res->next());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+    QVERIFY(!res->next());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+
+    // previous() always fails, and it doesn't change the position
+    QVERIFY(!res->previous());
+    QVERIFY(res->pos() == QSparql::AfterLastRow);
+
+    delete res;
+}
+
+void tst_QSparql::iterate_nonempty_fwonly_result_first()
+{
+    // A corner case where the user calls first() legally for a forward only
+    // result
+    QSparqlConnection conn("MOCK");
+    QSparqlResult* res = conn.syncExec(QSparqlQuery("foo"));
+    QVERIFY(!res->hasError());
+    MockSyncFwOnlyResult::size_ = 2;
+    QVERIFY(res->pos() == QSparql::BeforeFirstRow);
+    // legal first(): just call next() once
+    QVERIFY(res->first());
+    QCOMPARE(res->pos(), 0);
+
+    // another legal first(), we're at the first row already
+    QVERIFY(res->first());
+    QCOMPARE(res->pos(), 0);
 }
 
 QTEST_MAIN(tst_QSparql)

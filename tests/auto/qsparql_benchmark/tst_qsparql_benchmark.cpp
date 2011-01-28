@@ -44,6 +44,23 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
+#include <stdlib.h>
+#include <sys/time.h>
+#include <stdio.h>
+
+#define START_BENCHMARK \
+    char tsbuf2[32]; \
+    struct timeval tv2; \
+    gettimeofday(&tv2, NULL); \
+    long start = tv2.tv_sec * 1000 + tv2.tv_usec / 1000; \
+
+
+#define END_BENCHMARK(TEXT) \
+    gettimeofday(&tv2, NULL); \
+    long end = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;          \
+    snprintf(tsbuf2, sizeof(tsbuf2), TEXT " %lu\n", end - start); \
+    write(8, tsbuf2, strlen(tsbuf2))
+
 class tst_QSparqlBenchmark : public QObject
 {
     Q_OBJECT
@@ -140,17 +157,18 @@ void tst_QSparqlBenchmark::queryBenchmark()
     QSparqlConnection conn(connectionName);
 
     QSparqlResult* r = 0;
-    QBENCHMARK {
-        // We run multiple queries here (and don't leave it for QBENCHMARK to
-        // run this multiple times, to be able to measure things like "how much
-        // does adding a QThreadPool help".
-        for (int i = 0; i < 100; ++i) {
+    // We run multiple queries here (and don't leave it for QBENCHMARK to
+    // run this multiple times, to be able to measure things like "how much
+    // does adding a QThreadPool help".
+    for (int i = 0; i < 100; ++i) {
+        START_BENCHMARK {
             r = conn.exec(query);
             r->waitForFinished();
             QVERIFY(!r->hasError());
             QVERIFY(r->size() > 0);
             delete r;
         }
+        END_BENCHMARK("qsparql");
     }
 }
 
@@ -161,7 +179,7 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
 
     // The query is trivial, these tests cases measure (exaggerates) other costs
     // than running the query.
-    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
+/*    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
     QTest::newRow("TrackerDBusAllResources")
         << "QTRACKER"
         << trivialQuery;
@@ -169,6 +187,7 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
     QTest::newRow("TrackerDirectAllResources")
         << "QTRACKER_DIRECT"
         << trivialQuery;
+*/
 
     // A bit more complicated query. Test data for running this can be found in
     // the tracker project.
@@ -180,10 +199,10 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
         "?song nmm:performer ?artist . "
         "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
-    QTest::newRow("TrackerDBusArtistsAndAlbums")
+/*    QTest::newRow("TrackerDBusArtistsAndAlbums")
         << "QTRACKER"
         << artistsAndAlbums;
-
+*/
     QTest::newRow("TrackerDirectArtistsAndAlbums")
         << "QTRACKER_DIRECT"
         << artistsAndAlbums;
@@ -198,9 +217,8 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
     QVERIFY(connection);
     QVERIFY(error == 0);
 
-    QBENCHMARK {
-        for (int i = 0; i < 100; ++i) {
-
+    for (int i = 0; i < 100; ++i) {
+        START_BENCHMARK {
             TrackerSparqlCursor* cursor =
                 tracker_sparql_connection_query(connection,
                                                 queryString.toUtf8(),
@@ -228,6 +246,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 
             g_object_unref(cursor);
         }
+        END_BENCHMARK("lts");
     }
 
     g_object_unref(connection);
@@ -239,9 +258,10 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
 
     // The query is trivial, these tests cases measure (exaggerates) other costs
     // than running the query.
-    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
+    /*QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
     QTest::newRow("AllResources")
         << trivialQuery;
+    */
 
     // A bit more complicated query. Test data for running this can be found in
     // the tracker project.
@@ -299,7 +319,6 @@ public:
             QVERIFY(values.size() > 0);
             QVERIFY(types.size() > 0);
             g_object_unref(cursor);
-
         }
     TrackerSparqlConnection* connection;
     QString queryString;
@@ -318,12 +337,13 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
     QVERIFY(connection);
     QVERIFY(error == 0);
 
-    QBENCHMARK {
-        for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 100; ++i) {
+        START_BENCHMARK {
             QueryRunner runner(connection, queryString);
             runner.start();
             runner.wait();
         }
+        END_BENCHMARK("lts-thread");
     }
 
     g_object_unref(connection);
@@ -346,8 +366,6 @@ void tst_QSparqlBenchmark::dummyThread()
         }
     }
 }
-
-
 
 QTEST_MAIN(tst_QSparqlBenchmark)
 #include "tst_qsparql_benchmark.moc"

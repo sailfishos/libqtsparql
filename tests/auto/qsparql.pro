@@ -10,6 +10,7 @@ SUBDIRS = \
     qsparql_threading \
     qsparql_tracker \
     qsparql_tracker_direct \
+    qsparql_tracker_direct_sync \
     qsparql_virtuoso \
     qsparql_virtuoso_endpoint \
     qsparql_benchmark

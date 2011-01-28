@@ -187,7 +187,7 @@ bool QSparqlResult::isTable() const
 }
 
 /*!
-    Returns true if the statement is a CONSTRUCT or DESCRIBE query 
+    Returns true if the statement is a CONSTRUCT or DESCRIBE query
     returning a graph. Each QSparqlResultRow in a graph result hasError
     three QSParqlBinding values, named 's', 'p' and 'o' corresponding
     to triples with Subject, Predicate and Object values
@@ -197,25 +197,18 @@ bool QSparqlResult::isTable() const
 
 bool QSparqlResult::isGraph() const
 {
-    return d->statementType == QSparqlQuery::ConstructStatement 
+    return d->statementType == QSparqlQuery::ConstructStatement
             || d->statementType == QSparqlQuery::DescribeStatement;
 }
 
 /*!
-    Returns true if the statement is an ASK query returning a 
-    boolean value
-
-    \sa isTable() isGraph()
-*/
-
-/*!
-    Returns true if the statement is an ASK query returning a 
+    Returns true if the statement is an ASK query returning a
     boolean value
 
     \sa isTable() isGraph() boolValue()
 */
 
-bool QSparqlResult::isBool() const 
+bool QSparqlResult::isBool() const
 {
     return d->statementType == QSparqlQuery::AskStatement;
 }
@@ -303,7 +296,6 @@ bool QSparqlResult::isFinished() const
     return false;
 }
 
-
 /*!
 
   Retrieves the next row in the result, if available, and positions
@@ -337,15 +329,29 @@ bool QSparqlResult::next()
 {
     // qDebug() << "QSparqlResult::next():" << pos() << " size:" << size();
 
+    // Note: Forward only results should re-implement this function, otherwise
+    // they cannot work.
+    if (hasFeature(QSparqlResult::ForwardOnly)) {
+        qWarning() <<
+            "QSparqlResult: ForwardOnly QSparqlResult doesn't override next()";
+        return false;
+    }
+
     bool b = false;
+    int s = size();
     switch (pos()) {
     case QSparql::BeforeFirstRow:
+        // special case: empty results
+        if (s == 0) {
+            d->idx = QSparql::AfterLastRow;
+            return false;
+        }
         b = first();
         return b;
     case QSparql::AfterLastRow:
         return false;
     default:
-        if (pos() + 1 < size()) {
+        if (s < 0 || pos() + 1 < s) {
             return setPos(pos() + 1);
         } else {
             d->idx = QSparql::AfterLastRow;
@@ -383,11 +389,20 @@ bool QSparqlResult::next()
 
 bool QSparqlResult::previous()
 {
+    if (hasFeature(ForwardOnly))  {
+        return false;
+    }
+
     bool b = false;
     switch (pos()) {
     case QSparql::BeforeFirstRow:
         return false;
     case QSparql::AfterLastRow:
+        // Special case: empty results
+        if (size() == 0) {
+            d->idx = QSparql::BeforeFirstRow;
+            return false;
+        }
         b = last();
         return b;
     case 0:
@@ -409,8 +424,18 @@ bool QSparqlResult::previous()
 
 bool QSparqlResult::first()
 {
+    // Already at the first result
     if (pos() == 0)
         return true;
+
+    if (hasFeature(ForwardOnly)) {
+        if (pos() == QSparql::BeforeFirstRow) {
+            // if the user hasn't iterated yet, calling first() is the same as
+            // calling next() once.
+            return next();
+        }
+        return false;
+    }
 
     return setPos(0);
 }
@@ -429,19 +454,33 @@ bool QSparqlResult::first()
 
 bool QSparqlResult::last()
 {
-    return setPos(size() - 1);
+    // With forward-only results, we don't know which row was the last before we
+    // have iterated to it. So, we cannot jump into the last row.
+    if (hasFeature(ForwardOnly)) {
+        return false;
+    }
+
+    int s = size();
+    if (s < 0)
+        return false;
+    return setPos(s - 1);
 }
 
 /*!
-  \fn int QSparqlResult::size() const
-
   Returns the size of the result (number of rows returned), or -1 if
   the size cannot be determined or if the database does not support
   reporting information about query sizes. If the query is not
   finished (isFinished() returns false), -1 is returned.
 
-  \sa isFinished() QSparqlDriver::hasFeature()
+  \sa isFinished() QSparqlResult::hasFeature()
 */
+
+int QSparqlResult::size() const
+{
+    // The default implementation is OK for ForwardOnly Results. Other Results
+    // need to override this function.
+    return -1;
+}
 
 /*!
     \fn QSparqlBinding QSparqlResult::binding(int index) const
@@ -493,15 +532,50 @@ bool QSparqlResult::last()
     \sa pos()
 */
 
-bool QSparqlResult::setPos(int index)
+bool QSparqlResult::setPos(int pos)
 {
-    if (index < 0 || index >= size())
+    if (hasFeature(ForwardOnly)) {
+        // For forward-only results, the only legal way to move forward is
+        // next(). We cannot say that setPos(pos() + 1) is legal and the same as
+        // calling next(), since (it causes weird cornercases when iterating
+        // past the end of the result: If the last row is 2, and the user does
+        // setPos(3), next() is called, it sets the position to AfterLastRow
+        // (and not 3). Should setPos() return true or false? We cannot satisfy
+        // these 2 rules: 1) if setPos returns false, it hasn't changed the
+        // state of the Result 2) if setPos(i) returns true, pos() returns i.
+        return false;
+    }
+
+    int s = size();
+    if (pos < 0 || (s >= 0 && pos >= s))
         return false;
 
-    d->idx = index;
+    d->idx = pos;
     return true;
 }
 
+/*!
+  Returns the value on column \a column on the current result row as a
+  string. This function ignores the type of the data.
+
+  An empty QString is returned if column \a column does not exist, or if the
+  result is positioned on an invalid result row.
+
+  \sa binding() value() current()
+*/
+QString QSparqlResult::stringValue(int i) const
+{
+    // Subclasses are free to implement this more efficiently
+    return value(i).toString();
+}
+
+void QSparqlResult::updatePos(int index)
+{
+    // This function dummily udpates d->idx to record the current position. This
+    // is used by results which handle the position tracking themselves (e.g.,
+    // forward only results use this in their overridden version of next()).
+    d->idx = index;
+}
 
 /*!
     This function is provided for derived classes to set the last
@@ -518,7 +592,7 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 
 /*!
     Returns true if there is an error associated with the result.
-    
+
     \sa setLastError() lastError()
 */
 
@@ -536,6 +610,11 @@ QSparqlError QSparqlResult::lastError() const
     return d->error;
 }
 
+bool QSparqlResult::hasFeature(QSparqlResult::Feature) const
+{
+    return false;
+}
+
 /*!
     \fn void QSparqlResult::finished()
 
@@ -546,29 +625,22 @@ QSparqlError QSparqlResult::lastError() const
 /*!
     \fn void QSparqlResult::dataReady(int totalRows)
 
-    This signal is emitted when a query has fetched data. The \a
-    totalRows is the row count of the data set after the new data has
-    arrived.
+    This signal is emitted when a query has fetched data. The \a totalRows is
+    the row count of the data set after the new data has arrived.
 */
 
 /*!
   \fn QSparqlResultRow QSparqlResult::current() const
 
-  Returns a QSparqlResultRow containing the binding values information for the
-  current query. If the query points to a valid row (isValid() returns
-  true), the result row is populated.  An empty
-  result row is returned when there is no result at the current position
+  Returns a QSparqlResultRow containing the binding values for the current
+  row. If the result points to a valid row (isValid() returns true), the result
+  row is populated. An empty result row is returned when there is no result at
+  the current position.
 
   To retrieve just the values from a query, value() should be used since
   its index-based lookup is faster. Use QSparqlResultRow::binding() to
   retrieve the value along with meta data, such as the data type URI
   or language tag for literals.
-
-  In the following example, a \c{SELECT * FROM} query is executed.
-  Since the order of the columns is not defined, QSparqlResultRow::indexOf()
-  is used to obtain the index of a column. FIXME: "select * from"?
-
-  \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 1
 
   \sa value() binding() pos() setPos()
 */

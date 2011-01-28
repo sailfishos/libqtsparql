@@ -245,5 +245,77 @@
 	<file>/home/user/.local/share/tracker/tracker-store.log</file>
       </get>
     </set>
+    <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
+      <pre_steps>
+	<step expected_result="0">
+          . /tmp/session_bus_address.user;
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl
+        </step>
+      </pre_steps>
+      <case name="test-query-contacts-sync" description="Executing a query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_contacts_sync
+        </step>
+      </case>
+      <case name="test-ask-contacts-sync" description="Executing an ASK query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync ask_contacts_sync
+        </step>
+      </case>
+      <case name="test-insert-and-delete-contact-sync" description="Executing an update">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync insert_and_delete_contact_sync ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
+      <case name="test-query-with-error-sync" description="Erroneous query">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_with_error_sync
+        </step>
+      </case>
+      <case name="test-iterating-result-sync" description="Iterating a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_sync
+        </step>
+      </case>
+      <case name="test-delete-partially-iterated-result-sync" description="Deleting a QSparqlResult">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync delete_partially_iterated_result
+        </step>
+      </case>
+      <case name="test-concurrent-queries-sync" description="Concurrent queries">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync concurrent_queries
+        </step>
+      </case>
+      <case name="test-result-type-bool-sync" description="Bool result type">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync result_type_bool
+        </step>
+      </case>
+      <case name="test-special-chars-sync" description="Special characters">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync special_chars ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
+      <post_steps>
+	<step expected_result="0">
+	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
+        </step>
+      </post_steps>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+      <get>
+	<file>/home/user/.local/share/tracker/tracker-store.log</file>
+      </get>
+    </set>
   </suite>
 </testdefinition>
