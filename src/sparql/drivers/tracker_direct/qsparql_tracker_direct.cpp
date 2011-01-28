@@ -686,7 +686,7 @@ bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate()
-    : dataReadyInterval(1), mutex(QMutex::Recursive)
+    : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive)
 {
 }
 
