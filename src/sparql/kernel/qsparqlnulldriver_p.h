@@ -75,7 +75,7 @@ public:
     inline QSparqlBinding binding(int) const { return QSparqlBinding(); }
     inline QVariant value(int) const { return QVariant(); }
     inline void waitForFinished() { }
-    inline bool isFinished() { return true; }
+    inline bool isFinished() const { return true; }
 protected:
     inline bool fetch(int) { return false; }
     inline bool isNull(int) const { return false; }
