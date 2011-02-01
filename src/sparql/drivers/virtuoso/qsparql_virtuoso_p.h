@@ -85,12 +85,15 @@ class QVirtuosoDriver;
 class QVirtuosoResult : public QSparqlResult
 {
 public:
-    QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p);
+    QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p,
+                    const QString& query, QSparqlQuery::StatementType type,
+                    const QString& prefixes);
     virtual ~QVirtuosoResult();
 
+    Q_INVOKABLE void startFetcher();
+    bool runQuery();
+
     QVariant handle() const;
-    void exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes);
-    bool exec();
 
     QSparqlBinding binding(int field) const;
     QVariant value(int field) const;
@@ -120,7 +123,6 @@ public:
     virtual ~QVirtuosoDriver();
     bool hasFeature(QSparqlConnection::Feature f) const;
     void close();
-    QVirtuosoResult *createResult() const;
     QVariant handle() const;
     bool open(const QSparqlConnectionOptions& options);
     QVirtuosoResult* exec(const QString& query, QSparqlQuery::StatementType type);
