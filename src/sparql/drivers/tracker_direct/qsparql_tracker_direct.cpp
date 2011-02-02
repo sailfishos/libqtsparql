@@ -241,7 +241,6 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 
     delete fetcher;
 
-    QMutexLocker resultLocker(&mutex);
     if (cursor != 0) {
         g_object_unref(cursor);
         cursor = 0;
@@ -380,7 +379,6 @@ void QTrackerDirectResult::cleanup()
 bool QTrackerDirectResult::fetchNextResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
-    QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -400,6 +398,8 @@ bool QTrackerDirectResult::fetchNextResult()
         terminate();
         return false;
     }
+
+    QMutexLocker resultLocker(&(d->mutex));
 
     QSparqlResultRow resultRow;
     gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
@@ -428,7 +428,6 @@ bool QTrackerDirectResult::fetchNextResult()
 bool QTrackerDirectResult::fetchBoolResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
-    QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -442,6 +441,8 @@ bool QTrackerDirectResult::fetchBoolResult()
         terminate();
         return false;
     }
+
+    QMutexLocker resultLocker(&(d->mutex));
 
     if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1)  {
         QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, 0, 0));

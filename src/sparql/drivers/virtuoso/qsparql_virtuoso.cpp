@@ -101,7 +101,7 @@ public:
     void run()
     {
         setTerminationEnabled(false);
-        if (result->exec()) {
+        if (result->runQuery()) {
             if (result->isTable()) {
                 while (result->fetchNextResult()) {
                     setTerminationEnabled(true);
@@ -145,7 +145,7 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp, QVirtuosoFetcherPrivate *f) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        resultColIdx(0), driverPrivate(dpp), fetcher(f),
+        resultColIdx(0), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
         mutex(QMutex::Recursive), isFinished(false)
     {
     }
@@ -184,6 +184,7 @@ public:
     int disconnectCount;
     QVirtuosoDriverPrivate *driverPrivate;
     QVirtuosoFetcherPrivate *fetcher;
+    bool fetcherStarted;
     // This mutex is for ensuring that only one thread at a time
     // is accessing the results array
     QMutex mutex;
@@ -282,11 +283,27 @@ static QSparqlError qMakeError(const QString& err, QSparqlError::ErrorType type,
 
 ////////////////////////////////////////////////////////////////////////////
 
-QVirtuosoResult::QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p)
+QVirtuosoResult::QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p,
+                                const QString& query, QSparqlQuery::StatementType type,
+                                const QString& prefixes)
 : QSparqlResult()
 {
+    setQuery(query);
+    setStatementType(type);
     d = new QVirtuosoResultPrivate(db, p, new QVirtuosoFetcherPrivate(this));
     d->disconnectCount = p->disconnectCount;
+    d->query = "SPARQL ";
+
+    // Note that NTriples output support depends on a patch from Ivan Mikhailov
+    // of OpenLink software. It should be in the next release (ie after 6.1.2)
+    if (isGraph())
+        d->query.append("define output:format \"NT\" ");
+
+    d->query.append(prefixes.toUtf8());
+    d->query.append(query.toUtf8());
+
+    setPos(QSparql::BeforeFirstRow);
+    d->bindingNames.clear();
 }
 
 QVirtuosoResult::~QVirtuosoResult()
@@ -307,32 +324,26 @@ QVirtuosoResult::~QVirtuosoResult()
 // the work is done here instead of Result::exec.
 QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
 {
-    QVirtuosoResult* res = createResult();
-    res->exec(query, type, prefixes());
+    QVirtuosoResult* res = new QVirtuosoResult(this, d, query, type, prefixes());
+
+    // Queue calling exec() on the result. This way the finished() and
+    // dataReady() signals won't be emitted before the user connects to
+    // them, and the result won't be in the "finished" state before the
+    // thread that calls this function has entered its event loop.
+    QMetaObject::invokeMethod(res, "startFetcher",  Qt::QueuedConnection);
     return res;
 }
 
-void QVirtuosoResult::exec(const QString& sparqlQuery, QSparqlQuery::StatementType type, const QString& prefixes)
+void QVirtuosoResult::startFetcher()
 {
-    setQuery(sparqlQuery);
-    setStatementType(type);
-
-    d->query = "SPARQL ";
-
-    // Note that NTriples output support depends on a patch from Ivan Mikhailov
-    // of OpenLink software. It should be in the next release (ie after 6.1.2)
-    if (isGraph())
-        d->query.append("define output:format \"NT\" ");
-
-    d->query.append(prefixes.toUtf8());
-    d->query.append(sparqlQuery.toUtf8());
-
-    setPos(QSparql::BeforeFirstRow);
-    d->bindingNames.clear();
-    d->fetcher->start();
+    QMutexLocker resultLocker(&(d->mutex));
+    if (!d->fetcherStarted) {
+        d->fetcherStarted = true;
+        d->fetcher->start();
+    }
 }
 
-bool QVirtuosoResult::exec()
+bool QVirtuosoResult::runQuery()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
@@ -822,11 +833,6 @@ void QVirtuosoDriver::cleanup()
             qSparqlWarning(QLatin1String("QVirtuosoDriver::cleanup: Unable to free environment handle"), d);
         d->hEnv = 0;
     }
-}
-
-QVirtuosoResult *QVirtuosoDriver::createResult() const
-{
-    return new QVirtuosoResult(this, d);
 }
 
 bool QVirtuosoDriver::beginTransaction()
