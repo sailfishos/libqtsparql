@@ -79,39 +79,66 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QVirtuosoResultPrivate;
+class QVirtuosoAsyncResultPrivate;
 class QVirtuosoDriverPrivate;
 class QVirtuosoDriver;
 
 class QVirtuosoResult : public QSparqlResult
 {
+    Q_OBJECT
 public:
     QVirtuosoResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p,
                     const QString& query, QSparqlQuery::StatementType type,
                     const QString& prefixes);
     virtual ~QVirtuosoResult();
 
-    Q_INVOKABLE void startFetcher();
-    bool runQuery();
-
     QVariant handle() const;
+    virtual bool runQuery();
 
+    bool next();
     QSparqlBinding binding(int field) const;
     QVariant value(int field) const;
-
-    int size() const;
     QSparqlResultRow current() const;
+    int size() const;
 
     void waitForFinished();
     bool isFinished() const;
 
+    bool hasFeature(QSparqlResult::Feature feature) const;
+    virtual void terminate() {}
 private:
+    QVirtuosoResultPrivate *d;
+};
+
+class QVirtuosoAsyncResult : public QVirtuosoResult
+{
+    Q_OBJECT
+    friend class QVirtuosoFetcherPrivate;
+public:
+    QVirtuosoAsyncResult(const QVirtuosoDriver * db, QVirtuosoDriverPrivate* p,
+                    const QString& query, QSparqlQuery::StatementType type,
+                    const QString& prefixes);
+    virtual ~QVirtuosoAsyncResult();
+
+    Q_INVOKABLE void startFetcher();
+    bool runQuery();
+
+    bool next();
+    QSparqlBinding binding(int field) const;
+    QVariant value(int field) const;
+    QSparqlResultRow current() const;
+    int size() const;
+
+    void waitForFinished();
+    bool isFinished() const;
+
+    bool hasFeature(QSparqlResult::Feature feature) const;
     void terminate();
+private:
     bool fetchNextResult();
     bool fetchBoolResult();
     bool fetchGraphResult();
-
-    QVirtuosoResultPrivate *d;
-    friend class QVirtuosoFetcherPrivate;
+    QVirtuosoAsyncResultPrivate *d;
 };
 
 class Q_EXPORT_SPARQLDRIVER_VIRTUOSO QVirtuosoDriver : public QSparqlDriver
@@ -125,7 +152,8 @@ public:
     void close();
     QVariant handle() const;
     bool open(const QSparqlConnectionOptions& options);
-    QVirtuosoResult* exec(const QString& query, QSparqlQuery::StatementType type);
+    QVirtuosoAsyncResult* exec(const QString& query, QSparqlQuery::StatementType type);
+    QVirtuosoResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
 
 protected:
     bool beginTransaction();
@@ -138,6 +166,7 @@ private:
     void cleanup();
     QVirtuosoDriverPrivate* d;
     friend class QVirtuosoResultPrivate;
+    friend class QVirtuosoAsyncResultPrivate;
 };
 
 QT_END_NAMESPACE
