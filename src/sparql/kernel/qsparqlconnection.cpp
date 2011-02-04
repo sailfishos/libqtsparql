@@ -449,11 +449,8 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
             result = d->driver->syncExec(queryText, query.type());
         }
         else {
-            // TODO: insert a wrapper here
-            result = new QSparqlNullResult();
-            result->setLastError(
-                QSparqlError(QLatin1String("SyncWrapper not implemented yet"),
-                             QSparqlError::ConnectionError));
+            result = d->driver->exec(queryText, query.type());
+            result->waitForFinished();
         }
     }
     result->setParent(this);
