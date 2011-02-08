@@ -49,12 +49,13 @@
 #include <qsparqlresultrow.h>
 #include <qsparqlconnection.h>
 
-#include <qcoreapplication.h>
-#include <qvariant.h>
-#include <qstringlist.h>
-#include <qvector.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qvariant.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qatomicint.h>
 
-#include <qdebug.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -158,12 +159,10 @@ public:
 
     void run()
     {
-        setTerminationEnabled(false);
         if (result->runQuery()) {
             if (result->isTable()) {
-                while (result->fetchNextResult()) {
-                    setTerminationEnabled(true);
-                    setTerminationEnabled(false);
+                while (!result->isFinished() && result->fetchNextResult()) {
+                    ;
                 }
             } else if (result->isBool()) {
                 result->fetchBoolResult();
@@ -171,7 +170,6 @@ public:
                 result->terminate();
             }
         }
-        setTerminationEnabled(true);
     }
 
 private:
@@ -206,7 +204,7 @@ public:
     TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
-    bool isFinished;
+    QAtomicInt isFinished;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -220,7 +218,7 @@ public:
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0), isFinished(false),
+  : cursor(0),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -233,9 +231,7 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
     // since the thread might lock the same mutex right after us, and we
     // couldn't terminate it then.
     if (fetcher->isRunning()) {
-        fetcher->terminate();
-        // This might (in theory) block forever. But the fetcher thread *should*
-        // enter a "termination enabled" point after fetching each row.
+        isFinished = 1;
         fetcher->wait();
     }
 
@@ -255,7 +251,7 @@ void QTrackerDirectResultPrivate::terminate()
         dataReady(results.count());
     }
 
-    isFinished = true;
+    isFinished = 1;
     q->emit finished();
     if (cursor != 0) {
         g_object_unref(cursor);
@@ -493,7 +489,7 @@ QVariant QTrackerDirectResult::value(int field) const
 
 void QTrackerDirectResult::waitForFinished()
 {
-    if (d->isFinished)
+    if (d->isFinished == 1)
         return;
 
     // We may have queued startFetcher, call it now.
@@ -504,7 +500,7 @@ void QTrackerDirectResult::waitForFinished()
 
 bool QTrackerDirectResult::isFinished() const
 {
-    return d->isFinished;
+    return d->isFinished == 1;
 }
 
 void QTrackerDirectResult::terminate()
