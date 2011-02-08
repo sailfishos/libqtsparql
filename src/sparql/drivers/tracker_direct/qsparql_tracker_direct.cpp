@@ -53,7 +53,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qatomicint.h>
+#include <QtCore/qatomic.h>
 
 #include <QtCore/qdebug.h>
 
@@ -127,9 +127,9 @@ void readBindingValue(TrackerSparqlCursor* cursor, int col, QSparqlBinding& bind
     {
         QByteArray value(tracker_sparql_cursor_get_string(cursor, col, 0));
         if (value == "1" || value.toLower() == "true")
-            binding.setValue(QString::fromLatin1("true"), *XSD::Boolean());
+            binding.setValue(QString::fromUtf8("true"), *XSD::Boolean());
         else
-            binding.setValue(QString::fromLatin1("false"), *XSD::Boolean());
+            binding.setValue(QString::fromUtf8("false"), *XSD::Boolean());
         break;
     }
     default:
@@ -336,7 +336,7 @@ bool QTrackerDirectResult::runQuery()
                                                         0,
                                                         &error );
         if (error != 0 || d->cursor == 0) {
-            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"),
+            QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
                            QSparqlError::StatementError,
                            error ? error->code : -1);
             setLastError(e);
@@ -353,7 +353,7 @@ bool QTrackerDirectResult::runQuery()
                                             0,
                                             &error );
         if (error != 0) {
-            QSparqlError e(QString::fromLatin1(error->message),
+            QSparqlError e(QString::fromUtf8(error->message),
                            QSparqlError::StatementError,
                            error->code);
             g_error_free(error);
@@ -380,7 +380,7 @@ bool QTrackerDirectResult::fetchNextResult()
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
     if (error != 0) {
-        QSparqlError e(QString::fromLatin1(error->message),
+        QSparqlError e(QString::fromUtf8(error->message),
                        QSparqlError::BackendError,
                        error->code);
         g_error_free(error);
@@ -428,7 +428,7 @@ bool QTrackerDirectResult::fetchBoolResult()
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
     if (error != 0) {
-        QSparqlError e(QString::fromLatin1(error->message),
+        QSparqlError e(QString::fromUtf8(error->message),
                        QSparqlError::BackendError,
                        error->code);
         g_error_free(error);
@@ -544,7 +544,7 @@ QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate()
 
 QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
 {
-    if (cursor)
+    if (cursor != 0)
         g_object_unref(cursor);
 }
 
@@ -569,7 +569,7 @@ bool QTrackerDirectSyncResult::next()
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
     if (error != 0) {
-        QSparqlError e(QString::fromLatin1(error->message),
+        QSparqlError e(QString::fromUtf8(error->message),
                        QSparqlError::BackendError,
                        error->code);
         g_error_free(error);
@@ -735,10 +735,11 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     GError *error = 0;
     d->connection = tracker_sparql_connection_get(0, &error);
     // maybe-TODO: Add the GCancellable
-    if (!d->connection) {
+    if (d->connection == 0) {
         qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
                     error ? error->message : "unknown error");
-        g_error_free(error);
+        if (error != 0)
+            g_error_free(error);
         return false;
     }
 
@@ -751,7 +752,10 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->mutex));
-    g_object_unref(d->connection);
+    if (d->connection != 0) {
+        g_object_unref(d->connection);
+        d->connection = 0;
+    }
 
     if (isOpen()) {
         setOpen(false);
@@ -772,11 +776,11 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
             0,
             &error);
         if (error != 0 || result->d->cursor == 0) {
-            QSparqlError e(QString::fromLatin1(error ? error->message : "unknown error"),
+            QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
                            QSparqlError::StatementError,
                            error ? error->code : -1);
             result->setLastError(e);
-            if (error)
+            if (error != 0)
                 g_error_free(error);
             qWarning() << "QTrackerDirectResult:" << lastError() << query;
         }
@@ -788,7 +792,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
                                          0,
                                          &error);
         if (error != 0) {
-            QSparqlError e(QString::fromLatin1(error->message),
+            QSparqlError e(QString::fromUtf8(error->message),
                            QSparqlError::StatementError,
                            error->code);
             g_error_free(error);
