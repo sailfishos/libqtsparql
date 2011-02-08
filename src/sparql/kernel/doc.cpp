@@ -124,6 +124,6 @@
     \section backendspecific Accessing backend-specific functionalities
 
     QtSparql doesn't offer backend-specific functionalities.  For that purpose,
-    there are separate add-on libraries, e.g., libqtsparql-tracker.
+    there are separate add-on libraries, e.g., libqtsparql-tracker-extensions.
 
 */
