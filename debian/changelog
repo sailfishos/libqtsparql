@@ -1,6 +1,6 @@
 libqtsparql (0.0.18~unreleased) unstable; urgency=low
 
-  *
+  * Don't create one QDBusConnection per thread; QDBus should be thread safe.
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Fri, 28 Jan 2011 13:11:48 +0200
 

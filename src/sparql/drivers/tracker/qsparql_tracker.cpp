@@ -90,7 +90,6 @@ class QTrackerDriverPrivate {
 public:
     QTrackerDriverPrivate();
     ~QTrackerDriverPrivate();
-    QDBusConnection connection;
     QDBusInterface* iface;
     bool doBatch; // true: call BatchSparqlUpdate on Tracker instead of
                   // SparqlUpdateBlank
@@ -121,80 +120,6 @@ QLatin1String service("org.freedesktop.Tracker1");
 QLatin1String basePath("/org/freedesktop/Tracker1");
 QLatin1String resourcesInterface("org.freedesktop.Tracker1.Resources");
 QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
-
-/*
-
-QDBusConnection and threading problems
-
-A QDBusConnection can only be used from one thread, see e.g.,
-http://bugreports.qt.nokia.com/browse/QTBUG-11413
-
-We'd like QSparqlConnection instances to share the QDBusConnection if they
-are on the same thread. We would also like the D-Bus connections to get closed
-when all the QSparqlConnection instances using them are destroyed.
-
-Approaches which use QObject::thread() as an ID fail: QObject::thread() returns
-the memory address of a QThread, and they get recycled when using a QThreadPool.
-
-Approaches which use QThreadStorage need to be robust enough to deal with the
-possibility that QSparqlConnection is itself put into a QThreadStorage. The
-destruction order of QThreadStorage instances is arbitrary.
-
-*/
-
-// ClosingDBusConnection is like QDBusConnection but it disconnects the D-Bus
-// connection when it is destroyed. It has a refcount for counting how many
-// objects are using it (in the current thread). When all objects are destoyed,
-// the ref count will go to 0, and dropConnection will destroy the
-// ClosingDBusConnection. The D-Bus connection is also disconnected then.
-class ClosingDBusConnection : public QDBusConnection
-{
-public:
-    ClosingDBusConnection(const QDBusConnection& c)
-        : QDBusConnection(c), refCount(0)
-        {
-        }
-    ~ClosingDBusConnection()
-        {
-            disconnectFromBus(name());
-        }
-    int refCount;
-};
-
-QThreadStorage<ClosingDBusConnection*> dbusTls;
-QAtomicInt connectionCounter = 0;
-
-QDBusConnection getConnection()
-{
-    // Create a separate D-Bus connection for each thread. Use
-    // ClosingDBusConnection so that the bus gets disconnected when the thread
-    // storage is deleted.
-    if (!dbusTls.hasLocalData()) {
-        QString id = QString::number(connectionCounter.fetchAndAddRelaxed(1))
-            .prepend(QString::fromLatin1("qtsparql-dbus-"));
-        dbusTls.setLocalData(new ClosingDBusConnection
-                             (QDBusConnection::connectToBus(QDBusConnection::SessionBus, id)));
-    }
-    ++(dbusTls.localData()->refCount);
-    return *dbusTls.localData();
-}
-
-void dropConnection()
-{
-    // Deal with a possibility that the QThreadStorages we use have already been
-    // destroyed; in this case, do nothing. The D-Bus connection has already
-    // been disconnected by ~ClosingDBusConnection.
-    if (!dbusTls.hasLocalData())
-        return;
-
-    ClosingDBusConnection* conn = dbusTls.localData();
-    --(conn->refCount);
-    if (conn->refCount == 0) {
-        dbusTls.setLocalData(0); // this deletes the connection
-        // If this thread needs to reconnect, a QDBusConnection with a different
-        // name will be created.
-    }
-}
 
 } // end of unnamed namespace
 
@@ -371,7 +296,7 @@ QSparqlResultRow QTrackerResult::current() const
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
-    : connection(QString::fromLatin1("")), iface(0),  doBatch(false)
+    : iface(0),  doBatch(false)
 {
 }
 
@@ -431,9 +356,9 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 
     if (isOpen())
         close();
-    d->connection = getConnection();
     d->iface = new QDBusInterface(service, resourcesPath,
-                                  resourcesInterface, d->connection);
+                                  resourcesInterface,
+                                  QDBusConnection::sessionBus());
 
     setOpen(true);
     setOpenError(false);
@@ -444,7 +369,6 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDriver::close()
 {
     if (isOpen()) {
-        dropConnection();
         delete d->iface;
         d->iface = 0;
         setOpen(false);
