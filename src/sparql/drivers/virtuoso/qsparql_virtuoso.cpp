@@ -54,6 +54,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qurl.h>
 
+#include <QtCore/QAtomicInt>
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 #include <QtCore/QThread>
@@ -100,12 +101,10 @@ public:
 
     void run()
     {
-        setTerminationEnabled(false);
         if (result->runQuery()) {
             if (result->isTable()) {
-                while (result->fetchNextResult()) {
-                    setTerminationEnabled(true);
-                    setTerminationEnabled(false);
+                while (!result->isFinished() && result->fetchNextResult()) {
+                    ;
                 }
             } else if (result->isBool()) {
                 result->fetchBoolResult();
@@ -115,7 +114,6 @@ public:
                 result->terminate();
             }
         }
-        setTerminationEnabled(true);
     }
 
 private:
@@ -145,8 +143,7 @@ class QVirtuosoResultPrivate
 public:
     QVirtuosoResultPrivate(const QVirtuosoDriver* d, QVirtuosoDriverPrivate *dpp) :
         driver(d), hstmt(0), numResultCols(0), hdesc(0),
-        resultColIdx(0), driverPrivate(dpp),
-        isFinished(false)
+        resultColIdx(0), driverPrivate(dpp)
     {
     }
 
@@ -167,7 +164,7 @@ public:
     int resultColIdx;
     int disconnectCount;
     QVirtuosoDriverPrivate *driverPrivate;
-    bool isFinished;
+    QAtomicInt isFinished;
 
     bool isStmtHandleValid() { return disconnectCount == driver->d->disconnectCount; }
     void updateStmtHandleState() { disconnectCount = driver->d->disconnectCount; }
@@ -185,12 +182,10 @@ public:
     ~QVirtuosoAsyncResultPrivate()
     {
         if (fetcher->isRunning()) {
-            fetcher->terminate();
-            if (!fetcher->wait(500)) {
-                qWarning() << "QVirtuosoResult: unable to terminate the result fetcher thread";
-                return;
-            }
+            isFinished = 1;
+            fetcher->wait();
         }
+
         delete fetcher;
     }
 
@@ -398,7 +393,7 @@ bool QVirtuosoResult::runQuery()
 
 void QVirtuosoAsyncResult::waitForFinished()
 {
-    if (d->isFinished)
+    if (d->isFinished == 1)
         return;
 
     d->fetcher->wait();
@@ -406,7 +401,7 @@ void QVirtuosoAsyncResult::waitForFinished()
 
 bool QVirtuosoAsyncResult::isFinished() const
 {
-    return d->isFinished;
+    return d->isFinished == 1;
 }
 
 void QVirtuosoAsyncResult::terminate()
@@ -417,7 +412,7 @@ void QVirtuosoAsyncResult::terminate()
         emit dataReady(d->results.count());
     }
 
-    d->isFinished = true;
+    d->isFinished = 1;
     emit finished();
 }
 
@@ -737,7 +732,7 @@ QVariant QVirtuosoResult::value(int i) const
 
 bool QVirtuosoResult::isFinished() const
 {
-    return d->isFinished;
+    return d->isFinished == 1;
 }
 
 bool QVirtuosoResult::hasFeature(QSparqlResult::Feature feature) const
