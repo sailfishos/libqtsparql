@@ -205,6 +205,7 @@ public:
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
     QAtomicInt isFinished;
+    bool resultAlive; // whether the corresponding Result object is still alive
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -215,10 +216,38 @@ public:
     QMutex mutex;
 };
 
+static void
+async_update_callback( GObject *source_object,
+                       GAsyncResult *result,
+                       gpointer user_data)
+{
+    Q_UNUSED(source_object);
+    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
+    if (!data->resultAlive) {
+        // The user has deleted the Result object before this callback was
+        // called. Just delete the ResultPrivate here and do nothing.
+        delete data;
+        return;
+    }
+    GError *error = 0;
+    tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
+
+    if (error != 0) {
+        QSparqlError e(QString::fromUtf8(error->message));
+        e.setType(QSparqlError::StatementError);
+        data->setLastError(e);
+        g_error_free(error);
+        data->terminate();
+        return;
+    }
+
+    data->terminate();
+}
+
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0),
+  : cursor(0), resultAlive(true),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -287,31 +316,48 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    delete d;
+    if (!d->isFinished) {
+        // We're deleting the Result before the async data retrieval has
+        // finished. There is a pending async callback that will be called at
+        // some point, and that will have our ResultPrivate as user_data. Don't
+        // delete the ResultPrivate here, but just mark that we're no longer
+        // alive. The callback will then delete the ResultPrivate.
+        d->resultAlive = false;
+    }
+    else {
+        delete d;
+    }
 }
 
 QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQuery::StatementType type)
 {
     QTrackerDirectResult* res = new QTrackerDirectResult(d, query, type);
 
-    if (type != QSparqlQuery::AskStatement
-        && type != QSparqlQuery::SelectStatement
-        && type != QSparqlQuery::InsertStatement
-        && type != QSparqlQuery::DeleteStatement)
+    if (    type == QSparqlQuery::AskStatement
+            || type == QSparqlQuery::SelectStatement)
     {
+        // Queue calling exec() on the result. This way the finished() and
+        // dataReady() signals won't be emitted before the user connects to
+        // them, and the result won't be in the "finished" state before the
+        // thread that calls this function has entered its event loop.
+        QMetaObject::invokeMethod(res, "startFetcher",  Qt::QueuedConnection);
+    } else if ( type == QSparqlQuery::InsertStatement
+                || type == QSparqlQuery::DeleteStatement)
+    {
+        tracker_sparql_connection_update_async( d->connection,
+                                                query.toUtf8().constData(),
+                                                0,
+                                                0,
+                                                async_update_callback,
+                                                res->d);
+    } else {
         setLastError(QSparqlError(
                               QLatin1String("Unsupported statement type"),
                               QSparqlError::BackendError));
         qWarning() << "QTrackerDirectResult:" << lastError() << query;
         res->terminate();
     }
-    else {
-        // Queue calling exec() on the result. This way the finished() and
-        // dataReady() signals won't be emitted before the user connects to
-        // them, and the result won't be in the "finished" state before the
-        // thread that calls this function has entered its event loop.
-        QMetaObject::invokeMethod(res, "startFetcher",  Qt::QueuedConnection);
-    }
+
     return res;
 }
 
@@ -330,38 +376,20 @@ bool QTrackerDirectResult::runQuery()
     QMutexLocker resultLocker(&(d->mutex));
 
     GError * error = 0;
-    if (isTable() || isBool()) {
-        d->cursor = tracker_sparql_connection_query(    d->driverPrivate->connection,
-                                                        query().toUtf8().constData(),
-                                                        0,
-                                                        &error );
-        if (error != 0 || d->cursor == 0) {
-            QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
-                           QSparqlError::StatementError,
-                           error ? error->code : -1);
-            setLastError(e);
-            if (error)
-                g_error_free(error);
-            qWarning() << "QTrackerDirectResult:" << lastError() << query();
-            terminate();
-            return false;
-        }
-    } else {
-        tracker_sparql_connection_update(   d->driverPrivate->connection,
-                                            query().toUtf8().constData(),
-                                            0,
-                                            0,
-                                            &error );
-        if (error != 0) {
-            QSparqlError e(QString::fromUtf8(error->message),
-                           QSparqlError::StatementError,
-                           error->code);
+    d->cursor = tracker_sparql_connection_query(    d->driverPrivate->connection,
+                                                    query().toUtf8().constData(),
+                                                    0,
+                                                    &error );
+    if (error != 0 || d->cursor == 0) {
+        QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
+                        QSparqlError::StatementError,
+                        error ? error->code : -1);
+        setLastError(e);
+        if (error)
             g_error_free(error);
-            setLastError(e);
-            qWarning() << "QTrackerDirectResult:" << lastError() << query();
-            terminate();
-            return false;
-        }
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        terminate();
+        return false;
     }
 
     return true;
