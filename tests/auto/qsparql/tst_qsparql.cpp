@@ -200,6 +200,7 @@ public slots:
 private slots:
     void mock_creation();
     void wrong_creation();
+    void iterate_error_result();
     void open_fails();
     void connection_scope();
     void drivers_list();
@@ -259,6 +260,16 @@ void tst_QSparql::wrong_creation()
     QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
     QVERIFY(res->hasError());
     QCOMPARE(res->lastError().type(), QSparqlError::ConnectionError);
+    delete res;
+}
+
+void tst_QSparql::iterate_error_result()
+{
+    QSparqlConnection conn("TOTALLYNOTTHERE");
+    QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
+    QVERIFY(res->hasError());
+    QVERIFY(!res->next());
+    delete res;
 }
 
 void tst_QSparql::open_fails()
