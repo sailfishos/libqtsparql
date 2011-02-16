@@ -339,6 +339,9 @@ bool QSparqlResult::next()
 
     bool b = false;
     int s = size();
+    if (s < 0)
+        return false;
+
     switch (pos()) {
     case QSparql::BeforeFirstRow:
         // special case: empty results
