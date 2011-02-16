@@ -51,6 +51,8 @@
 #include <qvariant.h>
 #include <qstringlist.h>
 #include <qvector.h>
+#include <qstring.h>
+#include <qregexp.h>
 
 #include <qdebug.h>
 
@@ -86,6 +88,19 @@ class QTrackerDriver;
 
 QT_BEGIN_NAMESPACE
 
+// This enum is defined in tracker-sparql.h, but copy it here for now
+// to avoid a dependency on that header.
+typedef enum  {
+    TRACKER_SPARQL_ERROR_PARSE,
+    TRACKER_SPARQL_ERROR_UNKNOWN_CLASS,
+    TRACKER_SPARQL_ERROR_UNKNOWN_PROPERTY,
+    TRACKER_SPARQL_ERROR_TYPE,
+    TRACKER_SPARQL_ERROR_CONSTRAINT,
+    TRACKER_SPARQL_ERROR_NO_SPACE,
+    TRACKER_SPARQL_ERROR_INTERNAL,
+    TRACKER_SPARQL_ERROR_UNSUPPORTED
+} TrackerSparqlError;
+
 class QTrackerDriverPrivate {
 public:
     QTrackerDriverPrivate();
@@ -106,6 +121,8 @@ public:
     QVector<QStringList> data;
     QSparqlQuery::StatementType type;
     void setCall(QDBusPendingCall& call);
+    static TrackerSparqlError errorNameToCode(const QString& name);
+    static QSparqlError::ErrorType errorCodeToType(TrackerSparqlError code);
 
 private slots:
     void onDBusCallFinished();
@@ -142,21 +159,72 @@ QTrackerResultPrivate::~QTrackerResultPrivate()
     delete watcher;
 }
 
+TrackerSparqlError QTrackerResultPrivate::errorNameToCode(const QString& name)
+{
+    if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.Parse")) {
+        return TRACKER_SPARQL_ERROR_PARSE;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.UnknownClass")) {
+        return TRACKER_SPARQL_ERROR_UNKNOWN_CLASS;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.UnknownProperty")) {
+        return TRACKER_SPARQL_ERROR_UNKNOWN_PROPERTY;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.Type")) {
+        return TRACKER_SPARQL_ERROR_TYPE;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.Constraint")) {
+        return TRACKER_SPARQL_ERROR_CONSTRAINT;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.NoSpace")) {
+        return TRACKER_SPARQL_ERROR_NO_SPACE;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.Internal")) {
+        return TRACKER_SPARQL_ERROR_INTERNAL;
+    } else if (name == QLatin1String("org.freedesktop.Tracker1.SparqlError.Unsupported")) {
+        return TRACKER_SPARQL_ERROR_UNSUPPORTED;
+    } else {
+        return static_cast<TrackerSparqlError>(-1);
+    }
+}
+
+QSparqlError::ErrorType QTrackerResultPrivate::errorCodeToType(TrackerSparqlError code)
+{
+    switch (code) {
+    case TRACKER_SPARQL_ERROR_PARSE:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_UNKNOWN_CLASS:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_UNKNOWN_PROPERTY:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_TYPE:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_CONSTRAINT:
+        return QSparqlError::ConnectionError;
+    case TRACKER_SPARQL_ERROR_NO_SPACE:
+        return QSparqlError::BackendError;
+    case TRACKER_SPARQL_ERROR_INTERNAL:
+        return QSparqlError::BackendError;
+    case TRACKER_SPARQL_ERROR_UNSUPPORTED:
+        return QSparqlError::BackendError;
+    default:
+        return QSparqlError::BackendError;
+    }
+}
+
 void QTrackerResultPrivate::onDBusCallFinished()
 {
     if (watcher->isError()) {
         qWarning() << "Tracker driver error:" << watcher->error().message();
         qWarning() << "The query was" << q->query();
 
-        QSparqlError error(watcher->error().message());
+        QString msg = watcher->error().message();
+        // Remove any dbus version string, such as "1.1: ", from the front of the message
+        msg.replace(QRegExp(QString::fromLatin1("^\\d+\\.\\d+: ")), QLatin1String(""));
+        QSparqlError error(msg);
+        TrackerSparqlError code = errorNameToCode(watcher->error().name());
+        error.setNumber(code);
         if (watcher->error().type() == QDBusError::Other) {
-            error.setType(QSparqlError::BackendError);
-        }
-        else {
+            error.setType(errorCodeToType(code));
+        } else {
             // Error from D-Bus
             error.setType(QSparqlError::ConnectionError);
         }
-        error.setNumber((int)watcher->error().type());
+
         q->setLastError(error);
         emit q->finished();
         return;
