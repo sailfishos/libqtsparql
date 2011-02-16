@@ -206,6 +206,7 @@ public:
     QVector<QSparqlResultRow> results;
     QAtomicInt isFinished;
     bool resultAlive; // whether the corresponding Result object is still alive
+    QEventLoop *loop;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -247,7 +248,7 @@ async_update_callback( GObject *source_object,
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0), resultAlive(true),
+  : cursor(0), resultAlive(true), loop(0),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -286,6 +287,9 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
+
+    if (loop != 0)
+        loop->exit();
 }
 
 void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
@@ -520,10 +524,16 @@ void QTrackerDirectResult::waitForFinished()
     if (d->isFinished == 1)
         return;
 
-    // We may have queued startFetcher, call it now.
-    startFetcher();
-
-    d->fetcher->wait();
+    if (isTable() || isBool()) {
+        // We may have queued startFetcher, call it now.
+        startFetcher();
+        d->fetcher->wait();
+    } else {
+        QEventLoop loop;
+        d->loop = &loop;
+        loop.exec();
+        d->loop = 0;
+    }
 }
 
 bool QTrackerDirectResult::isFinished() const
