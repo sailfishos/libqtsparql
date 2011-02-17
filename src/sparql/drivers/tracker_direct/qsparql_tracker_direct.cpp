@@ -148,6 +148,30 @@ QVariant readValue(TrackerSparqlCursor* cursor, int col)
 
 }
 
+static QSparqlError::ErrorType errorCodeToType(gint code)
+{
+    switch (static_cast<TrackerSparqlError>(code)) {
+    case TRACKER_SPARQL_ERROR_PARSE:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_UNKNOWN_CLASS:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_UNKNOWN_PROPERTY:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_TYPE:
+        return QSparqlError::StatementError;
+    case TRACKER_SPARQL_ERROR_CONSTRAINT:
+        return QSparqlError::ConnectionError;
+    case TRACKER_SPARQL_ERROR_NO_SPACE:
+        return QSparqlError::BackendError;
+    case TRACKER_SPARQL_ERROR_INTERNAL:
+        return QSparqlError::BackendError;
+    case TRACKER_SPARQL_ERROR_UNSUPPORTED:
+        return QSparqlError::BackendError;
+    default:
+        return QSparqlError::BackendError;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // FIXME: refactor QTrackerDirectResult to use QTrackerDirectSyncResult +
 // sync->async wrapper.
@@ -235,7 +259,8 @@ async_update_callback( GObject *source_object,
 
     if (error != 0) {
         QSparqlError e(QString::fromUtf8(error->message));
-        e.setType(QSparqlError::StatementError);
+        e.setType(errorCodeToType(error->code));
+        e.setNumber(error->code);
         data->setLastError(e);
         g_error_free(error);
         data->terminate();
@@ -413,7 +438,7 @@ bool QTrackerDirectResult::fetchNextResult()
 
     if (error != 0) {
         QSparqlError e(QString::fromUtf8(error->message),
-                       QSparqlError::BackendError,
+                       errorCodeToType(error->code),
                        error->code);
         g_error_free(error);
         setLastError(e);
@@ -461,7 +486,7 @@ bool QTrackerDirectResult::fetchBoolResult()
     tracker_sparql_cursor_next(d->cursor, 0, &error);
     if (error != 0) {
         QSparqlError e(QString::fromUtf8(error->message),
-                       QSparqlError::BackendError,
+                       errorCodeToType(error->code),
                        error->code);
         g_error_free(error);
         setLastError(e);
@@ -608,7 +633,7 @@ bool QTrackerDirectSyncResult::next()
 
     if (error != 0) {
         QSparqlError e(QString::fromUtf8(error->message),
-                       QSparqlError::BackendError,
+                       errorCodeToType(error->code),
                        error->code);
         g_error_free(error);
         setLastError(e);
@@ -831,7 +856,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
                                          &error);
         if (error != 0) {
             QSparqlError e(QString::fromUtf8(error->message),
-                           QSparqlError::StatementError,
+                           errorCodeToType(error->code),
                            error->code);
             g_error_free(error);
             setLastError(e);
