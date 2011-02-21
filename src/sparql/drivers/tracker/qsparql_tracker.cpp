@@ -212,16 +212,14 @@ void QTrackerResultPrivate::onDBusCallFinished()
         qWarning() << "Tracker driver error:" << watcher->error().message();
         qWarning() << "The query was" << q->query();
 
-        QString msg = watcher->error().message();
-        // Remove any dbus version string, such as "1.1: ", from the front of the message
-        msg.replace(QRegExp(QString::fromLatin1("^\\d+\\.\\d+: ")), QLatin1String(""));
-        QSparqlError error(msg);
-        TrackerSparqlError code = errorNameToCode(watcher->error().name());
-        error.setNumber(code);
+        QSparqlError error(watcher->error().message());
         if (watcher->error().type() == QDBusError::Other) {
+            TrackerSparqlError code = errorNameToCode(watcher->error().name());
+            error.setNumber(code);
             error.setType(errorCodeToType(code));
         } else {
             // Error from D-Bus
+            error.setNumber((int)watcher->error().type());
             error.setType(QSparqlError::ConnectionError);
         }
 
