@@ -161,10 +161,6 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
     data before showing it to the user, and how to create a
     read-write model based on QSparqlQueryModel.
 
-    If the connection doesn't return the amount of selected rows in
-    a query, the model will fetch rows incrementally.
-    See fetchMore() for more information.
-
     \sa QSparqlQuery,
         {Model/View Programming}, {Query Model Example}
 */

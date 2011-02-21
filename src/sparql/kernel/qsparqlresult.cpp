@@ -92,7 +92,6 @@ public:
     - previous()
     - first()
     - last()
-    - seek()
 
     Retrieving the data is performed with the following functions:
     - current()
@@ -240,7 +239,7 @@ void QSparqlResult::setBoolValue(bool v)
     function returns QSparql::BeforeFirstRow or
     QSparql::AfterLastRow, which are special negative values.
 
-    \sa previous() next() first() last() seek()
+    \sa previous() next() first() last()
 */
 
 int QSparqlResult::pos() const
