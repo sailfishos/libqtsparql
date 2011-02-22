@@ -596,6 +596,9 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     r = conn.exec(del);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    delete r;
 }
 
 void tst_QSparqlTrackerDirect::result_type_bool()
