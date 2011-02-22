@@ -229,7 +229,7 @@ public:
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
     QAtomicInt isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
+    GCancellable *updateCancellable;
     QEventLoop *loop;
 
     QTrackerDirectResult* q;
@@ -248,12 +248,6 @@ async_update_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
-    if (!data->resultAlive) {
-        // The user has deleted the Result object before this callback was
-        // called. Just delete the ResultPrivate here and do nothing.
-        delete data;
-        return;
-    }
     GError *error = 0;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
@@ -273,7 +267,7 @@ async_update_callback( GObject *source_object,
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0), resultAlive(true), loop(0),
+  : cursor(0), updateCancellable(0), loop(0),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -281,15 +275,6 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
-    // The fetcher thread also accesses "cursor", so, first terminate the
-    // thread, and only after that unref the cursor. Don't lock the mutex here,
-    // since the thread might lock the same mutex right after us, and we
-    // couldn't terminate it then.
-    if (fetcher->isRunning()) {
-        isFinished = 1;
-        fetcher->wait();
-    }
-
     delete fetcher;
 
     if (cursor != 0) {
@@ -345,17 +330,18 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (!d->isFinished) {
-        // We're deleting the Result before the async data retrieval has
-        // finished. There is a pending async callback that will be called at
-        // some point, and that will have our ResultPrivate as user_data. Don't
-        // delete the ResultPrivate here, but just mark that we're no longer
-        // alive. The callback will then delete the ResultPrivate.
-        d->resultAlive = false;
+    if (d->fetcher->isRunning()) {
+        d->isFinished = 1;
+        d->fetcher->wait();
     }
-    else {
-        delete d;
+    
+    if (d->updateCancellable != 0) {
+        g_cancellable_cancel(d->updateCancellable);
+        g_object_unref(d->updateCancellable);
+        d->updateCancellable = 0;
     }
+
+    delete d;
 }
 
 QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQuery::StatementType type)
@@ -373,10 +359,11 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQu
     } else if ( type == QSparqlQuery::InsertStatement
                 || type == QSparqlQuery::DeleteStatement)
     {
+        res->d->updateCancellable = g_cancellable_new();
         tracker_sparql_connection_update_async( d->connection,
                                                 query.toUtf8().constData(),
                                                 0,
-                                                0,
+                                                res->d->updateCancellable,
                                                 async_update_callback,
                                                 res->d);
     } else {
