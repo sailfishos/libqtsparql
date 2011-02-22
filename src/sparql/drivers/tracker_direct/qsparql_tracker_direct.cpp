@@ -229,7 +229,7 @@ public:
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
     QAtomicInt isFinished;
-    GCancellable *updateCancellable;
+    bool resultAlive; // whether the corresponding Result object is still alive
     QEventLoop *loop;
 
     QTrackerDirectResult* q;
@@ -248,6 +248,13 @@ async_update_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
+    if (!data->resultAlive) {
+        // The user has deleted the Result object before this callback was
+        // called. Just delete the ResultPrivate here and do nothing.
+        delete data;
+        return;
+    }
+
     GError *error = 0;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
@@ -267,7 +274,7 @@ async_update_callback( GObject *source_object,
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0), updateCancellable(0), loop(0),
+  : cursor(0), resultAlive(true), loop(0),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -330,15 +337,21 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (d->fetcher->isRunning()) {
-        d->isFinished = 1;
-        d->fetcher->wait();
-    }
-    
-    if (d->updateCancellable != 0) {
-        g_cancellable_cancel(d->updateCancellable);
-        g_object_unref(d->updateCancellable);
-        d->updateCancellable = 0;
+    if (isTable() || isBool()) {
+        if (d->fetcher->isRunning()) {
+            d->isFinished = 1;
+            d->fetcher->wait();
+        }
+    } else {
+        if (!d->isFinished) {
+            // We're deleting the Result before the async update has
+            // finished. There is a pending async callback that will be called at
+            // some point, and that will have our ResultPrivate as user_data. Don't
+            // delete the ResultPrivate here, but just mark that we're no longer
+            // alive. The callback will then delete the ResultPrivate.
+            d->resultAlive = false;
+            return;
+        }
     }
 
     delete d;
@@ -359,11 +372,10 @@ QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQu
     } else if ( type == QSparqlQuery::InsertStatement
                 || type == QSparqlQuery::DeleteStatement)
     {
-        res->d->updateCancellable = g_cancellable_new();
         tracker_sparql_connection_update_async( d->connection,
                                                 query.toUtf8().constData(),
                                                 0,
-                                                res->d->updateCancellable,
+                                                0,
                                                 async_update_callback,
                                                 res->d);
     } else {
