@@ -1,4 +1,8 @@
-/****************************************************************************
+/****************************************************************************/
+/**
+** @copyright Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+**
+** @license Commercial Qt/LGPL 2.1 with Nokia exception/GPL 3.0
 **
 ** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
