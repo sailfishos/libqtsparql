@@ -588,6 +588,14 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     QCOMPARE(r->hasError(), false);
     delete r;
     QTest::qWait(3000);
+
+    // Delete the uri
+    QSparqlQuery del("delete { <addeduri001> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r = conn.exec(del);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
 }
 
 void tst_QSparqlTrackerDirect::result_type_bool()
@@ -649,7 +657,7 @@ void tst_QSparqlTrackerDirect::concurrent_queries()
 
     r1->waitForFinished();
     r2->waitForFinished();
-
+    
     QCOMPARE(r1->hasError(), false);
     QCOMPARE(r1->size(), 3);
     delete r1;
