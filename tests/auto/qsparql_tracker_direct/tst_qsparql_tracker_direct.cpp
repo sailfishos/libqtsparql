@@ -75,7 +75,8 @@ private slots:
     void delete_unfinished_result();
     void delete_partially_iterated_result();
     void delete_nearly_finished_result();
-
+    void cancel_insert_result();
+    
     void concurrent_queries();
     void concurrent_queries_2();
 
@@ -571,6 +572,22 @@ void tst_QSparqlTrackerDirect::delete_nearly_finished_result()
     // doesn't always crash).
     QTest::qWait(3000);
 
+}
+
+void tst_QSparqlTrackerDirect::cancel_insert_result()
+{
+    // This test will leave unclean test data in tracker if it crashes.
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname001\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn.exec(add);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    delete r;
+    QTest::qWait(3000);
 }
 
 void tst_QSparqlTrackerDirect::result_type_bool()
