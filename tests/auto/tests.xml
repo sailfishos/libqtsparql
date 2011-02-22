@@ -149,6 +149,14 @@
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_nearly_finished_result
         </step>
       </case>
+      <case name="test-cancel-insert-result" description="Canclling an INSERT">
+        <step expected_result="0">
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct cancel_insert_result ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
+	  exit $i )
+        </step>
+      </case>
       <case name="test-concurrent-queries" description="Concurrent queries">
         <step expected_result="0">
 	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries
