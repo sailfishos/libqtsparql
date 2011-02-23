@@ -1,6 +1,11 @@
 libqtsparql (0.0.18~unreleased) unstable; urgency=low
 
-  * Don't create one QDBusConnection per thread; QDBus should be thread safe.
+  * Tracker driver: Don't create one QDBusConnection per thread.
+  * Fixes: NB#222258
+  * Fixes: NB#199361
+  * Virtuoso driver: syncExec support.
+  * Tracker direct driver: run inserts + deletes with async libtracker-sparql.
+  * Small static code analysis fixes.
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Fri, 28 Jan 2011 13:11:48 +0200
 
