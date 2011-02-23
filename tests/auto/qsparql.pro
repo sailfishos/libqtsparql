@@ -17,7 +17,7 @@ SUBDIRS = \
 contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 
 check.CONFIG = recursive
-check.recurse = qsparql qsparqlquery qsparqlbinding
+check.recurse = qsparql qsparqlquery qsparqlbinding qsparql_tracker qsparql_tracker_direct qsparql_tracker_direct_sync
 
 QMAKE_EXTRA_TARGETS += check
 
