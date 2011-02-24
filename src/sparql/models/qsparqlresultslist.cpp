@@ -41,6 +41,8 @@
 
 #include <QtCore/QDebug>
 
+#include <QtSparql/qsparqlerror.h>
+
 #include "qsparqlresultslist_p.h"
 
 /*!
@@ -54,7 +56,7 @@ class QSparqlResultsListPrivate
 {
 public:
     QSparqlResultsListPrivate(QSparqlResultsList* _q) :
-        q(_q), connection(0), result(0), options(0), lastRowCount(0)
+        q(_q), connection(0), result(0), options(0), lastRowCount(0), status(QSparqlResultsList::Null)
     {
     }
 
@@ -64,6 +66,7 @@ public:
     QString query;
     QSparqlConnectionOptionsWrapper *options;
     int lastRowCount;
+    QSparqlResultsList::Status status;
 };
 
 QSparqlResultsList::QSparqlResultsList(QObject *parent) :
@@ -116,6 +119,13 @@ void QSparqlResultsList::reload()
 
     d->connection = new QSparqlConnection(d->options->driverName(), d->options->options());
     d->result = d->connection->exec(QSparqlQuery(d->query));
+
+    if (d->result->hasError())
+        d->status = Error;
+    else
+        d->status = Loading;
+    emit statusChanged(d->status);
+
     connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
     connect(d->result, SIGNAL(finished()), this, SLOT(queryFinished()));
     connect(d->result, SIGNAL(dataReady(int)), this, SLOT(queryData(int)));
@@ -147,11 +157,20 @@ void QSparqlResultsList::queryData(int rowCount)
 
     d->lastRowCount = rowCount;
     QAbstractItemModel::endInsertRows();
+    emit countChanged();
 }
 
 void QSparqlResultsList::queryFinished()
 {
     reset();
+    
+    if (d->result->hasError())
+        d->status = Error;
+    else
+        d->status = Ready;
+
+    emit statusChanged(d->status);
+    emit countChanged();
 }
 
 QSparqlConnectionOptionsWrapper* QSparqlResultsList::options() const
@@ -163,6 +182,7 @@ void QSparqlResultsList::setOptions(QSparqlConnectionOptionsWrapper *options)
 {
     d->options = options;
     reload();
+    emit optionsChanged();
 }
 
 QString QSparqlResultsList::query() const
@@ -170,9 +190,29 @@ QString QSparqlResultsList::query() const
     return d->query;
 }
 
-void
-QSparqlResultsList::setQuery(const QString &query)
+void QSparqlResultsList::setQuery(const QString &query)
 {
-    d->query = query;
-    reload();
+    if (d->query != query) {
+        d->query = query;
+        reload();
+        emit queryChanged();
+    }
+}
+
+int QSparqlResultsList::count() const
+{
+    return d->result == 0 ? 0 : d->result->size();
+}
+
+QSparqlResultsList::Status QSparqlResultsList::status() const
+{
+    return d->status;
+}
+
+QString QSparqlResultsList::errorString() const
+{
+    if (d->result == 0 || !d->result->hasError())
+        return QString();
+    
+    return d->result->lastError().message();
 }

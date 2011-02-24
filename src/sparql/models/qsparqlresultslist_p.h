@@ -42,7 +42,9 @@
 #ifndef QSPARQLRESULTSLIST_H
 #define QSPARQLRESULTSLIST_H
 
-#include <QAbstractListModel>
+#include <QtCore/QAbstractListModel>
+
+#include <QtScript/qscriptvalue.h>
 
 #include <QtSparql/QSparqlQuery>
 #include <QtSparql/QSparqlResult>
@@ -63,14 +65,16 @@ class QSparqlResultsListPrivate;
 class QSparqlResultsList : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(QSparqlConnectionOptionsWrapper * options READ options WRITE setOptions)
-    Q_PROPERTY(QString query READ query WRITE setQuery)
+    Q_ENUMS(Status)
+    Q_PROPERTY(QSparqlConnectionOptionsWrapper * options READ options WRITE setOptions NOTIFY optionsChanged)
+    Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_CLASSINFO("DefaultProperty", "query")
+
 public:
     QSparqlResultsList(QObject *parent = 0);
     ~QSparqlResultsList();
-
-    void reload();
 
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent) const;
@@ -81,10 +85,24 @@ public:
     QString query() const;
     void setQuery(const QString &query);
 
+    int count() const;
+
+    enum Status { Null, Ready, Loading, Error };
+    Status status() const;
+
+    Q_INVOKABLE QString errorString() const;
+    
+public Q_SLOTS:
+    void reload();
+
 Q_SIGNALS:
     void finished();
+    void statusChanged(QSparqlResultsList::Status);
+    void optionsChanged();
+    void queryChanged();
+    void countChanged();
 
-private slots:
+private Q_SLOTS:
     void queryData(int totalResults);
     void queryFinished();
 
