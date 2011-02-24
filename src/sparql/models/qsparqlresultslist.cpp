@@ -79,6 +79,9 @@ QSparqlResultsList::~QSparqlResultsList()
 
 int QSparqlResultsList::rowCount(const QModelIndex &) const
 {
+    if (d->result == 0)
+        return 0;
+
     return d->result->size();
 }
 
