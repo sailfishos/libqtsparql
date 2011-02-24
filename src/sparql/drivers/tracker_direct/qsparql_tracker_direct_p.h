@@ -93,6 +93,9 @@ public:
 protected:
     void cleanup();
 
+private Q_SLOTS:
+    void exec();
+
 private:
     void terminate();
     bool fetchNextResult();
@@ -142,7 +145,12 @@ public:
                          QSparqlQuery::StatementType type);
     QSparqlResult* syncExec(const QString& query,
                             QSparqlQuery::StatementType type);
+
+Q_SIGNALS:
+    void opened();
+
 private:
+    friend class QTrackerDirectDriverPrivate;
     QTrackerDirectDriverPrivate* d;
 };
 

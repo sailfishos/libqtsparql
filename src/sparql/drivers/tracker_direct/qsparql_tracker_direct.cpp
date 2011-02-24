@@ -202,8 +202,11 @@ private:
 
 class QTrackerDirectDriverPrivate {
 public:
-    QTrackerDirectDriverPrivate();
+    QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver);
     ~QTrackerDirectDriverPrivate();
+
+    void setOpen(bool open);
+    void opened();
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;
@@ -212,6 +215,9 @@ public:
     // probably isn't needed as a TrackerSparqlConnection is
     // already thread safe.
     QMutex mutex;
+    QTrackerDirectDriver *driver;
+    bool connectionOpen;
+    GCancellable *openCancellable;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -343,7 +349,7 @@ QTrackerDirectResult::~QTrackerDirectResult()
             d->fetcher->wait();
         }
     } else {
-        if (!d->isFinished) {
+        if (d->isFinished == 0) {
             // We're deleting the Result before the async update has
             // finished. There is a pending async callback that will be called at
             // some point, and that will have our ResultPrivate as user_data. Don't
@@ -357,36 +363,33 @@ QTrackerDirectResult::~QTrackerDirectResult()
     delete d;
 }
 
-QTrackerDirectResult* QTrackerDirectDriver::exec(const QString& query, QSparqlQuery::StatementType type)
+void QTrackerDirectResult::exec()
 {
-    QTrackerDirectResult* res = new QTrackerDirectResult(d, query, type);
+    if (!d->driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(QLatin1String("Connection not open"),
+                                          QSparqlError::ConnectionError));
+        d->terminate();
+        return;
+    }
 
-    if (    type == QSparqlQuery::AskStatement
-            || type == QSparqlQuery::SelectStatement)
-    {
+    if (isBool() || isTable()) {
         // Queue calling exec() on the result. This way the finished() and
         // dataReady() signals won't be emitted before the user connects to
         // them, and the result won't be in the "finished" state before the
         // thread that calls this function has entered its event loop.
-        QMetaObject::invokeMethod(res, "startFetcher",  Qt::QueuedConnection);
-    } else if ( type == QSparqlQuery::InsertStatement
-                || type == QSparqlQuery::DeleteStatement)
-    {
-        tracker_sparql_connection_update_async( d->connection,
-                                                query.toUtf8().constData(),
+        QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
+    } else if (isGraph()) {
+        setLastError(QSparqlError(QLatin1String("Unsupported statement type"),
+                                  QSparqlError::BackendError));
+        qWarning() << "Tracker backend: unsupported statement type";
+    } else {
+        tracker_sparql_connection_update_async( d->driverPrivate->connection,
+                                                query().toUtf8().constData(),
                                                 0,
                                                 0,
                                                 async_update_callback,
-                                                res->d);
-    } else {
-        setLastError(QSparqlError(
-                              QLatin1String("Unsupported statement type"),
-                              QSparqlError::BackendError));
-        qWarning() << "QTrackerDirectResult:" << lastError() << query;
-        res->terminate();
+                                                d);
     }
-
-    return res;
 }
 
 void QTrackerDirectResult::startFetcher()
@@ -548,7 +551,14 @@ void QTrackerDirectResult::waitForFinished()
     if (d->isFinished == 1)
         return;
 
-    if (isTable() || isBool()) {
+    // We first need the connection to be ready before doing anything
+    if (!d->driverPrivate->connectionOpen) {
+        QEventLoop loop;
+        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
+        loop.exec();
+    }
+
+    if (isBool() || isTable()) {
         // We may have queued startFetcher, call it now.
         startFetcher();
         d->fetcher->wait();
@@ -744,8 +754,34 @@ bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate()
-    : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive)
+static void
+async_open_callback(GObject         * /*source_object*/,
+                    GAsyncResult    *result,
+                    gpointer         user_data)
+{
+    QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
+
+    g_object_unref(d->openCancellable);
+    d->openCancellable = 0;
+
+    GError *error = 0;
+    d->connection = tracker_sparql_connection_get_finish(result, &error);
+    if (!d->connection) {
+        qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
+                    error ? error->message : "unknown error");
+        g_error_free(error);
+        d->setOpen(false);
+        d->opened();
+        return;
+    }
+
+    d->connectionOpen = true;
+    d->opened();
+}
+
+QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
+    : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive), driver(driver),
+      connectionOpen(false), openCancellable(0)
 {
 }
 
@@ -753,10 +789,22 @@ QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 {
 }
 
+void
+QTrackerDirectDriverPrivate::setOpen(bool open)
+{
+    driver->setOpen(open);
+}
+
+void
+QTrackerDirectDriverPrivate::opened()
+{
+    driver->opened();
+}
+
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
-    d = new QTrackerDirectDriverPrivate();
+    d = new QTrackerDirectDriverPrivate(this);
     /* Initialize GLib type system */
     g_type_init();
 
@@ -794,17 +842,8 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     if (isOpen())
         close();
 
-    GError *error = 0;
-    d->connection = tracker_sparql_connection_get(0, &error);
-    // maybe-TODO: Add the GCancellable
-    if (d->connection == 0) {
-        qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
-                    error ? error->message : "unknown error");
-        if (error != 0)
-            g_error_free(error);
-        return false;
-    }
-
+    d->openCancellable = g_cancellable_new();
+    tracker_sparql_connection_get_async(d->openCancellable, async_open_callback, static_cast<gpointer>(d));
     setOpen(true);
     setOpenError(false);
 
@@ -814,6 +853,13 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->mutex));
+
+    if (d->openCancellable != 0) {
+        g_cancellable_cancel(d->openCancellable);
+        g_object_unref(d->openCancellable);
+        d->openCancellable = 0;
+    }
+
     if (d->connection != 0) {
         g_object_unref(d->connection);
         d->connection = 0;
@@ -823,6 +869,22 @@ void QTrackerDirectDriver::close()
         setOpen(false);
         setOpenError(false);
     }
+}
+
+QTrackerDirectResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type)
+{
+    QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
+
+    result->setStatementType(type);
+    result->setQuery(query);
+
+    if (d->connectionOpen) {
+        result->exec();
+    } else {
+        connect(this, SIGNAL(opened()), result, SLOT(exec()));
+    }
+
+    return result;
 }
 
 QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
