@@ -1,5 +1,6 @@
 libqtsparql (0.0.18) unstable; urgency=low
 
+  * Fixes: NB#214211
   * Tracker driver: Don't create one QDBusConnection per thread.
   * Fixes: NB#222258
   * Fixes: NB#199361

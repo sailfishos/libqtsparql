@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectDriver;
 class QTrackerDirectResultPrivate;
+class QTrackerDirectUpdateResultPrivate;
 class QTrackerDirectSyncResultPrivate;
 
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
@@ -72,6 +73,7 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparql
     Q_OBJECT
     friend class QTrackerDirectDriver;
     friend class QTrackerDirectResultPrivate; // for emitting signals
+    friend class QTrackerDirectUpdateResultPrivate;
 public:
     explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
@@ -93,6 +95,9 @@ public:
 protected:
     void cleanup();
 
+private Q_SLOTS:
+    void exec();
+
 private:
     void terminate();
     bool fetchNextResult();
@@ -100,6 +105,41 @@ private:
 
     QTrackerDirectResultPrivate* d;
     friend class QTrackerDirectFetcherPrivate;
+};
+
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public QSparqlResult
+{
+    Q_OBJECT
+    friend class QTrackerDirectDriver;
+    friend class QTrackerDirectResultPrivate; // for emitting signals
+    friend class QTrackerDirectUpdateResultPrivate;
+public:
+    explicit QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
+                                  const QString& query,
+                                  QSparqlQuery::StatementType type);
+    ~QTrackerDirectUpdateResult();
+
+    bool runQuery();
+
+    // Implementation of the QSparqlResult interface
+    virtual void waitForFinished();
+    virtual bool isFinished() const;
+
+    virtual QSparqlResultRow current() const;
+    virtual QSparqlBinding binding(int i) const;
+    virtual QVariant value(int i) const;
+    virtual int size() const;
+
+protected:
+    void cleanup();
+
+private Q_SLOTS:
+    void exec();
+
+private:
+    void terminate();
+
+    QTrackerDirectUpdateResultPrivate* d;
 };
 
 // A sync and forward-only Result class. The instance of this class is retreved
@@ -138,11 +178,16 @@ public:
     bool hasFeature(QSparqlConnection::Feature f) const;
     bool open(const QSparqlConnectionOptions& options);
     void close();
-    QTrackerDirectResult* exec(const QString& query,
+    QSparqlResult* exec(const QString& query,
                          QSparqlQuery::StatementType type);
     QSparqlResult* syncExec(const QString& query,
                             QSparqlQuery::StatementType type);
+
+Q_SIGNALS:
+    void opened();
+
 private:
+    friend class QTrackerDirectDriverPrivate;
     QTrackerDirectDriverPrivate* d;
 };
 
