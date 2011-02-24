@@ -985,7 +985,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 {
     QSparqlResult *result = 0;
     
-    if (result->isTable() || result->isBool()) {
+    if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         
         if (d->connectionOpen) {
