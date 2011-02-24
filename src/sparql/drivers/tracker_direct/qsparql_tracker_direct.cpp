@@ -235,8 +235,6 @@ public:
     QVector<QString> columnNames;
     QVector<QSparqlResultRow> results;
     QAtomicInt isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
-    QEventLoop *loop;
 
     QTrackerDirectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -247,13 +245,30 @@ public:
     QMutex mutex;
 };
 
+class QTrackerDirectUpdateResultPrivate : public QObject {
+    Q_OBJECT
+public:
+    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp);
+
+    ~QTrackerDirectUpdateResultPrivate();
+    void terminate();
+    void setLastError(const QSparqlError& e);
+
+    QAtomicInt isFinished;
+    bool resultAlive; // whether the corresponding Result object is still alive
+    QEventLoop *loop;
+
+    QTrackerDirectUpdateResult* q;
+    QTrackerDirectDriverPrivate *driverPrivate;
+};
+
 static void
 async_update_callback( GObject *source_object,
                        GAsyncResult *result,
                        gpointer user_data)
 {
     Q_UNUSED(source_object);
-    QTrackerDirectResultPrivate *data = static_cast<QTrackerDirectResultPrivate*>(user_data);
+    QTrackerDirectUpdateResultPrivate *data = static_cast<QTrackerDirectUpdateResultPrivate*>(user_data);
     if (!data->resultAlive) {
         // The user has deleted the Result object before this callback was
         // called. Just delete the ResultPrivate here and do nothing.
@@ -280,7 +295,7 @@ async_update_callback( GObject *source_object,
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
-  : cursor(0), resultAlive(true), loop(0),
+  : cursor(0),
   q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
   mutex(QMutex::Recursive)
 {
@@ -310,9 +325,6 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
-
-    if (loop != 0)
-        loop->exit();
 }
 
 void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
@@ -343,21 +355,9 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (isTable() || isBool()) {
-        if (d->fetcher->isRunning()) {
-            d->isFinished = 1;
-            d->fetcher->wait();
-        }
-    } else {
-        if (d->isFinished == 0) {
-            // We're deleting the Result before the async update has
-            // finished. There is a pending async callback that will be called at
-            // some point, and that will have our ResultPrivate as user_data. Don't
-            // delete the ResultPrivate here, but just mark that we're no longer
-            // alive. The callback will then delete the ResultPrivate.
-            d->resultAlive = false;
-            return;
-        }
+    if (d->fetcher->isRunning()) {
+        d->isFinished = 1;
+        d->fetcher->wait();
     }
 
     delete d;
@@ -378,17 +378,10 @@ void QTrackerDirectResult::exec()
         // them, and the result won't be in the "finished" state before the
         // thread that calls this function has entered its event loop.
         QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
-    } else if (isGraph()) {
+    } else {
         setLastError(QSparqlError(QLatin1String("Unsupported statement type"),
                                   QSparqlError::BackendError));
         qWarning() << "Tracker backend: unsupported statement type";
-    } else {
-        tracker_sparql_connection_update_async( d->driverPrivate->connection,
-                                                query().toUtf8().constData(),
-                                                0,
-                                                0,
-                                                async_update_callback,
-                                                d);
     }
 }
 
@@ -558,16 +551,8 @@ void QTrackerDirectResult::waitForFinished()
         loop.exec();
     }
 
-    if (isBool() || isTable()) {
-        // We may have queued startFetcher, call it now.
-        startFetcher();
-        d->fetcher->wait();
-    } else {
-        QEventLoop loop;
-        d->loop = &loop;
-        loop.exec();
-        d->loop = 0;
-    }
+    startFetcher();
+    d->fetcher->wait();
 }
 
 bool QTrackerDirectResult::isFinished() const
@@ -598,6 +583,131 @@ QSparqlResultRow QTrackerDirectResult::current() const
         return QSparqlResultRow();
 
     return d->results[pos()];
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(   QTrackerDirectUpdateResult* result,
+                                                            QTrackerDirectDriverPrivate *dpp)
+  : resultAlive(true), loop(0),
+  q(result), driverPrivate(dpp)
+{
+}
+
+QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
+{
+}
+
+void QTrackerDirectUpdateResultPrivate::terminate()
+{
+    isFinished = 1;
+    q->emit finished();
+
+    if (loop != 0)
+        loop->exit();
+}
+
+void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
+{
+    q->setLastError(e);
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+
+QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
+                                           const QString& query,
+                                           QSparqlQuery::StatementType type)
+{
+    setQuery(query);
+    setStatementType(type);
+    d = new QTrackerDirectUpdateResultPrivate(this, p);
+}
+
+QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
+{
+    if (d->isFinished == 0) {
+        // We're deleting the Result before the async update has
+        // finished. There is a pending async callback that will be called at
+        // some point, and that will have our ResultPrivate as user_data. Don't
+        // delete the ResultPrivate here, but just mark that we're no longer
+        // alive. The callback will then delete the ResultPrivate.
+        d->resultAlive = false;
+        return;
+    }
+
+    delete d;
+}
+
+void QTrackerDirectUpdateResult::exec()
+{
+    if (!d->driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(QLatin1String("Connection not open"),
+                                          QSparqlError::ConnectionError));
+        d->terminate();
+        return;
+    }
+
+    if (isGraph()) {
+        setLastError(QSparqlError(QLatin1String("Unsupported statement type"),
+                                  QSparqlError::BackendError));
+        qWarning() << "Tracker backend: unsupported statement type";
+    } else {
+        tracker_sparql_connection_update_async( d->driverPrivate->connection,
+                                                query().toUtf8().constData(),
+                                                0,
+                                                0,
+                                                async_update_callback,
+                                                d);
+    }
+}
+
+QSparqlBinding QTrackerDirectUpdateResult::binding(int field) const
+{
+    return QSparqlBinding();
+}
+
+QVariant QTrackerDirectUpdateResult::value(int field) const
+{
+    return QVariant();
+}
+
+void QTrackerDirectUpdateResult::waitForFinished()
+{
+    if (d->isFinished == 1)
+        return;
+
+    // We first need the connection to be ready before doing anything
+    if (!d->driverPrivate->connectionOpen) {
+        QEventLoop loop;
+        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
+        loop.exec();
+    }
+
+    QEventLoop loop;
+    d->loop = &loop;
+    loop.exec();
+    d->loop = 0;
+}
+
+bool QTrackerDirectUpdateResult::isFinished() const
+{
+    return d->isFinished == 1;
+}
+
+void QTrackerDirectUpdateResult::terminate()
+{
+    d->terminate();
+}
+
+int QTrackerDirectUpdateResult::size() const
+{
+    return 0;
+}
+
+QSparqlResultRow QTrackerDirectUpdateResult::current() const
+{
+    return QSparqlResultRow();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -871,20 +981,31 @@ void QTrackerDirectDriver::close()
     }
 }
 
-QTrackerDirectResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type)
+QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type)
 {
-    QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
-
-    result->setStatementType(type);
-    result->setQuery(query);
-
-    if (d->connectionOpen) {
-        result->exec();
+    QSparqlResult *result = 0;
+    
+    if (result->isTable() || result->isBool()) {
+        QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
+        
+        if (d->connectionOpen) {
+            result->exec();
+        } else {
+            connect(this, SIGNAL(opened()), result, SLOT(exec()));
+        }
+        
+        return result;
     } else {
-        connect(this, SIGNAL(opened()), result, SLOT(exec()));
+        QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type);
+        
+        if (d->connectionOpen) {
+            result->exec();
+        } else {
+            connect(this, SIGNAL(opened()), result, SLOT(exec()));
+        }
+        
+        return result;
     }
-
-    return result;
 }
 
 QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
