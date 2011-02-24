@@ -915,7 +915,9 @@ void tst_QSparqlTrackerDirect::delete_connection_immediately()
 
 void tst_QSparqlTrackerDirect::delete_connection_after_a_wait()
 {
-    QSparqlConnection conn("QTRACKER_DIRECT");
+    {
+        QSparqlConnection conn("QTRACKER_DIRECT");
+    }
     QTest::qWait(1000);
 }
 
