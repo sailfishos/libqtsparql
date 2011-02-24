@@ -92,7 +92,7 @@ private slots:
     void result_immediately_finished2();
     
     void delete_connection_immediately();
-    void delete_connection_after_a_wait();
+    void delete_connection_before_a_wait();
 };
 
 namespace {
@@ -913,7 +913,7 @@ void tst_QSparqlTrackerDirect::delete_connection_immediately()
     QSparqlConnection conn("QTRACKER_DIRECT");
 }
 
-void tst_QSparqlTrackerDirect::delete_connection_after_a_wait()
+void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
 {
     {
         QSparqlConnection conn("QTRACKER_DIRECT");
