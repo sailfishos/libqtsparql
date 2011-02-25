@@ -56,9 +56,11 @@
 #include "../drivers/endpoint/qsparql_endpoint_p.h"
 #endif
 
-#include "qdebug.h"
-#include "qcoreapplication.h"
+#include "QtCore/qdebug.h"
+#include "QtCore/qcoreapplication.h"
+
 #include "qsparqlresult.h"
+#include "qsparqlerror.h"
 #include "qsparqlconnectionoptions.h"
 #include "qsparqldriver_p.h"
 #include "qsparqldriverplugin_p.h"
@@ -432,7 +434,19 @@ QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
     if (!result) {
         // No error. FIXME: it's evil to return a 0 pointer to indicate "no
         // error".
-        result = d->driver->exec(queryText, query.type());
+        if (    (query.type() == QSparqlQuery::AskStatement && !d->driver->hasFeature(AskQueries))
+                || (query.type() == QSparqlQuery::InsertStatement && !d->driver->hasFeature(UpdateQueries))
+                || (query.type() == QSparqlQuery::DeleteStatement && !d->driver->hasFeature(UpdateQueries))
+                || (query.type() == QSparqlQuery::ConstructStatement && !d->driver->hasFeature(ConstructQueries)) )
+        {
+            result = new QSparqlNullResult();
+            result->setLastError(QSparqlError(
+                                    QLatin1String("Unsupported statement type"),
+                                    QSparqlError::BackendError));
+            qWarning("QSparqlConnection::exec: Unsupported statement type");
+        } else {
+            result = d->driver->exec(queryText, query.type());
+        }
     }
     result->setParent(this);
     return result;

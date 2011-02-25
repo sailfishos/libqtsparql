@@ -372,17 +372,11 @@ void QTrackerDirectResult::exec()
         return;
     }
 
-    if (isBool() || isTable()) {
-        // Queue calling exec() on the result. This way the finished() and
-        // dataReady() signals won't be emitted before the user connects to
-        // them, and the result won't be in the "finished" state before the
-        // thread that calls this function has entered its event loop.
-        QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
-    } else {
-        setLastError(QSparqlError(QLatin1String("Unsupported statement type"),
-                                  QSparqlError::BackendError));
-        qWarning() << "Tracker backend: unsupported statement type";
-    }
+    // Queue calling exec() on the result. This way the finished() and
+    // dataReady() signals won't be emitted before the user connects to
+    // them, and the result won't be in the "finished" state before the
+    // thread that calls this function has entered its event loop.
+    QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
 }
 
 void QTrackerDirectResult::startFetcher()
@@ -648,18 +642,12 @@ void QTrackerDirectUpdateResult::exec()
         return;
     }
 
-    if (isGraph()) {
-        setLastError(QSparqlError(QLatin1String("Unsupported statement type"),
-                                  QSparqlError::BackendError));
-        qWarning() << "Tracker backend: unsupported statement type";
-    } else {
-        tracker_sparql_connection_update_async( d->driverPrivate->connection,
-                                                query().toUtf8().constData(),
-                                                0,
-                                                0,
-                                                async_update_callback,
-                                                d);
-    }
+    tracker_sparql_connection_update_async( d->driverPrivate->connection,
+                                            query().toUtf8().constData(),
+                                            0,
+                                            0,
+                                            async_update_callback,
+                                            d);
 }
 
 QSparqlBinding QTrackerDirectUpdateResult::binding(int field) const
@@ -922,7 +910,6 @@ QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
 
 QTrackerDirectDriver::~QTrackerDirectDriver()
 {
-    qWarning() << "QTrackerDirectDriver::~QTrackerDirectDriver() d->connectionOpened: " << d->connectionOpen;
     if (!d->connectionOpen) {
         d->driverAlive = false;
         return;
@@ -1042,12 +1029,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
             qWarning() << "QTrackerDirectResult:" << lastError() << query;
         }
     }
-    else {
-        result->setLastError(QSparqlError(
-                                 QLatin1String("Unsupported statement type"),
-                                 QSparqlError::BackendError));
-        qWarning() << "QTrackerDirectResult:" << lastError() << query;
-    }
+
     return result;
 }
 

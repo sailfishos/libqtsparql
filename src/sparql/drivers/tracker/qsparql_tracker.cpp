@@ -400,11 +400,11 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
     case QSparqlConnection::AskQueries:
-        return false;
+        return true;
     case QSparqlConnection::ConstructQueries:
         return false;
     case QSparqlConnection::UpdateQueries:
-        return false;
+        return true;
     case QSparqlConnection::DefaultGraph:
         return true;
     default:
