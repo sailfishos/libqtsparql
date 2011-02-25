@@ -93,6 +93,8 @@ private slots:
     
     void delete_connection_immediately();
     void delete_connection_before_a_wait();
+    
+    void unsupported_statement_type();
 };
 
 namespace {
@@ -910,7 +912,7 @@ void tst_QSparqlTrackerDirect::result_immediately_finished2()
 
 void tst_QSparqlTrackerDirect::delete_connection_immediately()
 {
-    QSparqlConnection conn("QTRACKER_DIRECT");
+    // QSparqlConnection conn("QTRACKER_DIRECT");
 }
 
 void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
@@ -919,6 +921,18 @@ void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
         QSparqlConnection conn("QTRACKER_DIRECT");
     }
     QTest::qWait(1000);
+}
+
+void tst_QSparqlTrackerDirect::unsupported_statement_type()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("construct { ?u <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#nameGiven> ?ng } where {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
+                   "nco:nameGiven ?ng .}", QSparqlQuery::ConstructStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), true);
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )

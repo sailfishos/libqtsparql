@@ -923,11 +923,12 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
     switch (f) {
     case QSparqlConnection::QuerySize:
     case QSparqlConnection::AskQueries:
-    case QSparqlConnection::ConstructQueries:
     case QSparqlConnection::UpdateQueries:
     case QSparqlConnection::DefaultGraph:
     case QSparqlConnection::SyncExec:
         return true;
+    case QSparqlConnection::ConstructQueries:
+        return false;
     default:
         return false;
     }
