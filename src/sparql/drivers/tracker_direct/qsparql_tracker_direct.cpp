@@ -217,7 +217,7 @@ public:
     QMutex mutex;
     QTrackerDirectDriver *driver;
     bool connectionOpen;
-    GCancellable *openCancellable;
+    bool driverAlive;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -871,8 +871,10 @@ async_open_callback(GObject         * /*source_object*/,
 {
     QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
 
-    g_object_unref(d->openCancellable);
-    d->openCancellable = 0;
+    if (!d->driverAlive) {
+        delete d;
+        return;
+    }
 
     GError *error = 0;
     d->connection = tracker_sparql_connection_get_finish(result, &error);
@@ -891,7 +893,7 @@ async_open_callback(GObject         * /*source_object*/,
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive), driver(driver),
-      connectionOpen(false), openCancellable(0)
+      connectionOpen(false), driverAlive(true)
 {
 }
 
@@ -899,16 +901,14 @@ QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 {
 }
 
-void
-QTrackerDirectDriverPrivate::setOpen(bool open)
+void QTrackerDirectDriverPrivate::setOpen(bool open)
 {
     driver->setOpen(open);
 }
 
-void
-QTrackerDirectDriverPrivate::opened()
+void QTrackerDirectDriverPrivate::opened()
 {
-    driver->opened();
+    emit driver->opened();
 }
 
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
@@ -922,6 +922,12 @@ QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
 
 QTrackerDirectDriver::~QTrackerDirectDriver()
 {
+    qWarning() << "QTrackerDirectDriver::~QTrackerDirectDriver() d->connectionOpened: " << d->connectionOpen;
+    if (!d->connectionOpen) {
+        d->driverAlive = false;
+        return;
+    }
+
     delete d;
 }
 
@@ -952,8 +958,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     if (isOpen())
         close();
 
-    d->openCancellable = g_cancellable_new();
-    tracker_sparql_connection_get_async(d->openCancellable, async_open_callback, static_cast<gpointer>(d));
+    tracker_sparql_connection_get_async(0, async_open_callback, static_cast<gpointer>(d));
     setOpen(true);
     setOpenError(false);
 
@@ -963,12 +968,6 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->mutex));
-
-    if (d->openCancellable != 0) {
-        g_cancellable_cancel(d->openCancellable);
-        g_object_unref(d->openCancellable);
-        d->openCancellable = 0;
-    }
 
     if (d->connection != 0) {
         g_object_unref(d->connection);
@@ -983,8 +982,6 @@ void QTrackerDirectDriver::close()
 
 QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type)
 {
-    QSparqlResult *result = 0;
-    
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         
