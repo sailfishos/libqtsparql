@@ -93,7 +93,8 @@ private slots:
     
     void delete_connection_immediately();
     void delete_connection_before_a_wait();
-    
+    void create_2_connections();
+
     void unsupported_statement_type();
 };
 
@@ -921,6 +922,13 @@ void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
         QSparqlConnection conn("QTRACKER_DIRECT");
     }
     QTest::qWait(1000);
+}
+
+void tst_QSparqlTrackerDirect::create_2_connections()
+{
+    QSKIP("This hangs; a bug somewhere", SkipAll);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlConnection conn2("QTRACKER_DIRECT"); // this hangs
 }
 
 void tst_QSparqlTrackerDirect::unsupported_statement_type()
