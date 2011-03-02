@@ -72,6 +72,8 @@ private slots:
     void iterate_result();
 
     void delete_unfinished_result();
+
+    void go_beyond_columns_number();
 };
 
 namespace {
@@ -404,6 +406,26 @@ void tst_QSparqlTracker::delete_unfinished_result()
     QCOMPARE(r->hasError(), false);
     delete r;
     QTest::qWait(1000);
+}
+
+void tst_QSparqlTracker::go_beyond_columns_number()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is syncronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->value(5).toString(), QString());
+        QCOMPARE(r->binding(5).toString(), QString());
+    }
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTracker )
