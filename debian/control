@@ -3,6 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Marja Hassinen <marja.hassinen@nokia.com>
 Build-Depends: debhelper (>= 5),
+	       quilt,
                libqt4-dev (>= 4.7),
                doxygen,
                libtracker-sparql-dev,
