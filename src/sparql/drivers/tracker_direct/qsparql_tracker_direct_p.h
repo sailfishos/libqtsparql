@@ -149,7 +149,7 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSp
     Q_OBJECT
     friend class QTrackerDirectDriver;
 public:
-    explicit QTrackerDirectSyncResult();
+    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p);
     ~QTrackerDirectSyncResult();
 
     // Implementation of the QSparqlResult interface
@@ -163,6 +163,11 @@ public:
     virtual bool isFinished() const;
 
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
+    
+private Q_SLOTS:
+    void exec();
+    void update();
+
 private:
     QTrackerDirectSyncResultPrivate* d;
 };
