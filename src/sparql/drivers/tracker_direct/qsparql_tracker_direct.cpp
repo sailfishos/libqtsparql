@@ -218,7 +218,6 @@ public:
     QTrackerDirectDriver *driver;
     bool asyncOpenCalled;
     GCancellable *openCancellable;
-    bool driverAlive;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -891,25 +890,10 @@ async_open_callback(GObject         * /*source_object*/,
 {
     QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
     d->asyncOpenCalled = true;
-    
-    // Emit an 'opened()' signal even if the open has failed, to indicate that
-    // this callback has been called. But if we delete 'd', does the signal
-    // still get emitted?
-    d->opened();
 
     g_object_unref(d->openCancellable);
     d->openCancellable = 0;
     GError *error = 0;
-
-    if (!d->driverAlive) {
-        d->connection = tracker_sparql_connection_get_finish(result, &error);
-        if (d->connection != 0) {
-            g_object_unref(d->connection);
-        }
-
-        delete d;
-        return;
-    }
 
     d->connection = tracker_sparql_connection_get_finish(result, &error);
     if (d->connection == 0) {
@@ -917,13 +901,16 @@ async_open_callback(GObject         * /*source_object*/,
                     error ? error->message : "unknown error");
         g_error_free(error);
         d->setOpen(false);
+        d->opened();
         return;
     }
+    
+    d->opened();
 }
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive), driver(driver),
-      asyncOpenCalled(false), openCancellable(0), driverAlive(true)
+      asyncOpenCalled(false), openCancellable(0)
 {
 }
 
@@ -952,11 +939,6 @@ QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
 
 QTrackerDirectDriver::~QTrackerDirectDriver()
 {
-    if (!d->asyncOpenCalled) {
-        d->driverAlive = false;
-        return;
-    }
-
     delete d;
 }
 
