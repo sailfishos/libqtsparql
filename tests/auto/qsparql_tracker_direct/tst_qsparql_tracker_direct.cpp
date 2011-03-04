@@ -93,8 +93,13 @@ private slots:
     
     void delete_connection_immediately();
     void delete_connection_before_a_wait();
-    
+
+    void go_beyond_columns_number();
+
+    void create_2_connections();
+
     void unsupported_statement_type();
+
 };
 
 namespace {
@@ -923,6 +928,33 @@ void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
     QTest::qWait(1000);
 }
 
+void tst_QSparqlTrackerDirect::go_beyond_columns_number()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->value(5).toString(), QString());
+        QCOMPARE(r->binding(5).toString(), QString());
+    }
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::create_2_connections()
+{
+    QSKIP("This hangs; a bug somewhere", SkipAll);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlConnection conn2("QTRACKER_DIRECT"); // this hangs
+}
+
 void tst_QSparqlTrackerDirect::unsupported_statement_type()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
@@ -934,6 +966,7 @@ void tst_QSparqlTrackerDirect::unsupported_statement_type()
     QCOMPARE(r->hasError(), true);
     delete r;
 }
+
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"

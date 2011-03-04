@@ -2,19 +2,20 @@
 # -*- makefile-mode -*-
 
 #export DH_VERBOSE=1
+include /usr/share/quilt/quilt.make 
 
 Makefile:
 	./configure -prefix /usr
 	qmake
 
 build: debian/build-stamp
-debian/build-stamp: Makefile
+debian/build-stamp: Makefile $(QUILT_STAMPFN)
 	dh_testdir
 	$(MAKE)
 	$(MAKE) doc
 	touch $@
 
-clean:
+clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -f debian/build-stamp
