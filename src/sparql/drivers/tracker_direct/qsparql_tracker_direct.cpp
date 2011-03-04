@@ -217,7 +217,6 @@ public:
     QMutex mutex;
     QTrackerDirectDriver *driver;
     bool asyncOpenCalled;
-    GCancellable *openCancellable;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -890,12 +889,9 @@ async_open_callback(GObject         * /*source_object*/,
 {
     QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
     d->asyncOpenCalled = true;
-
-    g_object_unref(d->openCancellable);
-    d->openCancellable = 0;
-    GError *error = 0;
-
+    GError * error = 0;
     d->connection = tracker_sparql_connection_get_finish(result, &error);
+    
     if (d->connection == 0) {
         qWarning("Couldn't obtain a direct connection to the Tracker store: %s",
                     error ? error->message : "unknown error");
@@ -910,7 +906,7 @@ async_open_callback(GObject         * /*source_object*/,
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), mutex(QMutex::Recursive), driver(driver),
-      asyncOpenCalled(false), openCancellable(0)
+      asyncOpenCalled(false)
 {
 }
 
@@ -970,8 +966,7 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     if (isOpen())
         close();
 
-    d->openCancellable = g_cancellable_new();
-    tracker_sparql_connection_get_async(d->openCancellable, async_open_callback, static_cast<gpointer>(d));
+    tracker_sparql_connection_get_async(0, async_open_callback, static_cast<gpointer>(d));
     setOpen(true);
     setOpenError(false);
 
@@ -986,12 +981,6 @@ void QTrackerDirectDriver::close()
         QEventLoop loop;
         connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
         loop.exec();
-    }
-
-    if (d->openCancellable != 0) {
-        g_cancellable_cancel(d->openCancellable);
-        g_object_unref(d->openCancellable);
-        d->openCancellable = 0;
     }
 
     if (d->connection != 0) {
