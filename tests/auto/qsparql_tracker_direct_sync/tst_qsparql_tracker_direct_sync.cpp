@@ -78,6 +78,8 @@ private slots:
     void special_chars();
     void async_conn_opening();
     void async_conn_opening_data();
+    void async_conn_opening_with_2_connections();
+    void async_conn_opening_with_2_connections_data();
 };
 
 namespace {
@@ -524,6 +526,63 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections()
+{
+    QSKIP("Waiting for a tracker fix", SkipAll);
+    QFETCH(int, delayBeforeCreatingSecondConnection);
+
+    QSparqlConnection conn1("QTRACKER_DIRECT");
+
+    if (delayBeforeCreatingSecondConnection > 0)
+        QTest::qWait(delayBeforeCreatingSecondConnection);
+
+    QSparqlConnection conn2("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+
+    QSparqlResult* r1 = conn1.syncExec(q);
+    QCOMPARE(r1->hasError(), false);
+
+    QSparqlResult* r2 = conn2.syncExec(q);
+    QCOMPARE(r2->hasError(), false);
+
+    // Check that the data is correct
+    QHash<QString, QString> contactNames1, contactNames2;
+    while (r1->next()) {
+        QCOMPARE(r1->current().count(), 2);
+        contactNames1[r1->value(0).toString()] = r1->value(1).toString();
+    }
+
+    while (r2->next()) {
+        QCOMPARE(r2->current().count(), 2);
+        contactNames2[r2->value(0).toString()] = r2->value(1).toString();
+    }
+    QCOMPARE(contactNames1.size(), 3);
+    QCOMPARE(contactNames1["uri001"], QString("name001"));
+    QCOMPARE(contactNames1["uri002"], QString("name002"));
+    QCOMPARE(contactNames1["uri003"], QString("name003"));
+    QCOMPARE(contactNames2.size(), 3);
+    QCOMPARE(contactNames2["uri001"], QString("name001"));
+    QCOMPARE(contactNames2["uri002"], QString("name002"));
+    QCOMPARE(contactNames2["uri003"], QString("name003"));
+
+    delete r1;
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections_data()
+{
+    QTest::addColumn<int>("delayBeforeCreatingSecondConnection");
+
+    QTest::newRow("SecondCreatedBeforeFirstOpened")
+        << 0;
+
+    QTest::newRow("SecondCreatedAfterFirstOpened")
+        << 2000;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
