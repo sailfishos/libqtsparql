@@ -100,6 +100,8 @@ private slots:
 
     void unsupported_statement_type();
 
+    void async_conn_opening();
+    void async_conn_opening_data();
 };
 
 namespace {
@@ -967,6 +969,77 @@ void tst_QSparqlTrackerDirect::unsupported_statement_type()
     delete r;
 }
 
+void tst_QSparqlTrackerDirect::async_conn_opening()
+{
+    QFETCH(int, delayBeforeFirst);
+    QFETCH(int, delayBeforeSecond);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeFirst);
+
+    QSparqlResult* r1 = conn.exec(q);
+    QCOMPARE(r1->hasError(), false);
+    QSignalSpy spy1(r1, SIGNAL(finished()));
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeSecond);
+
+    QSparqlResult* r2 = conn.exec(q);
+    QCOMPARE(r2->hasError(), false);
+    QSignalSpy spy2(r2, SIGNAL(finished()));
+
+    QTime timer;
+    timer.start();
+    while ((spy1.count() == 0 || spy2.count() == 0) && timer.elapsed() < 5000) {
+        QTest::qWait(1000);
+    }
+
+    // Check that the data is correct
+    QHash<QString, QString> contactNames1, contactNames2;
+    while (r1->next()) {
+        QCOMPARE(r1->current().count(), 2);
+        contactNames1[r1->value(0).toString()] = r1->value(1).toString();
+    }
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
+
+    while (r2->next()) {
+        QCOMPARE(r2->current().count(), 2);
+        contactNames2[r2->value(0).toString()] = r2->value(1).toString();
+    }
+    QCOMPARE(contactNames1.size(), 3);
+    QCOMPARE(contactNames1["uri001"], QString("name001"));
+    QCOMPARE(contactNames1["uri002"], QString("name002"));
+    QCOMPARE(contactNames1["uri003"], QString("name003"));
+    QCOMPARE(contactNames2.size(), 3);
+    QCOMPARE(contactNames2["uri001"], QString("name001"));
+    QCOMPARE(contactNames2["uri002"], QString("name002"));
+    QCOMPARE(contactNames2["uri003"], QString("name003"));
+
+    delete r1;
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirect::async_conn_opening_data()
+{
+    QTest::addColumn<int>("delayBeforeFirst");
+    QTest::addColumn<int>("delayBeforeSecond");
+
+    QTest::newRow("BothBeforeConnOpened")
+        << 0 << 0;
+
+    QTest::newRow("BothAfterConnOpened")
+        << 2000 << 0;
+
+    QTest::newRow("BeforeAndAfterConnOpened")
+        << 0 << 2000;
+}
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"
