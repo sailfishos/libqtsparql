@@ -1,6 +1,7 @@
 libqtsparql (0.0.19~unreleased) unstable; urgency=low
 
   * Fixes: NB#214211
+  * Fixes: NB#229601
 
  -- Marja Hassinen <marja.hassinen@nokia.com>  Thu, 24 Feb 2011 14:20:05 +0200
 
