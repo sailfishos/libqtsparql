@@ -104,6 +104,8 @@ private slots:
     void async_conn_opening_data();
     void async_conn_opening_with_2_connections();
     void async_conn_opening_with_2_connections_data();
+    void async_conn_opening_for_update();
+    void async_conn_opening_for_update_data();
 };
 
 namespace {
@@ -1108,6 +1110,85 @@ void tst_QSparqlTrackerDirect::async_conn_opening_with_2_connections_data()
 
     QTest::newRow("SecondCreatedAfterFirstOpened")
         << 2000;
+}
+
+void tst_QSparqlTrackerDirect::async_conn_opening_for_update()
+{
+    QFETCH(int, delayBeforeFirst);
+    QFETCH(int, delayBeforeSecond);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery add1("insert { <addeduri007> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname007\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    QSparqlQuery add2("insert { <addeduri008> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname008\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeFirst);
+
+    QSparqlResult* r1 = conn.exec(add1);
+    QCOMPARE(r1->hasError(), false);
+    QSignalSpy spy1(r1, SIGNAL(finished()));
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeSecond);
+
+    QSparqlResult* r2 = conn.exec(add2);
+    QCOMPARE(r2->hasError(), false);
+    QSignalSpy spy2(r2, SIGNAL(finished()));
+
+    // Check that we get the finished() signal
+    QTime timer;
+    timer.start();
+    while ((spy1.count() == 0 || spy2.count() == 0) && timer.elapsed() < 5000) {
+        QTest::qWait(1000);
+    }
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
+
+    delete r1;
+    delete r2;
+    
+    QSparqlQuery del1("delete { <addeduri007> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r1 = conn.exec(del1);
+    QVERIFY(r1 != 0);
+    QCOMPARE(r1->hasError(), false);
+    r1->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r1->hasError(), false);
+    delete r1;
+    
+    QSparqlQuery del2("delete { <addeduri008> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r2 = conn.exec(del2);
+    QVERIFY(r2 != 0);
+    QCOMPARE(r2->hasError(), false);
+    r2->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r2->hasError(), false);
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirect::async_conn_opening_for_update_data()
+{
+    QTest::addColumn<int>("delayBeforeFirst");
+    QTest::addColumn<int>("delayBeforeSecond");
+
+    QTest::newRow("BothBeforeConnOpened")
+        << 0 << 0;
+
+    QTest::newRow("BothAfterConnOpened")
+        << 2000 << 0;
+
+    QTest::newRow("BeforeAndAfterConnOpened")
+        << 0 << 2000;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
