@@ -1155,6 +1155,24 @@ void tst_QSparqlTrackerDirect::async_conn_opening_for_update()
     delete r1;
     delete r2;
     
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QString> contactNames;
+    r1 = conn.exec(q);
+    QVERIFY(r1 != 0);
+    r1->waitForFinished();
+    QCOMPARE(r1->size(), 5);
+    while (r1->next()) {
+        contactNames[r1->binding(0).value().toString()] =
+            r1->binding(1).value().toString();
+    }
+    QCOMPARE(contactNames.size(), 5);
+    QCOMPARE(contactNames["addeduri007"], QString("addedname007"));
+    QCOMPARE(contactNames["addeduri008"], QString("addedname008"));
+    delete r1;
+    
     QSparqlQuery del1("delete { <addeduri007> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
