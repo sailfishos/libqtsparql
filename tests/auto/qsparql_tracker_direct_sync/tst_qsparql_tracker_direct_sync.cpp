@@ -76,6 +76,12 @@ private slots:
     void result_type_bool();
 
     void special_chars();
+    void async_conn_opening();
+    void async_conn_opening_data();
+    void async_conn_opening_with_2_connections();
+    void async_conn_opening_with_2_connections_data();
+    void async_conn_opening_for_update();
+    void async_conn_opening_for_update_data();
 };
 
 namespace {
@@ -460,6 +466,222 @@ void tst_QSparqlTrackerDirectSync::special_chars()
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     delete r;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening()
+{
+    QFETCH(int, delayBeforeFirst);
+    QFETCH(int, delayBeforeSecond);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeFirst);
+
+    QSparqlResult* r1 = conn.syncExec(q);
+    QCOMPARE(r1->hasError(), false);
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeSecond);
+
+    QSparqlResult* r2 = conn.syncExec(q);
+    QCOMPARE(r2->hasError(), false);
+
+    // Check that the data is correct
+    QHash<QString, QString> contactNames1, contactNames2;
+    while (r1->next()) {
+        QCOMPARE(r1->current().count(), 2);
+        contactNames1[r1->value(0).toString()] = r1->value(1).toString();
+    }
+
+    while (r2->next()) {
+        QCOMPARE(r2->current().count(), 2);
+        contactNames2[r2->value(0).toString()] = r2->value(1).toString();
+    }
+    QCOMPARE(contactNames1.size(), 3);
+    QCOMPARE(contactNames1["uri001"], QString("name001"));
+    QCOMPARE(contactNames1["uri002"], QString("name002"));
+    QCOMPARE(contactNames1["uri003"], QString("name003"));
+    QCOMPARE(contactNames2.size(), 3);
+    QCOMPARE(contactNames2["uri001"], QString("name001"));
+    QCOMPARE(contactNames2["uri002"], QString("name002"));
+    QCOMPARE(contactNames2["uri003"], QString("name003"));
+
+    delete r1;
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_data()
+{
+    QTest::addColumn<int>("delayBeforeFirst");
+    QTest::addColumn<int>("delayBeforeSecond");
+
+    QTest::newRow("BothBeforeConnOpened")
+        << 0 << 0;
+
+    QTest::newRow("BothAfterConnOpened")
+        << 2000 << 0;
+
+    QTest::newRow("BeforeAndAfterConnOpened")
+        << 0 << 2000;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections()
+{
+    QSKIP("Waiting for a tracker fix", SkipAll);
+    QFETCH(int, delayBeforeCreatingSecondConnection);
+
+    QSparqlConnection conn1("QTRACKER_DIRECT");
+
+    if (delayBeforeCreatingSecondConnection > 0)
+        QTest::qWait(delayBeforeCreatingSecondConnection);
+
+    QSparqlConnection conn2("QTRACKER_DIRECT");
+
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+
+    QSparqlResult* r1 = conn1.syncExec(q);
+    QCOMPARE(r1->hasError(), false);
+
+    QSparqlResult* r2 = conn2.syncExec(q);
+    QCOMPARE(r2->hasError(), false);
+
+    // Check that the data is correct
+    QHash<QString, QString> contactNames1, contactNames2;
+    while (r1->next()) {
+        QCOMPARE(r1->current().count(), 2);
+        contactNames1[r1->value(0).toString()] = r1->value(1).toString();
+    }
+
+    while (r2->next()) {
+        QCOMPARE(r2->current().count(), 2);
+        contactNames2[r2->value(0).toString()] = r2->value(1).toString();
+    }
+    QCOMPARE(contactNames1.size(), 3);
+    QCOMPARE(contactNames1["uri001"], QString("name001"));
+    QCOMPARE(contactNames1["uri002"], QString("name002"));
+    QCOMPARE(contactNames1["uri003"], QString("name003"));
+    QCOMPARE(contactNames2.size(), 3);
+    QCOMPARE(contactNames2["uri001"], QString("name001"));
+    QCOMPARE(contactNames2["uri002"], QString("name002"));
+    QCOMPARE(contactNames2["uri003"], QString("name003"));
+
+    delete r1;
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections_data()
+{
+    QTest::addColumn<int>("delayBeforeCreatingSecondConnection");
+
+    QTest::newRow("SecondCreatedBeforeFirstOpened")
+        << 0;
+
+    QTest::newRow("SecondCreatedAfterFirstOpened")
+        << 2000;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
+{
+    QFETCH(int, delayBeforeFirst);
+    QFETCH(int, delayBeforeSecond);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QSparqlQuery add1("insert { <addeduri007> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname007\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    QSparqlQuery add2("insert { <addeduri008> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                     "nco:nameGiven \"addedname008\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeFirst);
+
+    QSparqlResult* r1 = conn.exec(add1);
+    QCOMPARE(r1->hasError(), false);
+    QSignalSpy spy1(r1, SIGNAL(finished()));
+
+    if (delayBeforeFirst > 0)
+        QTest::qWait(delayBeforeSecond);
+
+    QSparqlResult* r2 = conn.exec(add2);
+    QCOMPARE(r2->hasError(), false);
+    QSignalSpy spy2(r2, SIGNAL(finished()));
+
+    // Check that we get the finished() signal
+    QTime timer;
+    timer.start();
+    while ((spy1.count() == 0 || spy2.count() == 0) && timer.elapsed() < 5000) {
+        QTest::qWait(1000);
+    }
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
+
+    delete r1;
+    delete r2;
+    
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QString> contactNames;
+    r1 = conn.exec(q);
+    QVERIFY(r1 != 0);
+    r1->waitForFinished();
+    QCOMPARE(r1->size(), 5);
+    while (r1->next()) {
+        contactNames[r1->binding(0).value().toString()] =
+            r1->binding(1).value().toString();
+    }
+    QCOMPARE(contactNames.size(), 5);
+    QCOMPARE(contactNames["addeduri007"], QString("addedname007"));
+    QCOMPARE(contactNames["addeduri008"], QString("addedname008"));
+    delete r1;
+    
+    QSparqlQuery del1("delete { <addeduri007> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r1 = conn.exec(del1);
+    QVERIFY(r1 != 0);
+    QCOMPARE(r1->hasError(), false);
+    r1->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r1->hasError(), false);
+    delete r1;
+    
+    QSparqlQuery del2("delete { <addeduri008> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r2 = conn.exec(del2);
+    QVERIFY(r2 != 0);
+    QCOMPARE(r2->hasError(), false);
+    r2->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r2->hasError(), false);
+    delete r2;
+}
+
+void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
+{
+    QTest::addColumn<int>("delayBeforeFirst");
+    QTest::addColumn<int>("delayBeforeSecond");
+
+    QTest::newRow("BothBeforeConnOpened")
+        << 0 << 0;
+
+    QTest::newRow("BothAfterConnOpened")
+        << 2000 << 0;
+
+    QTest::newRow("BeforeAndAfterConnOpened")
+        << 0 << 2000;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
