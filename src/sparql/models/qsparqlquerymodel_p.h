@@ -91,6 +91,7 @@ public:
     void beginQuery(int totalResults);
 public slots:
     void addData(int totalResults);
+    void queryFinished();
 };
 
 QT_END_NAMESPACE

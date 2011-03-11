@@ -61,6 +61,15 @@ void QSparqlQueryModelPrivate::addData(int totalResults)
     }
 }
 
+void QSparqlQueryModelPrivate::queryFinished()
+{
+    if (result->hasError())
+        q->setLastError(result->lastError());
+
+    qDebug() << "QSparqlQueryModelPrivate::queryFinished() result:" << result;
+    emit q->finished();
+}
+
 void QSparqlQueryModelPrivate::beginQuery(int totalResults)
 {
     // This function will only be called when result is a valid
@@ -305,7 +314,7 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
     delete d->result;
     d->result = connection.exec(query);
     d->newQuery = true;
-    connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
+    connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
 
 }
