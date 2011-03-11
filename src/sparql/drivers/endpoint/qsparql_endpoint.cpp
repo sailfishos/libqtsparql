@@ -283,6 +283,9 @@ void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 
 void EndpointResultPrivate::terminate()
 {
+    if (isFinished)
+        return;
+
     isFinished = true;
     q->emit finished();
     
