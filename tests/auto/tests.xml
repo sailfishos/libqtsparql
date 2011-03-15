@@ -25,51 +25,63 @@
     <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
       <pre_steps>
 	<step expected_result="0">
-          . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq;
-	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl"
         </step>
       </pre_steps>
       <case name="test-query-contacts" description="Executing a query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker query_contacts
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker query_contacts"
         </step>
       </case>
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_and_delete_contact ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-query-with-error" description="Erroneous query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker query_with_error
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker query_with_error"
+        </step>
+      </case>
+      <case name="test-insert-new-urn" description="Urn creation">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker insert_new_urn ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq &amp;&amp;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
+	  exit $i )"
         </step>
       </case>
       <case name="test-batch-update" description="Batch update">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker batch_update ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker batch_update ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-iterating-result" description="Iterating a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker iterate_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker iterate_result"
         </step>
       </case>
       <case name="test-delete-unfinished-result" description="Deleting a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker delete_unfinished_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker delete_unfinished_result"
+        </step>
+      </case>
+      <case name="test-go-beyond-columns-number" description="Try to access non-existing column">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker go_beyond_columns_number"
         </step>
       </case>
 
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker.rq"
         </step>
       </post_steps>
       <environments>
@@ -83,129 +95,169 @@
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
       <pre_steps>
 	<step expected_result="0">
-          . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
-	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl"
         </step>
       </pre_steps>
       <case name="test-query-contacts" description="Executing a query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts"
         </step>
       </case>
       <case name="test-query-contacts-async" description="Executing a query async">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts_async
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts_async"
         </step>
       </case>
       <case name="test-ask-contacts" description="Executing an ASK query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct ask_contacts
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct ask_contacts"
         </step>
       </case>
       <case name="test-insert-and-delete-contact" description="Executing an update">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-insert-and-delete-contact-async" description="Executing an update async">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact_async ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_and_delete_contact_async ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-insert-new-urn" description="Inserting a created urn">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_new_urn
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_new_urn"
         </step>
       </case>
       <case name="test-query-with-error" description="Erroneous query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_error"
         </step>
       </case>
       <case name="test-iterating-result" description="Iterating a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result"
         </step>
       </case>
       <case name="test-delete-unfinished-result" description="Deleting a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_unfinished_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_unfinished_result"
         </step>
       </case>
       <case name="test-delete-partially-iterated-result" description="Deleting a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_partially_iterated_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_partially_iterated_result"
         </step>
       </case>
       <case name="test-delete-nearly-finished-result" description="Deleting a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_nearly_finished_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_nearly_finished_result"
         </step>
       </case>
       <case name="test-cancel-insert-result" description="Canclling an INSERT">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct cancel_insert_result ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct cancel_insert_result ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-concurrent-queries" description="Concurrent queries">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries"
         </step>
       </case>
       <case name="test-concurrent-queries2" description="Concurrent queries 2">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries_2
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct concurrent_queries_2"
         </step>
       </case>
       <case name="test-insert-with-dbus-read-with-direct" description="Inserting and reading">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_with_dbus_read_with_direct ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct insert_with_dbus_read_with_direct ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-open-connection-twice" description="Open connection twice">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice"
         </step>
       </case>
       <case name="test-result-type-bool" description="Bool result type">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_type_bool
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_type_bool"
         </step>
       </case>
       <case name="test-special-chars" description="Special characters">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct special_chars ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct special_chars ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-result-immediately-finished" description="Regression test">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished"
         </step>
       </case>
       <case name="test-result-immediately-finished2" description="Regression test">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished2
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_immediately_finished2"
         </step>
       </case>
+      <case name="test-delete-connection-immediately" description="Deleting a QSparqlConnection">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_conenction_immediately"
+        </step>
+      </case>
+      <case name="test-delete-connection-before-a-wait" description="Deleting a QSparqlConnection">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_conenction_before_a_wait"
+        </step>
+      </case>
+      <case name="test-go-beyond-columns-number" description="Try to access non-existing column">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct go_beyond_columns_number"
+        </step>
+      </case>
+      <case name="test-create-2-connections" description="Regression test">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct create_2_connections"
+        </step>
+      </case>
+      <case name="test-unsupported-statement-type" description="Unsupported statement type">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct unsupported_statement_type"
+        </step>
+      </case>
+      <case name="test-async-conn-opening" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct async_conn_opening"
+        </step>
+      </case>
+      <case name="test-async-conn-opening-with-2-connections" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct async_conn_opening_with_2_connections"
+        </step>
+      </case>
+      <case name="test-async-conn-opening-for-update" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct async_conn_opening_for_update"
+        </step>
+      </case>
+
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq"
         </step>
       </post_steps>
       <environments>
@@ -219,30 +271,29 @@
     <set name="qsparql-threding" description="Multithreading tests">
       <pre_steps>
 	<step expected_result="0">
-          . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq;
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq;"
         </step>
       </pre_steps>
       <case name="test-tracker-queries" description="Tracker queries">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries"
         </step>
       </case>
       <case name="test-tracker-direct-queries" description="Tracker direct queries">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries"
         </step>
       </case>
       <case name="test-tracker-direct-inserts" description="Tracker direct inserts">
 
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_threading.rq &amp;&amp; exit $i )
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_threading.rq &amp;&amp; exit $i )"
         </step>
       </case>
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq"
         </step>
       </post_steps>
       <environments>
@@ -256,65 +307,79 @@
     <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
       <pre_steps>
 	<step expected_result="0">
-          . /tmp/session_bus_address.user;
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
-	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl"
         </step>
       </pre_steps>
       <case name="test-query-contacts-sync" description="Executing a query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_contacts_sync
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_contacts_sync"
         </step>
       </case>
       <case name="test-ask-contacts-sync" description="Executing an ASK query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync ask_contacts_sync
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync ask_contacts_sync"
         </step>
       </case>
       <case name="test-insert-and-delete-contact-sync" description="Executing an update">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync insert_and_delete_contact_sync ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync insert_and_delete_contact_sync ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
         </step>
       </case>
       <case name="test-query-with-error-sync" description="Erroneous query">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_with_error_sync
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_with_error_sync"
         </step>
       </case>
       <case name="test-iterating-result-sync" description="Iterating a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_sync
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_sync"
         </step>
       </case>
       <case name="test-delete-partially-iterated-result-sync" description="Deleting a QSparqlResult">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync delete_partially_iterated_result
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync delete_partially_iterated_result"
         </step>
       </case>
       <case name="test-concurrent-queries-sync" description="Concurrent queries">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync concurrent_queries
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync concurrent_queries"
         </step>
       </case>
       <case name="test-result-type-bool-sync" description="Bool result type">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync result_type_bool
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync result_type_bool"
         </step>
       </case>
       <case name="test-special-chars-sync" description="Special characters">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync special_chars ||
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync special_chars ||
 	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq &amp;&amp;
 	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl &amp;&amp;
-	  exit $i )
+	  exit $i )"
+        </step>
+      </case>
+      <case name="test-async-conn-opening" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct-sync async_conn_opening"
+        </step>
+      </case>
+      <case name="test-async-conn-opening-with-2-connections" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync async_conn_opening_with_2_connections"
+        </step>
+      </case>
+      <case name="test-async-conn-opening-for-update" description="Async connection opening">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync async_conn_opening_for_update"
         </step>
       </case>
       <post_steps>
 	<step expected_result="0">
-	  tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq"
         </step>
       </post_steps>
       <environments>
