@@ -216,12 +216,12 @@
       </case>
       <case name="test-delete-connection-immediately" description="Deleting a QSparqlConnection">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_conenction_immediately"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_connection_immediately"
         </step>
       </case>
       <case name="test-delete-connection-before-a-wait" description="Deleting a QSparqlConnection">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_conenction_before_a_wait"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_connection_before_a_wait"
         </step>
       </case>
       <case name="test-go-beyond-columns-number" description="Try to access non-existing column">
@@ -364,7 +364,7 @@
       </case>
       <case name="test-async-conn-opening" description="Async connection opening">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct-sync async_conn_opening"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync async_conn_opening"
         </step>
       </case>
       <case name="test-async-conn-opening-with-2-connections" description="Async connection opening">
