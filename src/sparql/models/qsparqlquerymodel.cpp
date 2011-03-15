@@ -66,7 +66,6 @@ void QSparqlQueryModelPrivate::queryFinished()
     if (result->hasError())
         q->setLastError(result->lastError());
 
-    qDebug() << "QSparqlQueryModelPrivate::queryFinished() result:" << result;
     emit q->finished();
 }
 
