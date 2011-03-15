@@ -16,7 +16,7 @@ contains(sparql-drivers, tracker_direct) {
     HEADERS +=      drivers/tracker_direct/qsparql_tracker_direct_p.h
     SOURCES +=      drivers/tracker_direct/qsparql_tracker_direct.cpp
     CONFIG += link_pkgconfig
-    PKGCONFIG += tracker-sparql-0.9
+    PKGCONFIG += tracker-sparql-0.10
     DEFINES += QT_SPARQL_TRACKER_DIRECT
 }
 

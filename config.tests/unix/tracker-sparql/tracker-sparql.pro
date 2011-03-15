@@ -3,5 +3,5 @@ CONFIG -= qt
 
 unix: {
     CONFIG += link_pkgconfig
-    PKGCONFIG += tracker-sparql-0.9
+    PKGCONFIG += tracker-sparql-0.10
 }
