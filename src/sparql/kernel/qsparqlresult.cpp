@@ -71,7 +71,7 @@ public:
 /*!
     \class QSparqlResult
     \brief The QSparqlResult class provides an abstract interface for
-    accessing the asynchronous results of an executed QSparqlQuery.
+    accessing the results of an executed QSparqlQuery.
 
     \ingroup database
     \inmodule QtSparql

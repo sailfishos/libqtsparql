@@ -321,7 +321,6 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
   \class QSparqlConnection
 
   \brief The QSparqlConnection class provides an interface for accessing an RDF store.
-    \inmodule QtSparql
 
 */
 
