@@ -65,6 +65,7 @@ class EndpointDriver;
 
 class EndpointResult : public QSparqlResult
 {
+    Q_OBJECT
     friend class EndpointResultPrivate;
 public:
     explicit EndpointResult(EndpointDriverPrivate* p);

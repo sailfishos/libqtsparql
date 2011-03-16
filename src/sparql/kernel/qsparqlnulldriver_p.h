@@ -65,6 +65,7 @@ class QSparqlConnectionOptions;
 
 class QSparqlNullResult : public QSparqlResult
 {
+    Q_OBJECT
 public:
     inline explicit QSparqlNullResult()
     {
@@ -89,6 +90,7 @@ protected:
 
 class QSparqlNullDriver : public QSparqlDriver
 {
+    Q_OBJECT
 public:
     inline QSparqlNullDriver()
     {
@@ -109,5 +111,7 @@ protected:
 };
 
 QT_END_NAMESPACE
+
+#include "moc_qsparqlnulldriver_p.cpp"
 
 #endif // QSPARQLNULLDRIVER_P_H

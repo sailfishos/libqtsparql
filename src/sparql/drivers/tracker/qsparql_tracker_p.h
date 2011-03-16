@@ -68,6 +68,7 @@ class QTrackerDriver;
 
 class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerResult : public QSparqlResult
 {
+    Q_OBJECT
     friend class QTrackerDriver;
     friend class QTrackerResultPrivate; // for emitting signals
 public:
