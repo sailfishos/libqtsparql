@@ -956,7 +956,6 @@ void tst_QSparqlTrackerDirect::go_beyond_columns_number()
 
 void tst_QSparqlTrackerDirect::create_2_connections()
 {
-    QSKIP("This hangs; a bug somewhere", SkipAll);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlConnection conn2("QTRACKER_DIRECT"); // this hangs
 }
@@ -1048,7 +1047,6 @@ void tst_QSparqlTrackerDirect::async_conn_opening_data()
 
 void tst_QSparqlTrackerDirect::async_conn_opening_with_2_connections()
 {
-    QSKIP("Waiting for a tracker fix", SkipAll);
     QFETCH(int, delayBeforeCreatingSecondConnection);
 
     QSparqlConnection conn1("QTRACKER_DIRECT");

@@ -532,7 +532,6 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_data()
 
 void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections()
 {
-    QSKIP("Waiting for a tracker fix", SkipAll);
     QFETCH(int, delayBeforeCreatingSecondConnection);
 
     QSparqlConnection conn1("QTRACKER_DIRECT");
