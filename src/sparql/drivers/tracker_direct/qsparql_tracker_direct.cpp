@@ -539,7 +539,7 @@ void QTrackerDirectResult::waitForFinished()
     // We first need the connection to be ready before doing anything
     if (!d->driverPrivate->asyncOpenCalled) {
         QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
+        connect(d->driverPrivate->driver, SIGNAL(opened(QString)), &loop, SLOT(quit()));
         loop.exec();
     }
 
@@ -672,7 +672,7 @@ void QTrackerDirectUpdateResult::waitForFinished()
     // We first need the connection to be ready before doing anything
     if (!d->driverPrivate->asyncOpenCalled) {
         QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
+        connect(d->driverPrivate->driver, SIGNAL(opened(QString)), &loop, SLOT(quit()));
         loop.exec();
     }
 
@@ -995,7 +995,7 @@ void QTrackerDirectDriver::close()
 
     if (!d->asyncOpenCalled) {
         QEventLoop loop;
-        connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
+        connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
         loop.exec();
     }
 
@@ -1047,7 +1047,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
         } else {
             QEventLoop loop;
             connect(this, SIGNAL(opened(QString)), result, SLOT(exec(QString)));
-            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
+            connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
             loop.exec();
         }
     } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
@@ -1056,7 +1056,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
         } else {
             QEventLoop loop;
             connect(this, SIGNAL(opened(QString)), result, SLOT(update(QString)));
-            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
+            connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
             loop.exec();
         }
     }
