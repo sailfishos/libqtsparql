@@ -391,12 +391,6 @@
       </get>
     </set>
     <set name="qsparql-tracker-direct-crashes" description="Regression tests">
-      <pre_steps>
-	<step expected_result="0">
-	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
-	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl"
-        </step>
-      </pre_steps>
       <case name="test-waitforfinished-crashes" description="Regression test">
         <step expected_result="0">
 	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
