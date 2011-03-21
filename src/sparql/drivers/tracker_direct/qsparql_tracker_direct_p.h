@@ -96,7 +96,7 @@ protected:
     void cleanup();
 
 private Q_SLOTS:
-    void exec(QString msg);
+    void exec();
 
 private:
     void terminate();
@@ -134,7 +134,7 @@ protected:
     void cleanup();
 
 private Q_SLOTS:
-    void exec(QString msg);
+    void exec();
 
 private:
     void terminate();
@@ -165,8 +165,8 @@ public:
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
     
 private Q_SLOTS:
-    void exec(QString msg);
-    void update(QString msg);
+    void exec();
+    void update();
 
 private:
     QTrackerDirectSyncResultPrivate* d;
@@ -189,7 +189,7 @@ public:
                             QSparqlQuery::StatementType type);
 
 Q_SIGNALS:
-    void opened(QString msg);
+    void opened();
 
 private:
     friend class QTrackerDirectDriverPrivate;
