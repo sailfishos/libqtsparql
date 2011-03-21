@@ -206,7 +206,7 @@ public:
     ~QTrackerDirectDriverPrivate();
 
     void setOpen(bool open);
-    void opened(const QString& msg);
+    void opened();
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;
@@ -217,6 +217,7 @@ public:
     QMutex mutex;
     QTrackerDirectDriver *driver;
     bool asyncOpenCalled;
+    QString error;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -362,10 +363,11 @@ QTrackerDirectResult::~QTrackerDirectResult()
     delete d;
 }
 
-void QTrackerDirectResult::exec(QString msg)
+void QTrackerDirectResult::exec()
 {
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(msg, QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         d->terminate();
         return;
     }
@@ -539,13 +541,13 @@ void QTrackerDirectResult::waitForFinished()
     // We first need the connection to be ready before doing anything
     if (!d->driverPrivate->asyncOpenCalled) {
         QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened(QString)), &loop, SLOT(quit()));
+        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
         loop.exec();
     }
 
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(QLatin1String("Connection not open"),
-                                          QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         d->terminate();
         return;
     }
@@ -638,10 +640,11 @@ QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
     delete d;
 }
 
-void QTrackerDirectUpdateResult::exec(QString msg)
+void QTrackerDirectUpdateResult::exec()
 {
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(msg, QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         d->terminate();
         return;
     }
@@ -672,13 +675,13 @@ void QTrackerDirectUpdateResult::waitForFinished()
     // We first need the connection to be ready before doing anything
     if (!d->driverPrivate->asyncOpenCalled) {
         QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened(QString)), &loop, SLOT(quit()));
+        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
         loop.exec();
     }
 
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(QLatin1String("Connection not open"),
-                                          QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         d->terminate();
         return;
     }
@@ -743,10 +746,11 @@ QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
     delete d;
 }
 
-void QTrackerDirectSyncResult::exec(QString msg)
+void QTrackerDirectSyncResult::exec()
 {
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(msg, QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         return;
     }
 
@@ -763,10 +767,11 @@ void QTrackerDirectSyncResult::exec(QString msg)
     }
 }
 
-void QTrackerDirectSyncResult::update(QString msg)
+void QTrackerDirectSyncResult::update()
 {
     if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(msg, QSparqlError::ConnectionError));
+        setLastError(QSparqlError(d->driverPrivate->error,
+                                  QSparqlError::ConnectionError));
         return;
     }
 
@@ -915,16 +920,16 @@ async_open_callback(GObject         * /*source_object*/,
     d->connection = tracker_sparql_connection_get_finish(result, &error);
     
     if (d->connection == 0) {
-        QString msg = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
+        d->error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
                                         .arg(QString::fromUtf8(error ? error->message : "unknown error"));
-        qWarning() << msg;
+        qWarning() << d->error;
         g_error_free(error);
         d->setOpen(false);
-        d->opened(msg);
+        d->opened();
         return;
     }
     
-    d->opened(QLatin1String(""));
+    d->opened();
 }
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
@@ -942,9 +947,9 @@ void QTrackerDirectDriverPrivate::setOpen(bool open)
     driver->setOpen(open);
 }
 
-void QTrackerDirectDriverPrivate::opened(const QString& msg)
+void QTrackerDirectDriverPrivate::opened()
 {
-    emit driver->opened(msg);
+    emit driver->opened();
 }
 
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
@@ -1002,7 +1007,7 @@ void QTrackerDirectDriver::close()
 
     if (!d->asyncOpenCalled) {
         QEventLoop loop;
-        connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
+        connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
         loop.exec();
     }
 
@@ -1023,9 +1028,9 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         
         if (d->asyncOpenCalled) {
-            result->exec(QLatin1String(""));
+            result->exec();
         } else {
-            connect(this, SIGNAL(opened(QString)), result, SLOT(exec(QString)));
+            connect(this, SIGNAL(opened()), result, SLOT(exec()));
         }
         
         return result;
@@ -1033,9 +1038,9 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
         QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type);
         
         if (d->asyncOpenCalled) {
-            result->exec(QLatin1String(""));
+            result->exec();
         } else {
-            connect(this, SIGNAL(opened(QString)), result, SLOT(exec(QString)));
+            connect(this, SIGNAL(opened()), result, SLOT(exec()));
         }
         
         return result;
@@ -1050,20 +1055,20 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
     GError * error = 0;
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         if (d->asyncOpenCalled) {
-            result->exec(QLatin1String(""));
+            result->exec();
         } else {
             QEventLoop loop;
-            connect(this, SIGNAL(opened(QString)), result, SLOT(exec(QString)));
-            connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
+            connect(this, SIGNAL(opened()), result, SLOT(exec()));
+            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
             loop.exec();
         }
     } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
         if (d->asyncOpenCalled) {
-            result->update(QLatin1String(""));
+            result->update();
         } else {
             QEventLoop loop;
-            connect(this, SIGNAL(opened(QString)), result, SLOT(update(QString)));
-            connect(this, SIGNAL(opened(QString)), &loop, SLOT(quit()));
+            connect(this, SIGNAL(opened()), result, SLOT(update()));
+            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
             loop.exec();
         }
     }
