@@ -915,20 +915,18 @@ async_open_callback(GObject         * /*source_object*/,
                     gpointer         user_data)
 {
     QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
-    d->asyncOpenCalled = true;
     GError * error = 0;
     d->connection = tracker_sparql_connection_get_finish(result, &error);
-    
+
     if (d->connection == 0) {
         d->error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
                                         .arg(QString::fromUtf8(error ? error->message : "unknown error"));
         qWarning() << d->error;
         g_error_free(error);
         d->setOpen(false);
-        d->opened();
-        return;
     }
-    
+
+    d->asyncOpenCalled = true;
     d->opened();
 }
 
