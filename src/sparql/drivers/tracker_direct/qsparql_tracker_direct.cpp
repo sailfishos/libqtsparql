@@ -676,6 +676,13 @@ void QTrackerDirectUpdateResult::waitForFinished()
         loop.exec();
     }
 
+    if (!d->driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(QLatin1String("Connection not open"),
+                                          QSparqlError::ConnectionError));
+        d->terminate();
+        return;
+    }
+
     QEventLoop loop;
     d->loop = &loop;
     loop.exec();
