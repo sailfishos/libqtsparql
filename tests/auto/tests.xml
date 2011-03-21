@@ -390,5 +390,31 @@
 	<file>/home/user/.local/share/tracker/tracker-store.log</file>
       </get>
     </set>
+    <set name="qsparql-tracker-direct-crashes" description="Regression tests">
+      <pre_steps>
+	<step expected_result="0">
+	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
+	  tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl"
+        </step>
+      </pre_steps>
+      <case name="test-waitforfinished-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes waitForFinished_crashes_when_connection_opening_fails
+        </step>
+      </case>
+      <case name="test-syncexec-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_crashes_when_connection_opening_fails
+        </step>
+      </case>
+      <case name="test-syncexec-update-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_update_crashes_when_connection_opening_fails
+        </step>
+      </case>
+    </set>
   </suite>
 </testdefinition>
