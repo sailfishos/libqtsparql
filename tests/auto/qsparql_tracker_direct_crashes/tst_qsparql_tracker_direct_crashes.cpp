@@ -104,6 +104,8 @@ void tst_QSparqlTrackerDirectCrashes::waitForFinished_crashes_when_connection_op
 
     QSparqlResult* r = conn.exec(query);
     r->waitForFinished();
+    QVERIFY2(r->hasError(), "This test needs to run in a setup where connection opening fails");
+    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
     delete r;
 }
 
@@ -115,6 +117,8 @@ void tst_QSparqlTrackerDirectCrashes::syncExec_crashes_when_connection_opening_f
     QSparqlQuery query("SELECT ?u {?u a rdfs:Resource .}");
 
     QSparqlResult* r = conn.syncExec(query);
+    QVERIFY2(r->hasError(), "This test needs to run in a setup where connection opening fails");
+    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
     delete r;
 }
 
@@ -136,6 +140,8 @@ void tst_QSparqlTrackerDirectCrashes::syncExec_update_crashes_when_connection_op
                              QSparqlQuery::DeleteStatement);
 
     r = conn.syncExec(deleteQuery);
+    QVERIFY2(r->hasError(), "This test needs to run in a setup where connection opening fails");
+    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
     delete r;
 }
 
@@ -150,12 +156,16 @@ void tst_QSparqlTrackerDirectCrashes::two_failing_connections()
 
         QSparqlResult* r = conn.exec(query);
         r->waitForFinished();
+        QVERIFY2(r->hasError(), "This test needs to run in a setup where connection opening fails");
+        QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
         delete r;
     }
     {
         QSparqlConnection conn ("QTRACKER_DIRECT");
         QSparqlQuery query("SELECT ?u {?u a rdfs:Resource .}");
         QSparqlResult* r = conn.syncExec(query);
+        QVERIFY2(r->hasError(), "This test needs to run in a setup where connection opening fails");
+        QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
         delete r;
     }
 }
