@@ -288,7 +288,7 @@
 
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_threading.rq &amp;&amp; exit $i )"
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq &amp;&amp; exit $i )"
         </step>
       </case>
       <post_steps>
