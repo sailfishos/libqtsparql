@@ -396,7 +396,6 @@ public:
             QList<TrackerSparqlValueType> types;
 
             while (tracker_sparql_cursor_next(cursor, NULL, &error)) {
-                QSparqlResultRow resultRow;
                 gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
                 for (int i = 0; i < n_columns; i++) {
                     QString value = QString::fromUtf8(
