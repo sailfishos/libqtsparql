@@ -80,6 +80,9 @@ private slots:
     void queryBenchmark();
     void queryBenchmark_data();
 
+    void dataReadingBenchmark();
+    void dataReadingBenchmark_data();
+
     // Reference benchmarks
     void queryWithLibtrackerSparql();
     void queryWithLibtrackerSparql_data();
@@ -214,6 +217,83 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
         << "direct-artistsandalbums"
         << "QTRACKER_DIRECT"
         << artistsAndAlbums;
+}
+
+void tst_QSparqlBenchmark::dataReadingBenchmark()
+{
+    QFETCH(QString, benchmarkName);
+    QFETCH(QString, queryString);
+    QFETCH(int, columnCount);
+
+    QSparqlQuery query(queryString);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    // Note: connection opening cost is left out of the benchmark. Connection
+    // opening is async, so we need to wait here long enough to know that it has
+    // opened (there is no signal sent or such to know it has opened).
+    QTest::qWait(2000);
+
+    QString finished = benchmarkName + "-fin";
+    QString read = benchmarkName + "-read";
+
+    QSparqlResult* r = 0;
+    for (int i = 0; i < 100; ++i) {
+        {
+            START_BENCHMARK {
+                r = conn.exec(query);
+                QEventLoop loop;
+                connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
+                loop.exec();
+            }
+            END_BENCHMARK(finished);
+        }
+        QVERIFY(!r->hasError());
+        QVERIFY(r->size() > 0);
+        {
+            int size = 0;
+            START_BENCHMARK {
+                while (r->next()) {
+                    for (int c = 0; c < columnCount; ++c) {
+                        QVariant var = r->value(c);
+                        // Probably it's enough not to do anything with the
+                        // value; the statement of getting the value won't be
+                        // optimized out since calling r->value() might have
+                        // side effects.
+                    }
+                    ++size;
+                }
+            }
+            END_BENCHMARK(read);
+            // For verifying that enough data was really read
+            // qDebug() << "No of results" << size;
+        }
+        delete r;
+    }
+}
+
+void tst_QSparqlBenchmark::dataReadingBenchmark_data()
+{
+    QTest::addColumn<QString>("benchmarkName");
+    QTest::addColumn<QString>("queryString");
+    QTest::addColumn<int>("columnCount");
+
+    QString musicQuery =
+        "select ?song ?title "
+        "tracker:coalesce(nmm:artistName(nmm:performer(?song)), 'UNKNOWN_ARTIST') "
+        "tracker:coalesce(nie:title(nmm:musicAlbum(?song)), 'UNKNOWN_ALBUM') "
+        "nfo:duration(?song) "
+        "( EXISTS { ?song nao:hasTag nao:predefined-tag-favorite } ) "
+        "nfo:genre(?song) nie:contentCreated(?song) "
+        "tracker:id(?song) tracker:id(nmm:performer(?song)) "
+        "tracker:id(nmm:musicAlbum(?song)) "
+        "where { ?song a nmm:MusicPiece . "
+        "?song nie:title ?title . } "
+        "order by ?title "
+        "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
+
+    QTest::newRow("ReadingMusic")
+        << "read-music"
+        << musicQuery
+        << 11;
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
