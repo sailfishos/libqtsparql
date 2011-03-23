@@ -55,10 +55,10 @@
     long start = tv2.tv_sec * 1000 + tv2.tv_usec / 1000; \
 
 
-#define END_BENCHMARK(TEXT) \
+#define END_BENCHMARK(QSTRINGNAME) \
     gettimeofday(&tv2, NULL); \
     long end = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;          \
-    snprintf(tsbuf2, sizeof(tsbuf2), TEXT " %lu\n", end - start); \
+    snprintf(tsbuf2, sizeof(tsbuf2), "%s %lu\n", qPrintable(QSTRINGNAME), end - start); \
     write(8, tsbuf2, strlen(tsbuf2))
 
 class tst_QSparqlBenchmark : public QObject
@@ -149,12 +149,16 @@ private:
 
 void tst_QSparqlBenchmark::queryBenchmark()
 {
+    QFETCH(QString, benchmarkName);
     QFETCH(QString, connectionName);
     QFETCH(QString, queryString);
 
     QSparqlQuery query(queryString);
-    // Note: connection opening cost is left out from the QBENCHMARK.
     QSparqlConnection conn(connectionName);
+    // Note: connection opening cost is left out of the benchmark. Connection
+    // opening is async, so we need to wait here long enough to know that it has
+    // opened (there is no signal sent or such to know it has opened).
+    QTest::qWait(2000);
 
     QSparqlResult* r = 0;
     // We run multiple queries here (and don't leave it for QBENCHMARK to
@@ -168,26 +172,28 @@ void tst_QSparqlBenchmark::queryBenchmark()
             QVERIFY(r->size() > 0);
             delete r;
         }
-        END_BENCHMARK("qsparql");
+        END_BENCHMARK(benchmarkName);
     }
 }
 
 void tst_QSparqlBenchmark::queryBenchmark_data()
 {
+    QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("connectionName");
     QTest::addColumn<QString>("queryString");
 
     // The query is trivial, these tests cases measure (exaggerates) other costs
     // than running the query.
-/*    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
+    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
     QTest::newRow("TrackerDBusAllResources")
+        << "dbus-allresources"
         << "QTRACKER"
         << trivialQuery;
 
     QTest::newRow("TrackerDirectAllResources")
+        << "direct-allresources"
         << "QTRACKER_DIRECT"
         << trivialQuery;
-*/
 
     // A bit more complicated query. Test data for running this can be found in
     // the tracker project.
@@ -199,11 +205,13 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
         "?song nmm:performer ?artist . "
         "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
-/*    QTest::newRow("TrackerDBusArtistsAndAlbums")
+    QTest::newRow("TrackerDBusArtistsAndAlbums")
+        << "dbus-artistsandalbums"
         << "QTRACKER"
         << artistsAndAlbums;
-*/
+
     QTest::newRow("TrackerDirectArtistsAndAlbums")
+        << "direct-artistsandalbums"
         << "QTRACKER_DIRECT"
         << artistsAndAlbums;
 }
@@ -211,6 +219,7 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 {
     g_type_init();
+    QFETCH(QString, benchmarkName);
     QFETCH(QString, queryString);
     GError* error = 0;
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
@@ -246,7 +255,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 
             g_object_unref(cursor);
         }
-        END_BENCHMARK("lts");
+        END_BENCHMARK(benchmarkName);
     }
 
     g_object_unref(connection);
@@ -254,14 +263,15 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
 {
+    QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("queryString");
 
     // The query is trivial, these tests cases measure (exaggerates) other costs
     // than running the query.
-    /*QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
+    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
     QTest::newRow("AllResources")
+        << "lts-allresources"
         << trivialQuery;
-    */
 
     // A bit more complicated query. Test data for running this can be found in
     // the tracker project.
@@ -274,6 +284,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
         "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
     QTest::newRow("ArtistsAndAlbums")
+        << "lts-artistsandalbums"
         << artistsAndAlbums;
 }
 
@@ -331,6 +342,8 @@ public:
 void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
 {
     g_type_init();
+    QFETCH(QString, benchmarkName);
+    benchmarkName += QString("-thread");
     QFETCH(QString, queryString);
     GError* error = 0;
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
@@ -343,7 +356,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
             runner.start();
             runner.wait();
         }
-        END_BENCHMARK("lts-thread");
+        END_BENCHMARK(benchmarkName);
     }
 
     g_object_unref(connection);
