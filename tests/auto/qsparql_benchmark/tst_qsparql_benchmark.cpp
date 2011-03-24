@@ -94,7 +94,7 @@ private slots:
     void queryWithLibtrackerSparqlInThread();
     void queryWithLibtrackerSparqlInThread_data();
 
-    void dummyThread();
+    void threadCreatingOverhead();
 };
 
 namespace {
@@ -127,8 +127,32 @@ const QString musicQuery =
     "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
 
 const int musicQueryColumnCount = 11;
+
+void readValuesFromCursor(TrackerSparqlCursor* cursor,
+                          QStringList& values,
+                          QList<TrackerSparqlValueType>& types)
+{
+    QString value;
+    TrackerSparqlValueType type;
+    gint n_columns = -1;
+    GError* error;
+    while (tracker_sparql_cursor_next (cursor, 0, &error)) {
+        if (n_columns < 0)
+            n_columns = tracker_sparql_cursor_get_n_columns(cursor);
+        for (int i = 0; i < n_columns; i++) {
+            // Simulating what QtSparql does with the data: get the
+            // value as string, do conversion to utf-8, get the type,
+            // and store the value and the type.
+            value = QString::fromUtf8(
+                tracker_sparql_cursor_get_string(cursor, i, 0));
+            type = tracker_sparql_cursor_get_value_type(cursor, i);
+            values << value;
+            types << type;
+        }
+    }
 }
 
+}
 
 tst_QSparqlBenchmark::tst_QSparqlBenchmark()
 {
@@ -330,17 +354,9 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 
             QStringList values;
             QList<TrackerSparqlValueType> types;
-            while (tracker_sparql_cursor_next (cursor, NULL, &error)) {
-                gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
-                for (int i = 0; i < n_columns; i++) {
-                    QString value = QString::fromUtf8(
-                        tracker_sparql_cursor_get_string(cursor, i, 0));
-                    TrackerSparqlValueType type =
-                        tracker_sparql_cursor_get_value_type(cursor, i);
-                    values << value;
-                    types << type;
-                }
-            }
+
+            readValuesFromCursor(cursor, values, types);
+
             QVERIFY(values.size() > 0);
             QVERIFY(types.size() > 0);
 
@@ -393,17 +409,8 @@ public:
             QStringList values;
             QList<TrackerSparqlValueType> types;
 
-            while (tracker_sparql_cursor_next(cursor, NULL, &error)) {
-                gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
-                for (int i = 0; i < n_columns; i++) {
-                    QString value = QString::fromUtf8(
-                        tracker_sparql_cursor_get_string(cursor, i, 0));
-                    TrackerSparqlValueType type =
-                        tracker_sparql_cursor_get_value_type(cursor, i);
-                    values << value;
-                    types << type;
-                }
-            }
+            readValuesFromCursor(cursor, values, types);
+
             QVERIFY(values.size() > 0);
             QVERIFY(types.size() > 0);
             g_object_unref(cursor);
@@ -445,7 +452,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread_data()
 }
 
 
-void tst_QSparqlBenchmark::dummyThread()
+void tst_QSparqlBenchmark::threadCreatingOverhead()
 {
     QBENCHMARK {
         for (int i = 0; i < NO_QUERIES; ++i) {
