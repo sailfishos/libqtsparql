@@ -88,6 +88,12 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
     case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
         return QVariant(QDateTime::fromString(QString::fromUtf8(value), Qt::ISODate));
     case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
+        // Note: this type is not currently used by Tracker.  Here we're storing
+        // it as a null QVariant and losing information that it was a blank
+        // node.  If Tracker starts using this type, a possible solution would
+        // be to store the blank node label into a QVariant along with some type
+        // information indicating that it was a blank node, and utilizing that
+        // information in binding().
         break;
     case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
     {
