@@ -93,6 +93,39 @@ private slots:
     void dummyThread();
 };
 
+namespace {
+    // Query strings
+
+    // Test data for running this can be found in the tracker project.
+QString artistsAndAlbumsQuery =
+    "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
+    "WHERE "
+    "{ "
+    "?song a nmm:MusicPiece . "
+    "?song nmm:performer ?artist . "
+    "?song nmm:musicAlbum ?album . "
+        "} GROUP BY ?artist";
+
+int artistsAndAlbumsColumnCount = 2;
+
+QString musicQuery =
+    "select ?song ?title "
+    "tracker:coalesce(nmm:artistName(nmm:performer(?song)), 'UNKNOWN_ARTIST') "
+    "tracker:coalesce(nie:title(nmm:musicAlbum(?song)), 'UNKNOWN_ALBUM') "
+    "nfo:duration(?song) "
+    "( EXISTS { ?song nao:hasTag nao:predefined-tag-favorite } ) "
+    "nfo:genre(?song) nie:contentCreated(?song) "
+    "tracker:id(?song) tracker:id(nmm:performer(?song)) "
+    "tracker:id(nmm:musicAlbum(?song)) "
+    "where { ?song a nmm:MusicPiece . "
+    "?song nie:title ?title . } "
+    "order by ?title "
+    "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
+
+int musicQueryColumnCount = 11;
+}
+
+
 tst_QSparqlBenchmark::tst_QSparqlBenchmark()
 {
 }
@@ -185,38 +218,15 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
     QTest::addColumn<QString>("connectionName");
     QTest::addColumn<QString>("queryString");
 
-    // The query is trivial, these tests cases measure (exaggerates) other costs
-    // than running the query.
-    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
-    QTest::newRow("TrackerDBusAllResources")
-        << "dbus-allresources"
-        << "QTRACKER"
-        << trivialQuery;
-
-    QTest::newRow("TrackerDirectAllResources")
-        << "direct-allresources"
-        << "QTRACKER_DIRECT"
-        << trivialQuery;
-
-    // A bit more complicated query. Test data for running this can be found in
-    // the tracker project.
-    QString artistsAndAlbums =
-        "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
-        "WHERE "
-        "{ "
-        "?song a nmm:MusicPiece . "
-        "?song nmm:performer ?artist . "
-        "?song nmm:musicAlbum ?album . "
-        "} GROUP BY ?artist";
     QTest::newRow("TrackerDBusArtistsAndAlbums")
         << "dbus-artistsandalbums"
         << "QTRACKER"
-        << artistsAndAlbums;
+        << artistsAndAlbumsQuery;
 
     QTest::newRow("TrackerDirectArtistsAndAlbums")
         << "direct-artistsandalbums"
         << "QTRACKER_DIRECT"
-        << artistsAndAlbums;
+        << artistsAndAlbumsQuery;
 }
 
 void tst_QSparqlBenchmark::dataReadingBenchmark()
@@ -276,24 +286,15 @@ void tst_QSparqlBenchmark::dataReadingBenchmark_data()
     QTest::addColumn<QString>("queryString");
     QTest::addColumn<int>("columnCount");
 
-    QString musicQuery =
-        "select ?song ?title "
-        "tracker:coalesce(nmm:artistName(nmm:performer(?song)), 'UNKNOWN_ARTIST') "
-        "tracker:coalesce(nie:title(nmm:musicAlbum(?song)), 'UNKNOWN_ALBUM') "
-        "nfo:duration(?song) "
-        "( EXISTS { ?song nao:hasTag nao:predefined-tag-favorite } ) "
-        "nfo:genre(?song) nie:contentCreated(?song) "
-        "tracker:id(?song) tracker:id(nmm:performer(?song)) "
-        "tracker:id(nmm:musicAlbum(?song)) "
-        "where { ?song a nmm:MusicPiece . "
-        "?song nie:title ?title . } "
-        "order by ?title "
-        "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
+    QTest::newRow("ReadingArtistsAndAlbums")
+        << "read-artistsandalbums"
+        << artistsAndAlbumsQuery
+        << artistsAndAlbumsColumnCount;
 
     QTest::newRow("ReadingMusic")
         << "read-music"
         << musicQuery
-        << 11;
+        << musicQueryColumnCount;
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
@@ -346,26 +347,13 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
     QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("queryString");
 
-    // The query is trivial, these tests cases measure (exaggerates) other costs
-    // than running the query.
-    QString trivialQuery = "select ?u {?u a rdfs:Resource .}";
-    QTest::newRow("AllResources")
-        << "lts-allresources"
-        << trivialQuery;
-
-    // A bit more complicated query. Test data for running this can be found in
-    // the tracker project.
-    QString artistsAndAlbums =
-        "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
-        "WHERE "
-        "{ "
-        "?song a nmm:MusicPiece . "
-        "?song nmm:performer ?artist . "
-        "?song nmm:musicAlbum ?album . "
-        "} GROUP BY ?artist";
-    QTest::newRow("ArtistsAndAlbums")
+    QTest::newRow("LibtrackerSparqlArtistsAndAlbums")
         << "lts-artistsandalbums"
-        << artistsAndAlbums;
+        << artistsAndAlbumsQuery;
+
+    QTest::newRow("LibtrackersparqlMusic")
+        << "lts-music"
+        << musicQuery;
 }
 
 namespace {
