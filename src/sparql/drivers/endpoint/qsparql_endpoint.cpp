@@ -510,7 +510,7 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
     case QSparqlConnection::ConstructQueries:
         return true;
     case QSparqlConnection::UpdateQueries:
-        return false;
+        return true;
     case QSparqlConnection::DefaultGraph:
         return false;
     }
