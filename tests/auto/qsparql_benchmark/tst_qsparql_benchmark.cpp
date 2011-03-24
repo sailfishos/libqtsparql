@@ -48,6 +48,8 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+#define BENCHMARK_DATA_FD 8
+
 #define START_BENCHMARK \
     char tsbuf2[32]; \
     struct timeval tv2; \
@@ -59,7 +61,9 @@
     gettimeofday(&tv2, NULL); \
     long end = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;          \
     snprintf(tsbuf2, sizeof(tsbuf2), "%s %lu\n", qPrintable(QSTRINGNAME), end - start); \
-    write(8, tsbuf2, strlen(tsbuf2))
+    write(BENCHMARK_DATA_FD, tsbuf2, strlen(tsbuf2))
+
+#define NO_QUERIES 100
 
 class tst_QSparqlBenchmark : public QObject
 {
@@ -97,7 +101,7 @@ namespace {
     // Query strings
 
     // Test data for running this can be found in the tracker project.
-QString artistsAndAlbumsQuery =
+const QString artistsAndAlbumsQuery =
     "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
     "WHERE "
     "{ "
@@ -106,9 +110,9 @@ QString artistsAndAlbumsQuery =
     "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
 
-int artistsAndAlbumsColumnCount = 2;
+const int artistsAndAlbumsColumnCount = 2;
 
-QString musicQuery =
+const QString musicQuery =
     "select ?song ?title "
     "tracker:coalesce(nmm:artistName(nmm:performer(?song)), 'UNKNOWN_ARTIST') "
     "tracker:coalesce(nie:title(nmm:musicAlbum(?song)), 'UNKNOWN_ALBUM') "
@@ -122,7 +126,7 @@ QString musicQuery =
     "order by ?title "
     "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
 
-int musicQueryColumnCount = 11;
+const int musicQueryColumnCount = 11;
 }
 
 
@@ -200,7 +204,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
     // We run multiple queries here (and don't leave it for QBENCHMARK to
     // run this multiple times, to be able to measure things like "how much
     // does adding a QThreadPool help".
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
             r = conn.exec(query);
             r->waitForFinished();
@@ -235,18 +239,24 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     QFETCH(QString, queryString);
     QFETCH(int, columnCount);
 
-    QSparqlQuery query(queryString);
-    QSparqlConnection conn("QTRACKER_DIRECT");
+    // Set the dataReadyInterval to be large enough so that it won't affect this
+    // test case.
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1000000);
+
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
     // Note: connection opening cost is left out of the benchmark. Connection
     // opening is async, so we need to wait here long enough to know that it has
     // opened (there is no signal sent or such to know it has opened).
     QTest::qWait(2000);
 
+    QSparqlQuery query(queryString);
+
     QString finished = benchmarkName + "-fin";
     QString read = benchmarkName + "-read";
 
     QSparqlResult* r = 0;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < NO_QUERIES; ++i) {
         {
             START_BENCHMARK {
                 r = conn.exec(query);
@@ -307,7 +317,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
     QVERIFY(connection);
     QVERIFY(error == 0);
 
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
             TrackerSparqlCursor* cursor =
                 tracker_sparql_connection_query(connection,
@@ -417,7 +427,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
     QVERIFY(connection);
     QVERIFY(error == 0);
 
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
             QueryRunner runner(connection, queryString);
             runner.start();
@@ -438,7 +448,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread_data()
 void tst_QSparqlBenchmark::dummyThread()
 {
     QBENCHMARK {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < NO_QUERIES; ++i) {
             QueryRunner runner(0, "", true);
             runner.start();
             runner.wait();
