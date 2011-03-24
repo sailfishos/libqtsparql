@@ -284,11 +284,11 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries"
         </step>
       </case>
-      <case name="test-tracker-direct-inserts" description="Tracker direct inserts">
-
+      <case name="test-tracker-direct-inserts" description="Tracker direct inserts" insignificant="true">
+	<!-- this is marked as insigficant since it fails sporadically; this needs debugging! -->
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
-	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_threading.rq &amp;&amp; exit $i )"
+	  ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq &amp;&amp; exit $i )"
         </step>
       </case>
       <post_steps>
@@ -389,6 +389,26 @@
       <get>
 	<file>/home/user/.local/share/tracker/tracker-store.log</file>
       </get>
+    </set>
+    <set name="qsparql-tracker-direct-crashes" description="Regression tests">
+      <case name="test-waitforfinished-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes waitForFinished_crashes_when_connection_opening_fails
+        </step>
+      </case>
+      <case name="test-syncexec-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_crashes_when_connection_opening_fails
+        </step>
+      </case>
+      <case name="test-syncexec-update-crashes" description="Regression test">
+        <step expected_result="0">
+	  <!--Note: it's important that this is ran as root; otherwise conn opening won't fail -->
+	  /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_update_crashes_when_connection_opening_fails
+        </step>
+      </case>
     </set>
   </suite>
 </testdefinition>
