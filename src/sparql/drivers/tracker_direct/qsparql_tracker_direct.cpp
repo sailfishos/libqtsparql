@@ -72,7 +72,7 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
     case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
         break;
     case TRACKER_SPARQL_VALUE_TYPE_URI:
-        return QVariant(QUrl::fromEncoded(value));
+        return QVariant(QUrl::fromEncoded(QByteArray(value)));
     case TRACKER_SPARQL_VALUE_TYPE_STRING:
         return QVariant(QString::fromUtf8(value));
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
