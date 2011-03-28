@@ -1236,9 +1236,9 @@ void tst_QSparqlTrackerDirect::dataTypes()
     QCOMPARE(r->value(4), QVariant(false));
     QCOMPARE(r->value(5), QVariant(QString::fromLatin1("a string")));
 
-    // FIXME: setting types to xsd uris not implemented.
-    // QCOMPARE(r->binding(0).dataTypeUri(),
-    //        QUrl::fromEncoded("???"));
+    // urls don't have data type uris
+    QCOMPARE(r->binding(0).dataTypeUri(),
+            QUrl::fromEncoded(""));
 
     QCOMPARE(r->binding(1).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
@@ -1268,7 +1268,7 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
                                "\"true\"^^xsd:boolean "
                                "\"false\"^^xsd:boolean "
                                "\"a string\"^^xsd:string "
-                               "\"2011-03-28T09:36:00+02:00\"^^xsd:datetime "
+                               "\"2011-03-28T09:36:00+02:00\"^^xsd:dateTime "
                                "{ }");
     QSparqlResult* r = conn.exec(explicitTypes);
     QVERIFY(r != 0);
@@ -1290,9 +1290,9 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
     QCOMPARE(r->value(7),
              QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
 
-    // FIXME: setting types to xsd uris not implemented.
-    // QCOMPARE(r->binding(0).dataTypeUri(),
-    //        QUrl::fromEncoded("???"));
+    // urls don't have data type uris
+    QCOMPARE(r->binding(0).dataTypeUri(),
+            QUrl::fromEncoded(""));
 
     QCOMPARE(r->binding(1).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
@@ -1313,7 +1313,7 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
 
     QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
     QCOMPARE(r->binding(7).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#datetime"));
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
 
     delete r;
 }
