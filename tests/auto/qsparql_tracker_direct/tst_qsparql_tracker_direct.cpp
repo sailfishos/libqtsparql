@@ -1224,7 +1224,7 @@ void tst_QSparqlTrackerDirect::dataTypes()
                            "{ }");
     QSparqlResult* r = conn.exec(dataTypes);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    QVERIFY(!r->hasError());
     r->waitForFinished(); // this test is synchronous only
 
     QVERIFY(r->next());
@@ -1272,7 +1272,7 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
                                "{ }");
     QSparqlResult* r = conn.exec(explicitTypes);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    QVERIFY(!r->hasError());
     r->waitForFinished(); // this test is synchronous only
 
     QVERIFY(r->next());
@@ -1335,7 +1335,7 @@ void tst_QSparqlTrackerDirect::largeInteger()
 
     QVERIFY(!r->hasError());
     QVERIFY(r->next());
-    QCOMPARE(r->value(1), QVariant(5000000000));
+    QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
     delete r;
 
     QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
