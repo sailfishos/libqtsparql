@@ -72,7 +72,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 
 namespace {
 
-static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
+static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glong length)
 {
     switch (type) {
     case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
@@ -83,12 +83,18 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
         return QVariant(QString::fromUtf8(value));
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
     {
-        QByteArray ba(value);
+        // It's safe to use QByteArray::setRawData here, since there won't be
+        // pointers to the byte array after the conversion.
+        QByteArray ba;
+        ba.setRawData(value, length);
         return QVariant(ba.toLongLong());
     }
     case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
     {
-        QByteArray ba(value);
+        // It's safe to use QByteArray::setRawData here, since there won't be
+        // pointers to the byte array after the conversion.
+        QByteArray ba;
+        ba.setRawData(value, length);
         return QVariant(ba.toDouble());
     }
     case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
@@ -103,8 +109,7 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
         break;
     case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
     {
-        QByteArray ba(value);
-        bool isTrue = (ba == "1" || ba.toLower() == "true");
+        bool isTrue = (strcmp(value, "1") == 0 || strcasecmp(value, "true") == 0);
         return QVariant(isTrue);
     }
     default:
@@ -118,8 +123,9 @@ QVariant readVariant(TrackerSparqlCursor* cursor, int col)
 {
     TrackerSparqlValueType type =
         tracker_sparql_cursor_get_value_type(cursor, col);
-    const gchar* data = tracker_sparql_cursor_get_string(cursor, col, 0);
-    return makeVariant(type, data);
+    glong len;
+    const gchar* data = tracker_sparql_cursor_get_string(cursor, col, &len);
+    return makeVariant(type, data, len);
 }
 
 }
