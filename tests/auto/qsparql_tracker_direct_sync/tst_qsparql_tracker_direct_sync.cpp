@@ -610,38 +610,25 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeFirst);
 
-    QSparqlResult* r1 = conn.exec(add1);
-    QCOMPARE(r1->hasError(), false);
-    QSignalSpy spy1(r1, SIGNAL(finished()));
+    QSparqlResult* r1 = conn.syncExec(add1);
+    QVERIFY(!r1->hasError());
 
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeSecond);
 
-    QSparqlResult* r2 = conn.exec(add2);
-    QCOMPARE(r2->hasError(), false);
-    QSignalSpy spy2(r2, SIGNAL(finished()));
-
-    // Check that we get the finished() signal
-    QTime timer;
-    timer.start();
-    while ((spy1.count() == 0 || spy2.count() == 0) && timer.elapsed() < 5000) {
-        QTest::qWait(1000);
-    }
-    QCOMPARE(spy1.count(), 1);
-    QCOMPARE(spy2.count(), 1);
+    QSparqlResult* r2 = conn.syncExec(add2);
+    QVERIFY(!r2->hasError());
 
     delete r1;
     delete r2;
-    
+
     // Verify that the insertion succeeded
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
-    r1 = conn.exec(q);
+    r1 = conn.syncExec(q);
     QVERIFY(r1 != 0);
-    r1->waitForFinished();
-    QCOMPARE(r1->size(), 5);
     while (r1->next()) {
         contactNames[r1->binding(0).value().toString()] =
             r1->binding(1).value().toString();
@@ -650,25 +637,21 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
     QCOMPARE(contactNames["addeduri007"], QString("addedname007"));
     QCOMPARE(contactNames["addeduri008"], QString("addedname008"));
     delete r1;
-    
+
     QSparqlQuery del1("delete { <addeduri007> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    r1 = conn.exec(del1);
+    r1 = conn.syncExec(del1);
     QVERIFY(r1 != 0);
-    QCOMPARE(r1->hasError(), false);
-    r1->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r1->hasError(), false);
+    QVERIFY(!r1->hasError());
     delete r1;
-    
+
     QSparqlQuery del2("delete { <addeduri008> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    r2 = conn.exec(del2);
+    r2 = conn.syncExec(del2);
     QVERIFY(r2 != 0);
-    QCOMPARE(r2->hasError(), false);
-    r2->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r2->hasError(), false);
+    QVERIFY(!r2->hasError());
     delete r2;
 }
 
