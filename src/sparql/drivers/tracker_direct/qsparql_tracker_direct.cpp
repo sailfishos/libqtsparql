@@ -53,7 +53,6 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qatomic.h>
 
 #include <QtCore/qdebug.h>
 
@@ -393,11 +392,6 @@ bool QTrackerDirectResult::runQuery()
     }
 
     return true;
-}
-
-void QTrackerDirectResult::cleanup()
-{
-    setPos(QSparql::BeforeFirstRow);
 }
 
 bool QTrackerDirectResult::fetchNextResult()
@@ -990,8 +984,6 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
     }
     return false;
 }
-
-QAtomicInt connectionCounter = 0;
 
 bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 {
