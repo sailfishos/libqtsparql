@@ -78,9 +78,9 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
     case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
         break;
     case TRACKER_SPARQL_VALUE_TYPE_URI:
-        return QVariant(QUrl::fromEncoded(QByteArray(value)));
+        return QVariant(QUrl::fromEncoded(QByteArray(value, length)));
     case TRACKER_SPARQL_VALUE_TYPE_STRING:
-        return QVariant(QString::fromUtf8(value));
+        return QVariant(QString::fromUtf8(value, length));
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
     {
         // It's safe to use QByteArray::setRawData here, since there won't be
@@ -98,7 +98,7 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
         return QVariant(ba.toDouble());
     }
     case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
-        return QVariant(QDateTime::fromString(QString::fromUtf8(value), Qt::ISODate));
+        return QVariant(QDateTime::fromString(QString::fromUtf8(value, length), Qt::ISODate));
     case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
         // Note: this type is not currently used by Tracker.  Here we're storing
         // it as a null QVariant and losing information that it was a blank
@@ -109,7 +109,7 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
         break;
     case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
     {
-        bool isTrue = (strcmp(value, "1") == 0 || strcasecmp(value, "true") == 0);
+        bool isTrue = (qstrcmp(value, "1") == 0 || qstricmp(value, "true") == 0);
         return QVariant(isTrue);
     }
     default:
