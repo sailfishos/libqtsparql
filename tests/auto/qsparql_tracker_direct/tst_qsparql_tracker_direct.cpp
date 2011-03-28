@@ -1265,8 +1265,8 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
                                "\"80\"^^xsd:integer "
                                "\"-7\"^^xsd:int "
                                "\"23.4\"^^xsd:double "
-                               "\"true\"^^xsd:bool "
-                               "\"false\"^^xsd:bool "
+                               "\"true\"^^xsd:boolean "
+                               "\"false\"^^xsd:boolean "
                                "\"a string\"^^xsd:string "
                                "\"2011-03-28T09:36:00+02:00\"^^xsd:datetime "
                                "{ }");
@@ -1303,10 +1303,8 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
     QCOMPARE(r->binding(3).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
 
-    QEXPECT_FAIL("", "Tracker returns booleans as strings", Continue);
     QCOMPARE(r->binding(4).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-    QEXPECT_FAIL("", "Tracker returns booleans as strings", Continue);
     QCOMPARE(r->binding(5).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
 
