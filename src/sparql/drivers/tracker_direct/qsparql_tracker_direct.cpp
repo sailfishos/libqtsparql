@@ -59,6 +59,12 @@
 
 QT_BEGIN_NAMESPACE
 
+// TODO: centralize the xsd uris into one place
+namespace XSD {
+Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
+                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 // Helper functions used both by QTrackerDirectResult and
@@ -78,7 +84,7 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value)
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
     {
         QByteArray ba(value);
-        return QVariant(ba.toInt());
+        return QVariant(ba.toLongLong());
     }
     case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
     {
@@ -481,10 +487,21 @@ QSparqlBinding QTrackerDirectResult::binding(int field) const
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
         return QSparqlBinding();
     }
-    if (field >= d->columnNames.count()) {
-        return QSparqlBinding(QString::fromLatin1(""), d->results[pos()][field]);
+    // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
+    // but its data type uri should be xsd:integer. Set it manually here.
+    QSparqlBinding b;
+    QVariant value = d->results[pos()][field];
+    if (value.type() == QVariant::LongLong) {
+        b.setValue(value.toString(), *XSD::Integer());
     }
-    return QSparqlBinding(d->columnNames[field], d->results[pos()][field]);
+    else {
+        b.setValue(value);
+    }
+
+    if (field < d->columnNames.count()) {
+        b.setName(d->columnNames[field]);
+    }
+    return b;
 }
 
 QVariant QTrackerDirectResult::value(int field) const
@@ -830,9 +847,19 @@ QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
         return QSparqlBinding();
 
     const gchar* name = tracker_sparql_cursor_get_variable_name(d->cursor, i);
+    QVariant value = readVariant(d->cursor, i);
 
-    return QSparqlBinding(QString::fromUtf8(name),
-                          readVariant(d->cursor, i));
+    // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
+    // but its data type uri should be xsd:integer. Set it manually here.
+    QSparqlBinding b;
+    b.setName(QString::fromUtf8(name));
+    if (value.type() == QVariant::LongLong) {
+        b.setValue(value.toString(), *XSD::Integer());
+    }
+    else {
+        b.setValue(value);
+    }
+    return b;
 }
 
 QVariant QTrackerDirectSyncResult::value(int i) const

@@ -106,6 +106,10 @@ private slots:
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
+
+    void dataTypes();
+    void explicitDataTypes();
+    void largeInteger();
 };
 
 namespace {
@@ -1205,6 +1209,141 @@ void tst_QSparqlTrackerDirect::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
+}
+
+void tst_QSparqlTrackerDirect::dataTypes()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery dataTypes("select "
+                           "<qsparql-tracker-direct-tests> "
+                           "80 "
+                           "23.4 "
+                           "true "
+                           "false "
+                           "\"a string\" "
+                           "{ }");
+    QSparqlResult* r = conn.exec(dataTypes);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+
+    QVERIFY(r->next());
+    QCOMPARE(r->value(0),
+             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
+    QCOMPARE(r->value(1), QVariant(80));
+    QCOMPARE(r->value(2), QVariant(23.4));
+    QCOMPARE(r->value(3), QVariant(true));
+    QCOMPARE(r->value(4), QVariant(false));
+    QCOMPARE(r->value(5), QVariant(QString::fromLatin1("a string")));
+
+    // FIXME: setting types to xsd uris not implemented.
+    // QCOMPARE(r->binding(0).dataTypeUri(),
+    //        QUrl::fromEncoded("???"));
+
+    QCOMPARE(r->binding(1).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+
+    QCOMPARE(r->binding(2).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+
+    QCOMPARE(r->binding(3).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+    QCOMPARE(r->binding(4).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+
+    QCOMPARE(r->binding(5).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::explicitDataTypes()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery explicitTypes("select "
+                               "<qsparql-tracker-direct-tests> "
+                               "\"80\"^^xsd:integer "
+                               "\"-7\"^^xsd:int "
+                               "\"23.4\"^^xsd:double "
+                               "\"true\"^^xsd:bool "
+                               "\"false\"^^xsd:bool "
+                               "\"a string\"^^xsd:string "
+                               "\"2011-03-28T09:36:00+02:00\"^^xsd:datetime "
+                               "{ }");
+    QSparqlResult* r = conn.exec(explicitTypes);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+
+    QVERIFY(r->next());
+    QCOMPARE(r->value(0),
+             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
+    QCOMPARE(r->value(1), QVariant(80));
+    QCOMPARE(r->value(2), QVariant(-7));
+    QCOMPARE(r->value(3), QVariant(23.4));
+    QCOMPARE(r->value(4), QVariant(true));
+    QCOMPARE(r->value(5), QVariant(false));
+    QCOMPARE(r->value(6), QVariant(QString::fromLatin1("a string")));
+
+    // Tracker seems to return the datetime as a string
+    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
+    QCOMPARE(r->value(7),
+             QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
+
+    // FIXME: setting types to xsd uris not implemented.
+    // QCOMPARE(r->binding(0).dataTypeUri(),
+    //        QUrl::fromEncoded("???"));
+
+    QCOMPARE(r->binding(1).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+    QCOMPARE(r->binding(2).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+
+    QEXPECT_FAIL("", "Tracker returns doubles as strings", Continue);
+    QCOMPARE(r->binding(3).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+
+    QEXPECT_FAIL("", "Tracker returns booleans as strings", Continue);
+    QCOMPARE(r->binding(4).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+    QEXPECT_FAIL("", "Tracker returns booleans as strings", Continue);
+    QCOMPARE(r->binding(5).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+
+    QCOMPARE(r->binding(6).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+
+    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
+    QCOMPARE(r->binding(7).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#datetime"));
+
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::largeInteger()
+{
+    QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.syncExec(insert);
+    delete r;
+    QSparqlQuery select("select ?do ?bs "
+                        "{ ?do a nie:DataObject ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize ?bs .}");
+    r = conn.exec(select);
+    r->waitForFinished();
+
+    QVERIFY(!r->hasError());
+    QVERIFY(r->next());
+    QCOMPARE(r->value(1), QVariant(5000000000));
+    delete r;
+
+    QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = conn.syncExec(clean);
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
