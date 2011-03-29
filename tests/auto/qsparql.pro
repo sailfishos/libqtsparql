@@ -4,6 +4,7 @@ TEMPLATE = subdirs
 SUBDIRS = \
     qsparqlquery \
     qsparqlbinding \
+    qsparqlresultrow \
     qsparql \
     qsparql_endpoint \
     qsparql_ntriples \
