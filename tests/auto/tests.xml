@@ -9,7 +9,12 @@
       </case>
       <case name="qsparqlbinding" description="qsparqlbinding unit tests">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparqlbinding
+      /usr/lib/libqtsparql-tests/tst_qsparqlbinding
+        </step>
+      </case>
+      <case name="qsparqlresultrow" description="qsparqlresultrow unit tests">
+        <step expected_result="0">
+      /usr/lib/libqtsparql-tests/tst_qsparqlresultrow
         </step>
       </case>
       <case name="qsparql" description="qsparql unit tests">
