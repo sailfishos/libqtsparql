@@ -86,6 +86,7 @@ public:
     bool isEmpty() const;
     bool contains(const QString& name) const;
     void clear();
+    void clearValues();
     int count() const;
 
 private:

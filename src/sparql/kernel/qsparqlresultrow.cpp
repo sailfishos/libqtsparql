@@ -285,6 +285,21 @@ bool QSparqlResultRow::contains(const QString& name) const
 }
 
 /*!
+    Clears the value of all bindings in the result row and sets each binding
+    to null.
+
+    \sa setValue()
+*/
+
+void QSparqlResultRow::clearValues()
+{
+    detach();
+    int count = d->bindings.count();
+    for (int i = 0; i < count; ++i)
+        d->bindings[i].clear();
+}
+
+/*!
     Returns the number of bindings in the result row.
 
     \sa isEmpty()
