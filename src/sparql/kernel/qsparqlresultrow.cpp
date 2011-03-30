@@ -186,18 +186,17 @@ QString QSparqlResultRow::variableName(int index) const
 
 /*!
     Returns the position of the binding called \a name within the
-    result row, or -1 if it cannot be found. Field names are not
-    case-sensitive. If more than one binding matches, the first one is
-    returned.
+    result row, or -1 if it cannot be found. Variable names are
+    case-sensitive. If more than one binding matches, the index of
+    the first one is returned.
 
     \sa bindingName()
 */
 
 int QSparqlResultRow::indexOf(const QString& name) const
 {
-    QString nm = name.toUpper();
     for (int i = 0; i < count(); ++i) {
-        if (d->bindings.at(i).name().toUpper() == nm) // TODO: case-insensitive comparison
+        if (d->bindings.at(i).name() == name)
             return i;
     }
     return -1;

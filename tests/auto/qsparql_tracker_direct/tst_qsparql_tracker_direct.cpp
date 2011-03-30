@@ -62,6 +62,7 @@ public slots:
 
 private slots:
     void query_contacts();
+    void qsparqlresultrow();
     void query_contacts_async();
     void ask_contacts();
     void insert_and_delete_contact();
@@ -190,6 +191,48 @@ void tst_QSparqlTrackerDirect::query_contacts()
     QCOMPARE(contactNames["uri001"], QString("name001"));
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::qsparqlresultrow()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+    QVERIFY(r->next());
+    QSparqlResultRow row = r->current();
+
+    QCOMPARE(row.count(), 2);
+    QCOMPARE(row.isEmpty(), false);
+
+    QCOMPARE(row.indexOf("foo"), -1);
+    QCOMPARE(row.indexOf("NG"), -1);
+    QCOMPARE(row.indexOf(""), -1);
+    QCOMPARE(row.indexOf("ng"), 1);
+
+    QCOMPARE(row.contains("foo"), false);
+    QCOMPARE(row.contains("NG"), false);
+    QCOMPARE(row.contains(""), false);
+    QCOMPARE(row.contains("ng"), true);
+
+    QCOMPARE(row.variableName(0), QString::fromLatin1("u"));
+    QCOMPARE(row.variableName(1), QString::fromLatin1("ng"));
+    QCOMPARE(row.variableName(2), QString());
+    QCOMPARE(row.variableName(-1), QString());
+
+    row.clear();
+    QCOMPARE(row.isEmpty(), true);
+    QCOMPARE(row.contains("ng"), false);
+    QCOMPARE(row.variableName(1), QString());
+    QCOMPARE(row.indexOf("ng"), -1);
+
     delete r;
 }
 
