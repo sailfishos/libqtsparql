@@ -111,8 +111,8 @@ private slots:
     void explicitDataTypes();
     void largeInteger();
 
-    void deletingSelectResult();
-    void deletingUpdateResult();
+    void deleteLaterWithSelectResult();
+    void deleteLaterWithUpdateResult();
 };
 
 namespace {
@@ -1361,7 +1361,7 @@ class DeleteResultOnFinished : public QObject
 
 }
 
-void tst_QSparqlTrackerDirect::deletingSelectResult()
+void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
 {
     // it doesn't matter what the query is; we don't look at what it returns
     QSparqlQuery query("select ?ie { ?ie a nie:InformationElement . } ");
@@ -1383,7 +1383,7 @@ void tst_QSparqlTrackerDirect::deletingSelectResult()
     while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
         QTest::qWait(100);
     }
-    QVERIFY(finishedSpy.count() == 1);
+    QCOMPARE(finishedSpy.count(), 1);
 
     // Now spinning the event loop should make the DeferredDelete event is
     // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
@@ -1393,7 +1393,7 @@ void tst_QSparqlTrackerDirect::deletingSelectResult()
     QCOMPARE(destroyedSpy.count(), 1);
 }
 
-void tst_QSparqlTrackerDirect::deletingUpdateResult()
+void tst_QSparqlTrackerDirect::deleteLaterWithUpdateResult()
 {
     QSparqlQuery insert("insert {<testresource001> a nie:InformationElement ; "
                         "nie:isLogicalPartOf <qsparql-tracker-live-tests> .}",
@@ -1416,7 +1416,7 @@ void tst_QSparqlTrackerDirect::deletingUpdateResult()
     while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
         QTest::qWait(100);
     }
-    QVERIFY(finishedSpy.count() == 1);
+    QCOMPARE(finishedSpy.count(), 1);
 
     // Now spinning the event loop should make the DeferredDelete event is
     // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
