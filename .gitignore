@@ -61,6 +61,7 @@ debian/libqtsparql-doc
 debian/libqtsparql0
 debian/libqtsparql0-dbg
 debian/libqtsparql-tests
+debian/libqtsparql-tests-dbg
 debian/libqtsparql-tracker
 debian/libqtsparql-tracker-dbg
 debian/libqtsparql-endpoint
