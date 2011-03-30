@@ -222,7 +222,9 @@ public:
     QTrackerDirectFetcherPrivate *fetcher;
     bool fetcherStarted;
     // This mutex is for ensuring that only one thread at a time is accessing
-    // the member variables of this class (mainly: "results" and "cursor").
+    // the member variables of this class (mainly: "results").
+    // Note that only the fetcher thread accesses the 'cursor', and so that
+    // is protected by the connectionMutex in the driver, not this mutex.
     QMutex resultMutex;
 };
 
