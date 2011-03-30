@@ -52,7 +52,7 @@ Description: Tests for libqtsparql.
 Package: libqtsparql-tests-dbg
 Section: debug
 Architecture: any
-Depends: libqtsparql-trasts (= ${binary:Version})
+Depends: libqtsparql-tests (= ${binary:Version})
 Description: Tests for libqtsparql.
  .
  This package contains the debug symbols.
