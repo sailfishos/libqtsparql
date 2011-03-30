@@ -92,9 +92,6 @@ public:
     virtual QVariant value(int i) const;
     virtual int size() const;
 
-protected:
-    void cleanup();
-
 private Q_SLOTS:
     void exec();
 
@@ -129,9 +126,6 @@ public:
     virtual QSparqlBinding binding(int i) const;
     virtual QVariant value(int i) const;
     virtual int size() const;
-
-protected:
-    void cleanup();
 
 private Q_SLOTS:
     void exec();

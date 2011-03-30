@@ -49,6 +49,14 @@ XB-Maemo-CI-Packages: libqtsparql0
 XB-Maemo-CI-Stage: staging, acceptance
 Description: Tests for libqtsparql.
 
+Package: libqtsparql-tests-dbg
+Section: debug
+Architecture: any
+Depends: libqtsparql-tests (= ${binary:Version})
+Description: Tests for libqtsparql.
+ .
+ This package contains the debug symbols.
+
 Package: libqtsparql-endpoint
 Architecture: any
 Depends: ${shlibs:Depends}

@@ -82,6 +82,10 @@ private slots:
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
+
+    void dataTypes();
+    void explicitDataTypes();
+    void largeInteger();
 };
 
 namespace {
@@ -606,38 +610,25 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeFirst);
 
-    QSparqlResult* r1 = conn.exec(add1);
-    QCOMPARE(r1->hasError(), false);
-    QSignalSpy spy1(r1, SIGNAL(finished()));
+    QSparqlResult* r1 = conn.syncExec(add1);
+    QVERIFY(!r1->hasError());
 
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeSecond);
 
-    QSparqlResult* r2 = conn.exec(add2);
-    QCOMPARE(r2->hasError(), false);
-    QSignalSpy spy2(r2, SIGNAL(finished()));
-
-    // Check that we get the finished() signal
-    QTime timer;
-    timer.start();
-    while ((spy1.count() == 0 || spy2.count() == 0) && timer.elapsed() < 5000) {
-        QTest::qWait(1000);
-    }
-    QCOMPARE(spy1.count(), 1);
-    QCOMPARE(spy2.count(), 1);
+    QSparqlResult* r2 = conn.syncExec(add2);
+    QVERIFY(!r2->hasError());
 
     delete r1;
     delete r2;
-    
+
     // Verify that the insertion succeeded
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
-    r1 = conn.exec(q);
+    r1 = conn.syncExec(q);
     QVERIFY(r1 != 0);
-    r1->waitForFinished();
-    QCOMPARE(r1->size(), 5);
     while (r1->next()) {
         contactNames[r1->binding(0).value().toString()] =
             r1->binding(1).value().toString();
@@ -646,25 +637,21 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
     QCOMPARE(contactNames["addeduri007"], QString("addedname007"));
     QCOMPARE(contactNames["addeduri008"], QString("addedname008"));
     delete r1;
-    
+
     QSparqlQuery del1("delete { <addeduri007> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    r1 = conn.exec(del1);
+    r1 = conn.syncExec(del1);
     QVERIFY(r1 != 0);
-    QCOMPARE(r1->hasError(), false);
-    r1->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r1->hasError(), false);
+    QVERIFY(!r1->hasError());
     delete r1;
-    
+
     QSparqlQuery del2("delete { <addeduri008> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
 
-    r2 = conn.exec(del2);
+    r2 = conn.syncExec(del2);
     QVERIFY(r2 != 0);
-    QCOMPARE(r2->hasError(), false);
-    r2->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r2->hasError(), false);
+    QVERIFY(!r2->hasError());
     delete r2;
 }
 
@@ -681,6 +668,136 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
+}
+
+void tst_QSparqlTrackerDirectSync::dataTypes()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery dataTypes("select "
+                           "<qsparql-tracker-direct-tests> "
+                           "80 "
+                           "23.4 "
+                           "true "
+                           "false "
+                           "\"a string\" "
+                           "{ }");
+    QSparqlResult* r = conn.syncExec(dataTypes);
+    QVERIFY(r != 0);
+    QVERIFY(!r->hasError());
+
+    QVERIFY(r->next());
+    QCOMPARE(r->value(0),
+             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
+    QCOMPARE(r->value(1), QVariant(80));
+    QCOMPARE(r->value(2), QVariant(23.4));
+    QCOMPARE(r->value(3), QVariant(true));
+    QCOMPARE(r->value(4), QVariant(false));
+    QCOMPARE(r->value(5), QVariant(QString::fromLatin1("a string")));
+
+    // urls don't have data type uris
+    QCOMPARE(r->binding(0).dataTypeUri(),
+            QUrl::fromEncoded(""));
+
+    QCOMPARE(r->binding(1).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+
+    QCOMPARE(r->binding(2).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+
+    QCOMPARE(r->binding(3).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+    QCOMPARE(r->binding(4).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+
+    QCOMPARE(r->binding(5).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+
+    delete r;
+}
+
+void tst_QSparqlTrackerDirectSync::explicitDataTypes()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery explicitTypes("select "
+                               "<qsparql-tracker-direct-tests> "
+                               "\"80\"^^xsd:integer "
+                               "\"-7\"^^xsd:int "
+                               "\"23.4\"^^xsd:double "
+                               "\"true\"^^xsd:boolean "
+                               "\"false\"^^xsd:boolean "
+                               "\"a string\"^^xsd:string "
+                               "\"2011-03-28T09:36:00+02:00\"^^xsd:dateTime "
+                               "{ }");
+    QSparqlResult* r = conn.syncExec(explicitTypes);
+    QVERIFY(r != 0);
+    QVERIFY(!r->hasError());
+
+    QVERIFY(r->next());
+    QCOMPARE(r->value(0),
+             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
+    QCOMPARE(r->value(1), QVariant(80));
+    QCOMPARE(r->value(2), QVariant(-7));
+    QCOMPARE(r->value(3), QVariant(23.4));
+    QCOMPARE(r->value(4), QVariant(true));
+    QCOMPARE(r->value(5), QVariant(false));
+    QCOMPARE(r->value(6), QVariant(QString::fromLatin1("a string")));
+
+    // Tracker seems to return the datetime as a string
+    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
+    QCOMPARE(r->value(7),
+             QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
+
+    // urls don't have data type uris
+    QCOMPARE(r->binding(0).dataTypeUri(),
+            QUrl::fromEncoded(""));
+
+    QCOMPARE(r->binding(1).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+    QCOMPARE(r->binding(2).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
+
+    QEXPECT_FAIL("", "Tracker returns doubles as strings", Continue);
+    QCOMPARE(r->binding(3).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
+
+    QCOMPARE(r->binding(4).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+    QCOMPARE(r->binding(5).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
+
+    QCOMPARE(r->binding(6).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
+
+    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
+    QCOMPARE(r->binding(7).dataTypeUri(),
+             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
+
+    delete r;
+}
+
+void tst_QSparqlTrackerDirectSync::largeInteger()
+{
+    QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.syncExec(insert);
+    delete r;
+    QSparqlQuery select("select ?do ?bs "
+                        "{ ?do a nie:DataObject ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize ?bs .}");
+    r = conn.syncExec(select);
+
+    QVERIFY(!r->hasError());
+    QVERIFY(r->next());
+    QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
+    delete r;
+
+    QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = conn.syncExec(clean);
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
