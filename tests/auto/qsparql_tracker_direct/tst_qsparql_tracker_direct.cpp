@@ -62,6 +62,7 @@ public slots:
 
 private slots:
     void query_contacts();
+    void qsparqlresultrow();
     void query_contacts_async();
     void ask_contacts();
     void insert_and_delete_contact();
@@ -110,6 +111,9 @@ private slots:
     void dataTypes();
     void explicitDataTypes();
     void largeInteger();
+
+    void deleteLaterWithSelectResult();
+    void deleteLaterWithUpdateResult();
 };
 
 namespace {
@@ -187,6 +191,48 @@ void tst_QSparqlTrackerDirect::query_contacts()
     QCOMPARE(contactNames["uri001"], QString("name001"));
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::qsparqlresultrow()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 3);
+    QVERIFY(r->next());
+    QSparqlResultRow row = r->current();
+
+    QCOMPARE(row.count(), 2);
+    QCOMPARE(row.isEmpty(), false);
+
+    QCOMPARE(row.indexOf("foo"), -1);
+    QCOMPARE(row.indexOf("NG"), -1);
+    QCOMPARE(row.indexOf(""), -1);
+    QCOMPARE(row.indexOf("ng"), 1);
+
+    QCOMPARE(row.contains("foo"), false);
+    QCOMPARE(row.contains("NG"), false);
+    QCOMPARE(row.contains(""), false);
+    QCOMPARE(row.contains("ng"), true);
+
+    QCOMPARE(row.variableName(0), QString::fromLatin1("u"));
+    QCOMPARE(row.variableName(1), QString::fromLatin1("ng"));
+    QCOMPARE(row.variableName(2), QString());
+    QCOMPARE(row.variableName(-1), QString());
+
+    row.clear();
+    QCOMPARE(row.isEmpty(), true);
+    QCOMPARE(row.contains("ng"), false);
+    QCOMPARE(row.variableName(1), QString());
+    QCOMPARE(row.indexOf("ng"), -1);
+
     delete r;
 }
 
@@ -1339,6 +1385,90 @@ void tst_QSparqlTrackerDirect::largeInteger()
     delete r;
 
     QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = conn.syncExec(clean);
+    delete r;
+}
+
+namespace {
+
+class DeleteResultOnFinished : public QObject
+{
+    Q_OBJECT
+    public Q_SLOTS:
+    void onFinished()
+    {
+        sender()->deleteLater();
+    }
+};
+
+}
+
+void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
+{
+    // it doesn't matter what the query is; we don't look at what it returns
+    QSparqlQuery query("select ?ie { ?ie a nie:InformationElement . } ");
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.exec(query);
+
+    // Start monitoring the destroyed() signal
+    QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
+
+    // When we get the finished() signal of the result, do deleteLater.
+    DeleteResultOnFinished resultDeleter;
+    connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
+
+    QSignalSpy finishedSpy(r, SIGNAL(finished()));
+
+    // Spin the event loop so that the finished() signal arrives
+    QTime timer;
+    timer.start();
+    while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(finishedSpy.count(), 1);
+
+    // Now spinning the event loop should make the DeferredDelete event is
+    // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
+    // QEvent::DeferredDelete here, that will make buggy code pass, too.)
+    QTest::qWait(100);
+
+    QCOMPARE(destroyedSpy.count(), 1);
+}
+
+void tst_QSparqlTrackerDirect::deleteLaterWithUpdateResult()
+{
+    QSparqlQuery insert("insert {<testresource001> a nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> .}",
+                        QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.exec(insert);
+
+    // Start monitoring the destroyed() signal
+    QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
+
+    // When we get the finished() signal of the result, do deleteLater.
+    DeleteResultOnFinished resultDeleter;
+    connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
+
+    QSignalSpy finishedSpy(r, SIGNAL(finished()));
+
+    // Spin the event loop so that the finished() signal arrives
+    QTime timer;
+    timer.start();
+    while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(finishedSpy.count(), 1);
+
+    // Now spinning the event loop should make the DeferredDelete event is
+    // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
+    // QEvent::DeferredDelete here, that will make buggy code pass, too.)
+    QTest::qWait(100);
+
+    QCOMPARE(destroyedSpy.count(), 1);
+
+    QSparqlQuery clean("delete {<testresource001> a rdfs:Resource . }",
                        QSparqlQuery::DeleteStatement);
     r = conn.syncExec(clean);
     delete r;

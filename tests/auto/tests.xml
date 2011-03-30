@@ -9,7 +9,12 @@
       </case>
       <case name="qsparqlbinding" description="qsparqlbinding unit tests">
         <step expected_result="0">
-	  /usr/lib/libqtsparql-tests/tst_qsparqlbinding
+      /usr/lib/libqtsparql-tests/tst_qsparqlbinding
+        </step>
+      </case>
+      <case name="qsparqlresultrow" description="qsparqlresultrow unit tests">
+        <step expected_result="0">
+      /usr/lib/libqtsparql-tests/tst_qsparqlresultrow
         </step>
       </case>
       <case name="qsparql" description="qsparql unit tests">
@@ -101,7 +106,12 @@
       </pre_steps>
       <case name="test-query-contacts" description="Executing a query">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts"
+      su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_contacts"
+        </step>
+      </case>
+      <case name="test-qsparqlresultrow" description="Accessing a QSparqlResultRow">
+        <step expected_result="0">
+      su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct qsparqlresultrow"
         </step>
       </case>
       <case name="test-query-contacts-async" description="Executing a query async">

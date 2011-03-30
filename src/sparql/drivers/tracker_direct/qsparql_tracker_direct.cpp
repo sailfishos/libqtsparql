@@ -266,11 +266,13 @@ async_update_callback( GObject *source_object,
         e.setNumber(error->code);
         data->setLastError(e);
         g_error_free(error);
-        data->terminate();
-        return;
     }
 
-    data->terminate();
+    // A workaround for http://bugreports.qt.nokia.com/browse/QTBUG-18434
+
+    // We cannot emit the QSparqlResult::finished() signal directly here; so
+    // delay it and emit it the next time the main loop spins.
+    QMetaObject::invokeMethod(data->q, "terminate", Qt::QueuedConnection);
 }
 
 QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
