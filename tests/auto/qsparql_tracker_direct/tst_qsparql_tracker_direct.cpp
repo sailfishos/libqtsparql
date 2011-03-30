@@ -110,6 +110,9 @@ private slots:
     void dataTypes();
     void explicitDataTypes();
     void largeInteger();
+
+    void deleteLaterWithSelectResult();
+    void deleteLaterWithUpdateResult();
 };
 
 namespace {
@@ -1339,6 +1342,90 @@ void tst_QSparqlTrackerDirect::largeInteger()
     delete r;
 
     QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = conn.syncExec(clean);
+    delete r;
+}
+
+namespace {
+
+class DeleteResultOnFinished : public QObject
+{
+    Q_OBJECT
+    public Q_SLOTS:
+    void onFinished()
+    {
+        sender()->deleteLater();
+    }
+};
+
+}
+
+void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
+{
+    // it doesn't matter what the query is; we don't look at what it returns
+    QSparqlQuery query("select ?ie { ?ie a nie:InformationElement . } ");
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.exec(query);
+
+    // Start monitoring the destroyed() signal
+    QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
+
+    // When we get the finished() signal of the result, do deleteLater.
+    DeleteResultOnFinished resultDeleter;
+    connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
+
+    QSignalSpy finishedSpy(r, SIGNAL(finished()));
+
+    // Spin the event loop so that the finished() signal arrives
+    QTime timer;
+    timer.start();
+    while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(finishedSpy.count(), 1);
+
+    // Now spinning the event loop should make the DeferredDelete event is
+    // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
+    // QEvent::DeferredDelete here, that will make buggy code pass, too.)
+    QTest::qWait(100);
+
+    QCOMPARE(destroyedSpy.count(), 1);
+}
+
+void tst_QSparqlTrackerDirect::deleteLaterWithUpdateResult()
+{
+    QSparqlQuery insert("insert {<testresource001> a nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> .}",
+                        QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = conn.exec(insert);
+
+    // Start monitoring the destroyed() signal
+    QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
+
+    // When we get the finished() signal of the result, do deleteLater.
+    DeleteResultOnFinished resultDeleter;
+    connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
+
+    QSignalSpy finishedSpy(r, SIGNAL(finished()));
+
+    // Spin the event loop so that the finished() signal arrives
+    QTime timer;
+    timer.start();
+    while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(finishedSpy.count(), 1);
+
+    // Now spinning the event loop should make the DeferredDelete event is
+    // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
+    // QEvent::DeferredDelete here, that will make buggy code pass, too.)
+    QTest::qWait(100);
+
+    QCOMPARE(destroyedSpy.count(), 1);
+
+    QSparqlQuery clean("delete {<testresource001> a rdfs:Resource . }",
                        QSparqlQuery::DeleteStatement);
     r = conn.syncExec(clean);
     delete r;

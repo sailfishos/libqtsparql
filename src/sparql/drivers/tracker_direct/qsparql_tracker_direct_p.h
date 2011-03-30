@@ -131,7 +131,7 @@ private Q_SLOTS:
     void exec();
 
 private:
-    void terminate();
+    Q_INVOKABLE void terminate();
 
     QTrackerDirectUpdateResultPrivate* d;
 };
