@@ -50,12 +50,12 @@
 #define START_BENCHMARK { \
     struct timeval benchmark_tv; \
     gettimeofday(&benchmark_tv, NULL); \
-    const long benchmark_start = benchmark_tv.tv_sec * 1000 + benchmark_tv.tv_usec / 1000; \
+    const long benchmark_start = benchmark_tv.tv_sec * 1000 + (benchmark_tv.tv_usec + 500) / 1000; \
     do
 
 #define END_BENCHMARK(BENCHMARKNAME) while(false); \
         gettimeofday(&benchmark_tv, NULL); \
-        const long benchmark_end = benchmark_tv.tv_sec * 1000 + benchmark_tv.tv_usec / 1000; \
+        const long benchmark_end = benchmark_tv.tv_sec * 1000 + (benchmark_tv.tv_usec + 500) / 1000; \
         char benchmark_tsbuf[80]; \
         qsnprintf(benchmark_tsbuf, sizeof(benchmark_tsbuf), "QSparql_bnechmark_data: %s %lu\n",  \
                   qPrintable(BENCHMARKNAME), benchmark_end - benchmark_start); \
