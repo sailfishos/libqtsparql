@@ -47,17 +47,20 @@
 #include <sys/time.h>
 #include <stdio.h>
 
-#define START_BENCHMARK \
-    char tsbuf[80]; \
-    struct timeval tv2; \
-    gettimeofday(&tv2, NULL); \
-    long start = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;
+#define START_BENCHMARK { \
+    struct timeval benchmark_tv; \
+    gettimeofday(&benchmark_tv, NULL); \
+    const long benchmark_start = benchmark_tv.tv_sec * 1000 + benchmark_tv.tv_usec / 1000; \
+    do
 
-#define END_BENCHMARK(QSTRINGNAME) \
-    gettimeofday(&tv2, NULL); \
-    long end = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;          \
-    qsnprintf(tsbuf, sizeof(tsbuf), "QSparql_bnechmark_data: %s %lu\n", qPrintable(QSTRINGNAME), end - start); \
-    fwrite(tsbuf, qstrnlen(tsbuf, sizeof(tsbuf)), 1, stderr);
+#define END_BENCHMARK(BENCHMARKNAME) while(false); \
+        gettimeofday(&benchmark_tv, NULL); \
+        const long benchmark_end = benchmark_tv.tv_sec * 1000 + benchmark_tv.tv_usec / 1000; \
+        char benchmark_tsbuf[80]; \
+        qsnprintf(benchmark_tsbuf, sizeof(benchmark_tsbuf), "QSparql_bnechmark_data: %s %lu\n",  \
+                  qPrintable(BENCHMARKNAME), benchmark_end - benchmark_start); \
+        fwrite(benchmark_tsbuf, qstrnlen(benchmark_tsbuf, sizeof(benchmark_tsbuf)), 1, stderr); \
+    }
 
 #define NO_QUERIES 100
 
