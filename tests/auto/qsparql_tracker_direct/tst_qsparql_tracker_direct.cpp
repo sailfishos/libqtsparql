@@ -87,8 +87,6 @@ private slots:
 
     void open_connection_twice();
 
-    void result_type_bool();
-
     void special_chars();
 
     void result_immediately_finished();
@@ -110,9 +108,17 @@ private slots:
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
 
-    void dataTypes();
-    void explicitDataTypes();
-    void largeInteger();
+    void data_types();
+    void explicit_data_types();
+    void large_integer();
+
+    void datatypes_as_properties();
+    void datatypes_as_properties_data();
+    void datatype_string_data();
+    void datatype_int_data();
+    void datatype_double_data();
+    void datatype_datetime_data();
+    void datatype_boolean_data();
 
     void deleteLaterWithSelectResult();
     void deleteLaterWithUpdateResult();
@@ -667,48 +673,6 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     delete r;
 }
 
-void tst_QSparqlTrackerDirect::result_type_bool()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-
-    // Boolean result
-    QSparqlResult* r = conn.exec(QSparqlQuery("select 1 > 0 { }"));
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QVERIFY(r->value(0).toBool() == true);
-    QVERIFY(r->value(0).type() == QVariant::Bool);
-    delete r;
-    r = conn.exec(QSparqlQuery("select 0 > 1 { }"));
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QVERIFY(r->value(0).toBool() == false);
-    QVERIFY(r->value(0).type() == QVariant::Bool);
-    delete r;
-
-    // Another type of boolean result
-    r = conn.exec(QSparqlQuery("select ?b { <uri004> tracker:available ?b . }"));
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QVERIFY(r->value(0).toBool() == true);
-    QVERIFY(r->value(0).type() == QVariant::Bool);
-    delete r;
-
-    r = conn.exec(QSparqlQuery("select ?b { <uri005> tracker:available ?b . }"));
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QVERIFY(r->value(0).toBool() == false);
-    QVERIFY(r->value(0).type() == QVariant::Bool);
-    delete r;
-}
-
 void tst_QSparqlTrackerDirect::concurrent_queries()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
@@ -1254,7 +1218,7 @@ void tst_QSparqlTrackerDirect::async_conn_opening_for_update_data()
         << 0 << 2000;
 }
 
-void tst_QSparqlTrackerDirect::dataTypes()
+void tst_QSparqlTrackerDirect::data_types()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery dataTypes("select "
@@ -1300,7 +1264,7 @@ void tst_QSparqlTrackerDirect::dataTypes()
     delete r;
 }
 
-void tst_QSparqlTrackerDirect::explicitDataTypes()
+void tst_QSparqlTrackerDirect::explicit_data_types()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery explicitTypes("select "
@@ -1361,7 +1325,7 @@ void tst_QSparqlTrackerDirect::explicitDataTypes()
     delete r;
 }
 
-void tst_QSparqlTrackerDirect::largeInteger()
+void tst_QSparqlTrackerDirect::large_integer()
 {
     QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
                         "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
@@ -1386,6 +1350,225 @@ void tst_QSparqlTrackerDirect::largeInteger()
     r = conn.syncExec(clean);
     CHECK_ERROR(r);
     delete r;
+}
+
+void tst_QSparqlTrackerDirect::datatypes_as_properties()
+{
+    QFETCH(QString, property);
+    QFETCH(QString, classes);
+    QFETCH(QString, string);
+    QFETCH(QVariant, value);
+    QFETCH(QString, dataTypeUri);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    // Insert the test data.
+    QString insertQuery = QString(
+        "insert { "
+        "<testresource> a nie:InformationElement %1 ; "
+        "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+        "%2 %3 . }").arg(classes).arg(property).arg(string);
+
+    QSparqlResult* r = conn.syncExec(QSparqlQuery(insertQuery, QSparqlQuery::InsertStatement));
+    CHECK_ERROR(r);
+    delete r;
+
+    QSparqlQuery query(QString("select ?value { "
+                               "<testresource> %1 ?value . "
+                               "}").arg(property));
+
+    r = conn.exec(query);
+    r->waitForFinished();
+
+    // First delete the data, only after that check the results.  This way the
+    // test doesn't leave unclean data to the database that easily.  The results
+    // of our query have been read by in the buffer by the async api, and are
+    // not affected by the data deletion.
+    QString cleanString = "delete { <testresource> a rdfs:Resource . }";
+    QSparqlResult* deleteResult = conn.syncExec(QSparqlQuery(cleanString, QSparqlQuery::DeleteStatement));
+    CHECK_ERROR(deleteResult);
+    delete deleteResult;
+
+    CHECK_ERROR(r);
+    QVERIFY(r->next());
+    QCOMPARE(r->value(0), value);
+    QCOMPARE(r->value(0).type(), value.type());
+    QCOMPARE(r->binding(0).value(), value);
+    QCOMPARE(r->binding(0).value().type(), value.type());
+    QCOMPARE(r->binding(0).name(), QString("value"));
+    QCOMPARE(r->binding(0).dataTypeUri().toString(), dataTypeUri);
+    QVERIFY(!r->next());
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::datatypes_as_properties_data()
+{
+    // which property in the ontology can be used for inserting this type of
+    // data
+    QTest::addColumn<QString>("property");
+    // what classes the test resource needs to belong to (in addition to
+    // nie:InformationElement)
+    QTest::addColumn<QString>("classes");
+    // string representation of the value, inserted into the query
+    QTest::addColumn<QString>("string");
+    // Expected value: what QVariant we should get back
+    QTest::addColumn<QVariant>("value");
+    // Expected value: data type uri of the constructed QSparqlBinding
+    QTest::addColumn<QString>("dataTypeUri");
+
+    // different data sets
+    datatype_string_data();
+    datatype_int_data();
+    datatype_double_data();
+    datatype_datetime_data();
+    datatype_boolean_data();
+}
+
+void tst_QSparqlTrackerDirect::datatype_string_data()
+{
+    QString property = "nie:mimeType";
+    QString classes = "";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#string";
+
+    QTest::newRow("emptyString") <<
+        property <<
+        classes <<
+        "\"\"" <<
+        QVariant("") <<
+        dataType;
+    QTest::newRow("nonemptyString") <<
+        property <<
+        classes <<
+        "\"nonempty\"" <<
+        QVariant("nonempty") <<
+        dataType;
+}
+
+void tst_QSparqlTrackerDirect::datatype_int_data()
+{
+    QString property = "nie:byteSize";
+    QString classes = ", nie:DataObject";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#integer";
+
+    QTest::newRow("typicalNegativeInteger") <<
+        property <<
+        classes <<
+        "-600" <<
+        QVariant(qlonglong(-600)) <<
+        dataType;
+    QTest::newRow("typicalPositiveInteger") <<
+        property <<
+        classes <<
+        "800" <<
+        QVariant(qlonglong(800)) <<
+        dataType;
+    QTest::newRow("zeroInterger") <<
+        property <<
+        classes <<
+        "0" <<
+        QVariant(qlonglong(0)) <<
+        dataType;
+    QTest::newRow("bigInterger") <<
+        property <<
+        classes <<
+        "9223372036854775807" <<
+        QVariant(qlonglong(Q_UINT64_C(9223372036854775807))) <<
+        dataType;
+    QTest::newRow("smallInterger") <<
+        property <<
+        classes <<
+        "-9223372036854775808" <<
+        QVariant(qlonglong(Q_UINT64_C(-9223372036854775808))) <<
+        dataType;
+}
+
+void tst_QSparqlTrackerDirect::datatype_double_data()
+{
+    QString property = "slo:latitude";
+    QString classes = ", slo:GeoLocation";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#double";
+
+    QTest::newRow("typicalNegativeDouble") <<
+        property <<
+        classes <<
+        "-300.123456789" <<
+        QVariant(-300.123456789) <<
+        dataType;
+    QTest::newRow("typicalPositiveDouble") <<
+        property <<
+        classes <<
+        "987.09877" <<
+        QVariant(987.09877) <<
+        dataType;
+    QTest::newRow("zeroDouble") <<
+        property <<
+        classes <<
+        "0" <<
+        QVariant(0.0) <<
+        dataType;
+    QTest::newRow("maxSignificantDigitsDouble") <<
+        property <<
+        classes <<
+        "-0.12345678901234" <<
+        QVariant(-0.12345678901234) <<
+        dataType;
+    QTest::newRow("maxSignificantDigitsDouble2") <<
+        property <<
+        classes <<
+        "0.12345678901234" <<
+        QVariant(0.12345678901234) <<
+        dataType;
+    QTest::newRow("withExponentDouble") <<
+        property <<
+        classes <<
+        "0.12345678901234e+19" <<
+        QVariant(0.12345678901234e+19) <<
+        dataType;
+    QTest::newRow("withExponentDouble3") <<
+        property <<
+        classes <<
+        "-0.12345678901234e+19" <<
+        QVariant(-0.12345678901234e+19) <<
+        dataType;
+    QTest::newRow("withExponentDouble4") <<
+        property <<
+        classes <<
+        "-0.12345678901234e-19" <<
+        QVariant(-0.12345678901234e-19) <<
+        dataType;
+}
+
+void tst_QSparqlTrackerDirect::datatype_datetime_data()
+{
+    QString property = "nco:birthDate";
+    QString classes = ", nco:PersonContact";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#dateTime";
+    QTest::newRow("typicalDateTime") <<
+        property <<
+        classes <<
+        "\"1953-03-16T03:20:12Z\"" <<
+        QVariant(QDateTime::fromString("1953-03-16T03:20:12Z", Qt::ISODate)) <<
+        dataType;
+}
+
+void tst_QSparqlTrackerDirect::datatype_boolean_data()
+{
+    QString property = "tracker:available";
+    QString classes = ", nie:DataObject";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#boolean";
+
+    QTest::newRow("trueBool") <<
+        property <<
+        classes <<
+        "true" <<
+        QVariant(true) <<
+        dataType;
+    QTest::newRow("falseBool") <<
+        property <<
+        classes <<
+        "false" <<
+        QVariant(false) <<
+        dataType;
 }
 
 namespace {
