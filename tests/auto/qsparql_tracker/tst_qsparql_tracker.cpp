@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include "../testhelpers.h"
+
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
@@ -138,9 +140,8 @@ void tst_QSparqlTracker::query_contacts()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
@@ -165,9 +166,8 @@ void tst_QSparqlTracker::insert_and_delete_contact()
 
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -176,8 +176,8 @@ void tst_QSparqlTracker::insert_and_delete_contact()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
     r = conn.exec(q);
-    QVERIFY(r != 0);
     r->waitForFinished();
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
@@ -192,9 +192,8 @@ void tst_QSparqlTracker::insert_and_delete_contact()
 
     r = conn.exec(del);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that it got deleted
@@ -202,6 +201,7 @@ void tst_QSparqlTracker::insert_and_delete_contact()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
@@ -221,9 +221,8 @@ void tst_QSparqlTracker::insert_new_urn()
     add.bindValue(conn.createUrn("addeduri"));
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -234,6 +233,7 @@ void tst_QSparqlTracker::insert_new_urn()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         // qDebug() << r->binding(0).toString() << r->binding(1).toString();
@@ -255,9 +255,8 @@ void tst_QSparqlTracker::insert_new_urn()
     r = conn.exec(del);
     qDebug() << r->query();
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that it got deleted
@@ -281,9 +280,8 @@ void tst_QSparqlTracker::query_with_error()
     QSparqlQuery q("this is not a valid query");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), true);
+    QVERIFY(r->hasError());
     QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
 }
@@ -301,9 +299,8 @@ void tst_QSparqlTracker::batch_update()
 
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -314,6 +311,7 @@ void tst_QSparqlTracker::batch_update()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
@@ -328,9 +326,8 @@ void tst_QSparqlTracker::batch_update()
 
     r = conn.exec(del);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 
     // Verify that it got deleted
@@ -338,6 +335,7 @@ void tst_QSparqlTracker::batch_update()
     r = conn.exec(q);
     QVERIFY(r != 0);
     r->waitForFinished();
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
@@ -356,9 +354,8 @@ void tst_QSparqlTracker::iterate_result()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 3);
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
@@ -403,7 +400,7 @@ void tst_QSparqlTracker::delete_unfinished_result()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
     QTest::qWait(1000);
 }
@@ -416,9 +413,8 @@ void tst_QSparqlTracker::go_beyond_columns_number()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is syncronous only
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         QCOMPARE(r->current().count(), 2);

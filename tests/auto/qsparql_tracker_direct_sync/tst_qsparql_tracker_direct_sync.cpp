@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include "../testhelpers.h"
+
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
@@ -150,8 +152,8 @@ void tst_QSparqlTrackerDirectSync::query_contacts_sync()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
     QVERIFY(!r->isFinished());
+    CHECK_ERROR(r);
     QCOMPARE(r->size(), -1); // no size info for iterator-type results
     QHash<QString, QString> contactNames;
     while (r->next()) {
@@ -167,7 +169,7 @@ void tst_QSparqlTrackerDirectSync::query_contacts_sync()
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
 
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 }
 
@@ -179,7 +181,7 @@ void tst_QSparqlTrackerDirectSync::ask_contacts_sync()
                    "nco:nameGiven \"name003\" .}", QSparqlQuery::AskStatement);
     QSparqlResult* r = conn.syncExec(q1);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(!r->isFinished());
     QVERIFY(r->next());
     // We don't set the boolValue for iterator-type results
@@ -191,7 +193,7 @@ void tst_QSparqlTrackerDirectSync::ask_contacts_sync()
                    "nco:nameGiven \"name005\" .}", QSparqlQuery::AskStatement);
     r = conn.syncExec(q2);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(!r->isFinished());
     QVERIFY(r->next());
     // We don't set the boolValue for iterator-type results
@@ -212,7 +214,7 @@ void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
     // r.
     QSparqlResult* r = conn.syncExec(add);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->isFinished()); // update is immediately finished
     delete r;
 
@@ -224,7 +226,7 @@ void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
     r = conn.syncExec(q);
     QVERIFY(r != 0);
     QVERIFY(!r->isFinished());
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
 
     // No size information
     QCOMPARE(r->size(), -1);
@@ -233,6 +235,7 @@ void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
             r->value(1).toString();
     }
     QVERIFY(r->isFinished());
+    CHECK_ERROR(r);
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
     delete r;
@@ -243,7 +246,7 @@ void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
 
     r = conn.syncExec(del);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->isFinished());
     delete r;
 
@@ -253,7 +256,7 @@ void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
     QVERIFY(r != 0);
     // No size information
     QCOMPARE(r->size(), -1);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(!r->isFinished());
     while (r->next()) {
         // A different way for retrieving the results
@@ -287,7 +290,7 @@ void tst_QSparqlTrackerDirectSync::iterate_result_sync()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(!r->isFinished());
     QCOMPARE(r->size(), -1);
 
@@ -337,7 +340,7 @@ void tst_QSparqlTrackerDirectSync::delete_partially_iterated_result()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(!r->isFinished());
     QVERIFY(r->next());
 
@@ -351,14 +354,14 @@ void tst_QSparqlTrackerDirectSync::result_type_bool()
     // Boolean result
     QSparqlResult* r = conn.syncExec(QSparqlQuery("select 1 > 0 { }"));
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->next());
     QVERIFY(r->value(0).toBool() == true);
     QVERIFY(r->value(0).type() == QVariant::Bool);
     delete r;
     r = conn.syncExec(QSparqlQuery("select 0 > 1 { }"));
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->next());
     QVERIFY(r->value(0).toBool() == false);
     QVERIFY(r->value(0).type() == QVariant::Bool);
@@ -367,7 +370,7 @@ void tst_QSparqlTrackerDirectSync::result_type_bool()
     // Another type of boolean result
     r = conn.syncExec(QSparqlQuery("select ?b { <uri004> tracker:available ?b . }"));
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->next());
     QVERIFY(r->value(0).toBool() == true);
     QVERIFY(r->value(0).type() == QVariant::Bool);
@@ -375,7 +378,7 @@ void tst_QSparqlTrackerDirectSync::result_type_bool()
 
     r = conn.syncExec(QSparqlQuery("select ?b { <uri005> tracker:available ?b . }"));
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->next());
     QVERIFY(r->value(0).toBool() == false);
     QVERIFY(r->value(0).type() == QVariant::Bool);
@@ -391,12 +394,12 @@ void tst_QSparqlTrackerDirectSync::concurrent_queries()
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r1 = conn.syncExec(q);
     QVERIFY(r1 != 0);
-    QCOMPARE(r1->hasError(), false);
+    CHECK_ERROR(r1);
     QVERIFY(!r1->isFinished());
 
     QSparqlResult* r2 = conn.syncExec(q);
     QVERIFY(r2 != 0);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
     QVERIFY(!r2->isFinished());
 
     QHash<QString, QString> contactNames1, contactNames2;
@@ -436,12 +439,8 @@ void tst_QSparqlTrackerDirectSync::special_chars()
 
     QSparqlResult* r = conn.syncExec(add);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     QVERIFY(r->isFinished());
-    if (r->hasError()) {
-        qDebug() << r->lastError().message();
-    }
-    QCOMPARE(r->hasError(), false);
     delete r;
 
     // Verify that the insertion succeeded
@@ -457,6 +456,7 @@ void tst_QSparqlTrackerDirectSync::special_chars()
         contactNames[r->value(0).toString()] =
             r->value(1).toString();
     }
+    CHECK_ERROR(r);
     QVERIFY(r->isFinished());
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri002"], withSpecialChars);
@@ -468,7 +468,7 @@ void tst_QSparqlTrackerDirectSync::special_chars()
 
     r = conn.syncExec(del);
     QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
+    CHECK_ERROR(r);
     delete r;
 }
 
@@ -487,13 +487,13 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening()
         QTest::qWait(delayBeforeFirst);
 
     QSparqlResult* r1 = conn.syncExec(q);
-    QCOMPARE(r1->hasError(), false);
+    CHECK_ERROR(r1);
 
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeSecond);
 
     QSparqlResult* r2 = conn.syncExec(q);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
 
     // Check that the data is correct
     QHash<QString, QString> contactNames1, contactNames2;
@@ -550,10 +550,10 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_with_2_connections()
                    "nco:nameGiven ?ng .}");
 
     QSparqlResult* r1 = conn1.syncExec(q);
-    QCOMPARE(r1->hasError(), false);
+    CHECK_ERROR(r1);
 
     QSparqlResult* r2 = conn2.syncExec(q);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
 
     // Check that the data is correct
     QHash<QString, QString> contactNames1, contactNames2;
@@ -611,13 +611,13 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
         QTest::qWait(delayBeforeFirst);
 
     QSparqlResult* r1 = conn.syncExec(add1);
-    QVERIFY(!r1->hasError());
+    CHECK_ERROR(r1);
 
     if (delayBeforeFirst > 0)
         QTest::qWait(delayBeforeSecond);
 
     QSparqlResult* r2 = conn.syncExec(add2);
-    QVERIFY(!r2->hasError());
+    CHECK_ERROR(r2);
 
     delete r1;
     delete r2;
@@ -629,6 +629,7 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
     QHash<QString, QString> contactNames;
     r1 = conn.syncExec(q);
     QVERIFY(r1 != 0);
+    CHECK_ERROR(r1);
     while (r1->next()) {
         contactNames[r1->binding(0).value().toString()] =
             r1->binding(1).value().toString();
@@ -643,7 +644,7 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
 
     r1 = conn.syncExec(del1);
     QVERIFY(r1 != 0);
-    QVERIFY(!r1->hasError());
+    CHECK_ERROR(r1);
     delete r1;
 
     QSparqlQuery del2("delete { <addeduri008> a rdfs:Resource. }",
@@ -651,7 +652,7 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update()
 
     r2 = conn.syncExec(del2);
     QVERIFY(r2 != 0);
-    QVERIFY(!r2->hasError());
+    CHECK_ERROR(r2);
     delete r2;
 }
 
@@ -683,7 +684,7 @@ void tst_QSparqlTrackerDirectSync::dataTypes()
                            "{ }");
     QSparqlResult* r = conn.syncExec(dataTypes);
     QVERIFY(r != 0);
-    QVERIFY(!r->hasError());
+    CHECK_ERROR(r);
 
     QVERIFY(r->next());
     QCOMPARE(r->value(0),
@@ -730,7 +731,7 @@ void tst_QSparqlTrackerDirectSync::explicitDataTypes()
                                "{ }");
     QSparqlResult* r = conn.syncExec(explicitTypes);
     QVERIFY(r != 0);
-    QVERIFY(!r->hasError());
+    CHECK_ERROR(r);
 
     QVERIFY(r->next());
     QCOMPARE(r->value(0),
@@ -782,6 +783,7 @@ void tst_QSparqlTrackerDirectSync::largeInteger()
                         "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = conn.syncExec(insert);
+    CHECK_ERROR(r);
     delete r;
     QSparqlQuery select("select ?do ?bs "
                         "{ ?do a nie:DataObject ; "
@@ -789,7 +791,7 @@ void tst_QSparqlTrackerDirectSync::largeInteger()
                         "nie:byteSize ?bs .}");
     r = conn.syncExec(select);
 
-    QVERIFY(!r->hasError());
+    CHECK_ERROR(r);
     QVERIFY(r->next());
     QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
     delete r;
@@ -797,6 +799,7 @@ void tst_QSparqlTrackerDirectSync::largeInteger()
     QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
                        QSparqlQuery::DeleteStatement);
     r = conn.syncExec(clean);
+    CHECK_ERROR(r);
     delete r;
 }
 

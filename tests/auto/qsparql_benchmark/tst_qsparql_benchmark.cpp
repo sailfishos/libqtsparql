@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include "../testhelpers.h"
+
 #include <tracker-sparql.h>
 
 #include <QtTest/QtTest>
@@ -232,7 +234,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
         START_BENCHMARK {
             r = conn.exec(query);
             r->waitForFinished();
-            QVERIFY(!r->hasError());
+            CHECK_ERROR(r);
             QVERIFY(r->size() > 0);
             delete r;
         }
@@ -290,7 +292,7 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
             }
             END_BENCHMARK(finished);
         }
-        QVERIFY(!r->hasError());
+        CHECK_ERROR(r);
         QVERIFY(r->size() > 0);
         {
             int size = 0;

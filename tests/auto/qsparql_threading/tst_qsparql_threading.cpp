@@ -41,6 +41,8 @@
 
 // This test code is based on the qdbusthreading tests in qt
 
+#include "../testhelpers.h"
+
 #include <QtTest>
 #include <QtCore/QVarLengthArray>
 #include <QtCore/QThread>
@@ -247,8 +249,8 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    QCOMPARE(r1->hasError(), false);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r1);
+    CHECK_ERROR(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -290,8 +292,8 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    QCOMPARE(r1->hasError(), false);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r1);
+    CHECK_ERROR(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -328,8 +330,8 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    QCOMPARE(r1->hasError(), false);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r1);
+    CHECK_ERROR(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -365,8 +367,8 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    QCOMPARE(r1->hasError(), false);
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r1);
+    CHECK_ERROR(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -387,7 +389,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
     sem2.release();
     r2->waitForFinished();
 
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
 
     delete r2;
 
@@ -413,9 +415,8 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
     r2 = conn2->exec(del);
     qDebug() << "r2 delete query:" << r2->query();
     QVERIFY(r2 != 0);
-    QCOMPARE(r2->hasError(), false);
     r2->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
     delete r2;
 
     // Verify that it got deleted
@@ -447,7 +448,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
 
     r1->waitForFinished();
 
-    QCOMPARE(r1->hasError(), false);
+    CHECK_ERROR(r1);
 
     delete r1;
 
@@ -473,9 +474,8 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
     r1 = conn1->exec(del);
     qDebug() << "r1 delete query:" << r1->query();
     QVERIFY(r1 != 0);
-    QCOMPARE(r1->hasError(), false);
     r1->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r1->hasError(), false);
+    CHECK_ERROR(r1);
     delete r1;
 
     // Verify that it got deleted
@@ -514,7 +514,7 @@ void tst_QSparqlThreading::subThreadTrackerDirectQuery()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    QCOMPARE(r2->hasError(), false);
+    CHECK_ERROR(r2);
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
