@@ -44,24 +44,20 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
-#include <stdlib.h>
 #include <sys/time.h>
 #include <stdio.h>
 
-#define BENCHMARK_DATA_FD 8
-
 #define START_BENCHMARK \
-    char tsbuf2[32]; \
+    char tsbuf[80]; \
     struct timeval tv2; \
     gettimeofday(&tv2, NULL); \
-    long start = tv2.tv_sec * 1000 + tv2.tv_usec / 1000; \
-
+    long start = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;
 
 #define END_BENCHMARK(QSTRINGNAME) \
     gettimeofday(&tv2, NULL); \
     long end = tv2.tv_sec * 1000 + tv2.tv_usec / 1000;          \
-    snprintf(tsbuf2, sizeof(tsbuf2), "%s %lu\n", qPrintable(QSTRINGNAME), end - start); \
-    write(BENCHMARK_DATA_FD, tsbuf2, strlen(tsbuf2))
+    qsnprintf(tsbuf, sizeof(tsbuf), "QSparql_bnechmark_data: %s %lu\n", qPrintable(QSTRINGNAME), end - start); \
+    fwrite(tsbuf, qstrnlen(tsbuf, sizeof(tsbuf)), 1, stderr);
 
 #define NO_QUERIES 100
 
