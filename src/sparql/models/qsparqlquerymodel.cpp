@@ -104,7 +104,6 @@ void QSparqlQueryModelPrivate::prefetch(int limit)
         return;
 
     QModelIndex newBottom;
-    const int oldBottomRow = qMax(bottom.row(), 0);
 
     result->setPos(limit - 1);
     newBottom = q->createIndex(limit - 1, bottom.column());

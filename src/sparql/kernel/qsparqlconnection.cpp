@@ -217,6 +217,7 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QStri
 #endif // QT_NO_LIBRARY
 
     if (!driver) {
+        Q_UNUSED(type)
         qWarning("QSparqlConnection: %s driver not loaded", type.toLatin1().data());
         qWarning("QSparqlConnection: available drivers: %s",
                         QSparqlConnection::drivers().join(QLatin1String(" ")).toLatin1().data());
@@ -226,6 +227,7 @@ QSparqlDriver* QSparqlConnectionPrivate::findDriverWithFactoryLoader(const QStri
     }
     return driver;
 #else
+    Q_UNUSED(type)
     return 0;
 #endif // WE_ARE_QT
 }

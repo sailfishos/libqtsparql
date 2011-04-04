@@ -649,7 +649,7 @@ QSparqlResultRow QVirtuosoAsyncResult::current() const
     return d->results[pos()];
 }
 
-bool QVirtuosoAsyncResult::hasFeature(QSparqlResult::Feature feature) const
+bool QVirtuosoAsyncResult::hasFeature(QSparqlResult::Feature /*feature*/) const
 {
     return false;
 }
@@ -793,8 +793,9 @@ bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
         return false;
     case QSparqlConnection::SyncExec:
         return false;
+    default:
+        return false;
     }
-    return false;
 }
 
 bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)

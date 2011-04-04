@@ -513,8 +513,9 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
         return true;
     case QSparqlConnection::DefaultGraph:
         return false;
+    default:
+        return false;
     }
-    return false;
 }
 
 bool EndpointDriver::open(const QSparqlConnectionOptions& options)

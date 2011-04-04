@@ -656,12 +656,12 @@ void QTrackerDirectUpdateResult::exec()
                                             d);
 }
 
-QSparqlBinding QTrackerDirectUpdateResult::binding(int field) const
+QSparqlBinding QTrackerDirectUpdateResult::binding(int /*field*/) const
 {
     return QSparqlBinding();
 }
 
-QVariant QTrackerDirectUpdateResult::value(int field) const
+QVariant QTrackerDirectUpdateResult::value(int /*field*/) const
 {
     return QVariant();
 }
@@ -1056,7 +1056,6 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
     QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d);
     result->setQuery(query);
     result->setStatementType(type);
-    GError * error = 0;
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         if (d->asyncOpenCalled) {
             result->exec();
