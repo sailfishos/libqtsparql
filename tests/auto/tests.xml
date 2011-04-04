@@ -201,11 +201,6 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct open_connection_twice"
         </step>
       </case>
-      <case name="test-result-type-bool" description="Bool result type">
-        <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct result_type_bool"
-        </step>
-      </case>
       <case name="test-special-chars" description="Special characters">
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct special_chars ||
@@ -262,6 +257,26 @@
       <case name="test-async-conn-opening-for-update" description="Async connection opening">
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct async_conn_opening_for_update"
+        </step>
+      </case>
+      <case name="test-data-types" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct data_types"
+        </step>
+      </case>
+      <case name="test-explicit-data-types" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct explicit_data_types"
+        </step>
+      </case>
+      <case name="test-large-integer" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct large_integer"
+        </step>
+      </case>
+      <case name="test-datatype-boolean" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct datatypes_as_properties"
         </step>
       </case>
 
