@@ -1608,7 +1608,7 @@ void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
         QTest::qWait(100);
     }
     QCOMPARE(finishedSpy.count(), 1);
-    CHECK_ERROR(r);
+    // Don't access r any more; it might already have been deleted.
 
     // Now spinning the event loop should make the DeferredDelete event is
     // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
@@ -1642,7 +1642,7 @@ void tst_QSparqlTrackerDirect::deleteLaterWithUpdateResult()
         QTest::qWait(100);
     }
     QCOMPARE(finishedSpy.count(), 1);
-    CHECK_ERROR(r);
+    // Don't access r any more; it might already have been deleted.
 
     // Now spinning the event loop should make the DeferredDelete event is
     // processed.  (Note: don't do QCoreApplication::sendPostedEvents(0,
