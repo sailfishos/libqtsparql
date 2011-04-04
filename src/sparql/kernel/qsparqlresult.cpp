@@ -601,6 +601,10 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 
 bool QSparqlResult::hasError() const
 {
+    // Don't access d->error unless isFinished is true. This is because a
+    // driver-specific thread might set d->error and we have no way to
+    // coordinate with it. The driver is responsible for implementing
+    // isFinished() in a thread-safe way.
     return isFinished() && d->error.isValid();
 }
 
@@ -613,6 +617,10 @@ bool QSparqlResult::hasError() const
 
 QSparqlError QSparqlResult::lastError() const
 {
+    // Don't access d->error unless isFinished is true. This is because a
+    // driver-specific thread might set d->error and we have no way to
+    // coordinate with it. The driver is responsible for implementing
+    // isFinished() in a thread-safe way.
     if (!isFinished())
         return QSparqlError();
 
