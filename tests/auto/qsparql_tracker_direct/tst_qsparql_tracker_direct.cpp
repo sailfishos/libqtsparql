@@ -120,8 +120,8 @@ private slots:
     void datatype_datetime_data();
     void datatype_boolean_data();
 
-    void deleteLaterWithSelectResult();
-    void deleteLaterWithUpdateResult();
+    void delete_later_with_select_result();
+    void delete_later_with_update_result();
 };
 
 namespace {
@@ -1585,7 +1585,7 @@ class DeleteResultOnFinished : public QObject
 
 }
 
-void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
+void tst_QSparqlTrackerDirect::delete_later_with_select_result()
 {
     // it doesn't matter what the query is; we don't look at what it returns
     QSparqlQuery query("select ?ie { ?ie a nie:InformationElement . } ");
@@ -1618,7 +1618,7 @@ void tst_QSparqlTrackerDirect::deleteLaterWithSelectResult()
     QCOMPARE(destroyedSpy.count(), 1);
 }
 
-void tst_QSparqlTrackerDirect::deleteLaterWithUpdateResult()
+void tst_QSparqlTrackerDirect::delete_later_with_update_result()
 {
     QSparqlQuery insert("insert {<testresource001> a nie:InformationElement ; "
                         "nie:isLogicalPartOf <qsparql-tracker-live-tests> .}",

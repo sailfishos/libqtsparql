@@ -279,6 +279,16 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct datatypes_as_properties"
         </step>
       </case>
+      <case name="test-delete-later-with-select-result" description="deleteLater()">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_later_with_select_result"
+        </step>
+      </case>
+      <case name="test-delete-later-with-update-result" description="deleteLater()">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_later_with_update_result"
+        </step>
+      </case>
 
       <post_steps>
 	<step expected_result="0">
@@ -402,6 +412,22 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync async_conn_opening_for_update"
         </step>
       </case>
+      <case name="test-data-types" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync data_types"
+        </step>
+      </case>
+      <case name="test-explicit-data-types" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync explicit_data_types"
+        </step>
+      </case>
+      <case name="test-large-integer" description="Data types">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync large_integer"
+        </step>
+      </case>
+
       <post_steps>
 	<step expected_result="0">
 	  su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq"

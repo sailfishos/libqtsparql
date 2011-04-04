@@ -85,9 +85,9 @@ private slots:
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
 
-    void dataTypes();
-    void explicitDataTypes();
-    void largeInteger();
+    void data_types();
+    void explicit_data_types();
+    void large_integer();
 };
 
 namespace {
@@ -671,7 +671,7 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
         << 0 << 2000;
 }
 
-void tst_QSparqlTrackerDirectSync::dataTypes()
+void tst_QSparqlTrackerDirectSync::data_types()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery dataTypes("select "
@@ -716,7 +716,7 @@ void tst_QSparqlTrackerDirectSync::dataTypes()
     delete r;
 }
 
-void tst_QSparqlTrackerDirectSync::explicitDataTypes()
+void tst_QSparqlTrackerDirectSync::explicit_data_types()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery explicitTypes("select "
@@ -776,7 +776,7 @@ void tst_QSparqlTrackerDirectSync::explicitDataTypes()
     delete r;
 }
 
-void tst_QSparqlTrackerDirectSync::largeInteger()
+void tst_QSparqlTrackerDirectSync::large_integer()
 {
     QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
                         "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
