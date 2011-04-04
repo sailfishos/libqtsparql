@@ -593,22 +593,29 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 
 
 /*!
-    Returns true if there is an error associated with the result.
+    Returns true if the query has finished and there is an error
+    associated with the result.
 
-    \sa setLastError() lastError()
+    \sa setLastError() lastError() isFinished()
 */
 
 bool QSparqlResult::hasError() const
 {
-    return d->error.isValid();
+    return isFinished() && d->error.isValid();
 }
 
 /*!
-    Returns the last error associated with the result.
+    Once the query has finished, returns the last error associated
+    with the result
+
+    \sa setLastError() hasError() isFinished()
 */
 
 QSparqlError QSparqlResult::lastError() const
 {
+    if (!isFinished())
+        return QSparqlError();
+
     return d->error;
 }
 
