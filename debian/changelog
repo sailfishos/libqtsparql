@@ -1,9 +1,11 @@
-libqtsparql (0.0.21~unreleased) unstable; urgency=low
+libqtsparql (0.0.21) unstable; urgency=low
 
   * Fixes: NB#240314
   * Fixes: NB#228899
+  * API clarification: QSparqlResult::hasError() returns always false if QSparqlResult::isFinished() returns false.
+  * Minor API change: QSparqlResultRow::indexOf() was changed to case-sensitive from case-insensitive to match Sparql definition.
 
- -- Marja Hölttä <marja.holtta@nokia.com>  Tue, 22 Mar 2011 14:32:10 +0200
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Mon, 4 Apr 2011 11:31:29 +0200
 
 libqtsparql (0.0.20) unstable; urgency=low
 
