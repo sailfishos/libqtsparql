@@ -72,8 +72,6 @@ private slots:
     void query_contacts_sync();
     void ask_contacts_sync();
 
-    void query_with_error_sync();
-
     void iterate_result_sync();
 
     void delete_partially_iterated_result();
@@ -218,18 +216,6 @@ void tst_QSparqlTrackerDirectSync::ask_contacts_sync()
     QVERIFY(r->next());
     // We don't set the boolValue for iterator-type results
     QCOMPARE(r->value(0), QVariant(false));
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::query_with_error_sync()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("this is not a valid query");
-    QSparqlResult* r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(r->isFinished());
-    QCOMPARE(r->hasError(), true);
-    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
 }
 

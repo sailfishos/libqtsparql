@@ -83,3 +83,16 @@ void TrackerDirectCommon::insert_and_delete_contact()
     QCOMPARE(contactNames.size(), 3);
     delete r;
 }
+
+void TrackerDirectCommon::query_with_error()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("this is not a valid query");
+    QSparqlResult* r = execQuery(conn, q);
+    QVERIFY(r!=0);
+    waitForQueryFinished(r);
+    QVERIFY(r->isFinished());
+    QVERIFY(r->hasError());
+    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
+    delete r;
+}

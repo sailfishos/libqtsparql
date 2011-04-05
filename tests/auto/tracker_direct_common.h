@@ -61,6 +61,7 @@ class TrackerDirectCommon : public QObject
 
     private slots:
         void insert_and_delete_contact();
+        void query_with_error();
 
 };
 
