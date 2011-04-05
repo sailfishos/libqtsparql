@@ -8,18 +8,20 @@ Build-Depends: debhelper (>= 5),
                doxygen,
                libtracker-sparql-dev,
                aegis-builder (>= 1.4)
-Standards-Version: 3.8.0
+Standards-Version: 3.9.1
 
 Package: libqtsparql0
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
 Description: Library for accessing RDF stores.
 
 Package: libqtsparql0-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: libqtsparql0 (= ${binary:Version})
+Depends: libqtsparql0 (= ${binary:Version}),
+         ${misc:Depends}
 Description: Library for accessing RDF stores.
  .
  This package contains the debug symbols.
@@ -27,12 +29,14 @@ Description: Library for accessing RDF stores.
 Package: libqtsparql-dev
 Section: libdevel
 Architecture: any
-Depends: libqtsparql0 (= ${binary:Version})
+Depends: libqtsparql0 (= ${binary:Version}),
+         ${misc:Depends}
 Description: Library for accessing RDF stores.
 
 Package: libqtsparql-doc
 Section: doc
 Architecture: all
+Depends: ${misc:Depends}
 Description: Library for accessing RDF stores.
  .
  This package contains the documentation.
@@ -41,6 +45,7 @@ Package: libqtsparql-tests
 Section: devel
 Architecture: any
 Depends: ${shlibs:Depends},
+         ${misc:Depends},
          libqtsparql0 (>= ${binary:Version}),
          libqtsparql-tracker (>= ${binary:Version}),
          libqtsparql-tracker-direct (>= ${binary:Version}),
@@ -51,50 +56,58 @@ Description: Tests for libqtsparql.
 
 Package: libqtsparql-tests-dbg
 Section: debug
+Priority: extra
 Architecture: any
-Depends: libqtsparql-tests (= ${binary:Version})
+Depends: libqtsparql-tests (= ${binary:Version}),
+         ${misc:Depends}
 Description: Tests for libqtsparql.
  .
  This package contains the debug symbols.
 
 Package: libqtsparql-endpoint
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
 Description: Endpoint driver for QtSparql.
 
 Package: libqtsparql-endpoint-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: libqtsparql-endpoint (= ${binary:Version})
+Depends: libqtsparql-endpoint (= ${binary:Version}),
+         ${misc:Depends}
 Description: Endpoint driver for QtSparql.
  .
  This package contains the debug symbols.
 
 Package: libqtsparql-tracker
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
 Description: Tracker driver for QtSparql.
 
 Package: libqtsparql-tracker-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: libqtsparql-tracker (= ${binary:Version})
+Depends: libqtsparql-tracker (= ${binary:Version}),
+         ${misc:Depends}
 Description: Tracker driver for QtSparql.
  .
  This package contains the debug symbols.
 
 Package: libqtsparql-tracker-direct
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
 Description: Tracker direct access driver for QtSparql.
 
 Package: libqtsparql-tracker-direct-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: libqtsparql-tracker-direct (= ${binary:Version})
+Depends: libqtsparql-tracker-direct (= ${binary:Version}),
+         ${misc:Depends}
 Description: Tracker direct access driver for QtSparql.
  .
  This package contains the debug symbols.
