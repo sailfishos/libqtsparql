@@ -213,7 +213,7 @@ public:
 
     TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;
-    QVector<QVariantList> results;
+    QList<QVector<QVariant> > results;
     QAtomicInt isFinished;
 
     QTrackerDirectResult* q;
@@ -425,8 +425,8 @@ bool QTrackerDirectResult::fetchNextResult()
         }
     }
 
-    QVariantList resultRow;
-
+    QVector<QVariant> resultRow;
+    resultRow.reserve(n_columns);
     for (int i = 0; i < n_columns; i++) {
         resultRow.append(readVariant(d->cursor, i));
     }
