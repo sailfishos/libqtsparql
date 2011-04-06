@@ -288,3 +288,30 @@ void TrackerDirectCommon::explicit_data_types()
 
     delete r;
 }
+
+void TrackerDirectCommon::large_integer()
+{
+    QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlResult* r = runQuery(conn, insert);
+    QVERIFY(r!=0);
+    delete r;
+    QSparqlQuery select("select ?do ?bs "
+                        "{ ?do a nie:DataObject ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
+                        "nie:byteSize ?bs .}");
+    r = runQuery(conn, select);
+    QVERIFY(r!=0);
+
+    QVERIFY(r->next());
+    QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
+    delete r;
+
+    QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = runQuery(conn, clean);
+    QVERIFY(r!=0);
+    delete r;
+}

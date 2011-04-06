@@ -66,6 +66,7 @@ class TrackerDirectCommon : public QObject
         void special_chars();
         void data_types();
         void explicit_data_types();
+        void large_integer();
 
 };
 

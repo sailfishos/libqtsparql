@@ -84,8 +84,6 @@ private slots:
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
-
-    void large_integer();
 };
 
 tst_QSparqlTrackerDirectSync::tst_QSparqlTrackerDirectSync()
@@ -484,33 +482,6 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
-}
-
-void tst_QSparqlTrackerDirectSync::large_integer()
-{
-    QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
-                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
-                        "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlResult* r = conn.syncExec(insert);
-    CHECK_ERROR(r);
-    delete r;
-    QSparqlQuery select("select ?do ?bs "
-                        "{ ?do a nie:DataObject ; "
-                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
-                        "nie:byteSize ?bs .}");
-    r = conn.syncExec(select);
-
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
-    delete r;
-
-    QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
-                       QSparqlQuery::DeleteStatement);
-    r = conn.syncExec(clean);
-    CHECK_ERROR(r);
-    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
