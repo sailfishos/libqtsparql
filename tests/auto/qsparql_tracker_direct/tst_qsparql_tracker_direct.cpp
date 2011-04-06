@@ -107,7 +107,6 @@ private slots:
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
 
-    void explicit_data_types();
     void large_integer();
 
     void datatypes_as_properties();
@@ -1039,67 +1038,6 @@ void tst_QSparqlTrackerDirect::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
-}
-
-void tst_QSparqlTrackerDirect::explicit_data_types()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery explicitTypes("select "
-                               "<qsparql-tracker-direct-tests> "
-                               "\"80\"^^xsd:integer "
-                               "\"-7\"^^xsd:int "
-                               "\"23.4\"^^xsd:double "
-                               "\"true\"^^xsd:boolean "
-                               "\"false\"^^xsd:boolean "
-                               "\"a string\"^^xsd:string "
-                               "\"2011-03-28T09:36:00+02:00\"^^xsd:dateTime "
-                               "{ }");
-    QSparqlResult* r = conn.exec(explicitTypes);
-    QVERIFY(r != 0);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r);
-
-    QVERIFY(r->next());
-    QCOMPARE(r->value(0),
-             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
-    QCOMPARE(r->value(1), QVariant(80));
-    QCOMPARE(r->value(2), QVariant(-7));
-    QCOMPARE(r->value(3), QVariant(23.4));
-    QCOMPARE(r->value(4), QVariant(true));
-    QCOMPARE(r->value(5), QVariant(false));
-    QCOMPARE(r->value(6), QVariant(QString::fromLatin1("a string")));
-
-    // Tracker seems to return the datetime as a string
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
-    QCOMPARE(r->value(7),
-             QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
-
-    // urls don't have data type uris
-    QCOMPARE(r->binding(0).dataTypeUri(),
-            QUrl::fromEncoded(""));
-
-    QCOMPARE(r->binding(1).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-    QCOMPARE(r->binding(2).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-
-    QEXPECT_FAIL("", "Tracker returns doubles as strings", Continue);
-    QCOMPARE(r->binding(3).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
-
-    QCOMPARE(r->binding(4).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-    QCOMPARE(r->binding(5).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-
-    QCOMPARE(r->binding(6).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
-
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
-    QCOMPARE(r->binding(7).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
-
-    delete r;
 }
 
 void tst_QSparqlTrackerDirect::large_integer()
