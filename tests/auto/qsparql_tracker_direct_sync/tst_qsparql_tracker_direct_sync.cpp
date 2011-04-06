@@ -85,7 +85,6 @@ private slots:
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
 
-    void data_types();
     void explicit_data_types();
     void large_integer();
 };
@@ -486,51 +485,6 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
-}
-
-void tst_QSparqlTrackerDirectSync::data_types()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery dataTypes("select "
-                           "<qsparql-tracker-direct-tests> "
-                           "80 "
-                           "23.4 "
-                           "true "
-                           "false "
-                           "\"a string\" "
-                           "{ }");
-    QSparqlResult* r = conn.syncExec(dataTypes);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-
-    QVERIFY(r->next());
-    QCOMPARE(r->value(0),
-             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
-    QCOMPARE(r->value(1), QVariant(80));
-    QCOMPARE(r->value(2), QVariant(23.4));
-    QCOMPARE(r->value(3), QVariant(true));
-    QCOMPARE(r->value(4), QVariant(false));
-    QCOMPARE(r->value(5), QVariant(QString::fromLatin1("a string")));
-
-    // urls don't have data type uris
-    QCOMPARE(r->binding(0).dataTypeUri(),
-            QUrl::fromEncoded(""));
-
-    QCOMPARE(r->binding(1).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-
-    QCOMPARE(r->binding(2).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
-
-    QCOMPARE(r->binding(3).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-    QCOMPARE(r->binding(4).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-
-    QCOMPARE(r->binding(5).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
-
-    delete r;
 }
 
 void tst_QSparqlTrackerDirectSync::explicit_data_types()

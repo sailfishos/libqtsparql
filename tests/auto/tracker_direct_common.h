@@ -64,6 +64,7 @@ class TrackerDirectCommon : public QObject
         void query_with_error();
         void iterate_result();
         void special_chars();
+        void data_types();
 
 };
 
