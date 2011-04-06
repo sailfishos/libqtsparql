@@ -88,8 +88,6 @@ private slots:
 
     void open_connection_twice();
 
-    void special_chars();
-
     void result_immediately_finished();
     void result_immediately_finished2();
     
@@ -702,51 +700,6 @@ void tst_QSparqlTrackerDirect::open_connection_twice()
         QCOMPARE(r->size(), 3);
         delete r;
     }
-}
-
-void tst_QSparqlTrackerDirect::special_chars()
-{
-    // This test will leave unclean test data in tracker if it crashes.
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QString withSpecialChars("foo\u2780\u2781\u2782");
-    QSparqlQuery add(QString("insert { <addeduri002> a nco:PersonContact; "
-                             "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                             "nco:nameGiven \"%1\" .}").arg(withSpecialChars),
-                             QSparqlQuery::InsertStatement);
-
-    QSparqlResult* r = conn.exec(add);
-    QVERIFY(r != 0);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r);
-    delete r;
-
-    // Verify that the insertion succeeded
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QHash<QString, QString> contactNames;
-    r = conn.exec(q);
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    QCOMPARE(r->size(), 4);
-    while (r->next()) {
-        contactNames[r->binding(0).value().toString()] =
-            r->binding(1).value().toString();
-    }
-    QCOMPARE(contactNames.size(), 4);
-    QCOMPARE(contactNames["addeduri002"], withSpecialChars);
-    delete r;
-
-    // Delete the uri
-    QSparqlQuery del("delete { <addeduri002> a rdfs:Resource. }",
-                     QSparqlQuery::DeleteStatement);
-
-    r = conn.exec(del);
-    QVERIFY(r != 0);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r);
-    delete r;
 }
 
 void tst_QSparqlTrackerDirect::result_immediately_finished()

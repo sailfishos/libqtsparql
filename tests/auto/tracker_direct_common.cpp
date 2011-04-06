@@ -143,3 +143,45 @@ void TrackerDirectCommon::iterate_result()
 
     delete r;
 }
+
+void TrackerDirectCommon::special_chars()
+{
+    // This test will leave unclean test data in tracker if it crashes.
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QString withSpecialChars("foo\u2780\u2781\u2782");
+    QSparqlQuery add(QString("insert { <addeduri002> a nco:PersonContact; "
+                             "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                             "nco:nameGiven \"%1\" .}").arg(withSpecialChars),
+                             QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = runQuery(conn, add);
+    QVERIFY(r!=0);
+    QVERIFY(r->isFinished());
+    delete r;
+
+    // Verify that the insertion succeeded
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QString> contactNames;
+    r = runQuery(conn, q);
+    QVERIFY(r!=0);
+    QVERIFY(checkResultSize(r, 4));
+    while (r->next()) {
+        contactNames[r->value(0).toString()] =
+            r->value(1).toString();
+    }
+    CHECK_ERROR(r);
+    QVERIFY(r->isFinished());
+    QCOMPARE(contactNames.size(), 4);
+    QCOMPARE(contactNames["addeduri002"], withSpecialChars);
+    delete r;
+
+    // Delete the uri
+    QSparqlQuery del("delete { <addeduri002> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+
+    r = runQuery(conn, del);
+    QVERIFY(r!=0);
+    delete r;
+}

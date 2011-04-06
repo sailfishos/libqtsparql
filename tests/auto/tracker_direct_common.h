@@ -63,6 +63,7 @@ class TrackerDirectCommon : public QObject
         void insert_and_delete_contact();
         void query_with_error();
         void iterate_result();
+        void special_chars();
 
 };
 
