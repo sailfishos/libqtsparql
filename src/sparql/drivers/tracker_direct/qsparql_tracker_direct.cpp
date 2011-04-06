@@ -261,7 +261,7 @@ async_update_callback( GObject *source_object,
     GError *error = 0;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
-    if (error != 0) {
+    if (error) {
         QSparqlError e(QString::fromUtf8(error->message));
         e.setType(errorCodeToType(error->code));
         e.setNumber(error->code);
@@ -289,10 +289,8 @@ QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
     delete fetcher;
 
-    if (cursor != 0) {
+    if (cursor)
         g_object_unref(cursor);
-        cursor = 0;
-    }
 }
 
 void QTrackerDirectResultPrivate::terminate()
@@ -305,7 +303,7 @@ void QTrackerDirectResultPrivate::terminate()
 
     isFinished = 1;
     q->emit finished();
-    if (cursor != 0) {
+    if (cursor) {
         g_object_unref(cursor);
         cursor = 0;
     }
@@ -376,7 +374,7 @@ bool QTrackerDirectResult::runQuery()
                                                     query().toUtf8().constData(),
                                                     0,
                                                     &error );
-    if (error != 0 || d->cursor == 0) {
+    if (error || !d->cursor) {
         QMutexLocker resultLocker(&(d->resultMutex));
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         QSparqlError::StatementError,
@@ -398,7 +396,7 @@ bool QTrackerDirectResult::fetchNextResult()
     GError * error = 0;
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
-    if (error != 0) {
+    if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
                        error->code));
@@ -443,7 +441,7 @@ bool QTrackerDirectResult::fetchBoolResult()
 
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
-    if (error != 0) {
+    if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
                        error->code));
@@ -591,7 +589,7 @@ void QTrackerDirectUpdateResultPrivate::terminate()
     isFinished = 1;
     q->emit finished();
 
-    if (loop != 0)
+    if (loop)
         loop->exit();
 }
 
@@ -717,7 +715,7 @@ QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectD
 
 QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
 {
-    if (cursor != 0)
+    if (cursor)
         g_object_unref(cursor);
 }
 
@@ -743,11 +741,11 @@ void QTrackerDirectSyncResult::exec()
 
     GError * error = 0;
     d->cursor = tracker_sparql_connection_query(d->driverPrivate->connection, query().toUtf8().constData(), 0, &error);
-    if (error != 0 || d->cursor == 0) {
+    if (error || !d->cursor) {
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         QSparqlError::StatementError,
                         error ? error->code : -1));
-        if (error != 0)
+        if (error)
             g_error_free(error);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
     }
@@ -763,7 +761,7 @@ void QTrackerDirectSyncResult::update()
 
     GError * error = 0;
     tracker_sparql_connection_update(d->driverPrivate->connection, query().toUtf8().constData(), 0, 0, &error);
-    if (error != 0) {
+    if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                         errorCodeToType(error->code),
                         error->code));
@@ -774,13 +772,13 @@ void QTrackerDirectSyncResult::update()
 
 bool QTrackerDirectSyncResult::next()
 {
-    if (d->cursor == 0)
+    if (!d->cursor)
         return false;
 
     GError * error = 0;
     const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
-    if (error != 0) {
+    if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
                        error->code));
@@ -808,7 +806,7 @@ bool QTrackerDirectSyncResult::next()
 QSparqlResultRow QTrackerDirectSyncResult::current() const
 {
     // Note: this function reads and constructs the data again every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QSparqlResultRow();
 
     QSparqlResultRow resultRow;
@@ -825,7 +823,7 @@ QSparqlResultRow QTrackerDirectSyncResult::current() const
 QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
 {
     // Note: this function reads and constructs the data again every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QSparqlBinding();
 
     // get the no. of columns only once; it won't change between rows
@@ -854,7 +852,7 @@ QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
 QVariant QTrackerDirectSyncResult::value(int i) const
 {
     // Note: this function re-constructs the data every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QVariant();
 
     // get the no. of columns only once; it won't change between rows
@@ -869,7 +867,7 @@ QVariant QTrackerDirectSyncResult::value(int i) const
 
 QString QTrackerDirectSyncResult::stringValue(int i) const
 {
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QString();
 
     // get the no. of columns only once; it won't change between rows
@@ -884,7 +882,7 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
 
 bool QTrackerDirectSyncResult::isFinished() const
 {
-    return (d->cursor == 0);
+    return !d->cursor;
 }
 
 bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
@@ -911,7 +909,7 @@ async_open_callback(GObject         * /*source_object*/,
     GError * error = 0;
     d->connection = tracker_sparql_connection_get_finish(result, &error);
 
-    if (d->connection == 0) {
+    if (!d->connection) {
         d->error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
                                         .arg(QString::fromUtf8(error ? error->message : "unknown error"));
         qWarning() << d->error;
@@ -1001,7 +999,7 @@ void QTrackerDirectDriver::close()
         loop.exec();
     }
 
-    if (d->connection != 0) {
+    if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
     }
