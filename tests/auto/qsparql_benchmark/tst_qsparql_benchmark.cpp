@@ -130,26 +130,29 @@ const QString musicQuery =
 const int musicQueryColumnCount = 11;
 
 void readValuesFromCursor(TrackerSparqlCursor* cursor,
-                          QStringList& values,
-                          QList<TrackerSparqlValueType>& types)
+                          QList<QVector<QVariant> >& values)
 {
     QString value;
-    TrackerSparqlValueType type;
     gint n_columns = -1;
-    GError* error;
+    GError* error = 0;
     while (tracker_sparql_cursor_next (cursor, 0, &error)) {
+        if (error) {
+            g_error_free(error);
+            return;
+        }
         if (n_columns < 0)
             n_columns = tracker_sparql_cursor_get_n_columns(cursor);
+        QVector<QVariant> row;
+        row.reserve(n_columns);
         for (int i = 0; i < n_columns; i++) {
             // Simulating what QtSparql does with the data: get the
             // value as string, do conversion to utf-8, get the type,
-            // and store the value and the type.
-            value = QString::fromUtf8(
-                tracker_sparql_cursor_get_string(cursor, i, 0));
-            type = tracker_sparql_cursor_get_value_type(cursor, i);
-            values << value;
-            types << type;
+            // and store the value as QList of QVector of QVariant.
+            /*const TrackerSparqlValueType type =*/ tracker_sparql_cursor_get_value_type(cursor, i);
+            const gchar* stringValue = tracker_sparql_cursor_get_string(cursor, i, 0);
+            row.append(QVariant(QString::fromUtf8(stringValue)));
         }
+        values.append(row);
     }
 }
 
@@ -353,13 +356,11 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
             QVERIFY(error == 0);
             QVERIFY(cursor);
 
-            QStringList values;
-            QList<TrackerSparqlValueType> types;
+            QList<QVector<QVariant> > values;
 
-            readValuesFromCursor(cursor, values, types);
+            readValuesFromCursor(cursor, values);
 
             QVERIFY(values.size() > 0);
-            QVERIFY(types.size() > 0);
 
             g_object_unref(cursor);
         }
@@ -407,13 +408,11 @@ public:
             QVERIFY(error == 0);
             QVERIFY(cursor);
 
-            QStringList values;
-            QList<TrackerSparqlValueType> types;
+            QList<QVector<QVariant> > values;
 
-            readValuesFromCursor(cursor, values, types);
+            readValuesFromCursor(cursor, values);
 
             QVERIFY(values.size() > 0);
-            QVERIFY(types.size() > 0);
             g_object_unref(cursor);
         }
     TrackerSparqlConnection* connection;
