@@ -62,8 +62,33 @@ class TrackerDirectCommon : public QObject
     private slots:
         void insert_and_delete_contact();
         void query_with_error();
+        void iterate_result();
 
 };
 
+namespace {
+    int testLogLevel = QtWarningMsg;
+    void myMessageOutput(QtMsgType type, const char *msg)
+    {
+        switch (type) {
+            case QtDebugMsg:
+                if (testLogLevel <= 0)
+                    fprintf(stderr, "QDEBUG : %s\n", msg);
+                break;
+            case QtWarningMsg:
+                if (testLogLevel <= 1)
+                    fprintf(stderr, "QWARN  : %s\n", msg);
+                break;
+            case QtCriticalMsg:
+                if (testLogLevel <= 2)
+                    fprintf(stderr, "QCRITICAL: %s\n", msg);
+                break;
+            case QtFatalMsg:
+                if (testLogLevel <= 3)
+                    fprintf(stderr, "QFATAL : %s\n", msg);
+                abort();
+        }
+    }
+} // end unnamed namespace
 
 #endif // QSPARQL_TRACKER_COMMON_H

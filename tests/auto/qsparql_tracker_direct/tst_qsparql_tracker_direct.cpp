@@ -76,8 +76,6 @@ private slots:
     void insert_and_delete_contact_async();
     void insert_new_urn();
 
-    void iterate_result();
-
     void delete_unfinished_result();
     void delete_partially_iterated_result();
     void delete_nearly_finished_result();
@@ -126,31 +124,6 @@ private slots:
     void delete_later_with_select_result();
     void delete_later_with_update_result();
 };
-
-namespace {
-int testLogLevel = QtWarningMsg;
-void myMessageOutput(QtMsgType type, const char *msg)
-{
-    switch (type) {
-    case QtDebugMsg:
-        if (testLogLevel <= 0)
-            fprintf(stderr, "QDEBUG : %s\n", msg);
-        break;
-    case QtWarningMsg:
-        if (testLogLevel <= 1)
-            fprintf(stderr, "QWARN  : %s\n", msg);
-        break;
-    case QtCriticalMsg:
-        if (testLogLevel <= 2)
-            fprintf(stderr, "QCRITICAL: %s\n", msg);
-        break;
-    case QtFatalMsg:
-        if (testLogLevel <= 3)
-            fprintf(stderr, "QFATAL : %s\n", msg);
-        abort();
-    }
-}
-} // end unnamed namespace
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
 {
@@ -446,54 +419,6 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 3);
-    delete r;
-}
-
-void tst_QSparqlTrackerDirect::iterate_result()
-{
-    // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
-    r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
-    QCOMPARE(r->size(), 3);
-
-    QVERIFY(r->pos() == QSparql::BeforeFirstRow);
-    // This is not a valid position
-    for (int i=-1; i <= 2; ++i) {
-        QCOMPARE(r->binding(i), QSparqlBinding());
-        QVERIFY(r->value(i).isNull());
-    }
-    QCOMPARE(r->current(), QSparqlResultRow());
-
-    for (int i=0; i<3; ++i) {
-        QVERIFY(r->next());
-        QCOMPARE(r->pos(), i);
-
-        QVERIFY(r->binding(-1).value().isNull());
-        QVERIFY(r->binding(0).value().isNull() == false);
-        QVERIFY(r->binding(1).value().isNull() == false);
-        QVERIFY(r->binding(2).value().isNull());
-
-        QVERIFY(r->value(-1).isNull());
-        QVERIFY(r->value(0).isNull() == false);
-        QVERIFY(r->value(1).isNull() == false);
-        QVERIFY(r->value(2).isNull());
-    }
-    QVERIFY(!r->next());
-    QVERIFY(r->pos() == QSparql::AfterLastRow);
-    // This is not a valid position
-    for (int i=-1; i <= 2; ++i) {
-        QCOMPARE(r->binding(i), QSparqlBinding());
-        QVERIFY(r->value(i).isNull());
-    }
-    QCOMPARE(r->current(), QSparqlResultRow());
-
     delete r;
 }
 
