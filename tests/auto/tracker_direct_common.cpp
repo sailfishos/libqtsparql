@@ -3,6 +3,31 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
+namespace {
+    void myMessageOutput(QtMsgType type, const char *msg)
+    {
+        switch (type) {
+            case QtDebugMsg:
+                if (testLogLevel <= 0)
+                    fprintf(stderr, "QDEBUG : %s\n", msg);
+                break;
+            case QtWarningMsg:
+                if (testLogLevel <= 1)
+                    fprintf(stderr, "QWARN  : %s\n", msg);
+                break;
+            case QtCriticalMsg:
+                if (testLogLevel <= 2)
+                    fprintf(stderr, "QCRITICAL: %s\n", msg);
+                break;
+            case QtFatalMsg:
+                if (testLogLevel <= 3)
+                    fprintf(stderr, "QFATAL : %s\n", msg);
+                abort();
+        }
+    }
+} // end unnamed namespace
+
+
 TrackerDirectCommon::TrackerDirectCommon()
 {
 }
@@ -24,6 +49,11 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
         return 0;
     }
     return r;
+}
+
+void TrackerDirectCommon::installMsgHandler()
+{
+    qInstallMsgHandler(myMessageOutput);
 }
 
 void TrackerDirectCommon::insert_and_delete_contact()

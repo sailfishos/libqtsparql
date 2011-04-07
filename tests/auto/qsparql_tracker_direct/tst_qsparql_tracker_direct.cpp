@@ -146,7 +146,7 @@ void tst_QSparqlTrackerDirect::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-    qInstallMsgHandler(myMessageOutput);
+    installMsgHandler();
 }
 
 void tst_QSparqlTrackerDirect::cleanupTestCase()
