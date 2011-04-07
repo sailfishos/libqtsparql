@@ -69,7 +69,6 @@ public slots:
     void cleanup();
 
 private slots:
-    void query_contacts_sync();
     void ask_contacts_sync();
 
     void delete_partially_iterated_result();
@@ -128,35 +127,6 @@ void tst_QSparqlTrackerDirectSync::init()
 
 void tst_QSparqlTrackerDirectSync::cleanup()
 {
-}
-
-void tst_QSparqlTrackerDirectSync::query_contacts_sync()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(!r->isFinished());
-    CHECK_ERROR(r);
-    QCOMPARE(r->size(), -1); // no size info for iterator-type results
-    QHash<QString, QString> contactNames;
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        QCOMPARE(r->stringValue(0), r->value(0).toString());
-        QCOMPARE(r->stringValue(1), r->value(1).toString());
-
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-    }
-    QVERIFY(r->isFinished());
-    QCOMPARE(contactNames.size(), 3);
-    QCOMPARE(contactNames["uri001"], QString("name001"));
-    QCOMPARE(contactNames["uri002"], QString("name002"));
-    QCOMPARE(contactNames["uri003"], QString("name003"));
-
-    CHECK_ERROR(r);
-    delete r;
 }
 
 void tst_QSparqlTrackerDirectSync::ask_contacts_sync()

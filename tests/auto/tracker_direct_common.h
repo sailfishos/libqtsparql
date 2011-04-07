@@ -61,6 +61,7 @@ class TrackerDirectCommon : public QObject
         virtual bool checkResultSize(QSparqlResult* r, int s) =0;
 
     private slots:
+        void query_contacts();
         void insert_and_delete_contact();
         void query_with_error();
         void iterate_result();

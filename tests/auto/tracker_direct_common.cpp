@@ -56,6 +56,32 @@ void TrackerDirectCommon::installMsgHandler()
     qInstallMsgHandler(myMessageOutput);
 }
 
+void TrackerDirectCommon::query_contacts()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QSparqlResult* r = runQuery(conn, q);
+    QVERIFY(r != 0);
+    QVERIFY(checkResultSize(r, 3));
+    QHash<QString, QString> contactNames;
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->stringValue(0), r->value(0).toString());
+        QCOMPARE(r->stringValue(1), r->value(1).toString());
+
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QVERIFY(r->isFinished());
+    QCOMPARE(contactNames.size(), 3);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+
+    CHECK_ERROR(r);
+    delete r;
+}
 void TrackerDirectCommon::insert_and_delete_contact()
 {
 
