@@ -68,6 +68,13 @@ class TrackerDirectCommon : public QObject
         void data_types();
         void explicit_data_types();
         void large_integer();
+        void datatype_string_data();
+        void datatype_int_data();
+        void datatype_double_data();
+        void datatype_datetime_data();
+        void datatype_boolean_data();
+        void datatypes_as_properties_data();
+        void datatypes_as_properties();
 
 };
 

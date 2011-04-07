@@ -345,3 +345,226 @@ void TrackerDirectCommon::large_integer()
     QVERIFY(r!=0);
     delete r;
 }
+
+
+void TrackerDirectCommon::datatype_string_data()
+{
+    QString property = "nie:mimeType";
+    QString classes = "";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#string";
+
+    QTest::newRow("emptyString") <<
+        property <<
+        classes <<
+        "\"\"" <<
+        QVariant("") <<
+        dataType;
+    QTest::newRow("nonemptyString") <<
+        property <<
+        classes <<
+        "\"nonempty\"" <<
+        QVariant("nonempty") <<
+        dataType;
+}
+
+void TrackerDirectCommon::datatype_int_data()
+{
+    QString property = "nie:byteSize";
+    QString classes = ", nie:DataObject";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#integer";
+
+    QTest::newRow("typicalNegativeInteger") <<
+        property <<
+        classes <<
+        "-600" <<
+        QVariant(qlonglong(-600)) <<
+        dataType;
+    QTest::newRow("typicalPositiveInteger") <<
+        property <<
+        classes <<
+        "800" <<
+        QVariant(qlonglong(800)) <<
+        dataType;
+    QTest::newRow("zeroInterger") <<
+        property <<
+        classes <<
+        "0" <<
+        QVariant(qlonglong(0)) <<
+        dataType;
+    QTest::newRow("bigInterger") <<
+        property <<
+        classes <<
+        "9223372036854775807" <<
+        QVariant(qlonglong(Q_UINT64_C(9223372036854775807))) <<
+        dataType;
+    QTest::newRow("smallInterger") <<
+        property <<
+        classes <<
+        "-9223372036854775808" <<
+        QVariant(qlonglong(Q_UINT64_C(-9223372036854775808))) <<
+        dataType;
+}
+
+void TrackerDirectCommon::datatype_double_data()
+{
+    QString property = "slo:latitude";
+    QString classes = ", slo:GeoLocation";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#double";
+
+    QTest::newRow("typicalNegativeDouble") <<
+        property <<
+        classes <<
+        "-300.123456789" <<
+        QVariant(-300.123456789) <<
+        dataType;
+    QTest::newRow("typicalPositiveDouble") <<
+        property <<
+        classes <<
+        "987.09877" <<
+        QVariant(987.09877) <<
+        dataType;
+    QTest::newRow("zeroDouble") <<
+        property <<
+        classes <<
+        "0" <<
+        QVariant(0.0) <<
+        dataType;
+    QTest::newRow("maxSignificantDigitsDouble") <<
+        property <<
+        classes <<
+        "-0.12345678901234" <<
+        QVariant(-0.12345678901234) <<
+        dataType;
+    QTest::newRow("maxSignificantDigitsDouble2") <<
+        property <<
+        classes <<
+        "0.12345678901234" <<
+        QVariant(0.12345678901234) <<
+        dataType;
+    QTest::newRow("withExponentDouble") <<
+        property <<
+        classes <<
+        "0.12345678901234e+19" <<
+        QVariant(0.12345678901234e+19) <<
+        dataType;
+    QTest::newRow("withExponentDouble3") <<
+        property <<
+        classes <<
+        "-0.12345678901234e+19" <<
+        QVariant(-0.12345678901234e+19) <<
+        dataType;
+    QTest::newRow("withExponentDouble4") <<
+        property <<
+        classes <<
+        "-0.12345678901234e-19" <<
+        QVariant(-0.12345678901234e-19) <<
+        dataType;
+}
+
+void TrackerDirectCommon::datatype_datetime_data()
+{
+    QString property = "nco:birthDate";
+    QString classes = ", nco:PersonContact";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#dateTime";
+    QTest::newRow("typicalDateTime") <<
+        property <<
+        classes <<
+        "\"1953-03-16T03:20:12Z\"" <<
+        QVariant(QDateTime::fromString("1953-03-16T03:20:12Z", Qt::ISODate)) <<
+        dataType;
+}
+
+void TrackerDirectCommon::datatype_boolean_data()
+{
+    QString property = "tracker:available";
+    QString classes = ", nie:DataObject";
+    QString dataType = "http://www.w3.org/2001/XMLSchema#boolean";
+
+    QTest::newRow("trueBool") <<
+        property <<
+        classes <<
+        "true" <<
+        QVariant(true) <<
+        dataType;
+    QTest::newRow("falseBool") <<
+        property <<
+        classes <<
+        "false" <<
+        QVariant(false) <<
+        dataType;
+}
+
+void TrackerDirectCommon::datatypes_as_properties_data()
+{
+    // which property in the ontology can be used for inserting this type of
+    // data
+    QTest::addColumn<QString>("property");
+    // what classes the test resource needs to belong to (in addition to
+    // nie:InformationElement)
+    QTest::addColumn<QString>("classes");
+    // string representation of the value, inserted into the query
+    QTest::addColumn<QString>("string");
+    // Expected value: what QVariant we should get back
+    QTest::addColumn<QVariant>("value");
+    // Expected value: data type uri of the constructed QSparqlBinding
+    QTest::addColumn<QString>("dataTypeUri");
+
+    // different data sets
+    datatype_string_data();
+    datatype_int_data();
+    datatype_double_data();
+    datatype_datetime_data();
+    datatype_boolean_data();
+}
+
+void TrackerDirectCommon::datatypes_as_properties()
+{
+    QFETCH(QString, property);
+    QFETCH(QString, classes);
+    QFETCH(QString, string);
+    QFETCH(QVariant, value);
+    QFETCH(QString, dataTypeUri);
+
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    // Insert the test data.
+    QSparqlQuery insertQuery(
+        QString("insert { "
+        "<testresource> a nie:InformationElement %1 ; "
+        "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+        "%2 %3 . }").arg(classes).arg(property).arg(string),
+        QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = runQuery(conn, insertQuery);
+    QVERIFY(r!=0);
+    CHECK_ERROR(r);
+    delete r;
+
+    QSparqlQuery query(QString("select ?value { "
+                                "<testresource> %1 ?value . "
+                                "}").arg(property));
+
+    r = runQuery(conn, query);
+    QVERIFY(r!=0);
+    CHECK_ERROR(r);
+
+    QVERIFY(r->next());
+    QVariant val = r->value(0);
+    QSparqlBinding binding = r->binding(0);
+    QVERIFY(!r->next());
+
+    QSparqlQuery cleanString("delete { <testresource> a rdfs:Resource . }",
+                             QSparqlQuery::DeleteStatement);
+    QSparqlResult* deleteResult = runQuery(conn, cleanString);
+    QVERIFY(deleteResult!=0);
+    CHECK_ERROR(deleteResult);
+    delete deleteResult;
+
+    QCOMPARE(val, value);
+    QCOMPARE(val.type(), value.type());
+    QCOMPARE(binding.value(), value);
+    QCOMPARE(binding.value().type(), value.type());
+    QCOMPARE(binding.name(), QString("value"));
+    QCOMPARE(binding.dataTypeUri().toString(), dataTypeUri);
+    delete r;
+}
