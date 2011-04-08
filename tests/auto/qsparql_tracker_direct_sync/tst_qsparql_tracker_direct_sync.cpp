@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "../testhelpers.h"
+#include "../tracker_direct_common.h"
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
@@ -48,13 +49,18 @@
 
 //TESTED_FILES=
 
-class tst_QSparqlTrackerDirectSync : public QObject
+class tst_QSparqlTrackerDirectSync : public TrackerDirectCommon
 {
     Q_OBJECT
 
 public:
     tst_QSparqlTrackerDirectSync();
     virtual ~tst_QSparqlTrackerDirectSync();
+
+private:
+    QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q);
+    void waitForQueryFinished(QSparqlResult* r);
+    bool checkResultSize(QSparqlResult* r, int s);
 
 public slots:
     void initTestCase();
@@ -63,13 +69,7 @@ public slots:
     void cleanup();
 
 private slots:
-    void query_contacts_sync();
     void ask_contacts_sync();
-    void insert_and_delete_contact_sync();
-
-    void query_with_error_sync();
-
-    void iterate_result_sync();
 
     void delete_partially_iterated_result();
 
@@ -77,43 +77,13 @@ private slots:
 
     void result_type_bool();
 
-    void special_chars();
     void async_conn_opening();
     void async_conn_opening_data();
     void async_conn_opening_with_2_connections();
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
-
-    void data_types();
-    void explicit_data_types();
-    void large_integer();
 };
-
-namespace {
-int testLogLevel = QtWarningMsg;
-void myMessageOutput(QtMsgType type, const char *msg)
-{
-    switch (type) {
-    case QtDebugMsg:
-        if (testLogLevel <= 0)
-            fprintf(stderr, "QDEBUG : %s\n", msg);
-        break;
-    case QtWarningMsg:
-        if (testLogLevel <= 1)
-            fprintf(stderr, "QWARN  : %s\n", msg);
-        break;
-    case QtCriticalMsg:
-        if (testLogLevel <= 2)
-            fprintf(stderr, "QCRITICAL: %s\n", msg);
-        break;
-    case QtFatalMsg:
-        if (testLogLevel <= 3)
-            fprintf(stderr, "QFATAL : %s\n", msg);
-        abort();
-    }
-}
-} // end unnamed namespace
 
 tst_QSparqlTrackerDirectSync::tst_QSparqlTrackerDirectSync()
 {
@@ -123,12 +93,27 @@ tst_QSparqlTrackerDirectSync::~tst_QSparqlTrackerDirectSync()
 {
 }
 
+QSparqlResult* tst_QSparqlTrackerDirectSync::execQuery(QSparqlConnection &conn, const QSparqlQuery &q){
+    QSparqlResult* r = conn.syncExec(q);
+    return r;
+}
+
+void tst_QSparqlTrackerDirectSync::waitForQueryFinished(QSparqlResult* r)
+{
+    Q_UNUSED(r);
+}
+
+bool tst_QSparqlTrackerDirectSync::checkResultSize(QSparqlResult* r, int s){
+    Q_UNUSED(s);
+    return (r->size() == -1);
+}
+
 void tst_QSparqlTrackerDirectSync::initTestCase()
 {
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-    qInstallMsgHandler(myMessageOutput);
+    installMsgHandler();
 }
 
 void tst_QSparqlTrackerDirectSync::cleanupTestCase()
@@ -142,35 +127,6 @@ void tst_QSparqlTrackerDirectSync::init()
 
 void tst_QSparqlTrackerDirectSync::cleanup()
 {
-}
-
-void tst_QSparqlTrackerDirectSync::query_contacts_sync()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(!r->isFinished());
-    CHECK_ERROR(r);
-    QCOMPARE(r->size(), -1); // no size info for iterator-type results
-    QHash<QString, QString> contactNames;
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        QCOMPARE(r->stringValue(0), r->value(0).toString());
-        QCOMPARE(r->stringValue(1), r->value(1).toString());
-
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-    }
-    QVERIFY(r->isFinished());
-    QCOMPARE(contactNames.size(), 3);
-    QCOMPARE(contactNames["uri001"], QString("name001"));
-    QCOMPARE(contactNames["uri002"], QString("name002"));
-    QCOMPARE(contactNames["uri003"], QString("name003"));
-
-    CHECK_ERROR(r);
-    delete r;
 }
 
 void tst_QSparqlTrackerDirectSync::ask_contacts_sync()
@@ -198,134 +154,6 @@ void tst_QSparqlTrackerDirectSync::ask_contacts_sync()
     QVERIFY(r->next());
     // We don't set the boolValue for iterator-type results
     QCOMPARE(r->value(0), QVariant(false));
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::insert_and_delete_contact_sync()
-{
-    // This test will leave unclean test data in tracker if it crashes.
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
-                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                     "nco:nameGiven \"addedname001\" .}",
-                     QSparqlQuery::InsertStatement);
-
-    // Update is really done in syncExec; no need to call any other functions of
-    // r.
-    QSparqlResult* r = conn.syncExec(add);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-    QVERIFY(r->isFinished()); // update is immediately finished
-    delete r;
-
-    // Verify that the insertion succeeded
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QHash<QString, QString> contactNames;
-    r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(!r->isFinished());
-    CHECK_ERROR(r);
-
-    // No size information
-    QCOMPARE(r->size(), -1);
-    while (r->next()) {
-        contactNames[r->value(0).toString()] =
-            r->value(1).toString();
-    }
-    QVERIFY(r->isFinished());
-    CHECK_ERROR(r);
-    QCOMPARE(contactNames.size(), 4);
-    QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
-    delete r;
-
-    // Delete the uri
-    QSparqlQuery del("delete { <addeduri001> a rdfs:Resource. }",
-                     QSparqlQuery::DeleteStatement);
-
-    r = conn.syncExec(del);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-    QVERIFY(r->isFinished());
-    delete r;
-
-    // Verify that it got deleted
-    contactNames.clear();
-    r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    // No size information
-    QCOMPARE(r->size(), -1);
-    CHECK_ERROR(r);
-    QVERIFY(!r->isFinished());
-    while (r->next()) {
-        // A different way for retrieving the results
-        contactNames[r->binding(0).value().toString()] =
-            r->binding(1).value().toString();
-    }
-    QVERIFY(r->isFinished());
-    QCOMPARE(contactNames.size(), 3);
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::query_with_error_sync()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("this is not a valid query");
-    QSparqlResult* r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(r->isFinished());
-    QCOMPARE(r->hasError(), true);
-    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::iterate_result_sync()
-{
-    // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-    QVERIFY(!r->isFinished());
-    QCOMPARE(r->size(), -1);
-
-    QVERIFY(r->pos() == QSparql::BeforeFirstRow);
-    // This is not a valid position
-    for (int i=-1; i <= 2; ++i) {
-        QCOMPARE(r->binding(i), QSparqlBinding());
-        QVERIFY(r->value(i).isNull());
-    }
-    QCOMPARE(r->current(), QSparqlResultRow());
-
-    for (int i=0; i<3; ++i) {
-        QVERIFY(r->next());
-        QCOMPARE(r->pos(), i);
-
-        QVERIFY(r->binding(-1).value().isNull());
-        QVERIFY(r->binding(0).value().isNull() == false);
-        QVERIFY(r->binding(1).value().isNull() == false);
-        QVERIFY(r->binding(2).value().isNull());
-
-        QVERIFY(r->value(-1).isNull());
-        QVERIFY(r->value(0).isNull() == false);
-        QVERIFY(r->value(1).isNull() == false);
-        QVERIFY(r->value(2).isNull());
-    }
-    QVERIFY(!r->next());
-    QVERIFY(r->pos() == QSparql::AfterLastRow);
-    // This is not a valid position
-    for (int i=-1; i <= 2; ++i) {
-        QCOMPARE(r->binding(i), QSparqlBinding());
-        QVERIFY(r->value(i).isNull());
-    }
-    QCOMPARE(r->current(), QSparqlResultRow());
-    QVERIFY(r->isFinished());
-
     delete r;
 }
 
@@ -425,51 +253,6 @@ void tst_QSparqlTrackerDirectSync::concurrent_queries()
 
     delete r1;
     delete r2;
-}
-
-void tst_QSparqlTrackerDirectSync::special_chars()
-{
-    // This test will leave unclean test data in tracker if it crashes.
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QString withSpecialChars("foo\u2780\u2781\u2782");
-    QSparqlQuery add(QString("insert { <addeduri002> a nco:PersonContact; "
-                             "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                             "nco:nameGiven \"%1\" .}").arg(withSpecialChars),
-                             QSparqlQuery::InsertStatement);
-
-    QSparqlResult* r = conn.syncExec(add);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-    QVERIFY(r->isFinished());
-    delete r;
-
-    // Verify that the insertion succeeded
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QHash<QString, QString> contactNames;
-    r = conn.syncExec(q);
-    QVERIFY(r != 0);
-    QVERIFY(!r->isFinished());
-    QCOMPARE(r->size(), -1);
-    while (r->next()) {
-        contactNames[r->value(0).toString()] =
-            r->value(1).toString();
-    }
-    CHECK_ERROR(r);
-    QVERIFY(r->isFinished());
-    QCOMPARE(contactNames.size(), 4);
-    QCOMPARE(contactNames["addeduri002"], withSpecialChars);
-    delete r;
-
-    // Delete the uri
-    QSparqlQuery del("delete { <addeduri002> a rdfs:Resource. }",
-                     QSparqlQuery::DeleteStatement);
-
-    r = conn.syncExec(del);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-    delete r;
 }
 
 void tst_QSparqlTrackerDirectSync::async_conn_opening()
@@ -669,138 +452,6 @@ void tst_QSparqlTrackerDirectSync::async_conn_opening_for_update_data()
 
     QTest::newRow("BeforeAndAfterConnOpened")
         << 0 << 2000;
-}
-
-void tst_QSparqlTrackerDirectSync::data_types()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery dataTypes("select "
-                           "<qsparql-tracker-direct-tests> "
-                           "80 "
-                           "23.4 "
-                           "true "
-                           "false "
-                           "\"a string\" "
-                           "{ }");
-    QSparqlResult* r = conn.syncExec(dataTypes);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-
-    QVERIFY(r->next());
-    QCOMPARE(r->value(0),
-             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
-    QCOMPARE(r->value(1), QVariant(80));
-    QCOMPARE(r->value(2), QVariant(23.4));
-    QCOMPARE(r->value(3), QVariant(true));
-    QCOMPARE(r->value(4), QVariant(false));
-    QCOMPARE(r->value(5), QVariant(QString::fromLatin1("a string")));
-
-    // urls don't have data type uris
-    QCOMPARE(r->binding(0).dataTypeUri(),
-            QUrl::fromEncoded(""));
-
-    QCOMPARE(r->binding(1).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-
-    QCOMPARE(r->binding(2).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
-
-    QCOMPARE(r->binding(3).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-    QCOMPARE(r->binding(4).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-
-    QCOMPARE(r->binding(5).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
-
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::explicit_data_types()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery explicitTypes("select "
-                               "<qsparql-tracker-direct-tests> "
-                               "\"80\"^^xsd:integer "
-                               "\"-7\"^^xsd:int "
-                               "\"23.4\"^^xsd:double "
-                               "\"true\"^^xsd:boolean "
-                               "\"false\"^^xsd:boolean "
-                               "\"a string\"^^xsd:string "
-                               "\"2011-03-28T09:36:00+02:00\"^^xsd:dateTime "
-                               "{ }");
-    QSparqlResult* r = conn.syncExec(explicitTypes);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-
-    QVERIFY(r->next());
-    QCOMPARE(r->value(0),
-             QVariant(QUrl::fromEncoded("qsparql-tracker-direct-tests")));
-    QCOMPARE(r->value(1), QVariant(80));
-    QCOMPARE(r->value(2), QVariant(-7));
-    QCOMPARE(r->value(3), QVariant(23.4));
-    QCOMPARE(r->value(4), QVariant(true));
-    QCOMPARE(r->value(5), QVariant(false));
-    QCOMPARE(r->value(6), QVariant(QString::fromLatin1("a string")));
-
-    // Tracker seems to return the datetime as a string
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
-    QCOMPARE(r->value(7),
-             QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
-
-    // urls don't have data type uris
-    QCOMPARE(r->binding(0).dataTypeUri(),
-            QUrl::fromEncoded(""));
-
-    QCOMPARE(r->binding(1).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-    QCOMPARE(r->binding(2).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
-
-    QEXPECT_FAIL("", "Tracker returns doubles as strings", Continue);
-    QCOMPARE(r->binding(3).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
-
-    QCOMPARE(r->binding(4).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-    QCOMPARE(r->binding(5).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#boolean"));
-
-    QCOMPARE(r->binding(6).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
-
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
-    QCOMPARE(r->binding(7).dataTypeUri(),
-             QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
-
-    delete r;
-}
-
-void tst_QSparqlTrackerDirectSync::large_integer()
-{
-    QSparqlQuery insert("insert {<mydataobject> a nie:DataObject, nie:InformationElement ; "
-                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
-                        "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlResult* r = conn.syncExec(insert);
-    CHECK_ERROR(r);
-    delete r;
-    QSparqlQuery select("select ?do ?bs "
-                        "{ ?do a nie:DataObject ; "
-                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
-                        "nie:byteSize ?bs .}");
-    r = conn.syncExec(select);
-
-    CHECK_ERROR(r);
-    QVERIFY(r->next());
-    QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
-    delete r;
-
-    QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
-                       QSparqlQuery::DeleteStatement);
-    r = conn.syncExec(clean);
-    CHECK_ERROR(r);
-    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectSync )
