@@ -313,7 +313,6 @@ void TrackerDirectCommon::explicit_data_types()
     QCOMPARE(r->value(6), QVariant(QString::fromLatin1("a string")));
 
     // Tracker seems to return the datetime as a string
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
     QCOMPARE(r->value(7),
              QVariant(QDateTime::fromString("2011-03-28T09:36:00+02:00", Qt::ISODate)));
 
@@ -326,7 +325,6 @@ void TrackerDirectCommon::explicit_data_types()
     QCOMPARE(r->binding(2).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#integer"));
 
-    QEXPECT_FAIL("", "Tracker returns doubles as strings", Continue);
     QCOMPARE(r->binding(3).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#double"));
 
@@ -338,7 +336,6 @@ void TrackerDirectCommon::explicit_data_types()
     QCOMPARE(r->binding(6).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#string"));
 
-    QEXPECT_FAIL("", "Tracker returns dates as strings", Continue);
     QCOMPARE(r->binding(7).dataTypeUri(),
              QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#dateTime"));
 
