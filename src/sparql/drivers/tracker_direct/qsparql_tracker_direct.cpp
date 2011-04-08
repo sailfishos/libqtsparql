@@ -1009,7 +1009,7 @@ void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
-    if (!d->asyncOpenCalled) {
+    if (!d->asyncOpenCalled && QCoreApplication::instance()) {
         QEventLoop loop;
         connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
         loop.exec();
