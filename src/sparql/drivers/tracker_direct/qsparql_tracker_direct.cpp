@@ -208,7 +208,6 @@ public:
 
     ~QTrackerDirectResultPrivate();
     void terminate();
-    void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
     void dataReady(int totalCount);
 
@@ -310,11 +309,6 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
-}
-
-void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
-{
-    q->setLastError(e);
 }
 
 void QTrackerDirectResultPrivate::setBoolValue(bool v)
