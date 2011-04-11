@@ -71,33 +71,48 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 
 namespace {
 
-static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glong length)
+QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, int col)
 {
+    glong strLen = 0;
+    const gchar* strData = 0;
+
+    // Get string data for types returned as strings from tracker
+    switch (type) {
+    case TRACKER_SPARQL_VALUE_TYPE_URI:
+    case TRACKER_SPARQL_VALUE_TYPE_STRING:
+    case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
+        strData = tracker_sparql_cursor_get_string(cursor, col, &strLen);
+        break;
+    default:
+        break;
+    }
+
     switch (type) {
     case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
         break;
     case TRACKER_SPARQL_VALUE_TYPE_URI:
-        return QVariant(QUrl::fromEncoded(QByteArray(value, length)));
+    {
+        const QByteArray ba(strData, strLen);
+        return QVariant(QUrl::fromEncoded(ba));
+    }
     case TRACKER_SPARQL_VALUE_TYPE_STRING:
-        return QVariant(QString::fromUtf8(value, length));
+    {
+        return QVariant(QString::fromUtf8(strData, strLen));
+    }
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
     {
-        // It's safe to use QByteArray::setRawData here, since there won't be
-        // pointers to the byte array after the conversion.
-        QByteArray ba;
-        ba.setRawData(value, length);
-        return QVariant(ba.toLongLong());
+        const gint64 value = tracker_sparql_cursor_get_integer(cursor, col);
+        return QVariant(qlonglong(value));
     }
     case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
     {
-        // It's safe to use QByteArray::setRawData here, since there won't be
-        // pointers to the byte array after the conversion.
-        QByteArray ba;
-        ba.setRawData(value, length);
-        return QVariant(ba.toDouble());
+        const gdouble value = tracker_sparql_cursor_get_double(cursor, col);
+        return QVariant(double(value));
     }
     case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
-        return QVariant(QDateTime::fromString(QString::fromUtf8(value, length), Qt::ISODate));
+        {
+        return QVariant(QDateTime::fromString(QString::fromUtf8(strData, strLen), Qt::ISODate));
+        }
     case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
         // Note: this type is not currently used by Tracker.  Here we're storing
         // it as a null QVariant and losing information that it was a blank
@@ -108,8 +123,8 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
         break;
     case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
     {
-        const bool isTrue = (qstrcmp(value, "1") == 0 || qstricmp(value, "true") == 0);
-        return QVariant(isTrue);
+        const gboolean value = tracker_sparql_cursor_get_boolean(cursor, col);
+        return QVariant(value != FALSE);
     }
     default:
         break;
@@ -122,9 +137,7 @@ QVariant readVariant(TrackerSparqlCursor* cursor, int col)
 {
     const TrackerSparqlValueType type =
         tracker_sparql_cursor_get_value_type(cursor, col);
-    glong len;
-    const gchar* data = tracker_sparql_cursor_get_string(cursor, col, &len);
-    return makeVariant(type, data, len);
+    return makeVariant(type, cursor, col);
 }
 
 }
@@ -453,15 +466,10 @@ bool QTrackerDirectResult::fetchBoolResult()
 
     QMutexLocker resultLocker(&(d->resultMutex));
 
-    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1)  {
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, 0, 0));
-        const TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, 0);
-
-        if (    type == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN
-                && (value == QLatin1String("1") || value.toLower() == QLatin1String("true")) )
-        {
-            d->setBoolValue(true);
-        }
+    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1 &&
+        tracker_sparql_cursor_get_value_type(d->cursor, 0) == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN)  {
+        const gboolean value = tracker_sparql_cursor_get_boolean(d->cursor, 0);
+        d->setBoolValue(value != FALSE);
     }
 
     terminate();
