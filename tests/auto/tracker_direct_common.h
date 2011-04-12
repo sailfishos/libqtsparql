@@ -76,7 +76,6 @@ class TrackerDirectCommon : public QObject
         void datatype_boolean_data();
         void datatypes_as_properties_data();
         void datatypes_as_properties();
-
 };
 
 namespace {

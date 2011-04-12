@@ -82,6 +82,7 @@ void TrackerDirectCommon::query_contacts()
     CHECK_ERROR(r);
     delete r;
 }
+
 void TrackerDirectCommon::insert_and_delete_contact()
 {
 
