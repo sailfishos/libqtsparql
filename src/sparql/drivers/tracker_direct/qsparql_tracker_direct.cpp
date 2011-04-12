@@ -565,9 +565,6 @@ QSparqlResultRow QTrackerDirectResult::current() const
         return QSparqlResultRow();
     }
 
-    if (pos() < 0 || pos() >= d->results.count())
-        return QSparqlResultRow();
-
     if (d->columnNames.size() != d->results[pos()].size())
         return QSparqlResultRow();
 
