@@ -109,6 +109,9 @@ private slots:
     void delete_later_with_select_result();
     void delete_later_with_update_result();
     void delete_result_while_update_query_is_executing();
+
+    void query_with_data_ready_set();
+    void query_with_data_ready_set_data();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -1122,6 +1125,95 @@ void tst_QSparqlTrackerDirect::delete_result_while_update_query_is_executing()
     r = conn.syncExec(clean);
     CHECK_ERROR(r);
     delete r;
+}
+
+void tst_QSparqlTrackerDirect::query_with_data_ready_set()
+{
+    QFETCH(int, testResourceCount);
+    QFETCH(int, dataReadyInterval);
+    QFETCH(int, expectedDataReadySignalCount);
+
+    const QString deleteQuery("delete { ?r a nie:InformationElement } "
+                              "where { ?r nie:isLogicalPartOf <qsparql-tracker-direct-data-ready-tests> .}");
+    const QString insertTemplate("insert { <data_ready_testresource%1> a nie:InformationElement ; "
+                                 "nie:isLogicalPartOf <qsparql-tracker-direct-data-ready-tests> .}");
+    QString insertQuery;
+    for (int i = 0; i < testResourceCount; ++i) {
+        insertQuery.append(insertTemplate.arg(i));
+    }
+
+    QSparqlConnectionOptions connOptions;
+    connOptions.setDataReadyInterval(dataReadyInterval);
+    QSparqlConnection conn("QTRACKER_DIRECT", connOptions);
+
+    QSparqlResult* r = conn.syncExec(QSparqlQuery(deleteQuery, QSparqlQuery::DeleteStatement));
+    CHECK_ERROR(r);
+    delete r;
+
+    if (!insertQuery.isEmpty()) {
+        r = conn.syncExec(QSparqlQuery(insertQuery, QSparqlQuery::InsertStatement));
+        CHECK_ERROR(r);
+        delete r;
+    }
+
+    const QString selectQuery("select ?r { ?r a nie:InformationElement ; "
+                              "nie:isLogicalPartOf <qsparql-tracker-direct-data-ready-tests> .}");
+    r = conn.exec(QSparqlQuery(selectQuery, QSparqlQuery::SelectStatement));
+    CHECK_ERROR(r);
+    QSignalSpy finishedSpy(r, SIGNAL(finished()));
+    QSignalSpy dataReadySpy(r, SIGNAL(dataReady(int)));
+
+    QTime timer;
+    timer.start();
+    while (finishedSpy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(finishedSpy.count(), 1);
+    QCOMPARE(r->size(), testResourceCount);
+    QCOMPARE(dataReadySpy.count(), expectedDataReadySignalCount);
+    for (int i = 0, c = 0; i < dataReadySpy.count(); ++i) {
+        QCOMPARE(dataReadySpy[i].count(), 1);
+        c += dataReadyInterval;
+        if (c > r->size())
+            c = r->size();
+        QCOMPARE(dataReadySpy[i][0].toInt(), c);
+    }
+
+    // Clean up test data
+    r = conn.syncExec(QSparqlQuery(deleteQuery, QSparqlQuery::InsertStatement));
+    CHECK_ERROR(r);
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
+{
+    QTest::addColumn<int>("testResourceCount");
+    QTest::addColumn<int>("dataReadyInterval");
+    QTest::addColumn<int>("expectedDataReadySignalCount");
+
+    QTest::newRow("No results, data ready interval set to 1")
+            << 0 << 1 << 0;
+
+    QTest::newRow("No results, data ready interval set to >1")
+            << 0 << 3 << 0;
+
+    QTest::newRow("One result, data ready interval set to 1")
+            << 1 << 1 << 1;
+
+    QTest::newRow("One result, data ready interval set to >1")
+            << 1 << 2 << 1;
+
+    QTest::newRow("Query size >1, data ready interval set to 1")
+            << 5 << 1 << 5;
+
+    QTest::newRow("Query size >1 is equal to data ready interval")
+            << 10 << 10 << 1;
+
+    QTest::newRow("Query size >1 is divisible by data ready interval")
+            << 15 << 5 << 3;
+
+    QTest::newRow("Query size >1 is indivisible by data ready interval")
+            << 17 << 5 << 4;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
