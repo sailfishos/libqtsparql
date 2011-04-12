@@ -108,6 +108,7 @@ private slots:
     
     void delete_later_with_select_result();
     void delete_later_with_update_result();
+    void delete_result_while_update_query_is_executing();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -1087,6 +1088,36 @@ void tst_QSparqlTrackerDirect::delete_later_with_update_result()
     QCOMPARE(destroyedSpy.count(), 1);
 
     QSparqlQuery clean("delete {<testresource001> a rdfs:Resource . }",
+                       QSparqlQuery::DeleteStatement);
+    r = conn.syncExec(clean);
+    CHECK_ERROR(r);
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::delete_result_while_update_query_is_executing()
+{
+    const QSparqlQuery insert("insert {<testresource001> a nie:InformationElement ; "
+                        "nie:isLogicalPartOf <qsparql-tracker-live-tests> .}",
+                        QSparqlQuery::InsertStatement);
+    QSparqlConnection conn("QTRACKER_DIRECT");
+
+    // Wait for the connection to open to ensure the exec call below runs the
+    // update immediately
+    QTest::qWait(1000);
+
+    QSparqlResult* r = conn.exec(insert);
+
+    // Delete the result
+    delete r;
+
+    // Wait for the insertion to complete to check that the result being
+    // deleted does not cause problems in the update completion handler
+    QTest::qWait(1000);
+
+    // There is nothing to verify through the API
+
+    // Clean up test data
+    const QSparqlQuery clean("delete {<testresource001> a rdfs:Resource . }",
                        QSparqlQuery::DeleteStatement);
     r = conn.syncExec(clean);
     CHECK_ERROR(r);
