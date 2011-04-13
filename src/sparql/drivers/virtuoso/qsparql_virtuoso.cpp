@@ -154,12 +154,12 @@ public:
     SQLHANDLE dpEnv() const { return driverPrivate ? driverPrivate->hEnv : 0;}
     SQLHANDLE dpDbc() const { return driverPrivate ? driverPrivate->hDbc : 0;}
 
-	inline void clearValues()
-	{
-		QSparqlResultRow resultRow;
-		results.append(resultRow);
-		resultColIdx = 0;
-	}
+    inline void clearValues()
+    {
+        QSparqlResultRow resultRow;
+        results.append(resultRow);
+        resultColIdx = 0;
+    }
 
     const QVirtuosoDriver* driver;
     SQLHANDLE hstmt;
@@ -280,7 +280,7 @@ QVirtuosoAsyncResult::QVirtuosoAsyncResult(const QVirtuosoDriver * db, QVirtuoso
                                 const QString& prefixes)
 : QVirtuosoResult(db, p, query, type, prefixes)
 {
-	da = new QVirtuosoAsyncResultPrivate(db, p, new QVirtuosoFetcherPrivate(this));
+    da = new QVirtuosoAsyncResultPrivate(db, p, new QVirtuosoFetcherPrivate(this));
 }
 
 QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
@@ -291,7 +291,7 @@ QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
 		d->isFinished = 1;
 		da->fetcher->wait();
 	}
-	delete da->fetcher;
+    delete da->fetcher;
     delete da;
 }
 
