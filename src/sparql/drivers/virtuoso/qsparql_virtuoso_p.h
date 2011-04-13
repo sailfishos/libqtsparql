@@ -104,7 +104,7 @@ public:
 
     bool hasFeature(QSparqlResult::Feature feature) const;
     virtual void terminate() {}
-private:
+protected:
     QVirtuosoResultPrivate *d;
 };
 
@@ -136,7 +136,7 @@ private:
     bool fetchNextResult();
     bool fetchBoolResult();
     bool fetchGraphResult();
-    QVirtuosoAsyncResultPrivate *d;
+    QVirtuosoAsyncResultPrivate *da;
 };
 
 class Q_EXPORT_SPARQLDRIVER_VIRTUOSO QVirtuosoDriver : public QSparqlDriver

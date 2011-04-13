@@ -154,6 +154,13 @@ public:
     SQLHANDLE dpEnv() const { return driverPrivate ? driverPrivate->hEnv : 0;}
     SQLHANDLE dpDbc() const { return driverPrivate ? driverPrivate->hDbc : 0;}
 
+	inline void clearValues()
+	{
+		QSparqlResultRow resultRow;
+		results.append(resultRow);
+		resultColIdx = 0;
+	}
+
     const QVirtuosoDriver* driver;
     SQLHANDLE hstmt;
     SQLSMALLINT numResultCols;
@@ -161,6 +168,7 @@ public:
 
     QByteArray query;
     QStringList bindingNames;
+	QVector<QSparqlResultRow> results;
     int resultColIdx;
     int disconnectCount;
     QVirtuosoDriverPrivate *driverPrivate;
@@ -181,23 +189,8 @@ public:
 
     ~QVirtuosoAsyncResultPrivate()
     {
-        if (fetcher->isRunning()) {
-            isFinished = 1;
-            fetcher->wait();
-        }
-
-        delete fetcher;
     }
 
-    inline void clearValues()
-    {
-        QSparqlResultRow resultRow;
-        results.append(resultRow);
-        resultColIdx = 0;
-    }
-
-    QVector<QSparqlResultRow> results;
-    
     QVirtuosoFetcherPrivate *fetcher;
     bool fetcherStarted;
     // This mutex is for ensuring that only one thread at a time
@@ -287,20 +280,19 @@ QVirtuosoAsyncResult::QVirtuosoAsyncResult(const QVirtuosoDriver * db, QVirtuoso
                                 const QString& prefixes)
 : QVirtuosoResult(db, p, query, type, prefixes)
 {
+	da = new QVirtuosoAsyncResultPrivate(db, p, new QVirtuosoFetcherPrivate(this));
 }
 
 QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
 
-    if (d->hstmt && d->isStmtHandleValid() && d->driver->isOpen()) {
-        SQLRETURN r = SQLFreeHandle(SQL_HANDLE_STMT, d->hstmt);
-        if (r != SQL_SUCCESS)
-            qSparqlWarning(QLatin1String("QVirtuosoDriver: Unable to free statement handle ")
-                         + QString::number(r), d);
-    }
-
-    delete d;
+	if (da->fetcher->isRunning()) {
+		d->isFinished = 1;
+		da->fetcher->wait();
+	}
+	delete da->fetcher;
+    delete da;
 }
 
 QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
@@ -317,10 +309,10 @@ QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::
 
 void QVirtuosoAsyncResult::startFetcher()
 {
-    QMutexLocker resultLocker(&(d->mutex));
-    if (!d->fetcherStarted) {
-        d->fetcherStarted = true;
-        d->fetcher->start();
+    QMutexLocker resultLocker(&(da->mutex));
+    if (!da->fetcherStarted) {
+        da->fetcherStarted = true;
+        da->fetcher->start();
     }
 }
 
@@ -396,7 +388,8 @@ void QVirtuosoAsyncResult::waitForFinished()
     if (d->isFinished == 1)
         return;
 
-    d->fetcher->wait();
+	startFetcher();
+    da->fetcher->wait();
 }
 
 bool QVirtuosoAsyncResult::isFinished() const
@@ -406,7 +399,7 @@ bool QVirtuosoAsyncResult::isFinished() const
 
 void QVirtuosoAsyncResult::terminate()
 {
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (d->results.count() % d->driverPrivate->dataReadyInterval != 0) {
         emit dataReady(d->results.count());
@@ -530,7 +523,7 @@ bool QVirtuosoAsyncResult::fetchNextResult()
 
     }
 
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
     d->clearValues();
 
     for (d->resultColIdx = 1; d->resultColIdx <= d->numResultCols; ++(d->resultColIdx)) {
@@ -547,7 +540,7 @@ bool QVirtuosoAsyncResult::fetchBoolResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     SQLRETURN r = SQLFetch(d->hstmt);
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
         if (r != SQL_NO_DATA)
@@ -569,7 +562,7 @@ bool QVirtuosoAsyncResult::fetchGraphResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->mutex));
     SQLRETURN r = SQLFetch(d->hstmt);
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
         if (r != SQL_NO_DATA)
@@ -600,7 +593,7 @@ bool QVirtuosoAsyncResult::next()
 
 QSparqlBinding QVirtuosoAsyncResult::binding(int field) const
 {
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (!isValid()) {
         return QSparqlBinding();
@@ -616,7 +609,7 @@ QSparqlBinding QVirtuosoAsyncResult::binding(int field) const
 
 QVariant QVirtuosoAsyncResult::value(int field) const
 {
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (!isValid()) {
         return QVariant();
@@ -631,13 +624,13 @@ QVariant QVirtuosoAsyncResult::value(int field) const
 
 int QVirtuosoAsyncResult::size() const
 {
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
     return d->results.count();
 }
 
 QSparqlResultRow QVirtuosoAsyncResult::current() const
 {
-    QMutexLocker resultLocker(&(d->mutex));
+    QMutexLocker resultLocker(&(da->mutex));
 
     if (!isValid()) {
         return QSparqlResultRow();
