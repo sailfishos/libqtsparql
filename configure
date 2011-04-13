@@ -175,6 +175,7 @@ QTSPARQL_INSTALL_PLUGINS=`$QMAKE -query QT_INSTALL_PLUGINS`
 QTSPARQL_INSTALL_LIBS=
 QTSPARQL_INSTALL_EXAMPLES=
 QTSPARQL_INSTALL_TESTS=
+CFG_QTSPARQL_COVERAGE=
 
 # check how the user wants the SPARQL drivers to be built
 # options: 
@@ -190,6 +191,10 @@ while [ "$#" -gt 0 ]; do
     -no-*-*|-plugin-*-*|-qt-*-*)
         VAR=`echo $1 | sed "s,^-[^-]*-\(.*\),\1,"`
         VAL=`echo $1 | sed "s,^-\([^-]*\).*,\1,"`
+        ;;
+
+    --enable-coverage)
+        CFG_QTSPARQL_COVERAGE=yes
         ;;
 
     -prefix|-docdir|-headerdir|-importdir|-plugindir|-libdir|-examplesdir|-testdir)
@@ -265,6 +270,14 @@ while [ "$#" -gt 0 ]; do
 
     shift
 done
+
+#overwrite the way the drivers are built if user wants coverage report
+if [ "$CFG_QTSPARQL_COVERAGE" = "yes" ]; then
+    CFG_SPARQL_endpoint=qt
+    CFG_SPARQL_tracker=qt
+    CFG_SPARQL_tracker_direct=qt
+    echo "Preparing configuration for coverage report..."
+fi
 
 # next, emit a usage message if something failed.
 if [ "$OPT_HELP" = "yes" ]; then
@@ -494,6 +507,10 @@ if [ "$relpath" = "$QTSPARQL_INSTALL_PREFIX" ]; then
 else
     echo Once everything is built, you must run \'$MAKE install\'.
     echo QtSparql will be installed into $QTSPARQL_INSTALL_PREFIX
+fi
+if [ "$CFG_QTSPARQL_COVERAGE" = "yes" ]; then
+    "$QMAKE" CONFIG+=coverage
+    echo "You are ready to generate coverage report. Just run tests (make check) and make coverage"
 fi
 echo
 echo To reconfigure, run \'$MAKE distclean\' and \'configure\'.

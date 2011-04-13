@@ -56,10 +56,12 @@ QMAKE_PKGCONFIG_NAME = QtSparql
 QMAKE_PKGCONFIG_DESCRIPTION = "Library for accessing RDF stores."
 
 coverage {
-	LIBS += -lgcov
-	QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
-	QMAKE_EXTRA_TARGETS += coverage
-	coverage.commands  = lcov -d . --capture --output-file all.cov -b . &&
-	coverage.commands += lcov -e all.cov '*/*/src/sparql/*/*.cpp' -e all.cov '*/*/src/sparql/*/*.h' -o src.cov &&
-	coverage.commands += genhtml -o coverage src.cov
+    LIBS += -lgcov
+    QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
+    QMAKE_EXTRA_TARGETS += coverage
+    coverage.commands = mkdir -p ../../coverage &&
+    coverage.commands += lcov -d . --capture --output-file ../../coverage/all.cov -b . &&
+    coverage.commands += cd ../../coverage &&
+    coverage.commands += lcov -e all.cov '*/*/src/sparql/*/*.cpp' -e all.cov '*/*/src/sparql/*/*.h' -o src.cov &&
+    coverage.commands += genhtml -o . src.cov
 }

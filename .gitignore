@@ -80,6 +80,6 @@ doc/html/*
 
 # code coverage
 *.cov
-src/sparql/coverage/*
+coverage/*
 *.gcda
 *.gcno
