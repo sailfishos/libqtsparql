@@ -99,9 +99,7 @@ public:
     QSparqlBinding binding(int field) const;
     QVariant value(int field) const;
     QSparqlResultRow current() const;
-    int size() const;
 
-    void waitForFinished();
     bool isFinished() const;
 
     bool hasFeature(QSparqlResult::Feature feature) const;
