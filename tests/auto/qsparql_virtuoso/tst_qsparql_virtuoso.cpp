@@ -94,21 +94,21 @@ void tst_QSparqlVirtuoso::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
 
-	QSettings settings("settings", QSettings::IniFormat);
-	QString driver;
-	QString driverArg("DRIVER=%1");
+    QSettings settings("settings", QSettings::IniFormat);
+    QString driver;
+    QString driverArg("DRIVER=%1");
 
-	settings.beginGroup("Settings");
-	portNumber = settings.value("portNumber").toInt();
-	driver = settings.value("driver").toString();
-	settings.endGroup();
+    settings.beginGroup("Settings");
+    portNumber = settings.value("portNumber").toInt();
+    driver = settings.value("driver").toString();
+    settings.endGroup();
 
-	if(!portNumber)
-		portNumber = 1111;
-	if(driver.isNull())
-		driver = "/usr/local/virtuoso-opensource/lib/virtodbc_r.so";
+    if(!portNumber)
+        portNumber = 1111;
+    if(driver.isNull())
+        driver = "/usr/local/virtuoso-opensource/lib/virtodbc_r.so";
 
-	driverPath.append(driverArg.arg(driver));
+    driverPath.append(driverArg.arg(driver));
 }
 
 void tst_QSparqlVirtuoso::cleanupTestCase()
