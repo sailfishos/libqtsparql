@@ -377,7 +377,7 @@ for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
         virtuoso)
             if [ "$CFG_SPARQL_virtuoso" != "no" ]; then
                 if [ "$PLATFORM_MAC" != "yes" ] && "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/iodbc "ODBC" $L_FLAGS $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
-					QT_LFLAGS_ODBC="-liodbc"
+			QT_LFLAGS_ODBC="-liodbc"
                     if [ "$CFG_SPARQL_virtuoso" = "auto" ]; then
                         CFG_SPARQL_virtuoso=plugin
                     fi
