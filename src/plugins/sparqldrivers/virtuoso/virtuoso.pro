@@ -10,6 +10,7 @@ unix {
 	!contains( LIBS, .*odbc.* ) {
 	    LIBS 	*= $$QT_LFLAGS_ODBC
 	}
+	INCLUDEPATH=/usr/include/libiodbc
 }
 
 win32 {
