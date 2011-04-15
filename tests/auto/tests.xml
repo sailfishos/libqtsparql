@@ -348,7 +348,7 @@
       </pre_steps>
       <case name="test-query-contacts-sync" description="Executing a query">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_contacts_sync"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_contacts"
         </step>
       </case>
       <case name="test-ask-contacts-sync" description="Executing an ASK query">
@@ -366,12 +366,12 @@
       </case>
       <case name="test-query-with-error-sync" description="Erroneous query">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_with_error_sync"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync query_with_error"
         </step>
       </case>
       <case name="test-iterating-result-sync" description="Iterating a QSparqlResult">
         <step expected_result="0">
-	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_sync"
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result"
         </step>
       </case>
       <case name="test-delete-partially-iterated-result-sync" description="Deleting a QSparqlResult">
