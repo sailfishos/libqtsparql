@@ -7,10 +7,8 @@ SOURCES		= main.cpp \
 		  ../../../sparql/drivers/virtuoso/qsparql_virtuoso.cpp
 
 unix {
-	!contains( LIBS, .*odbc.* ) {
-	    LIBS 	*= $$QT_LFLAGS_ODBC
-	}
-	INCLUDEPATH += /usr/include/libiodbc
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libiodbc
 }
 
 win32 {

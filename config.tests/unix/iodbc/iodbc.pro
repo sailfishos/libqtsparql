@@ -1,5 +1,5 @@
 SOURCES = iodbc.cpp
 CONFIG -= qt dylib
+CONFIG += link_pkgconfig
+PKGCONFIG += libiodbc
 mac:CONFIG -= app_bundle
-LIBS += -liodbc
-INCLUDEPATH += /usr/include/libiodbc
