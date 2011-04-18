@@ -127,6 +127,26 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result"
         </step>
       </case>
+      <case name="test-iterating-result-rows" description="Iterating QSparqlResult rows">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result_rows"
+        </step>
+      </case>
+      <case name="test-iterating-result-bindings" description="Iterating QSparqlResult bindings">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result_bindings"
+        </step>
+      </case>
+      <case name="test-iterating-result-values" description="Iterating QSparqlResult values">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result_values"
+        </step>
+      </case>
+      <case name="test-iterating-result-string-values" description="Iterating QSparqlResult string values">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct iterate_result_stringValues"
+        </step>
+      </case>
       <case name="test-special-chars" description="Special characters">
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct special_chars ||
@@ -289,6 +309,16 @@
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_later_with_update_result"
         </step>
       </case>
+      <case name="test-delete-result-while-update-query-is-executing" description="delete">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct delete_result_while_update_query_is_executing"
+        </step>
+      </case>
+      <case name="test-query-with-data-ready-set" description="setDataReadyInterval">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct query_with_data_ready_set"
+        </step>
+      </case>
 
       <post_steps>
 	<step expected_result="0">
@@ -367,6 +397,26 @@
       <case name="test-iterating-result-sync" description="Iterating a QSparqlResult">
         <step expected_result="0">
 	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result"
+        </step>
+      </case>
+      <case name="test-iterating-result-rows-sync" description="Iterating QSparqlResult rows">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_rows"
+        </step>
+      </case>
+      <case name="test-iterating-result-bindings-sync" description="Iterating QSparqlResult bindings">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_bindings"
+        </step>
+      </case>
+      <case name="test-iterating-result-values-sync" description="Iterating QSparqlResult values">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_values"
+        </step>
+      </case>
+      <case name="test-iterating-result-string-values-sync" description="Iterating QSparqlResult string values">
+        <step expected_result="0">
+	  su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync iterate_result_stringValues"
         </step>
       </case>
       <case name="test-special-chars-sync" description="Special characters">
