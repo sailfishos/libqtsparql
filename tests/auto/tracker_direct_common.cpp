@@ -592,3 +592,99 @@ void TrackerDirectCommon::datatypes_as_properties()
     QCOMPARE(binding.dataTypeUri().toString(), dataTypeUri);
     delete r;
 }
+
+class TestDataImpl : public TestData {
+
+public:
+    TestDataImpl(const QSparqlQuery& cleanupQuery);
+    ~TestDataImpl();
+    void setOK();
+    bool isOK() const;
+private:
+    QSparqlQuery cleanupQuery;
+    bool ok;
+};
+
+TestData* createTestData(int testDataAmount, const QString& testTag)
+{
+    const int insertBatchSize = 200;
+    QSparqlConnection conn("QTRACKER");
+    const QString insertQueryTemplate =
+            "<urn:music:%1> a nmm:MusicPiece, nfo:FileDataObject, nfo:Audio;"
+                "nie:isLogicalPartOf %3 ;"
+                "tracker:available          true ;"
+                "nie:byteSize               \"0\" ;"
+                "nie:url                    \"file://music/Song_%1.mp3\" ;"
+                "nfo:belongsToContainer     <file://music/> ;"
+                "nie:title                  \"Song %1\" ;"
+                "nie:mimeType               \"audio/mpeg\" ;"
+                "nie:contentCreated         \"2000-01-01T01:01:01Z\" ;"
+                "nie:isLogicalPartOf        <urn:album:%2> ;"
+                "nco:contributor            <urn:artist:%2> ;"
+                "nfo:fileLastAccessed       \"2000-01-01T01:01:01Z\" ;"
+                "nfo:fileSize               \"0\" ;"
+                "nfo:fileName               \"Song_%1.mp3\" ;"
+                "nfo:fileLastModified       \"2000-01-01T01:01:01Z\" ;"
+                "nfo:codec                  \"MPEG\" ;"
+                "nfo:averageBitrate         \"16\" ;"
+                "nfo:genre                  \"Genre %2\" ;"
+                "nfo:channels               \"2\" ;"
+                "nfo:sampleRate             \"44100.0\" ;"
+                "nmm:musicAlbum             <urn:album:%2> ;"
+                "nmm:musicAlbumDisc         <urn:album-disk:%2> ;"
+                "nmm:performer              <urn:artist:%2> ;"
+                "nfo:duration               \"1\" ;"
+                "nmm:trackNumber            \"1\" .";
+
+    const QSparqlQuery cleanupQuery(
+        QString("delete { "
+            "?u a rdfs:Resource . } "
+            "where { "
+            "?u nie:isLogicalPartOf %1 . "
+            "} "
+            "delete {"
+            "<tracker-live-tests> a nie:InformationElement . "
+            "}").arg(testTag),
+        QSparqlQuery::DeleteStatement);
+
+    TestDataImpl* testData = new TestDataImpl(cleanupQuery);
+
+    for (int item = 1; item <= testDataAmount; ) {
+        QString insertQuery = "insert { ";
+        int itemDozen = 10;
+        const int batchEnd = item + insertBatchSize;
+        for (; item < batchEnd && item <= testDataAmount; ++item) {
+            insertQuery.append( insertQueryTemplate.arg(item).arg(itemDozen).arg(testTag) );
+            if (item % 10 == 0) itemDozen += 10;
+        }
+        insertQuery.append(" }");
+        QScopedPointer<QSparqlResult> r(conn.syncExec(QSparqlQuery(insertQuery, QSparqlQuery::InsertStatement)));
+        if (r.isNull() || r->hasError())
+            return testData;
+    }
+
+    testData->setOK();
+    return testData;
+}
+
+TestDataImpl::TestDataImpl(const QSparqlQuery& cleanupQuery)
+    : cleanupQuery(cleanupQuery), ok(false)
+{
+}
+
+TestDataImpl::~TestDataImpl()
+{
+    QSparqlConnection conn("QTRACKER");
+    conn.syncExec(cleanupQuery);
+}
+
+void TestDataImpl::setOK()
+{
+    ok = true;
+}
+
+bool TestDataImpl::isOK() const
+{
+    return ok;
+}
+

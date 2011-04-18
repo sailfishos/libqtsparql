@@ -404,13 +404,26 @@ void tst_QSparqlTrackerDirect::delete_unfinished_result()
 
 void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
 {
+    const int testDataAmount = 2000;
+    const QString testTag("<qsparql-tracker-direct-tests-delete_partially_iterated_result>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QTest::qWait(1000);
+    QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
-    opts.setOption("dataReadyInterval", 1);
-
+    opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
+    const QSparqlQuery q(
+        QString("select tracker:id(?musicPiece) ?title ?performer ?album ?duration ?created "
+            "{ "
+            "?musicPiece a nmm:MusicPiece; "
+            "nie:isLogicalPartOf %1; "
+            "nie:title ?title; "
+            "nmm:performer ?performer; "
+            "nmm:musicAlbum ?album; "
+            "nfo:duration ?duration; "
+            "nie:contentCreated ?created. "
+            "} order by ?title ?created").arg(testTag));
+
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     CHECK_ERROR(r);
@@ -418,8 +431,11 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     // Wait for some dataReady signals
     QSignalSpy spy(r, SIGNAL(dataReady(int)));
     while (spy.count() < 2)
-        QTest::qWait(100);
+        QTest::qWait(1);
+    // Verify that the query is really deleted mid-way through
+    QVERIFY(!r->isFinished());
     delete r;
+
     // And then spin the event loop so that the async callback is called...
     QTest::qWait(1000);
 }

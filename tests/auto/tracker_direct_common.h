@@ -82,4 +82,13 @@ namespace {
     int testLogLevel = QtWarningMsg;
 } // end unnamed namespace
 
+class TestData : public QObject {
+    Q_OBJECT
+public:
+    virtual ~TestData() { }
+    virtual bool isOK() const =0;
+};
+
+TestData* createTestData(int testDataAmount, const QString& testTag);
+
 #endif // QSPARQL_TRACKER_COMMON_H
