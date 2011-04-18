@@ -616,6 +616,7 @@ QStringList QSparqlConnection::drivers()
 }
 
 #ifndef QT_NO_DEBUG_STREAM
+// LCOV_EXCL_START
 QDebug operator<<(QDebug dbg, const QSparqlConnection &d)
 {
     if (!d.isValid()) {
@@ -626,6 +627,7 @@ QDebug operator<<(QDebug dbg, const QSparqlConnection &d)
     dbg.nospace() << "QSparqlConnection(driver=\"" << d.driverName() << ")";
     return dbg.space();
 }
+// LCOV_EXCL_STOP
 #endif
 
 QT_END_NAMESPACE

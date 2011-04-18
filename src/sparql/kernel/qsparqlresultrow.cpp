@@ -319,6 +319,7 @@ void QSparqlResultRow::detach()
 }
 
 #ifndef QT_NO_DEBUG_STREAM
+// LCOV_EXCL_START
 QDebug operator<<(QDebug dbg, const QSparqlResultRow &r)
 {
     dbg << "QSparqlResultRow(" << r.count() << ')';
@@ -326,6 +327,7 @@ QDebug operator<<(QDebug dbg, const QSparqlResultRow &r)
         dbg << '\n' << QString::fromLatin1("%1:").arg(i, 2) << r.binding(i) << r.binding(i).toString();
     return dbg;
 }
+// LCOV_EXCL_STOP
 #endif
 
 QT_END_NAMESPACE
