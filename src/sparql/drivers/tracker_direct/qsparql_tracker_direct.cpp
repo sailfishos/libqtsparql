@@ -188,6 +188,7 @@ public:
 
     void setOpen(bool open);
     void opened();
+    void addActiveResult(QTrackerDirectResult* result);
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;
@@ -199,6 +200,7 @@ public:
     QTrackerDirectDriver *driver;
     bool asyncOpenCalled;
     QString error;
+    QList<QPointer<QTrackerDirectResult> > activeResults;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -369,6 +371,9 @@ void QTrackerDirectResult::startFetcher()
 
 bool QTrackerDirectResult::runQuery()
 {
+    if (isFinished())
+        return false;
+
     QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
 
     GError * error = 0;
@@ -549,6 +554,12 @@ bool QTrackerDirectResult::isFinished() const
 void QTrackerDirectResult::terminate()
 {
     d->terminate();
+}
+
+void QTrackerDirectResult::terminateAndWait()
+{
+    d->terminate();
+    d->fetcher->wait();
 }
 
 int QTrackerDirectResult::size() const
@@ -949,6 +960,21 @@ void QTrackerDirectDriverPrivate::opened()
     emit driver->opened();
 }
 
+void QTrackerDirectDriverPrivate::addActiveResult(QTrackerDirectResult* result)
+{
+    for (QList<QPointer<QTrackerDirectResult> >::iterator it = activeResults.begin();
+            it != activeResults.end(); ++it) {
+        if (it->isNull()) {
+            // Replace entry for deleted result if one is found. This is done
+            // to avoid the activeResults list from growing indefinitely.
+            *it = result;
+            return;
+        }
+    }
+    // No deleted result found, append new one
+    activeResults.append(result);
+}
+
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
@@ -1001,6 +1027,16 @@ void QTrackerDirectDriver::close()
 {
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
+    foreach(QPointer<QTrackerDirectResult> result, d->activeResults) {
+        if (!result.isNull()) {
+            qWarning() << "QSparqlConnection closed: Terminating active query:" <<
+                result->query();
+            disconnect(this, SIGNAL(opened()), result.data(), SLOT(exec()));
+            result->terminateAndWait();
+        }
+    }
+    d->activeResults.clear();
+
     if (!d->asyncOpenCalled && QCoreApplication::instance()) {
         QEventLoop loop;
         connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
@@ -1022,6 +1058,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 {
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
+        d->addActiveResult(result);
         
         if (d->asyncOpenCalled) {
             result->exec();
@@ -1032,7 +1069,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
         return result;
     } else {
         QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type);
-        
+
         if (d->asyncOpenCalled) {
             result->exec();
         } else {

@@ -62,13 +62,12 @@ private:
     void waitForQueryFinished(QSparqlResult* r);
     bool checkResultSize(QSparqlResult* r, int s);
 
-public slots:
+private slots:
     void initTestCase();
     void cleanupTestCase();
     void init();
     void cleanup();
 
-private slots:
     void qsparqlresultrow();
     void query_contacts_async();
     void ask_contacts();
@@ -112,6 +111,9 @@ private slots:
 
     void query_with_data_ready_set();
     void query_with_data_ready_set_data();
+
+    void destroy_connection_before_result();
+    void destroy_connection_before_result_data();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -1230,6 +1232,45 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
 
     QTest::newRow("Query size >1 is indivisible by data ready interval")
             << 17 << 5 << 4;
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_before_result()
+{
+    const QString connectionType("QTRACKER_DIRECT");
+    QFETCH(int, waitForConnectionOpen);
+    QSparqlConnection* conn = new QSparqlConnection(connectionType);
+    if (waitForConnectionOpen > 0)
+        QTest::qWait(waitForConnectionOpen);
+    QSparqlResult* r = 0;
+    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests>; "
+                         "nco:nameGiven ?ng. }");
+
+    r = conn->exec(q);
+    QVERIFY( r );
+    QVERIFY( !r->hasError() );
+
+    // Take ownership of the result to prevent connection from deleting it
+    r->setParent(this);
+    // Delete the connection before the result
+    delete conn; conn = 0;
+
+    // Wait in event loop to let any asynchronous activity complete
+    QTest::qWait(500);
+
+    // Delete the result
+    delete r; r = 0;
+    // Wait in event loop to let any asynchronous activity complete
+    QTest::qWait(500);
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_before_result_data()
+{
+    QTest::addColumn<int>("waitForConnectionOpen");
+
+    QTest::newRow("Dbus connection") << 0;
+    QTest::newRow("Direct connection") << 0;
+    QTest::newRow("Direct connection") << 1000;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
