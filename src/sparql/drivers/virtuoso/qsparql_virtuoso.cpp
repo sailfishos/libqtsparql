@@ -776,15 +776,14 @@ QVirtuosoDriver::~QVirtuosoDriver()
 bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
+    case QSparqlResult::QuerySize:
     case QSparqlConnection::AskQueries:
-        return true;
     case QSparqlConnection::ConstructQueries:
-        return true;
     case QSparqlConnection::UpdateQueries:
         return true;
     case QSparqlConnection::DefaultGraph:
-        return false;
     case QSparqlConnection::SyncExec:
+    case QSparqlConnection::AsyncExec:
         return false;
     default:
         return false;

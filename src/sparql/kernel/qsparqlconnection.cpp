@@ -376,26 +376,6 @@ QSparqlConnection::~QSparqlConnection()
     delete d;
 }
 
-/*!
-    Executes a SPARQL query on the database and returns a pointer
-    to a QSparqlResult object. The user is responsible for
-    freeing it when it's no longer used (but not after the
-    QSparqlConnection is deleted). The QSparqlResult object is
-    also a child of the QSparqlConnection, so after the
-    QSparqlConnection has been deleted, the QSparqlResult is no
-    longer valid (and doesn't need to be freed).
-
-    If \a query is empty or if the this QSparqlConnection is not
-    valid, exec() returns a QSparqlResult which is in the error
-    state. It won't emit the finished() signal.
-
-    If this function fails with "connection not open" error, the
-    most probable reason is that the required driver is not
-    installed.
-
-    \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
-*/
-
 /// Returns a QSparqlNullResult with an appropriate error if executing a query
 /// would fail immediately (e.g., connection is not open). Otherwise returns 0.
 QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) const
@@ -428,6 +408,26 @@ QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) c
 // finished() signal when the main loop is entered the next time,
 // so that the user has a change to connect to it?
 
+/*!
+    Executes a SPARQL query on the database asynchronously and returns a pointer
+    to a QSparqlResult object.
+
+    The user is responsible for freeing the QSparqlResult when it's no longer
+    used (but not after the QSparqlConnection is deleted). The QSparqlResult
+    object is also a child of the QSparqlConnection, so after the
+    QSparqlConnection has been deleted, the QSparqlResult is no longer valid
+    (and doesn't need to be freed).
+
+    If \a query is empty or if the this QSparqlConnection is not
+    valid, exec() returns a QSparqlResult which is in the error
+    state. It won't emit the finished() signal.
+
+    If this function fails with "connection not open" error, the
+    most probable reason is that the required driver is not
+    installed.
+
+    \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
+*/
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
 {
     QString queryText = query.preparedQueryText();
@@ -453,6 +453,29 @@ QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
     return result;
 }
 
+/*!
+    Begins the execution of a SPARQL query on the database synchronously and
+    returns a pointer to a QSparqlResult object.
+
+    The user can call QSparqlResult::next() to retrieve the next row of the
+    result set synchronously.
+
+    The user is responsible for freeing the QSparqlResult when it's no longer
+    used (but not after the QSparqlConnection is deleted). The QSparqlResult
+    object is also a child of the QSparqlConnection, so after the
+    QSparqlConnection has been deleted, the QSparqlResult is no longer valid
+    (and doesn't need to be freed).
+
+    If \a query is empty or if the this QSparqlConnection is not
+    valid, exec() returns a QSparqlResult which is in the error
+    state.
+
+    If this function fails with "connection not open" error, the
+    most probable reason is that the required driver is not
+    installed.
+
+    \sa QSparqlQuery, QSparqlResult, QSparqlResult::hasError
+*/
 QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
 {
     QString queryText = query.preparedQueryText();
@@ -490,15 +513,24 @@ QString QSparqlConnection::driverName() const
     of a query. Note that some databases do not support returning the size
     (i.e. number of rows returned) of a query, in which case
     QSparqlQuery::size() will return -1.
-    
+
     \value DefaultGraph  The store has a default graph which doesn't have
     to be specified. Some stores, like Virtuoso, don't have a default graph.
-    
-    \value AskQueries The driver supports ASK queries
-    
-    \value ConstructQueries The driver supports CONSTRUCT queries
-    
-    \value UpdateQueries The driver supports INSERT and UPDATE queries
+
+    \value AskQueries The connection supports ASK queries
+
+    \value ConstructQueries The connection supports CONSTRUCT queries
+
+    \value UpdateQueries The connection supports INSERT and DELETE queries
+
+    \value SyncExec The connection can execute synchronous queries natively. For
+    connections not supporting SyncExec, QSparqlConnection::syncExec() will
+    execute an asynchronous query and wait until it has finished.
+
+    \value AsyncExec The connection can execute asynchronous queries
+    natively. For connections not supporting AsyncExec,
+    QSparqlConnection::exec() will create a thread for executing the query
+    synchronously.
 
     \sa hasFeature()
 */

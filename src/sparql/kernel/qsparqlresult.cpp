@@ -627,6 +627,31 @@ QSparqlError QSparqlResult::lastError() const
     return d->error;
 }
 
+/*!
+    \enum QSparqlResult::Feature
+
+    This enum contains a list of features a QSparqlResult might support. Use
+    hasFeature() to query whether a feature is supported or not. The supported
+    features depend on the driver and whether the result was obtained via
+    QSparqlConnection::exec() or QSparqlConnection::syncExec().
+
+    \value QuerySize Whether the QSparqlResult can report the number of results
+    of the query.
+
+    \value ForwardOnly Whether the result can only be navigated forward (i.e.,
+    using QSparqlResult::next()).
+
+    \value Sync Whether the result is natively synchronous (was retrieved via
+    QSparqlConnection::syncExec() of natively synchronous connection). In this
+    case, QSparqlResult::next() will fetch the next result synchronously.
+
+    \sa hasFeature()
+*/
+
+/*!
+    Returns true if the QSparqlResult supports feature \a feature;
+    otherwise returns false.
+*/
 bool QSparqlResult::hasFeature(QSparqlResult::Feature) const
 {
     return false;
