@@ -5,6 +5,8 @@
 
 namespace {
 
+    int testLogLevel = QtWarningMsg;
+
     void myMessageOutput(QtMsgType type, const char *msg)
     {
         switch (type) {
@@ -63,6 +65,11 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 void TrackerDirectCommon::installMsgHandler()
 {
     qInstallMsgHandler(myMessageOutput);
+}
+
+void TrackerDirectCommon::setMsgLogLevel(int logLevel)
+{
+    testLogLevel = logLevel;
 }
 
 void TrackerDirectCommon::query_contacts()
@@ -166,7 +173,7 @@ void TrackerDirectCommon::query_with_error()
 void TrackerDirectCommon::iterate_result()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -189,7 +196,7 @@ void TrackerDirectCommon::iterate_result()
 void TrackerDirectCommon::iterate_result_rows()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -208,7 +215,7 @@ void TrackerDirectCommon::iterate_result_rows()
 void TrackerDirectCommon::iterate_result_bindings()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -236,7 +243,7 @@ void TrackerDirectCommon::iterate_result_bindings()
 void TrackerDirectCommon::iterate_result_values()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -264,7 +271,7 @@ void TrackerDirectCommon::iterate_result_values()
 void TrackerDirectCommon::iterate_result_stringValues()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);

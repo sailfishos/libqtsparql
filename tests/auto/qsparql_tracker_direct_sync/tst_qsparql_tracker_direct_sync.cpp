@@ -122,7 +122,7 @@ void tst_QSparqlTrackerDirectSync::cleanupTestCase()
 
 void tst_QSparqlTrackerDirectSync::init()
 {
-    testLogLevel = QtDebugMsg;
+    setMsgLogLevel(QtDebugMsg);
 }
 
 void tst_QSparqlTrackerDirectSync::cleanup()
