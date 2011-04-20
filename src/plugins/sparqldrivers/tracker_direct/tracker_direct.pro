@@ -12,11 +12,13 @@ unix: {
 include(../qsparqldriverbase.pri)
 
 coverage {
-        LIBS += -lgcov
-        QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
-        QMAKE_EXTRA_TARGETS += coverage
-        coverage.commands  = lcov -d . --capture --output-file all.cov -b . &&
-        coverage.commands += lcov -e all.cov '*/tracker_direct/*.cpp' -e all.cov '*/drivers/tracker_direct/*.h' -o src.cov &&
-        coverage.commands += genhtml -o coverage src.cov || echo "no coverage measures for tracker direct driver"
+    LIBS += -lgcov
+    QMAKE_CXXFLAGS += -ftest-coverage -fprofile-arcs -fno-elide-constructors
+    QMAKE_EXTRA_TARGETS += coverage
+    coverage.commands = mkdir -p ../../coverage &&
+    coverage.commands += lcov -d . --capture --output-file ../../coverage/all-direct.cov -b . &&
+    coverage.commands += cd ../../coverage &&
+    coverage.commands += lcov -e all-direct.cov '*/tracker_direct/*.cpp' -e all-direct.cov '*/drivers/tracker_direct/*.h' -o src-direct.cov &&
+    coverage.commands += genhtml -o . src-direct.cov || echo "no coverage measures for tracker direct driver"
 
 }

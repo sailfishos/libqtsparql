@@ -32,10 +32,9 @@ check.recurse = tests
 QMAKE_EXTRA_TARGETS += xclean
 
 # To measure code coverage:
-# 1) build the plugins into the libqtsparql.so
-# ./configure -qt-sparql-endpoint -qt-sparql-tracker -qt-sparql-tracker_direct
-# 2) compile with coverage flags
-# qmake CONFIG+=coverage
+# 1) enable the coverage target - that implies building the plugins into the libqtsparql.so
+# ./configure --enable-coverage
+# 2) compile project
 # make
 # 3) run tests
 # make check (unit tests)
@@ -43,8 +42,11 @@ QMAKE_EXTRA_TARGETS += xclean
 # 4) create coverage reports
 # make coverage
 coverage {
-	coverage.CONFIG = recursive
-	coverage.recurse = src
-	QMAKE_EXTRA_TARGETS += coverage
+    coverage.command = rm -rf coverage
+    coverage.CONFIG = recursive
+    coverage.recurse = src
+    QMAKE_EXTRA_TARGETS += coverage
+    clean.commands += rm -rf coverage src/sparql/*.gcno src/sparql/*.gcda src/sparql/*.gcov
+    QMAKE_EXTRA_TARGETS += clean
 }
 

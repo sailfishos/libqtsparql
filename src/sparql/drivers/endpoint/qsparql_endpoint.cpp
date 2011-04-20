@@ -504,14 +504,13 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
     case QSparqlConnection::QuerySize:
-        return true;
     case QSparqlConnection::AskQueries:
-        return true;
     case QSparqlConnection::ConstructQueries:
-        return true;
     case QSparqlConnection::UpdateQueries:
+    case QSparqlConnection::AsyncExec:
         return true;
     case QSparqlConnection::DefaultGraph:
+    case QSparqlConnection::SyncExec:
         return false;
     default:
         return false;

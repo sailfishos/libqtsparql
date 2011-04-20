@@ -3,7 +3,7 @@
 
     \brief <center>unstable</center>
 
-    \section Introduction    
+    \section Introduction
 
     <b>Description</b>
 
@@ -65,7 +65,7 @@
 
     \attention The QtSparql library is not yet stable; we make no
     promises about API / ABI compatibility!
-    
+
     \section gettingstarted Getting started
 
     The following code snippets demonstrate how to retrieve data from
@@ -148,6 +148,8 @@
     - password (QString)
     - networkAccessManager (QNetworkAccessManager*)
     - proxy (const QNetworkProxy&)
+    - custom: "timeout" (int) (for virtuoso endpoints)
+    - custom: "maxrows" (int) (for virtuoso endpoints)
 
     QVIRTUOSO driver supports the following connection options:
     - hostName (QString)
@@ -155,11 +157,70 @@
     - userName (QString)
     - password (QString)
     - databaseName (QString)
-    - custom: "timeout" (int)
-    - custom: "maxrows" (int)
 
     For setting custom options, use QSparqlConnectionOptions::setOption() and
     give the option name as a string.
+
+    \section connectionfeatures Connection features
+
+    The following table describes the features supported by each driver. The
+    features can be queried with QSparqlConnection::hasFeature().
+
+    <table>
+    <tr>
+    <td></td>
+    <th>QuerySize</th>
+    <th>DefaultGraph</th>
+    <th>AskQueries</th>
+    <th>ConstructQueries</th>
+    <th>UpdateQueries</th>
+    <th>SyncExec</th>
+    <th>AsyncExec</th>
+    </tr>
+    <tr>
+    <th>QTRACKER</th>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>Yes</td>
+    </tr>
+    <tr>
+    <th>QTRACKER_DIRECT</th>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>No</td>
+    </tr>
+    <tr>
+    <th>QSPARQL_ENDPOINT</th>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>Yes</td>
+    </tr>
+    <tr>
+    <th>QVIRTUOSO</th>
+    <td>Yes</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    <td>No (*)</td>
+    <td>No</td>
+    </tr>
+    </table>
+
+    (*) The QVIRTUOSO driver is natively synchronous, but support for syncExec
+    directly is not currently implemented.
 
     \section backendspecific Accessing backend-specific functionalities
 

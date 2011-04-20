@@ -65,6 +65,10 @@ class TrackerDirectCommon : public QObject
         void insert_and_delete_contact();
         void query_with_error();
         void iterate_result();
+        void iterate_result_rows();
+        void iterate_result_bindings();
+        void iterate_result_values();
+        void iterate_result_stringValues();
         void special_chars();
         void data_types();
         void explicit_data_types();
@@ -76,11 +80,19 @@ class TrackerDirectCommon : public QObject
         void datatype_boolean_data();
         void datatypes_as_properties_data();
         void datatypes_as_properties();
-
 };
 
 namespace {
     int testLogLevel = QtWarningMsg;
 } // end unnamed namespace
+
+class TestData : public QObject {
+    Q_OBJECT
+public:
+    virtual ~TestData() { }
+    virtual bool isOK() const =0;
+};
+
+TestData* createTestData(int testDataAmount, const QString& testTag);
 
 #endif // QSPARQL_TRACKER_COMMON_H

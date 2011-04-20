@@ -208,7 +208,6 @@ public:
 
     ~QTrackerDirectResultPrivate();
     void terminate();
-    void setLastError(const QSparqlError& e);
     void setBoolValue(bool v);
     void dataReady(int totalCount);
 
@@ -310,11 +309,6 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
-}
-
-void QTrackerDirectResultPrivate::setLastError(const QSparqlError& e)
-{
-    q->setLastError(e);
 }
 
 void QTrackerDirectResultPrivate::setBoolValue(bool v)
@@ -570,9 +564,6 @@ QSparqlResultRow QTrackerDirectResult::current() const
     if (!isValid()) {
         return QSparqlResultRow();
     }
-
-    if (pos() < 0 || pos() >= d->results.count())
-        return QSparqlResultRow();
 
     if (d->columnNames.size() != d->results[pos()].size())
         return QSparqlResultRow();
@@ -982,6 +973,7 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
     case QSparqlConnection::SyncExec:
         return true;
     case QSparqlConnection::ConstructQueries:
+    case QSparqlConnection::AsyncExec:
         return false;
     default:
         return false;

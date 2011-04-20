@@ -399,14 +399,15 @@ QTrackerDriver::~QTrackerDriver()
 bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
+    case QSparqlConnection::QuerySize:
+    case QSparqlConnection::DefaultGraph:
     case QSparqlConnection::AskQueries:
+    case QSparqlConnection::UpdateQueries:
+    case QSparqlConnection::AsyncExec:
         return true;
     case QSparqlConnection::ConstructQueries:
+    case QSparqlConnection::SyncExec:
         return false;
-    case QSparqlConnection::UpdateQueries:
-        return true;
-    case QSparqlConnection::DefaultGraph:
-        return true;
     default:
         return false;
     }
