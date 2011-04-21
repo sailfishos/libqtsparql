@@ -78,7 +78,7 @@ private slots:
     void delete_partially_iterated_result();
     void delete_nearly_finished_result();
     void cancel_insert_result();
-    
+
     void concurrent_queries();
     void concurrent_queries_2();
 
@@ -88,7 +88,7 @@ private slots:
 
     void result_immediately_finished();
     void result_immediately_finished2();
-    
+
     void delete_connection_immediately();
     void delete_connection_before_a_wait();
 
@@ -104,7 +104,7 @@ private slots:
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
-    
+
     void delete_later_with_select_result();
     void delete_later_with_update_result();
     void delete_result_while_update_query_is_executing();
@@ -114,6 +114,9 @@ private slots:
 
     void destroy_connection_before_result();
     void destroy_connection_before_result_data();
+    void destroy_connection_verify_result();
+    void destroy_connection_verify_result_async();
+    void destroy_connection_partially_iterated_results();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -1271,6 +1274,121 @@ void tst_QSparqlTrackerDirect::destroy_connection_before_result_data()
     QTest::newRow("Dbus connection") << 0;
     QTest::newRow("Direct connection") << 0;
     QTest::newRow("Direct connection") << 1000;
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_verify_result()
+{
+    const QString connectionType("QTRACKER_DIRECT");
+    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                         "nco:nameGiven ?ng .}");
+    QSparqlConnection* conn = new QSparqlConnection(connectionType);
+    //wait for the connection to open
+    QTest::qWait(1000);
+
+    QSparqlResult* r = conn->exec(q);
+    r->setParent(this);
+    r->waitForFinished();
+    QVERIFY(r != 0);
+
+    delete conn; conn = 0;
+    QTest::qWait(500);
+
+    QVERIFY(checkResultSize(r, 3));
+    QHash<QString, QString> contactNames;
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->stringValue(0), r->value(0).toString());
+        QCOMPARE(r->stringValue(1), r->value(1).toString());
+
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QVERIFY(r->isFinished());
+    QCOMPARE(contactNames.size(), 3);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+
+    CHECK_ERROR(r);
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_verify_result_async()
+{
+    const QString connectionType("QTRACKER_DIRECT");
+    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                         "nco:nameGiven ?ng .}");
+    QSparqlConnection* conn = new QSparqlConnection(connectionType);
+    //wait for the connection to open
+    QTest::qWait(1000);
+
+    QSparqlResult* r = conn->exec(q);
+    r->setParent(this);
+    QVERIFY(r != 0);
+    CHECK_ERROR(r);
+
+    QTime timer;
+    timer.start();
+    QSignalSpy spy(r, SIGNAL(finished()));
+    while (spy.count() == 0 && timer.elapsed() < 5000) {
+        QTest::qWait(100);
+    }
+    QCOMPARE(spy.count(), 1);
+    CHECK_ERROR(r);
+    delete conn; conn = 0;
+    QCOMPARE(r->size(), 3);
+    QHash<QString, QString> contactNames;
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+    QCOMPARE(contactNames.size(), 3);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+    delete r;
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
+{
+    const int testDataAmount = 2000;
+    const QString testTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QTest::qWait(1000);
+    QVERIFY( testData->isOK() );
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1);
+
+    //run this bit serveral times since we are checking for threading issues
+    for(int i=0;i<20;++i) {
+        QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
+        const QSparqlQuery q(
+            QString("select tracker:id(?musicPiece) ?title ?performer ?album ?duration ?created "
+                "{ "
+                "?musicPiece a nmm:MusicPiece; "
+                "nie:isLogicalPartOf %1; "
+                "nie:title ?title; "
+                "nmm:performer ?performer; "
+                "nmm:musicAlbum ?album; "
+                "nfo:duration ?duration; "
+                "nie:contentCreated ?created. "
+                "} order by ?title ?created").arg(testTag));
+
+        QSparqlResult* r = conn->exec(q);
+        r->setParent(this);
+        QVERIFY(r != 0);
+        CHECK_ERROR(r);
+
+        QSignalSpy spy(r, SIGNAL(dataReady(int)));
+        QTest::qWait(1);
+        while (spy.count() < 2)
+            QTest::qWait(1);
+        // Verify that the query is really deleted mid-way through
+        QVERIFY(!r->isFinished());
+        delete conn; conn = 0;
+        delete r;
+    }
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )

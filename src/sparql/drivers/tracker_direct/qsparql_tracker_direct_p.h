@@ -97,7 +97,7 @@ private Q_SLOTS:
 
 private:
     void terminate();
-    void terminateAndWait();
+    void stopAndWait();
     bool fetchNextResult();
     bool fetchBoolResult();
 

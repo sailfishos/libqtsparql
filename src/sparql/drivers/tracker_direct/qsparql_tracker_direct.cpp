@@ -289,8 +289,6 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
-    delete fetcher;
-
     if (cursor != 0) {
         g_object_unref(cursor);
         cursor = 0;
@@ -336,11 +334,7 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (d->fetcher->isRunning()) {
-        d->isFinished = 1;
-        d->fetcher->wait();
-    }
-
+    stopAndWait();
     delete d;
 }
 
@@ -363,7 +357,7 @@ void QTrackerDirectResult::exec()
 void QTrackerDirectResult::startFetcher()
 {
     QMutexLocker resultLocker(&(d->resultMutex));
-    if (!d->fetcherStarted) {
+    if (d->fetcher && !d->fetcherStarted && !isFinished()) {
         d->fetcherStarted = true;
         d->fetcher->start();
     }
@@ -556,11 +550,14 @@ void QTrackerDirectResult::terminate()
     d->terminate();
 }
 
-void QTrackerDirectResult::terminateAndWait()
+void QTrackerDirectResult::stopAndWait()
 {
-    d->terminate();
-    if (d->fetcher->isRunning())
+    if (d->fetcher)
+    {
+        d->isFinished = 1;
         d->fetcher->wait();
+    }
+    delete d->fetcher; d->fetcher = 0;
 }
 
 int QTrackerDirectResult::size() const
@@ -1026,17 +1023,16 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
 void QTrackerDirectDriver::close()
 {
-    QMutexLocker connectionLocker(&(d->connectionMutex));
-
     foreach(QPointer<QTrackerDirectResult> result, d->activeResults) {
         if (!result.isNull()) {
             qWarning() << "QSparqlConnection closed: Terminating active query:" <<
                 result->query();
             disconnect(this, SIGNAL(opened()), result.data(), SLOT(exec()));
-            result->terminateAndWait();
+            result->stopAndWait();
         }
     }
     d->activeResults.clear();
+    QMutexLocker connectionLocker(&(d->connectionMutex));
 
     if (!d->asyncOpenCalled && QCoreApplication::instance()) {
         QEventLoop loop;
