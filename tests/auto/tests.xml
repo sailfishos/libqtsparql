@@ -78,11 +78,6 @@
       </get>
     </set>
     <set name="qsparql-threading" description="Multithreading tests">
-        <pre_steps>
-            <step expected_result="0">
-                su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq;"
-            </step>
-        </pre_steps>
         <case name="test-tracker-queries" description="Tracker queries">
             <step expected_result="0">
                 su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries"

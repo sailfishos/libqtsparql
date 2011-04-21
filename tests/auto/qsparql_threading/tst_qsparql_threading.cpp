@@ -209,6 +209,16 @@ void tst_QSparqlThreading::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
+                   "WHERE {?u nie:isLogicalPartOf <qsparql-threading-tests> .}"
+                   "DELETE { <qsparql-threading-tests> a rdfs:Resource . }",
+                   QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    CHECK_ERROR(r);
+    delete r;
 }
 
 void tst_QSparqlThreading::concurrentEndpointQueries_thread()
