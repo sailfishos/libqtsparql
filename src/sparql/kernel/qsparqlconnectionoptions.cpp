@@ -100,10 +100,6 @@ template<> void QSharedDataPointer<QSparqlConnectionOptionsPrivate>::detach()
     given to QSparqlConnection. Some options are used only by some
     drivers.
 
-    \ingroup database
-    \ingroup shared
-    \inmodule QtSparql
-
     The function setOption() can be used for setting an option and
     option() for getting a value of an option. An option can be unset
     by passing a QVariant() to setOption().

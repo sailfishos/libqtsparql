@@ -48,8 +48,6 @@ QT_BEGIN_NAMESPACE
     \class QSparqlDriverPlugin
     \brief The QSparqlDriverPlugin class provides an abstract base for custom QSparqlDriver plugins.
 
-    \ingroup plugins
-
     The SPARQL driver plugin is a simple plugin interface that makes it
     easy to create your own SPARQL driver plugins that can be loaded
     dynamically by Qt.

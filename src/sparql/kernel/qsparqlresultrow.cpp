@@ -78,10 +78,6 @@ QSparqlResultRowPrivate::QSparqlResultRowPrivate(const QSparqlResultRowPrivate &
     \brief The QSparqlResultRow class encapsulates a row in the results of a
     query.
 
-    \ingroup database
-    \ingroup shared
-    \inmodule QtSparql
-
     The QSparqlResultRow class encapsulates the functionality and
     characteristics of a row of results returned by a QSparqlQuery.  A
     QSparqlResultRow is a set of (name, value) pairs (bindings).
@@ -119,8 +115,8 @@ QSparqlResultRow::QSparqlResultRow()
 /*!
     Constructs a copy of \a other.
 
-    QSparqlResultRow is \l{implicitly shared}. This means you can make copies
-    of a result row in \l{constant time}.
+    QSparqlResultRow is implicitly shared. This means you can make copies
+    of a result row in constant time.
 */
 
 QSparqlResultRow::QSparqlResultRow(const QSparqlResultRow& other)
@@ -132,8 +128,8 @@ QSparqlResultRow::QSparqlResultRow(const QSparqlResultRow& other)
 /*!
     Sets the result row equal to \a other.
 
-    QSparqlResultRow is \l{implicitly shared}. This means you can make copies
-    of a result row in \l{constant time}.
+    QSparqlResultRow is implicitly shared. This means you can make copies
+    of a result row in constant time.
 */
 
 QSparqlResultRow& QSparqlResultRow::operator=(const QSparqlResultRow& other)

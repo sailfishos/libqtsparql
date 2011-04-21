@@ -78,8 +78,6 @@ QSparqlDriverPrivate::~QSparqlDriverPrivate()
     \brief The QSparqlDriver class is an abstract base class for accessing
     specific SPARQL based RDF stores.
 
-    \ingroup database
-
     This class should not be used directly. Use QSparqlConnection instead.
 
     If you want to create your own SPARQL drivers, you can subclass this
