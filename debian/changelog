@@ -1,3 +1,9 @@
+libqtsparql (0.0.24~unreleased) unstable; urgency=low
+
+  * 
+
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Wed, 21 Apr 2011 09:43:00 +0300
+
 libqtsparql (0.0.23) unstable; urgency=low
 
   * Fixes: NB#228899
