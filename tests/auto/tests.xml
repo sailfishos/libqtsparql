@@ -42,22 +42,11 @@
       </get>
     </set>
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
-      <pre_steps>
-        <step expected_result="0">
-            su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq;
-            tracker-import /usr/share/libqtsparql-tests/testdata_tracker_direct.ttl"
-        </step>
-      </pre_steps>
       <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct">
         <step expected_result="0">
             su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct"
         </step>
       </case>
-      <post_steps>
-        <step expected_result="0">
-            su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_tracker_direct.rq"
-        </step>
-      </post_steps>
       <environments>
         <scratchbox>true</scratchbox>
         <hardware>true</hardware>
