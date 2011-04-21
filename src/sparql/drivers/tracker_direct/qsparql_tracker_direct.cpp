@@ -519,7 +519,7 @@ QVariant QTrackerDirectResult::value(int field) const
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
-   /}
+    }
 
     return d->results[pos()].value(field);
 }
