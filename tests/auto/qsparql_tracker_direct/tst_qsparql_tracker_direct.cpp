@@ -1352,6 +1352,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_verify_result_async()
 
 void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 {
+    setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 2000;
     const QString testTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
