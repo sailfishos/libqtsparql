@@ -113,14 +113,44 @@ tst_QSparqlTracker::~tst_QSparqlTracker()
 
 void tst_QSparqlTracker::initTestCase()
 {
+    // clean any remainings
+    cleanupTestCase();
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     qInstallMsgHandler(myMessageOutput);
+    const QString insertQueryTemplate =
+        "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
+        "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+        "nco:nameGiven \"name00%1\" .";
+    QString insertQuery = "insert { <qsparql-tracker-tests> a nie:InformationElement .";
+    for (int item = 1; item <= 3; item++) {
+        insertQuery.append( insertQueryTemplate.arg(item) );
+    }
+    insertQuery.append(" }");
+
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q(insertQuery,
+                   QSparqlQuery::InsertStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    CHECK_ERROR(r);
+    delete r;
 }
 
 void tst_QSparqlTracker::cleanupTestCase()
 {
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
+                    "WHERE { ?u nie:isLogicalPartOf <qsparql-tracker-tests> . }"
+                    "DELETE { <qsparql-tracker-tests> a rdfs:Resource . }",
+                    QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    r->waitForFinished();
+    CHECK_ERROR(r);
+    delete r;
 }
 
 void tst_QSparqlTracker::init()

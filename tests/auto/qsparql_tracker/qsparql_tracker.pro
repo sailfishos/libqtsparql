@@ -1,10 +1,10 @@
 include(../sparqltest.pri)
-CONFIG += qt warn_on console depend_includepath testcase
+CONFIG += qt warn_on console depend_includepath
 QT += testlib
 SOURCES  += tst_qsparql_tracker.cpp
 
 check.depends = $$TARGET
-check.commands = ./tst_qsparql_tracker_wrapper.sh
+check.commands = ./tst_qsparql_tracker
 
 QMAKE_EXTRA_TARGETS += check
 
