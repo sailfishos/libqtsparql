@@ -336,9 +336,10 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (d->fetcher->isRunning()) {
+    if (d->fetcher && d->fetcher->isRunning()) {
         d->isFinished = 1;
         d->fetcher->wait();
+        delete d->fetcher;
     }
 
     delete d;
@@ -518,7 +519,7 @@ QVariant QTrackerDirectResult::value(int field) const
     if (field >= d->results[pos()].count() || field < 0) {
         qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
-    }
+   /}
 
     return d->results[pos()].value(field);
 }
@@ -559,7 +560,10 @@ void QTrackerDirectResult::terminate()
 void QTrackerDirectResult::terminateAndWait()
 {
     d->terminate();
-    d->fetcher->wait();
+    if (d->fetcher->isRunning())
+        d->fetcher->wait();
+    delete d->fetcher;
+    d->fetcher = 0;
 }
 
 int QTrackerDirectResult::size() const
