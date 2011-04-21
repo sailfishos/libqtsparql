@@ -336,7 +336,7 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (d->fetcher && d->fetcher->isRunning()) {
+    if (d->fetcher->isRunning()) {
         d->isFinished = 1;
         d->fetcher->wait();
     }
@@ -561,8 +561,6 @@ void QTrackerDirectResult::terminateAndWait()
     d->terminate();
     if (d->fetcher->isRunning())
         d->fetcher->wait();
-    delete d->fetcher;
-    d->fetcher = 0;
 }
 
 int QTrackerDirectResult::size() const
