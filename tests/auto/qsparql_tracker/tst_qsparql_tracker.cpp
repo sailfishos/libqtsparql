@@ -236,7 +236,6 @@ void tst_QSparqlTracker::insert_new_urn()
     CHECK_ERROR(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
-        // qDebug() << r->binding(0).toString() << r->binding(1).toString();
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 4);
@@ -253,7 +252,6 @@ void tst_QSparqlTracker::insert_new_urn()
     // and need to do a bit of hackery here
     del.bindValue("addeduri", QUrl(contactNames["addedname006"].value().toString()));
     r = conn.exec(del);
-    qDebug() << r->query();
     QVERIFY(r != 0);
     r->waitForFinished(); // this test is synchronous only
     CHECK_ERROR(r);
@@ -407,6 +405,8 @@ void tst_QSparqlTracker::delete_unfinished_result()
 
 void tst_QSparqlTracker::go_beyond_columns_number()
 {
+    // This test will print out warnings
+    testLogLevel = QtCriticalMsg;
     QSparqlConnection conn("QTRACKER");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"

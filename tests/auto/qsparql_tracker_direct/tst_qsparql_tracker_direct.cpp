@@ -355,7 +355,6 @@ void tst_QSparqlTrackerDirect::insert_new_urn()
     r->waitForFinished();
     QCOMPARE(r->size(), 4);
     while (r->next()) {
-        // qDebug() << r->binding(0).toString() << r->binding(1).toString();
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 4);
@@ -453,7 +452,6 @@ public:
 public slots:
     void onDataReady(int tc)
     {
-        //qDebug() << "Ready" << tc;
         if (result) {
             result->deleteLater();
             result = 0;
@@ -638,7 +636,6 @@ void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
         CHECK_ERROR(r);
         QCOMPARE(r->size(), 4);
         while (r->next()) {
-            // qDebug() << r->binding(0).toString() << r->binding(1).toString();
             contactNames[r->binding(1).value().toString()] = r->binding(0);
         }
         QCOMPARE(contactNames.size(), 4);
@@ -653,7 +650,6 @@ void tst_QSparqlTrackerDirect::insert_with_dbus_read_with_direct()
 
     del.bindValue(addeduri);
     r = writeConn.exec(del);
-    qDebug() << r->query();
     QVERIFY(r);
     r->waitForFinished(); // this test is synchronous only
     CHECK_ERROR(r);
@@ -754,6 +750,8 @@ void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
 
 void tst_QSparqlTrackerDirect::go_beyond_columns_number()
 {
+    // This test will print out warnings
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
@@ -779,6 +777,8 @@ void tst_QSparqlTrackerDirect::create_2_connections()
 
 void tst_QSparqlTrackerDirect::unsupported_statement_type()
 {
+    // This test will print out warnings
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery q("construct { ?u <http://www.semanticdesktop.org/ontologies/2007/03/22/nco#nameGiven> ?ng } where {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-virtuoso-tests> ;"
