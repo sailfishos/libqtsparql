@@ -339,7 +339,6 @@ QTrackerDirectResult::~QTrackerDirectResult()
     if (d->fetcher && d->fetcher->isRunning()) {
         d->isFinished = 1;
         d->fetcher->wait();
-        delete d->fetcher;
     }
 
     delete d;
