@@ -509,28 +509,40 @@ QString QSparqlConnection::driverName() const
     This enum contains a list of features a driver might support. Use
     hasFeature() to query whether a feature is supported or not.
 
-    \value QuerySize  Whether the database is capable of reporting the size
-    of a query. Note that some databases do not support returning the size
-    (i.e. number of rows returned) of a query, in which case
-    QSparqlQuery::size() will return -1.
+    \var QSparqlConnection::Feature QSparqlConnection::QuerySize
 
-    \value DefaultGraph  The store has a default graph which doesn't have
-    to be specified. Some stores, like Virtuoso, don't have a default graph.
+    The connection is capable of reporting the size of a query. Note that
+    some databases do not support returning the size (i.e. number of rows
+    returned) of a query, in which case QSparqlQuery::size() will return -1.
 
-    \value AskQueries The connection supports ASK queries
+    \var QSparqlConnection::Feature QSparqlConnection::DefaultGraph
 
-    \value ConstructQueries The connection supports CONSTRUCT queries
+    The store has a default graph which doesn't have to be specified. Some
+    stores, like Virtuoso, don't have a default graph.
 
-    \value UpdateQueries The connection supports INSERT and DELETE queries
+    \var QSparqlConnection::Feature QSparqlConnection::AskQueries
 
-    \value SyncExec The connection can execute synchronous queries natively. For
-    connections not supporting SyncExec, QSparqlConnection::syncExec() will
-    execute an asynchronous query and wait until it has finished.
+    The connection supports ASK queries
 
-    \value AsyncExec The connection can execute asynchronous queries
-    natively. For connections not supporting AsyncExec,
-    QSparqlConnection::exec() will create a thread for executing the query
-    synchronously.
+    \var QSparqlConnection::Feature QSparqlConnection::ConstructQueries
+
+    The connection supports CONSTRUCT queries
+
+    \var QSparqlConnection::Feature QSparqlConnection::UpdateQueries
+
+    The connection supports INSERT and DELETE queries
+
+    \var QSparqlConnection::Feature QSparqlConnection::SyncExec
+
+    The connection can execute synchronous queries natively. For connections not
+    supporting SyncExec, QSparqlConnection::syncExec() will execute an
+    asynchronous query and wait until it has finished.
+
+    \var QSparqlConnection::Feature QSparqlConnection::AsyncExec
+
+    The connection can execute asynchronous queries natively. For connections
+    not supporting AsyncExec, QSparqlConnection::exec() will create a thread for
+    executing the query synchronously.
 
     \sa hasFeature()
 */
@@ -547,9 +559,6 @@ bool QSparqlConnection::hasFeature(Feature feature) const
 /*!
     Returns true if the QSparqlConnection has a valid driver, i.e.,
     the name of the driver given in the constructor was valid.
-
-    Example:
-    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlconnection.cpp 8
 */
 bool QSparqlConnection::isValid() const
 {

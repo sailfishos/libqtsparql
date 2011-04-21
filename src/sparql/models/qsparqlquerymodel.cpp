@@ -133,43 +133,15 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
     \brief The QSparqlQueryModel class provides a read-only data model
     for SPARQL result sets.
 
-    \ingroup connection
-    \inmodule QtSparql
-
     QSparqlQueryModel is a high-level interface for executing SPARQL
     statements and traversing the result set. It is built on top of
     the lower-level QSparqlQuery and can be used to provide data to
-    view classes such as QTableView. For example:
-
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 16
-
-    We set the model's query, then we set up the labels displayed in
-    the view header.
+    view classes such as QTableView.
 
     QSparqlQueryModel can also be used to access a connection
-    programmatically, without binding it to a view:
+    programmatically, without binding it to a view.
 
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 21
-
-    The code snippet above extracts the \c salary field from record 4 in
-    the result set of the query \c{SELECT * from employee}. Assuming
-    that \c salary is column 2, we can rewrite the last line as follows:
-
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 22
-
-    The model is read-only by default. To make it read-write, you
-    must subclass it and reimplement setData() and flags(). Another
-    option is to use QSparqlTableModel, which provides a read-write
-    model based on a single connection table.
-
-    The \l{sql/querymodel} example illustrates how to use
-    QSparqlQueryModel to display the result of a query. It also shows
-    how to subclass QSparqlQueryModel to customize the contents of the
-    data before showing it to the user, and how to create a
-    read-write model based on QSparqlQueryModel.
-
-    \sa QSparqlQuery,
-        {Model/View Programming}, {Query Model Example}
+    \sa QSparqlQuery
 */
 
 /*!
@@ -292,9 +264,6 @@ void QSparqlQueryModel::queryChange()
 
     lastError() can be used to retrieve verbose information if there
     was an error setting the query.
-
-    Example:
-    \snippet doc/src/snippets/code/src_sparql_models_qsparqlquerymodel.cpp 1
 
     \sa query(), queryChange(), lastError()
 */
@@ -445,9 +414,7 @@ QSparqlResultRow QSparqlQueryModel::resultRow() const
     Returns true if \a column is within bounds; otherwise returns false.
 
     By default, inserted columns are empty. To fill them with data,
-    reimplement data() and handle any inserted column separately:
-
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 23
+    reimplement data() and handle any inserted column separately.
 
     \sa removeColumns()
 */

@@ -76,6 +76,8 @@ private slots:
 
 private:
     int previousTotalResults;
+	QString driverPath;
+	int portNumber;
 };
 
 tst_QSparqlVirtuoso::tst_QSparqlVirtuoso()
@@ -91,6 +93,22 @@ void tst_QSparqlVirtuoso::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+
+    QSettings settings("settings", QSettings::IniFormat);
+    QString driver;
+    QString driverArg("DRIVER=%1");
+
+    settings.beginGroup("Settings");
+    portNumber = settings.value("portNumber").toInt();
+    driver = settings.value("driver").toString();
+    settings.endGroup();
+
+    if(!portNumber)
+        portNumber = 1111;
+    if(driver.isNull())
+        driver = "/usr/local/virtuoso-opensource/lib/virtodbc_r.so";
+
+    driverPath.append(driverArg.arg(driver));
 }
 
 void tst_QSparqlVirtuoso::cleanupTestCase()
@@ -108,8 +126,8 @@ void tst_QSparqlVirtuoso::cleanup()
 void tst_QSparqlVirtuoso::query_contacts()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
 
     QSparqlQuery q("select ?u ?ng "
@@ -152,8 +170,8 @@ void tst_QSparqlVirtuoso::construct_contacts()
     // Note that to run this test you will need a patched version of Virtuoso with
     // support for NTriples via a 'define output:format "NT"' option in the query
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
@@ -183,8 +201,8 @@ void tst_QSparqlVirtuoso::construct_contacts()
 void tst_QSparqlVirtuoso::ask_contact()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
@@ -220,8 +238,8 @@ void tst_QSparqlVirtuoso::insert_and_delete_contact()
 {
     // This test will leave unclean test data into virtuoso if it crashes.
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
     conn.addPrefix("nco", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
     conn.addPrefix("nie", QUrl("http://www.semanticdesktop.org/ontologies/2007/01/19/nie#"));
@@ -286,8 +304,8 @@ void tst_QSparqlVirtuoso::insert_and_delete_contact()
 void tst_QSparqlVirtuoso::query_with_error()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
 
     QSparqlQuery q("this is not a valid query");
@@ -304,8 +322,8 @@ void tst_QSparqlVirtuoso::query_with_error()
 void tst_QSparqlVirtuoso::select_datatypes()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
 
     QSparqlQuery q("select * from <http://virtuoso/testgraph> where { <thing001> ?p ?o . }");
@@ -369,8 +387,8 @@ void tst_QSparqlVirtuoso::select_datatypes()
 void tst_QSparqlVirtuoso::select_blanknode()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
     conn.addPrefix("foaf", QUrl("http://xmlns.com/foaf/0.1/"));
 
@@ -408,8 +426,8 @@ void tst_QSparqlVirtuoso::iterateResults(int totalResults)
 void tst_QSparqlVirtuoso::iterate_on_dataready()
 {
     QSparqlConnectionOptions options;
-    options.setDatabaseName("DRIVER=/usr/lib/odbc/virtodbc_r.so");
-    options.setPort(TEST_PORT);
+    options.setDatabaseName(driverPath);
+    options.setPort(portNumber);
     QSparqlConnection conn("QVIRTUOSO", options);
 
     QSparqlQuery q("SELECT ?s ?p ?o WHERE { ?s ?p ?o . }");

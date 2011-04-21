@@ -71,33 +71,48 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 
 namespace {
 
-static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glong length)
+QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, int col)
 {
+    glong strLen = 0;
+    const gchar* strData = 0;
+
+    // Get string data for types returned as strings from tracker
+    switch (type) {
+    case TRACKER_SPARQL_VALUE_TYPE_URI:
+    case TRACKER_SPARQL_VALUE_TYPE_STRING:
+    case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
+        strData = tracker_sparql_cursor_get_string(cursor, col, &strLen);
+        break;
+    default:
+        break;
+    }
+
     switch (type) {
     case TRACKER_SPARQL_VALUE_TYPE_UNBOUND:
         break;
     case TRACKER_SPARQL_VALUE_TYPE_URI:
-        return QVariant(QUrl::fromEncoded(QByteArray(value, length)));
+    {
+        const QByteArray ba(strData, strLen);
+        return QVariant(QUrl::fromEncoded(ba));
+    }
     case TRACKER_SPARQL_VALUE_TYPE_STRING:
-        return QVariant(QString::fromUtf8(value, length));
+    {
+        return QVariant(QString::fromUtf8(strData, strLen));
+    }
     case TRACKER_SPARQL_VALUE_TYPE_INTEGER:
     {
-        // It's safe to use QByteArray::setRawData here, since there won't be
-        // pointers to the byte array after the conversion.
-        QByteArray ba;
-        ba.setRawData(value, length);
-        return QVariant(ba.toLongLong());
+        const gint64 value = tracker_sparql_cursor_get_integer(cursor, col);
+        return QVariant(qlonglong(value));
     }
     case TRACKER_SPARQL_VALUE_TYPE_DOUBLE:
     {
-        // It's safe to use QByteArray::setRawData here, since there won't be
-        // pointers to the byte array after the conversion.
-        QByteArray ba;
-        ba.setRawData(value, length);
-        return QVariant(ba.toDouble());
+        const gdouble value = tracker_sparql_cursor_get_double(cursor, col);
+        return QVariant(double(value));
     }
     case TRACKER_SPARQL_VALUE_TYPE_DATETIME:
-        return QVariant(QDateTime::fromString(QString::fromUtf8(value, length), Qt::ISODate));
+        {
+        return QVariant(QDateTime::fromString(QString::fromUtf8(strData, strLen), Qt::ISODate));
+        }
     case TRACKER_SPARQL_VALUE_TYPE_BLANK_NODE:
         // Note: this type is not currently used by Tracker.  Here we're storing
         // it as a null QVariant and losing information that it was a blank
@@ -108,8 +123,8 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
         break;
     case TRACKER_SPARQL_VALUE_TYPE_BOOLEAN:
     {
-        bool isTrue = (qstrcmp(value, "1") == 0 || qstricmp(value, "true") == 0);
-        return QVariant(isTrue);
+        const gboolean value = tracker_sparql_cursor_get_boolean(cursor, col);
+        return QVariant(value != FALSE);
     }
     default:
         break;
@@ -120,11 +135,9 @@ static QVariant makeVariant(TrackerSparqlValueType type, const gchar* value, glo
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col)
 {
-    TrackerSparqlValueType type =
+    const TrackerSparqlValueType type =
         tracker_sparql_cursor_get_value_type(cursor, col);
-    glong len;
-    const gchar* data = tracker_sparql_cursor_get_string(cursor, col, &len);
-    return makeVariant(type, data, len);
+    return makeVariant(type, cursor, col);
 }
 
 }
@@ -215,7 +228,7 @@ public:
 
     TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;
-    QVector<QVariantList> results;
+    QList<QVector<QVariant> > results;
     QAtomicInt isFinished;
 
     QTrackerDirectResult* q;
@@ -263,7 +276,7 @@ async_update_callback( GObject *source_object,
     GError *error = 0;
     tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
-    if (error != 0) {
+    if (error) {
         QSparqlError e(QString::fromUtf8(error->message));
         e.setType(errorCodeToType(error->code));
         e.setNumber(error->code);
@@ -289,10 +302,8 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 
 QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
 {
-    if (cursor != 0) {
+    if (cursor)
         g_object_unref(cursor);
-        cursor = 0;
-    }
 }
 
 void QTrackerDirectResultPrivate::terminate()
@@ -305,7 +316,7 @@ void QTrackerDirectResultPrivate::terminate()
 
     isFinished = 1;
     q->emit finished();
-    if (cursor != 0) {
+    if (cursor) {
         g_object_unref(cursor);
         cursor = 0;
     }
@@ -375,12 +386,11 @@ bool QTrackerDirectResult::runQuery()
                                                     query().toUtf8().constData(),
                                                     0,
                                                     &error );
-    if (error != 0 || d->cursor == 0) {
+    if (error || !d->cursor) {
         QMutexLocker resultLocker(&(d->resultMutex));
-        QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
+        setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         QSparqlError::StatementError,
-                        error ? error->code : -1);
-        setLastError(e);
+                        error ? error->code : -1));
         if (error)
             g_error_free(error);
         qWarning() << "QTrackerDirectResult:" << lastError() << query();
@@ -398,12 +408,11 @@ bool QTrackerDirectResult::fetchNextResult()
     GError * error = 0;
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
-    if (error != 0) {
-        QSparqlError e(QString::fromUtf8(error->message),
+    if (error) {
+        setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
-                       error->code);
+                       error->code));
         g_error_free(error);
-        setLastError(e);
         qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
         return false;
@@ -416,7 +425,7 @@ bool QTrackerDirectResult::fetchNextResult()
 
     QMutexLocker resultLocker(&(d->resultMutex));
 
-    gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
+    const gint n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
 
     if (d->columnNames.empty()) {
         for (int i = 0; i < n_columns; i++) {
@@ -424,8 +433,8 @@ bool QTrackerDirectResult::fetchNextResult()
         }
     }
 
-    QVariantList resultRow;
-
+    QVector<QVariant> resultRow;
+    resultRow.reserve(n_columns);
     for (int i = 0; i < n_columns; i++) {
         resultRow.append(readVariant(d->cursor, i));
     }
@@ -444,12 +453,11 @@ bool QTrackerDirectResult::fetchBoolResult()
 
     GError * error = 0;
     tracker_sparql_cursor_next(d->cursor, 0, &error);
-    if (error != 0) {
-        QSparqlError e(QString::fromUtf8(error->message),
+    if (error) {
+        setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
-                       error->code);
+                       error->code));
         g_error_free(error);
-        setLastError(e);
         qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
         return false;
@@ -457,15 +465,10 @@ bool QTrackerDirectResult::fetchBoolResult()
 
     QMutexLocker resultLocker(&(d->resultMutex));
 
-    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1)  {
-        QString value = QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, 0, 0));
-        TrackerSparqlValueType type = tracker_sparql_cursor_get_value_type(d->cursor, 0);
-
-        if (    type == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN
-                && (value == QLatin1String("1") || value.toLower() == QLatin1String("true")) )
-        {
-            d->setBoolValue(true);
-        }
+    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1 &&
+        tracker_sparql_cursor_get_value_type(d->cursor, 0) == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN)  {
+        const gboolean value = tracker_sparql_cursor_get_boolean(d->cursor, 0);
+        d->setBoolValue(value != FALSE);
     }
 
     terminate();
@@ -487,7 +490,7 @@ QSparqlBinding QTrackerDirectResult::binding(int field) const
     // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
     // but its data type uri should be xsd:integer. Set it manually here.
     QSparqlBinding b;
-    QVariant value = d->results[pos()][field];
+    const QVariant& value = d->results[pos()][field];
     if (value.type() == QVariant::LongLong) {
         b.setValue(value.toString(), *XSD::Integer());
     }
@@ -603,7 +606,7 @@ void QTrackerDirectUpdateResultPrivate::terminate()
     isFinished = 1;
     q->emit finished();
 
-    if (loop != 0)
+    if (loop)
         loop->exit();
 }
 
@@ -729,7 +732,7 @@ QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectD
 
 QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
 {
-    if (cursor != 0)
+    if (cursor)
         g_object_unref(cursor);
 }
 
@@ -755,12 +758,11 @@ void QTrackerDirectSyncResult::exec()
 
     GError * error = 0;
     d->cursor = tracker_sparql_connection_query(d->driverPrivate->connection, query().toUtf8().constData(), 0, &error);
-    if (error != 0 || d->cursor == 0) {
-        QSparqlError e(QString::fromUtf8(error ? error->message : "unknown error"),
+    if (error || !d->cursor) {
+        setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         QSparqlError::StatementError,
-                        error ? error->code : -1);
-        setLastError(e);
-        if (error != 0)
+                        error ? error->code : -1));
+        if (error)
             g_error_free(error);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
     }
@@ -776,30 +778,28 @@ void QTrackerDirectSyncResult::update()
 
     GError * error = 0;
     tracker_sparql_connection_update(d->driverPrivate->connection, query().toUtf8().constData(), 0, 0, &error);
-    if (error != 0) {
-        QSparqlError e(QString::fromUtf8(error->message),
+    if (error) {
+        setLastError(QSparqlError(QString::fromUtf8(error->message),
                         errorCodeToType(error->code),
-                        error->code);
+                        error->code));
         g_error_free(error);
-        setLastError(e);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
     }
 }
 
 bool QTrackerDirectSyncResult::next()
 {
-    if (d->cursor == 0)
+    if (!d->cursor)
         return false;
 
     GError * error = 0;
-    gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
+    const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
-    if (error != 0) {
-        QSparqlError e(QString::fromUtf8(error->message),
+    if (error) {
+        setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),
-                       error->code);
+                       error->code));
         g_error_free(error);
-        setLastError(e);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
         g_object_unref(d->cursor);
         d->cursor = 0;
@@ -812,7 +812,7 @@ bool QTrackerDirectSyncResult::next()
         updatePos(QSparql::AfterLastRow);
         return false;
     }
-    int oldPos = pos();
+    const int oldPos = pos();
     if (oldPos == QSparql::BeforeFirstRow)
         updatePos(0);
     else
@@ -823,7 +823,7 @@ bool QTrackerDirectSyncResult::next()
 QSparqlResultRow QTrackerDirectSyncResult::current() const
 {
     // Note: this function reads and constructs the data again every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QSparqlResultRow();
 
     QSparqlResultRow resultRow;
@@ -840,7 +840,7 @@ QSparqlResultRow QTrackerDirectSyncResult::current() const
 QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
 {
     // Note: this function reads and constructs the data again every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QSparqlBinding();
 
     // get the no. of columns only once; it won't change between rows
@@ -851,7 +851,7 @@ QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
         return QSparqlBinding();
 
     const gchar* name = tracker_sparql_cursor_get_variable_name(d->cursor, i);
-    QVariant value = readVariant(d->cursor, i);
+    const QVariant& value = readVariant(d->cursor, i);
 
     // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
     // but its data type uri should be xsd:integer. Set it manually here.
@@ -869,7 +869,7 @@ QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
 QVariant QTrackerDirectSyncResult::value(int i) const
 {
     // Note: this function re-constructs the data every time it's called.
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QVariant();
 
     // get the no. of columns only once; it won't change between rows
@@ -884,7 +884,7 @@ QVariant QTrackerDirectSyncResult::value(int i) const
 
 QString QTrackerDirectSyncResult::stringValue(int i) const
 {
-    if (d->cursor == 0 || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
+    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
         return QString();
 
     // get the no. of columns only once; it won't change between rows
@@ -899,7 +899,7 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
 
 bool QTrackerDirectSyncResult::isFinished() const
 {
-    return (d->cursor == 0);
+    return !d->cursor;
 }
 
 bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
@@ -926,7 +926,7 @@ async_open_callback(GObject         * /*source_object*/,
     GError * error = 0;
     d->connection = tracker_sparql_connection_get_finish(result, &error);
 
-    if (d->connection == 0) {
+    if (!d->connection) {
         d->error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
                                         .arg(QString::fromUtf8(error ? error->message : "unknown error"));
         qWarning() << d->error;
@@ -1040,7 +1040,7 @@ void QTrackerDirectDriver::close()
         loop.exec();
     }
 
-    if (d->connection != 0) {
+    if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
     }

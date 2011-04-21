@@ -1,4 +1,4 @@
-INCLUDEPATH = $$QT_BUILD_TREE/include $$QT_BUILD_TREE/include/QtSparql/
+INCLUDEPATH += $$QT_BUILD_TREE/include $$QT_BUILD_TREE/include/QtSparql/
 QT = core
 
 QMAKE_LIBDIR = $$QT_BUILD_TREE/lib
@@ -10,7 +10,7 @@ isEmpty(PREFIX): PREFIX = $$QTSPARQL_INSTALL_PREFIX
 VERSION = 0.0.0
 
 # for documentation
-DOC_VERSION = 0.0.23
+DOC_VERSION = 0.0.24
 LIBRARYNAME = QtSparql
 PACKAGENAME = libqtsparql
 

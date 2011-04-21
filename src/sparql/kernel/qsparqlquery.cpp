@@ -111,12 +111,8 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     \brief The QSparqlQuery class provides a means of executing and
     manipulating SPARQL statements.
 
-    \ingroup database
-    \ingroup shared
-    \inmodule QtSparql
-
     QSparqlQuery encapsulates the functionality involved in creating
-    SPARQL queries which are executed on a \l QSparqlConnection.
+    SPARQL queries which are executed on a QSparqlConnection.
 
     It can also be used to execute commands specific to an RDF store which
     are not standard SPARQL.
@@ -150,12 +146,29 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
     This enum contains a list of SPARQL statement (or clause) types the
     driver can create.
 
-    \value SelectStatement A SPARQL \c SELECT statement
-    \value AskStatement  A SPARQL \c ASK statement
-    \value ConstructStatement A SPARQL \c CONSTRUCT statement
-    \value DescribeStatement A SPARQL \c DESCRIBE statement
-    \value InsertStatement A SPARQL \c INSERT statement
-    \value DeleteStatement A SPARQL \c DELETE statement
+    \var QSparqlQuery::StatementType QSparqlQuery::SelectStatement
+
+    A SPARQL \c SELECT statement
+
+    \var QSparqlQuery::StatementType QSparqlQuery::AskStatement
+
+    A SPARQL \c ASK statement
+
+    \var QSparqlQuery::StatementType QSparqlQuery::ConstructStatement
+
+    A SPARQL \c CONSTRUCT statement
+
+    \var QSparqlQuery::StatementType QSparqlQuery::DescribeStatement
+
+    A SPARQL \c DESCRIBE statement
+
+    \var QSparqlQuery::StatementType QSparqlQuery::InsertStatement
+
+    A SPARQL \c INSERT statement
+
+    \var QSparqlQuery::StatementType QSparqlQuery::DeleteStatement
+
+    A SPARQL \c DELETE statement
 
 */
 
@@ -304,7 +317,7 @@ QString QSparqlQuery::preparedQueryText() const
 
 /*!
   Set the placeholder \a placeholder to be bound to value \a val in the
-  query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be included
+  query. Note that the placeholder mark (\c ?: or \c $:) must not be included
   when specifying the placeholder name.
 
   \sa bindValue(), boundValue() boundValues()
@@ -317,7 +330,7 @@ void QSparqlQuery::bindValue(const QString& placeholder, const QVariant& val)
 
 /*!
   Set the placeholder \a binding.name() to be bound to value \a binding.value()
-  in the query. Note that the placeholder mark (\c{?:} or \c{$:}) must not be
+  in the query. Note that the placeholder mark (\c ?: or \c $:) must not be
   included when specifying the placeholder name.
 */
 void QSparqlQuery::bindValue(const QSparqlBinding& binding)
@@ -371,11 +384,6 @@ QVariant QSparqlQuery::boundValue(const QString& placeholder) const
 
 /*!
   Returns a map of the bound values.
-
-  With named binding, the bound values can be examined in the
-  following ways:
-
-  \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 14
 
   \sa boundValue() bindValue()
 */

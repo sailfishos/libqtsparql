@@ -56,9 +56,6 @@ QDebug operator<<(QDebug dbg, const QSparqlError &s)
     \class QSparqlError
     \brief The QSparqlError class provides SPARQL error information.
 
-    \ingroup database
-    \inmodule QtSparql
-
     A QSparqlError object can provide driver-specific error data, including the
     error message(), number() and type(). The functions all have setters so that
     you can create and return QSparqlError objects from your own classes, for
@@ -70,21 +67,31 @@ QDebug operator<<(QDebug dbg, const QSparqlError &s)
 /*!
     \enum QSparqlError::ErrorType
 
-    This enum type describes the context in which the error occurred, e.g., a connection error, a statement error, etc.
+    This enum type describes the context in which the error occurred.
 
-    \value NoError  No error occurred.
-    \value ConnectionError  Connection error.
-    \value StatementError  SPARQL statement syntax error.
-    \value TransactionError  Transaction failed error.
-    \value BackendError  Other backend-specific error
-    \value UnknownError  Unknown error.
+    \var QSparqlError::ErrorType QSparqlError::NoError
 
-    \omitvalue None
-    \omitvalue Connection
-    \omitvalue Statement
-    \omitvalue Transaction
-    \omitvalue Backend
-    \omitvalue Unknown
+    No error occurred.
+
+    \var QSparqlError::ErrorType QSparqlError::ConnectionError
+
+    Connection error.
+
+    \var QSparqlError::ErrorType QSparqlError::StatementError
+
+    SPARQL statement syntax error.
+
+    \var QSparqlError::ErrorType QSparqlError::TransactionError
+
+    Transaction failed error.
+
+    \var QSparqlError::ErrorType QSparqlError::BackendError
+
+    Other backend-specific error
+
+    \var QSparqlError::ErrorType QSparqlError::UnknownError
+
+    Unknown error.
 */
 
 /*!
@@ -197,9 +204,6 @@ void QSparqlError::setNumber(int number)
 
 /*!
     Returns true if an error is set, otherwise false.
-
-    Example:
-    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlerror.cpp 0
 
     \sa type()
 */

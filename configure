@@ -389,26 +389,20 @@ for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
 
         virtuoso)
             if [ "$CFG_SPARQL_virtuoso" != "no" ]; then
-                if [ "$PLATFORM_MAC" != "yes" ] && "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/odbc "ODBC" $L_FLAGS $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
+                if [ "$PLATFORM_MAC" != "yes" ] && "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/iodbc "iODBC" $L_FLAGS $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
+			        QT_LFLAGS_ODBC="-liodbc"
                     if [ "$CFG_SPARQL_virtuoso" = "auto" ]; then
                         CFG_SPARQL_virtuoso=plugin
                     fi
                 else
-                    if "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/unix/iodbc "iODBC" $L_FLAGS $I_FLAGS $l_FLAGS $MAC_CONFIG_TEST_COMMANDLINE; then
-                        QT_LFLAGS_ODBC="-liodbc"
-                        if [ "$CFG_SPARQL_virtuoso" = "auto" ]; then
-                            CFG_SPARQL_virtuoso=plugin
-                        fi
+                    if [ "$CFG_SPARQL_virtuoso" != "auto" ] && [ "$CFG_CONFIGURE_EXIT_ON_ERROR" = "yes" ]; then
+                        echo "Virtuoso SPARQL support cannot be enabled due to functionality tests!"
+                        echo " Turn on verbose messaging (-v) to $0 to see the final report."
+                        echo " If you believe this message is in error you may use the continue"
+                        echo " switch (-continue) to $0 to continue."
+                        exit 101
                     else
-                        if [ "$CFG_SPARQL_virtuoso" != "auto" ] && [ "$CFG_CONFIGURE_EXIT_ON_ERROR" = "yes" ]; then
-                            echo "Virtuoso SPARQL support cannot be enabled due to functionality tests!"
-                            echo " Turn on verbose messaging (-v) to $0 to see the final report."
-                            echo " If you believe this message is in error you may use the continue"
-                            echo " switch (-continue) to $0 to continue."
-                            exit 101
-                        else
-                            CFG_SPARQL_virtuoso=no
-                        fi
+                        CFG_SPARQL_virtuoso=no
                     fi
                 fi
             fi

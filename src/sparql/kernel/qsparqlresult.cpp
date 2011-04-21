@@ -73,9 +73,6 @@ public:
     \brief The QSparqlResult class provides an abstract interface for
     accessing the results of an executed QSparqlQuery.
 
-    \ingroup database
-    \inmodule QtSparql
-
     When QSparqlConnection::exec() is called, it asynchronously begins
     the execution of the given query. The returned result is in an
     unfinished state so that isFinished() returns false. When the execution
@@ -107,41 +104,9 @@ public:
 
 */
 
-/* this doc not included in doxygen...
-    These functions allow the programmer to move forward, backward
-    or arbitrarily through the rows returned by the query. If you
-    only need to move forward through the results (e.g., by using
-    next()), you can use setForwardOnly(), which will save a
-    significant amount of memory overhead and improve performance on
-    some databases. Once a finished query is positioned on a valid
-    row, data can be retrieved using value(). All data is
-    transferred from the SQL backend using QVariants.
-
-    For example:
-
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 7
-
-    To access the data returned by a query, use value(int). Each
-    field in the data returned by a \c SELECT statement is accessed
-    by passing the field's position in the statement, starting from
-    0. This makes using \c{SELECT *} queries inadvisable because the
-    order of the fields returned is indeterminate.
-
-    For the sake of efficiency, there are no functions to access a
-    field by name (unless you use prepared queries with names, as
-    explained below). To convert a field name into an index, use
-    resultRow().\l{QSparqlResultRow::indexOf()}{indexOf()}, for example:
-
-    \snippet doc/src/snippets/sparqlconnection/sparqlconnection.cpp 8
-
-    \sa QSparqlDriver
-*/
-
 /*!
     Creates a QSparqlResult. The result is empty, positioned at
     "before first row" and unfinished.
-
-    \sa driver()
 */
 
 QSparqlResult::QSparqlResult()
@@ -304,19 +269,15 @@ bool QSparqlResult::isFinished() const
 
   The following rules apply:
 
-  \list
-
-  \o If the result is currently located before the first row,
+  - If the result is currently located before the first row,
   e.g. immediately after a query is executed, an attempt is made to
   retrieve the first row.
 
-  \o If the result is currently located after the last row, there
+  - If the result is currently located after the last row, there
   is no change and false is returned.
 
-  \o If the result is located somewhere in the middle, an attempt is
+  - If the result is located somewhere in the middle, an attempt is
   made to retrieve the next row.
-
-  \endlist
 
   If the row could not be retrieved, the result is positioned after
   the last row and false is returned. If the row is successfully
@@ -369,18 +330,14 @@ bool QSparqlResult::next()
 
   The following rules apply:
 
-  \list
-
-  \o If the result is currently located before the first row, there
+  - If the result is currently located before the first row, there
   is no change and false is returned.
 
-  \o If the result is currently located after the last row, an
+  - If the result is currently located after the last row, an
   attempt is made to retrieve the last row.
 
-  \o If the result is somewhere in the middle, an attempt is made to
+  - If the result is somewhere in the middle, an attempt is made to
   retrieve the previous row.
-
-  \endlist
 
   If the row could not be retrieved, the result is positioned
   before the first row and false is returned. If the row is
@@ -444,12 +401,11 @@ bool QSparqlResult::first()
 
 /*!
 
-  Retrieves the last row in the result, if available, and positions
-  the query on the retrieved row. Note that the result must be in
-  the \l{isFinished()}{finished} state before calling this function or
-  it will do nothing and return false.  Returns true if successful. If
-  unsuccessful the query position is set to an invalid position and
-  false is returned.
+  Retrieves the last row in the result, if available, and positions the query on
+  the retrieved row. Note that the result must be in the finished state before
+  calling this function or it will do nothing and return false. Returns true if
+  successful. If unsuccessful the query position is set to an invalid position
+  and false is returned.
 
   \sa next() previous() first() setPos() pos() isFinished() isValid()
 */
@@ -490,13 +446,7 @@ int QSparqlResult::size() const
     Returns the binding \a index in the current result row.
 
     The bindings are numbered from left to right using the text of the
-    \c SELECT statement, e.g. in
-
-    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 0
-
-    binding 0 is \c forename and binding 1 is \c
-    surname. Using \c{SELECT *} is not recommended because the order
-    of the fields in the query is undefined.
+    \c SELECT statement. The indexes start from 0.
 
     An invalid QSparqlBinding is returned if binding \a index does not
     exist, if the query is inactive, or if the query is positioned on
@@ -511,13 +461,7 @@ int QSparqlResult::size() const
     Returns the value of binding \a index in the current result row.
 
     The binding values are numbered from left to right using the text of the
-    \c SELECT statement, e.g. in
-
-    \snippet doc/src/snippets/code/src_sparql_kernel_qsparqlquery.cpp 0
-
-    field 0 is \c forename and field 1 is \c
-    surname. Using \c{SELECT *} is not recommended because the order
-    of the fields in the query is undefined.
+    \c SELECT statement. The indexes start from 0.
 
     An invalid QVariant is returned if binding value \a index does not
     exist, if the query is inactive, or if the query is positioned on
@@ -635,13 +579,18 @@ QSparqlError QSparqlResult::lastError() const
     features depend on the driver and whether the result was obtained via
     QSparqlConnection::exec() or QSparqlConnection::syncExec().
 
-    \value QuerySize Whether the QSparqlResult can report the number of results
-    of the query.
+    \var QSparqlResult::Feature QSparqlResult::QuerySize
 
-    \value ForwardOnly Whether the result can only be navigated forward (i.e.,
-    using QSparqlResult::next()).
+    Whether the QSparqlResult can report the number of results of the query.
 
-    \value Sync Whether the result is natively synchronous (was retrieved via
+    \var QSparqlResult::Feature QSparqlResult::ForwardOnly
+
+    Whether the result can only be navigated forward (i.e., using
+    QSparqlResult::next()).
+
+    \var QSparqlResult::Feature QSparqlResult::Sync
+
+    Whether the result is natively synchronous (was retrieved via
     QSparqlConnection::syncExec() of natively synchronous connection). In this
     case, QSparqlResult::next() will fetch the next result synchronously.
 

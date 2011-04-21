@@ -5,6 +5,8 @@
 
 namespace {
 
+    int testLogLevel = QtWarningMsg;
+
     void myMessageOutput(QtMsgType type, const char *msg)
     {
         switch (type) {
@@ -63,6 +65,11 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 void TrackerDirectCommon::installMsgHandler()
 {
     qInstallMsgHandler(myMessageOutput);
+}
+
+void TrackerDirectCommon::setMsgLogLevel(int logLevel)
+{
+    testLogLevel = logLevel;
 }
 
 void TrackerDirectCommon::query_contacts()
@@ -166,7 +173,7 @@ void TrackerDirectCommon::query_with_error()
 void TrackerDirectCommon::iterate_result()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -189,7 +196,7 @@ void TrackerDirectCommon::iterate_result()
 void TrackerDirectCommon::iterate_result_rows()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -208,7 +215,7 @@ void TrackerDirectCommon::iterate_result_rows()
 void TrackerDirectCommon::iterate_result_bindings()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -236,7 +243,7 @@ void TrackerDirectCommon::iterate_result_bindings()
 void TrackerDirectCommon::iterate_result_values()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -264,7 +271,7 @@ void TrackerDirectCommon::iterate_result_values()
 void TrackerDirectCommon::iterate_result_stringValues()
 {
     // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, iterateResultsQuery);
     QVERIFY(r);
@@ -617,7 +624,7 @@ void TrackerDirectCommon::datatypes_as_properties_data()
     // string representation of the value, inserted into the query
     QTest::addColumn<QString>("string");
     // Expected value: what QVariant we should get back
-    QTest::addColumn<QVariant>("value");
+    QTest::addColumn<QVariant>("expectedValue");
     // Expected value: data type uri of the constructed QSparqlBinding
     QTest::addColumn<QString>("dataTypeUri");
 
@@ -634,7 +641,7 @@ void TrackerDirectCommon::datatypes_as_properties()
     QFETCH(QString, property);
     QFETCH(QString, classes);
     QFETCH(QString, string);
-    QFETCH(QVariant, value);
+    QFETCH(QVariant, expectedValue);
     QFETCH(QString, dataTypeUri);
 
     QSparqlConnection conn("QTRACKER_DIRECT");
@@ -661,7 +668,7 @@ void TrackerDirectCommon::datatypes_as_properties()
     CHECK_ERROR(r);
 
     QVERIFY(r->next());
-    QVariant val = r->value(0);
+    QVariant value = r->value(0);
     QSparqlBinding binding = r->binding(0);
     QVERIFY(!r->next());
 
@@ -672,12 +679,22 @@ void TrackerDirectCommon::datatypes_as_properties()
     CHECK_ERROR(deleteResult);
     delete deleteResult;
 
-    QCOMPARE(val, value);
-    QCOMPARE(val.type(), value.type());
-    QCOMPARE(binding.value(), value);
-    QCOMPARE(binding.value().type(), value.type());
+    QCOMPARE(value.type(), expectedValue.type());
+    QCOMPARE(binding.value().type(), expectedValue.type());
     QCOMPARE(binding.name(), QString("value"));
     QCOMPARE(binding.dataTypeUri().toString(), dataTypeUri);
+
+    // Compare the actual values fuzzily, QCOMPARE with QVariant doesn't do that
+    // (though QCOMPARE with doubles does).
+    if (expectedValue.type() == QVariant::Double) {
+        QCOMPARE(value.toDouble(), expectedValue.toDouble());
+        QCOMPARE(binding.value().toDouble(), expectedValue.toDouble());
+    }
+    else {
+        QCOMPARE(value, expectedValue);
+        QCOMPARE(binding.value(), expectedValue);
+    }
+
     delete r;
 }
 

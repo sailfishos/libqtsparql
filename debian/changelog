@@ -1,8 +1,15 @@
-libqtsparql (0.0.23~unreleased) unstable; urgency=low
+libqtsparql (0.0.24~unreleased) unstable; urgency=low
 
-  *
+  * 
 
- -- Marja Hölttä <marja.holtta@nokia.com>  Tue, 19 Apr 2011 09:35:08 +0300
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Wed, 21 Apr 2011 09:43:00 +0300
+
+libqtsparql (0.0.23) unstable; urgency=low
+
+  * Fixes: NB#228899
+  * Fix Virtuoso driver build
+
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Wed, 20 Apr 2011 17:47:00 +0300
 
 libqtsparql (0.0.22) unstable; urgency=low
 

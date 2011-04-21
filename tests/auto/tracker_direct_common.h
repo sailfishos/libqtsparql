@@ -53,6 +53,7 @@ class TrackerDirectCommon : public QObject
         TrackerDirectCommon();
         virtual ~TrackerDirectCommon();
         void installMsgHandler();
+        void setMsgLogLevel(int logLevel);
 
     private:
         QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
@@ -81,10 +82,6 @@ class TrackerDirectCommon : public QObject
         void datatypes_as_properties_data();
         void datatypes_as_properties();
 };
-
-namespace {
-    int testLogLevel = QtWarningMsg;
-} // end unnamed namespace
 
 class TestData : public QObject {
     Q_OBJECT

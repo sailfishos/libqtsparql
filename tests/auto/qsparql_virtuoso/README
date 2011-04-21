@@ -1,0 +1,23 @@
+To pass the virtuoso tests :
+
+1) Download and build virtuoso from http://sourceforge.net/projects/virtuoso/
+     
+2) Start the server using ./bin/virtuoso-t +foreground +configfile /path/to/virtuoso.ini (the default installation location is /usr/local/virtuoso-opensource, ./bin/virtuoso-t +foreground +configfile ./var/lib/virtuoso/db/virtuoso.ini should work there)
+     
+3) Test it's up and running by going to http://localhost:8890/conductor/, default username/password is dba/dba
+     
+4) Permissions need to be set before you can run insert, update and delete sparql queries, you can do this by running ./bin/isql 1111 dba dba in the virtuoso root (unixODBC has it's own isql, so make sure you're not running this!), where 1111 is the port number (this will work unless you changed it in virtuoso.ini). Now run :
+     
+	GRANT EXECUTE ON SPARQL_INSERT_DICT_CONTENT TO "SPARQL";
+	GRANT EXECUTE ON SPARQL_UPDATE_DICT_CONTENT TO "SPARQL";
+	GRANT EXECUTE ON SPARQL_DELETE_DICT_CONTENT TO "SPARQL";
+     
+You can test sparql queries by using http://localhost:8890/sparql
+     
+5) Import the test data using ./bin/isql 111 dba dba /path/to/tests/auto/qsparql_virtuoso/add_data.rq
+     
+6) Edit the settings file "settings", change the port number and location of your virtuoso odbc driver
+     
+Virtuoso tests should now execute and pass (assuming you have built the virtuoso driver, requires libiodbc). Clean the test data by passing clean_data.rq to isql  
+
+
