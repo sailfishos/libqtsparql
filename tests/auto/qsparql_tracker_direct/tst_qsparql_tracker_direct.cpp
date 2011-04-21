@@ -114,6 +114,7 @@ private slots:
 
     void destroy_connection_before_result();
     void destroy_connection_before_result_data();
+    void destroy_connection_waitForFinished();
     void destroy_connection_verify_result();
     void destroy_connection_verify_result_async();
     void destroy_connection_partially_iterated_results();
@@ -1276,8 +1277,32 @@ void tst_QSparqlTrackerDirect::destroy_connection_before_result_data()
     QTest::newRow("Direct connection") << 1000;
 }
 
+void tst_QSparqlTrackerDirect::destroy_connection_waitForFinished()
+{
+    setMsgLogLevel(QtCriticalMsg);
+    const QString connectionType("QTRACKER_DIRECT");
+    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                         "nco:nameGiven ?ng .}");
+    QSparqlConnection* conn = new QSparqlConnection(connectionType);
+    //wait for the connection to open
+    QTest::qWait(1000);
+
+    QSparqlResult* r = conn->exec(q);
+    r->setParent(this);
+    delete conn; conn = 0;
+    QTest::qWait(500);
+
+    r->waitForFinished();
+    QVERIFY(r != 0);
+
+    CHECK_ERROR(r);
+    delete r;
+}
+
 void tst_QSparqlTrackerDirect::destroy_connection_verify_result()
 {
+    setMsgLogLevel(QtCriticalMsg);
     const QString connectionType("QTRACKER_DIRECT");
     const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                          "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
@@ -1315,6 +1340,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_verify_result()
 
 void tst_QSparqlTrackerDirect::destroy_connection_verify_result_async()
 {
+    setMsgLogLevel(QtCriticalMsg);
     const QString connectionType("QTRACKER_DIRECT");
     const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                          "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
