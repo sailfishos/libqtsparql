@@ -72,6 +72,64 @@ void TrackerDirectCommon::setMsgLogLevel(int logLevel)
     testLogLevel = logLevel;
 }
 
+bool TrackerDirectCommon::setupData()
+{
+    const QString insertQueryTemplate =
+        "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
+        "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+        "nco:nameGiven \"name00%1\" .";
+    QString insertQuery = "insert { <qsparql-tracker-direct-tests> a nie:InformationElement .";
+    for (int item = 1; item <= 3; item++) {
+        insertQuery.append( insertQueryTemplate.arg(item) );
+    }
+    insertQuery.append("<uri004> a nie:DataObject , nie:InformationElement ;"
+                       "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                       "tracker:available true ."
+                       "<uri005> a nie:DataObject , nie:InformationElement ;"
+                       "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                       "tracker:available false .");
+    insertQuery.append(" }");
+
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q(insertQuery,
+                   QSparqlQuery::InsertStatement);
+    QSparqlResult* r = conn.exec(q);
+    if (r == 0)
+    {
+        qWarning() << "Error when inserting setup data for the test case - conn.exec() returned 0";
+        return false;
+    }
+    r->waitForFinished();
+    if (r->hasError()) {
+        qWarning() << "Error when inserting setup data for the test case: " << r->lastError().message();
+        return false;
+    }
+    delete r;
+    return true;
+}
+
+bool TrackerDirectCommon::cleanData()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
+                    "WHERE { ?u nie:isLogicalPartOf <qsparql-tracker-direct-tests> . }"
+                    "DELETE { <qsparql-tracker-direct-tests> a rdfs:Resource . }",
+                    QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    if (r == 0)
+    {
+        qWarning() << "Error when deleting test data from tracker - conn.exec() returned 0";
+        return false;
+    }
+    r->waitForFinished();
+    if (r->hasError()) {
+        qWarning() << "Error when deleting test data from tracker: " << r->lastError().message();
+        return false;
+    }
+    delete r;
+    return true;
+}
+
 void TrackerDirectCommon::query_contacts()
 {
     QSparqlConnection conn("QTRACKER_DIRECT");

@@ -110,14 +110,18 @@ bool tst_QSparqlTrackerDirectSync::checkResultSize(QSparqlResult* r, int s){
 
 void tst_QSparqlTrackerDirectSync::initTestCase()
 {
+    // clean any remainings
+    QVERIFY(cleanData() != 0);
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     installMsgHandler();
+    QVERIFY(setupData() != 0);
 }
 
 void tst_QSparqlTrackerDirectSync::cleanupTestCase()
 {
+    QVERIFY(cleanData() != 0);
 }
 
 void tst_QSparqlTrackerDirectSync::init()

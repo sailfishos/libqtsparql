@@ -54,6 +54,8 @@ class TrackerDirectCommon : public QObject
         virtual ~TrackerDirectCommon();
         void installMsgHandler();
         void setMsgLogLevel(int logLevel);
+        bool setupData();
+        bool cleanData();
 
     private:
         QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
