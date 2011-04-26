@@ -1,10 +1,10 @@
-libqtsparql (0.0.24~unreleased) unstable; urgency=low
+libqtsparql (0.0.24) unstable; urgency=low
 
   * Fixes: NB#248316
   * Tracker direct driver fix: Don't crash if Result is reparented and
     Connection is deleted before Result.
 
- -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Wed, 21 Apr 2011 09:43:00 +0300
+ -- Marja Hölttä <marja.holtta@nokia.com>  Tue, 26 Apr 2011 11:32:41 +0300
 
 libqtsparql (0.0.23) unstable; urgency=low
 
