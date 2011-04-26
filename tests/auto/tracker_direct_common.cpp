@@ -159,6 +159,8 @@ void TrackerDirectCommon::insert_and_delete_contact()
 
 void TrackerDirectCommon::query_with_error()
 {
+    // This test will print out warnings
+    setMsgLogLevel(QtCriticalMsg);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery q("this is not a valid query");
     QSparqlResult* r = execQuery(conn, q);
