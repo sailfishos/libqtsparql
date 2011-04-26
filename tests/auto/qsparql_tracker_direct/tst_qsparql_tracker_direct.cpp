@@ -418,19 +418,8 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     QSparqlConnectionOptions opts;
     opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
-    const QSparqlQuery q(
-        QString("select tracker:id(?musicPiece) ?title ?performer ?album ?duration ?created "
-            "{ "
-            "?musicPiece a nmm:MusicPiece; "
-            "nie:isLogicalPartOf %1; "
-            "nie:title ?title; "
-            "nmm:performer ?performer; "
-            "nmm:musicAlbum ?album; "
-            "nfo:duration ?duration; "
-            "nie:contentCreated ?created. "
-            "} order by ?title ?created").arg(testTag));
 
-    QSparqlResult* r = conn.exec(q);
+    QSparqlResult* r = conn.exec(testData->selectQuery());
     QVERIFY(r != 0);
     CHECK_ERROR(r);
 
@@ -1390,19 +1379,8 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
     //run this bit serveral times since we are checking for threading issues
     for(int i=0;i<20;++i) {
         QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
-        const QSparqlQuery q(
-            QString("select tracker:id(?musicPiece) ?title ?performer ?album ?duration ?created "
-                "{ "
-                "?musicPiece a nmm:MusicPiece; "
-                "nie:isLogicalPartOf %1; "
-                "nie:title ?title; "
-                "nmm:performer ?performer; "
-                "nmm:musicAlbum ?album; "
-                "nfo:duration ?duration; "
-                "nie:contentCreated ?created. "
-                "} order by ?title ?created").arg(testTag));
 
-        QSparqlResult* r = conn->exec(q);
+        QSparqlResult* r = conn->exec(testData->selectQuery());
         r->setParent(this);
         QVERIFY(r != 0);
         CHECK_ERROR(r);

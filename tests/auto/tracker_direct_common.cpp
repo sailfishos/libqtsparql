@@ -701,12 +701,14 @@ void TrackerDirectCommon::datatypes_as_properties()
 class TestDataImpl : public TestData {
 
 public:
-    TestDataImpl(const QSparqlQuery& cleanupQuery);
+    TestDataImpl(const QSparqlQuery& cleanupQuery, const QSparqlQuery& selectQuery);
     ~TestDataImpl();
     void setOK();
     bool isOK() const;
+    QSparqlQuery selectQuery() const;
 private:
     QSparqlQuery cleanupQuery;
+    QSparqlQuery selectQuery_;
     bool ok;
 };
 
@@ -752,7 +754,19 @@ TestData* createTestData(int testDataAmount, const QString& testTag)
             "}").arg(testTag),
         QSparqlQuery::DeleteStatement);
 
-    TestDataImpl* testData = new TestDataImpl(cleanupQuery);
+    const QSparqlQuery selectQuery(
+        QString("select tracker:id(?musicPiece) ?title ?performer ?album ?duration ?created "
+            "{ "
+            "?musicPiece a nmm:MusicPiece; "
+            "nie:isLogicalPartOf %1; "
+            "nie:title ?title; "
+            "nmm:performer ?performer; "
+            "nmm:musicAlbum ?album; "
+            "nfo:duration ?duration; "
+            "nie:contentCreated ?created. "
+            "} order by ?title ?created").arg(testTag));
+
+    TestDataImpl* testData = new TestDataImpl(cleanupQuery, selectQuery);
 
     for (int item = 1; item <= testDataAmount; ) {
         QString insertQuery = "insert { ";
@@ -772,8 +786,8 @@ TestData* createTestData(int testDataAmount, const QString& testTag)
     return testData;
 }
 
-TestDataImpl::TestDataImpl(const QSparqlQuery& cleanupQuery)
-    : cleanupQuery(cleanupQuery), ok(false)
+TestDataImpl::TestDataImpl(const QSparqlQuery& cleanupQuery, const QSparqlQuery& selectQuery)
+    : cleanupQuery(cleanupQuery), selectQuery_(selectQuery), ok(false)
 {
 }
 
@@ -791,5 +805,10 @@ void TestDataImpl::setOK()
 bool TestDataImpl::isOK() const
 {
     return ok;
+}
+
+QSparqlQuery TestDataImpl::selectQuery() const
+{
+    return selectQuery_;
 }
 

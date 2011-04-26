@@ -88,6 +88,7 @@ class TestData : public QObject {
 public:
     virtual ~TestData() { }
     virtual bool isOK() const =0;
+    virtual QSparqlQuery selectQuery() const = 0;
 };
 
 TestData* createTestData(int testDataAmount, const QString& testTag);
