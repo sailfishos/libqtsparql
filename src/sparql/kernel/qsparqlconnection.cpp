@@ -418,6 +418,11 @@ QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) c
     QSparqlConnection has been deleted, the QSparqlResult is no longer valid
     (and doesn't need to be freed).
 
+    If you change the parent of a returned result, you must be responsible for
+    deleting the result, and ensuring the connection is destroyed AFTER the QSparqlResult
+    have been deleted. Deleting the connection before the QSparqlResult will invalidate the results,
+    do not do this.
+
     If \a query is empty or if the this QSparqlConnection is not
     valid, exec() returns a QSparqlResult which is in the error
     state. It won't emit the finished() signal.
