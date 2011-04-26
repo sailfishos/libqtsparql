@@ -111,49 +111,17 @@ bool tst_QSparqlTrackerDirectSync::checkResultSize(QSparqlResult* r, int s){
 void tst_QSparqlTrackerDirectSync::initTestCase()
 {
     // clean any remainings
-    cleanupTestCase();
+    QVERIFY(cleanData() != 0);
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     installMsgHandler();
-    const QString insertQueryTemplate =
-        "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
-        "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-        "nco:nameGiven \"name00%1\" .";
-    QString insertQuery = "insert { <qsparql-tracker-direct-tests> a nie:InformationElement .";
-    for (int item = 1; item <= 3; item++) {
-        insertQuery.append( insertQueryTemplate.arg(item) );
-    }
-    insertQuery.append("<uri004> a nie:DataObject , nie:InformationElement ;"
-                       "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                       "tracker:available true ."
-                       "<uri005> a nie:DataObject , nie:InformationElement ;"
-                       "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                       "tracker:available false .");
-    insertQuery.append(" }");
-
-    QSparqlConnection conn("QTRACKER");
-    QSparqlQuery q(insertQuery,
-                   QSparqlQuery::InsertStatement);
-    QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    delete r;
+    QVERIFY(setupData() != 0);
 }
 
 void tst_QSparqlTrackerDirectSync::cleanupTestCase()
 {
-    QSparqlConnection conn("QTRACKER");
-    QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
-                    "WHERE { ?u nie:isLogicalPartOf <qsparql-tracker-direct-tests> . }"
-                    "DELETE { <qsparql-tracker-direct-tests> a rdfs:Resource . }",
-                    QSparqlQuery::DeleteStatement);
-    QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
-    r->waitForFinished();
-    CHECK_ERROR(r);
-    delete r;
+    QVERIFY(cleanData() != 0);
 }
 
 void tst_QSparqlTrackerDirectSync::init()
