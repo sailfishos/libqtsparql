@@ -114,12 +114,14 @@ tst_QSparqlTracker::~tst_QSparqlTracker()
 
 void tst_QSparqlTracker::initTestCase()
 {
-    // clean any remainings
-    cleanupTestCase();
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     qInstallMsgHandler(myMessageOutput);
+
+    // clean any remainings
+    cleanupTestCase();
+
     const QString insertQueryTemplate =
         "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
         "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
