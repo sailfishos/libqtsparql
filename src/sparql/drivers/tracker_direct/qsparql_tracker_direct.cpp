@@ -41,12 +41,12 @@
 
 #include "qsparql_tracker_direct_p.h"
 #include "qsparql_tracker_direct_result_p.h"
+#include "qsparql_tracker_direct_sync_result_p.h"
 
 #include <qsparqlbinding.h>
 #include <qsparqlresultrow.h>
 #include <qsparqlconnection.h>
 
-#include <QtCore/qvariant.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qeventloop.h>
@@ -54,14 +54,6 @@
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
-
-// TODO: centralize the xsd uris into one place
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
-}
-
-////////////////////////////////////////////////////////////////////////////
 
 // Helper functions used both by QTrackerDirectResult and
 // QTrackerDirectSyncResult
@@ -336,207 +328,6 @@ int QTrackerDirectUpdateResult::size() const
 QSparqlResultRow QTrackerDirectUpdateResult::current() const
 {
     return QSparqlResultRow();
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-struct QTrackerDirectSyncResultPrivate 
-{
-    QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp);
-    ~QTrackerDirectSyncResultPrivate();
-    TrackerSparqlCursor* cursor;
-    int n_columns;
-    QTrackerDirectDriverPrivate *driverPrivate;
-};
-
-QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp)
-    : cursor(0), n_columns(-1), driverPrivate(dpp)
-{
-}
-
-QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
-{
-    if (cursor)
-        g_object_unref(cursor);
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p)
-{
-    d = new QTrackerDirectSyncResultPrivate(p);
-}
-
-QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
-{
-    delete d;
-}
-
-void QTrackerDirectSyncResult::exec()
-{
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
-                                  QSparqlError::ConnectionError));
-        return;
-    }
-
-    GError * error = 0;
-    d->cursor = tracker_sparql_connection_query(d->driverPrivate->connection, query().toUtf8().constData(), 0, &error);
-    if (error || !d->cursor) {
-        setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
-                        QSparqlError::StatementError,
-                        error ? error->code : -1));
-        if (error)
-            g_error_free(error);
-        qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
-    }
-}
-
-void QTrackerDirectSyncResult::update()
-{
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
-                                  QSparqlError::ConnectionError));
-        return;
-    }
-
-    GError * error = 0;
-    tracker_sparql_connection_update(d->driverPrivate->connection, query().toUtf8().constData(), 0, 0, &error);
-    if (error) {
-        setLastError(QSparqlError(QString::fromUtf8(error->message),
-                        errorCodeToType(error->code),
-                        error->code));
-        g_error_free(error);
-        qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
-    }
-}
-
-bool QTrackerDirectSyncResult::next()
-{
-    if (!d->cursor)
-        return false;
-
-    GError * error = 0;
-    const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
-
-    if (error) {
-        setLastError(QSparqlError(QString::fromUtf8(error->message),
-                       errorCodeToType(error->code),
-                       error->code));
-        g_error_free(error);
-        qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
-        g_object_unref(d->cursor);
-        d->cursor = 0;
-        return false;
-    }
-
-    if (!active) {
-        g_object_unref(d->cursor);
-        d->cursor = 0;
-        updatePos(QSparql::AfterLastRow);
-        return false;
-    }
-    const int oldPos = pos();
-    if (oldPos == QSparql::BeforeFirstRow)
-        updatePos(0);
-    else
-        updatePos(oldPos + 1);
-    return true;
-}
-
-QSparqlResultRow QTrackerDirectSyncResult::current() const
-{
-    // Note: this function reads and constructs the data again every time it's called.
-    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
-        return QSparqlResultRow();
-
-    QSparqlResultRow resultRow;
-    // get the no. of columns only once; it won't change between rows
-    if (d->n_columns < 0)
-        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
-
-    for (int i = 0; i < d->n_columns; i++) {
-        resultRow.append(binding(i));
-    }
-    return resultRow;
-}
-
-QSparqlBinding QTrackerDirectSyncResult::binding(int i) const
-{
-    // Note: this function reads and constructs the data again every time it's called.
-    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
-        return QSparqlBinding();
-
-    // get the no. of columns only once; it won't change between rows
-    if (d->n_columns < 0)
-        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
-
-    if (i < 0 || i >= d->n_columns)
-        return QSparqlBinding();
-
-    const gchar* name = tracker_sparql_cursor_get_variable_name(d->cursor, i);
-    const QVariant& value = readVariant(d->cursor, i);
-
-    // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
-    // but its data type uri should be xsd:integer. Set it manually here.
-    QSparqlBinding b;
-    b.setName(QString::fromUtf8(name));
-    if (value.type() == QVariant::LongLong) {
-        b.setValue(value.toString(), *XSD::Integer());
-    }
-    else {
-        b.setValue(value);
-    }
-    return b;
-}
-
-QVariant QTrackerDirectSyncResult::value(int i) const
-{
-    // Note: this function re-constructs the data every time it's called.
-    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
-        return QVariant();
-
-    // get the no. of columns only once; it won't change between rows
-    if (d->n_columns < 0)
-        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
-
-    if (i < 0 || i >= d->n_columns)
-        return QVariant();
-
-    return readVariant(d->cursor, i);
-}
-
-QString QTrackerDirectSyncResult::stringValue(int i) const
-{
-    if (!d->cursor || pos() == QSparql::BeforeFirstRow || pos() == QSparql::AfterLastRow)
-        return QString();
-
-    // get the no. of columns only once; it won't change between rows
-    if (d->n_columns < 0)
-        d->n_columns = tracker_sparql_cursor_get_n_columns(d->cursor);
-
-    if (i < 0 || i >= d->n_columns)
-        return QString();
-
-    return QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
-}
-
-bool QTrackerDirectSyncResult::isFinished() const
-{
-    return !d->cursor;
-}
-
-bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
-{
-    switch (feature) {
-    case QSparqlResult::Sync:
-    case QSparqlResult::ForwardOnly:
-        return true;
-    case QSparqlResult::QuerySize:
-        return false;
-    default:
-        return false;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////

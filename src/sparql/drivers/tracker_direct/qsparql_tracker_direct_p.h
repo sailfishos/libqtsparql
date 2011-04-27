@@ -67,9 +67,9 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectDriver;
+class QTrackerDirectResult;
 class QTrackerDirectResultPrivate;
 class QTrackerDirectUpdateResultPrivate;
-class QTrackerDirectSyncResultPrivate;
 
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public QSparqlResult
 {
@@ -101,36 +101,6 @@ private:
     Q_INVOKABLE void terminate();
 
     QTrackerDirectUpdateResultPrivate* d;
-};
-
-// A sync and forward-only Result class. The instance of this class is retreved
-// with QTrackerDirectDriver::syncExec().
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSparqlResult
-{
-    Q_OBJECT
-    friend class QTrackerDirectDriver;
-public:
-    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p);
-    ~QTrackerDirectSyncResult();
-
-    // Implementation of the QSparqlResult interface
-    virtual bool next();
-
-    virtual QSparqlResultRow current() const;
-    virtual QSparqlBinding binding(int i) const;
-    virtual QVariant value(int i) const;
-    virtual QString stringValue(int i) const;
-
-    virtual bool isFinished() const;
-
-    virtual bool hasFeature(QSparqlResult::Feature feature) const;
-    
-private Q_SLOTS:
-    void exec();
-    void update();
-
-private:
-    QTrackerDirectSyncResultPrivate* d;
 };
 
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectDriver : public QSparqlDriver
