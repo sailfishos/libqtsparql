@@ -51,6 +51,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qmutex.h>
+#include <QThreadPool>
 
 class QSparqlResult;
 
@@ -112,6 +113,8 @@ public:
     bool asyncOpenCalled;
     QString error;
     QList<QPointer<QTrackerDirectResult> > activeResults;
+
+    QThreadPool threadPool;
 };
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);

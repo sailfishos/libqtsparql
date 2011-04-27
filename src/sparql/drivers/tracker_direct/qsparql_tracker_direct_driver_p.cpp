@@ -257,6 +257,9 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     setOpen(true);
     setOpenError(false);
 
+    if (options.maxThreadCount() != -1)
+        d->threadPool.setMaxThreadCount(options.maxThreadCount());
+
     return true;
 }
 

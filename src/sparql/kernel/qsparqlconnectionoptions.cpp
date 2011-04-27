@@ -80,6 +80,7 @@ static QString dataReadyIntervalKey = QString::fromLatin1("dataReadyInterval");
 static QString userKey = QString::fromLatin1("user");
 static QString passwordKey = QString::fromLatin1("password");
 static QString databaseKey = QString::fromLatin1("database");
+static QString maxThreadKey = QString::fromLatin1("maxThread");
 
 template<> void QSharedDataPointer<QSparqlConnectionOptionsPrivate>::detach()
 {
@@ -227,6 +228,20 @@ void QSparqlConnectionOptions::setDataReadyInterval(int interval)
         qWarning() << "QSparqlConnectionOptions: invalid dataReady interval:" << interval;
 }
 
+/*!
+    Convenience function for setting the maximum number of
+    threads for the thread pool to use
+
+    \sa setOption()
+*/
+void QSparqlConnectionOptions::setMaxThreadCount(int p)
+{
+    if (p > 0)
+        setOption(maxThreadKey, p);
+    else
+        qWarning() << "QSparqlConnectionOptions: invalid maxThread amount:" << p;
+}
+
 #ifndef QT_NO_NETWORKPROXY
 /*!
     Convenience function for setting the QNetworkProxy. Valid
@@ -326,6 +341,17 @@ int QSparqlConnectionOptions::dataReadyInterval() const
 {
     QVariant v = option(dataReadyIntervalKey);
     return v.canConvert(QVariant::Int) ? v.toInt() : 1;
+}
+
+/*!
+    Convenience function for getting the max thread count.
+
+    \sa option()
+*/
+int QSparqlConnectionOptions::maxThreadCount() const
+{
+    QVariant v = option(maxThreadKey);
+    return v.canConvert(QVariant::Int) ? v.toInt() : -1;
 }
 
 /*!
