@@ -42,7 +42,7 @@
 #include <tracker-sparql.h>
 
 #include "qsparql_tracker_direct_sync_result_p.h"
-#include "qsparql_tracker_direct_p.h"
+#include "qsparql_tracker_direct_driver_p.h"
 #include "qsparql_tracker_direct_result_p.h"
 
 #include <qsparqlerror.h>

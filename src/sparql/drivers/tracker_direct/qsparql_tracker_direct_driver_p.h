@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_H
-#define QSPARQL_TRACKER_DIRECT_H
+#ifndef QSPARQL_TRACKER_DIRECT_DRIVER_P_H
+#define QSPARQL_TRACKER_DIRECT_DRIVER_P_H
 
 #include <tracker-sparql.h>
 
@@ -121,4 +121,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_DIRECT_H
+#endif // QSPARQL_TRACKER_DIRECT_DRIVER_P_H
