@@ -42,9 +42,8 @@
 #include "qsparql_tracker_direct_p.h"
 #include "qsparql_tracker_direct_result_p.h"
 #include "qsparql_tracker_direct_sync_result_p.h"
+#include "qsparql_tracker_direct_update_result_p.h"
 
-#include <qsparqlbinding.h>
-#include <qsparqlresultrow.h>
 #include <qsparqlconnection.h>
 
 #include <QtCore/qdatetime.h>
@@ -153,181 +152,6 @@ QSparqlError::ErrorType errorCodeToType(gint code)
     default:
         return QSparqlError::BackendError;
     }
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-class QTrackerDirectUpdateResultPrivate : public QObject {
-    Q_OBJECT
-public:
-    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp);
-
-    ~QTrackerDirectUpdateResultPrivate();
-    void terminate();
-    void setLastError(const QSparqlError& e);
-
-    QAtomicInt isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
-    QEventLoop *loop;
-
-    QTrackerDirectUpdateResult* q;
-    QTrackerDirectDriverPrivate *driverPrivate;
-};
-
-static void
-async_update_callback( GObject *source_object,
-                       GAsyncResult *result,
-                       gpointer user_data)
-{
-    Q_UNUSED(source_object);
-    QTrackerDirectUpdateResultPrivate *data = static_cast<QTrackerDirectUpdateResultPrivate*>(user_data);
-    if (!data->resultAlive) {
-        // The user has deleted the Result object before this callback was
-        // called. Just delete the ResultPrivate here and do nothing.
-        delete data;
-        return;
-    }
-
-    GError *error = 0;
-    tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
-
-    if (error) {
-        QSparqlError e(QString::fromUtf8(error->message));
-        e.setType(errorCodeToType(error->code));
-        e.setNumber(error->code);
-        data->setLastError(e);
-        g_error_free(error);
-    }
-
-    // A workaround for http://bugreports.qt.nokia.com/browse/QTBUG-18434
-
-    // We cannot emit the QSparqlResult::finished() signal directly here; so
-    // delay it and emit it the next time the main loop spins.
-    QMetaObject::invokeMethod(data->q, "terminate", Qt::QueuedConnection);
-}
-
-QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(   QTrackerDirectUpdateResult* result,
-                                                            QTrackerDirectDriverPrivate *dpp)
-  : resultAlive(true), loop(0),
-  q(result), driverPrivate(dpp)
-{
-}
-
-QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
-{
-}
-
-void QTrackerDirectUpdateResultPrivate::terminate()
-{
-    isFinished = 1;
-    q->Q_EMIT finished();
-
-    if (loop)
-        loop->exit();
-}
-
-void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
-{
-    q->setLastError(e);
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-
-QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
-                                           const QString& query,
-                                           QSparqlQuery::StatementType type)
-{
-    setQuery(query);
-    setStatementType(type);
-    d = new QTrackerDirectUpdateResultPrivate(this, p);
-}
-
-QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
-{
-    if (d->isFinished == 0) {
-        // We're deleting the Result before the async update has
-        // finished. There is a pending async callback that will be called at
-        // some point, and that will have our ResultPrivate as user_data. Don't
-        // delete the ResultPrivate here, but just mark that we're no longer
-        // alive. The callback will then delete the ResultPrivate.
-        d->resultAlive = false;
-        return;
-    }
-
-    delete d;
-}
-
-void QTrackerDirectUpdateResult::exec()
-{
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
-                                  QSparqlError::ConnectionError));
-        d->terminate();
-        return;
-    }
-
-    tracker_sparql_connection_update_async( d->driverPrivate->connection,
-                                            query().toUtf8().constData(),
-                                            0,
-                                            0,
-                                            async_update_callback,
-                                            d);
-}
-
-QSparqlBinding QTrackerDirectUpdateResult::binding(int /*field*/) const
-{
-    return QSparqlBinding();
-}
-
-QVariant QTrackerDirectUpdateResult::value(int /*field*/) const
-{
-    return QVariant();
-}
-
-void QTrackerDirectUpdateResult::waitForFinished()
-{
-    if (d->isFinished == 1)
-        return;
-
-    // We first need the connection to be ready before doing anything
-    if (!d->driverPrivate->asyncOpenCalled) {
-        QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
-        loop.exec();
-    }
-
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
-                                  QSparqlError::ConnectionError));
-        d->terminate();
-        return;
-    }
-
-    QEventLoop loop;
-    d->loop = &loop;
-    loop.exec();
-    d->loop = 0;
-}
-
-bool QTrackerDirectUpdateResult::isFinished() const
-{
-    return d->isFinished == 1;
-}
-
-void QTrackerDirectUpdateResult::terminate()
-{
-    d->terminate();
-}
-
-int QTrackerDirectUpdateResult::size() const
-{
-    return 0;
-}
-
-QSparqlResultRow QTrackerDirectUpdateResult::current() const
-{
-    return QSparqlResultRow();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -521,5 +345,3 @@ QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery
 }
 
 QT_END_NAMESPACE
-
-#include "qsparql_tracker_direct.moc"
