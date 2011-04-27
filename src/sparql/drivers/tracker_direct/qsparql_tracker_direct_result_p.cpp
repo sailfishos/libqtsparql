@@ -70,23 +70,44 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 // FIXME: refactor QTrackerDirectResult to use QTrackerDirectSyncResult +
 // sync->async wrapper.
 
-class QTrackerDirectFetcherPrivate : public QThread
+class QTrackerDirectFetcherPrivate : public QRunnable
 {
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res) { }
+    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), finished(0), started(0) { setAutoDelete(false); }
 
+    QAtomicInt finished;
+    QAtomicInt started;
+    QMutex runLock;
+    
     void run()
     {
-        if (result->runQuery()) {
-            if (result->isTable()) {
-                while (!result->isFinished() && result->fetchNextResult()) {
-                    ;
+        if(!finished && runLock.tryLock()) {
+            started=1;
+            if (result->runQuery()) {
+                if (result->isTable()) {
+                    while (!result->isFinished() && result->fetchNextResult()) {
+                        ;
+                    }
+                } else if (result->isBool()) {
+                    result->fetchBoolResult();
+                } else {
+                    result->terminate();
                 }
-            } else if (result->isBool()) {
-                result->fetchBoolResult();
-            } else {
-                result->terminate();
             }
+        }
+        else {
+            runLock.lock();
+        }
+        runLock.unlock();
+        finished=1;
+    }
+
+    void wait()
+    {
+        if(started && !finished)
+        {
+            runLock.lock();
+            runLock.unlock();
         }
     }
 
@@ -199,7 +220,7 @@ void QTrackerDirectResult::startFetcher()
     QMutexLocker resultLocker(&(d->resultMutex));
     if (d->fetcher && !d->fetcherStarted && !isFinished()) {
         d->fetcherStarted = true;
-        d->fetcher->start();
+        d->driverPrivate->threadPool.start(d->fetcher);
     }
 }
 
@@ -368,8 +389,8 @@ void QTrackerDirectResult::waitForFinished()
         return;
     }
 
-    startFetcher();
-    d->fetcher->wait();
+    //call fetcher run directly
+    d->fetcher->run();
 }
 
 bool QTrackerDirectResult::isFinished() const
