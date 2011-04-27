@@ -108,8 +108,8 @@ async_update_callback( GObject *source_object,
     QMetaObject::invokeMethod(data->q, "terminate", Qt::QueuedConnection);
 }
 
-QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(   QTrackerDirectUpdateResult* result,
-                                                            QTrackerDirectDriverPrivate *dpp)
+QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
+                                                                     QTrackerDirectDriverPrivate *dpp)
   : resultAlive(true), loop(0),
   q(result), driverPrivate(dpp)
 {

@@ -79,7 +79,7 @@ public:
     virtual bool isFinished() const;
 
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
-    
+
 private Q_SLOTS:
     void exec();
     void update();

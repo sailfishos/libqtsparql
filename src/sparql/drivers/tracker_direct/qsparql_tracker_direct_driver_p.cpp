@@ -295,13 +295,13 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         d->addActiveResult(result);
-        
+
         if (d->asyncOpenCalled) {
             result->exec();
         } else {
             connect(this, SIGNAL(opened()), result, SLOT(exec()));
         }
-        
+
         return result;
     } else {
         QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type);
@@ -311,7 +311,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
         } else {
             connect(this, SIGNAL(opened()), result, SLOT(exec()));
         }
-        
+
         return result;
     }
 }
