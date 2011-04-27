@@ -52,6 +52,7 @@
 #include <QtCore/qpointer.h>
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qsemaphore.h>
 #include <QtCore/qeventloop.h>
 
 #include <QtCore/qdebug.h>
@@ -73,17 +74,16 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 class QTrackerDirectFetcherPrivate : public QRunnable
 {
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), finished(0), started(0) { setAutoDelete(false); }
+    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), finished(0), semaphore(1) { setAutoDelete(false); }
 
     QAtomicInt finished;
-    QAtomicInt started;
-    QMutex runLock;
-    
+    QSemaphore semaphore;
+
     void run()
     {
-        if(!finished && runLock.tryLock()) {
-            started=1;
-            if (result->runQuery()) {
+        if(!finished)
+        {
+            if(result->runQuery()) {
                 if (result->isTable()) {
                     while (!result->isFinished() && result->fetchNextResult()) {
                         ;
@@ -95,20 +95,19 @@ public:
                 }
             }
         }
-        else {
-            runLock.lock();
-        }
-        runLock.unlock();
         finished=1;
+        semaphore.release(1);
+    }
+
+    bool acquireSemaphore()
+    {
+        return semaphore.tryAcquire(1); //acquire(1);
     }
 
     void wait()
     {
-        if(started && !finished)
-        {
-            runLock.lock();
-            runLock.unlock();
-        }
+        semaphore.acquire(1); //acquireSemaphore();
+        semaphore.release(1);
     }
 
 private:
@@ -220,7 +219,8 @@ void QTrackerDirectResult::startFetcher()
     QMutexLocker resultLocker(&(d->resultMutex));
     if (d->fetcher && !d->fetcherStarted && !isFinished()) {
         d->fetcherStarted = true;
-        d->driverPrivate->threadPool.start(d->fetcher);
+        if(d->fetcher->acquireSemaphore())
+            d->driverPrivate->threadPool.start(d->fetcher);
     }
 }
 
@@ -390,7 +390,10 @@ void QTrackerDirectResult::waitForFinished()
     }
 
     //call fetcher run directly
-    d->fetcher->run();
+    if(d->fetcher->acquireSemaphore())
+        d->fetcher->run();
+    else
+        d->fetcher->wait();
 }
 
 bool QTrackerDirectResult::isFinished() const

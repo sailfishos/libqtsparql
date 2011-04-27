@@ -118,6 +118,8 @@ private slots:
     void destroy_connection_verify_result();
     void destroy_connection_verify_result_async();
     void destroy_connection_partially_iterated_results();
+
+    void waitForFinished_after_dataReady();
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -1401,6 +1403,39 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
         delete r;
     }
 }
+//todo add a test to validate a lot of results match the results from the threadpool
+
+void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
+{
+    setMsgLogLevel(QtCriticalMsg);
+    const int testDataAmount = 2000;
+    const QString testTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QTest::qWait(1000);
+    QVERIFY( testData->isOK() );
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1);
+
+    //run this bit serveral times since we are checking for threading issues
+    for(int i=0;i<20;++i) {
+        QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
+
+        QSparqlResult* r = conn->exec(testData->selectQuery());
+        QVERIFY(r != 0);
+        CHECK_ERROR(r);
+
+        QSignalSpy spy(r, SIGNAL(dataReady(int)));
+        QTest::qWait(1);
+        while (spy.count() < 2)
+            QTest::qWait(1);
+        // Verify that the query is really deleted mid-way through
+        QVERIFY(!r->isFinished());
+        r->waitForFinished();
+        QCOMPARE(r->size(), testDataAmount);
+        delete conn; 
+    }
+}
+
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"
