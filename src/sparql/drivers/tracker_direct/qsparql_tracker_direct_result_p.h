@@ -39,21 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_H
-#define QSPARQL_TRACKER_DIRECT_H
+#ifndef QSPARQL_TRACKER_DIRECT_RESULT_P_H
+#define QSPARQL_TRACKER_DIRECT_RESULT_P_H
 
-#include <tracker-sparql.h>
-
-#include <QtSparql/private/qsparqldriver_p.h>
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
-#include <QtSparql/qsparqlerror.h>
-
-#include <QtCore/qlist.h>
-#include <QtCore/qpointer.h>
-#include <QtCore/qmutex.h>
-
-class QTrackerDirectResult;
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
@@ -69,20 +59,20 @@ class QTrackerDirectDriverPrivate;
 class QTrackerDirectDriver;
 class QTrackerDirectResultPrivate;
 class QTrackerDirectUpdateResultPrivate;
-class QTrackerDirectSyncResultPrivate;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public QSparqlResult
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
     friend class QTrackerDirectDriver;
     friend class QTrackerDirectResultPrivate; // for emitting signals
     friend class QTrackerDirectUpdateResultPrivate;
 public:
-    explicit QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
+    explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
                                   QSparqlQuery::StatementType type);
-    ~QTrackerDirectUpdateResult();
+    ~QTrackerDirectResult();
 
+    Q_INVOKABLE void startFetcher();
     bool runQuery();
 
     // Implementation of the QSparqlResult interface
@@ -98,92 +88,17 @@ private Q_SLOTS:
     void exec();
 
 private:
-    Q_INVOKABLE void terminate();
+    void terminate();
+    void stopAndWait();
+    bool fetchNextResult();
+    bool fetchBoolResult();
 
-    QTrackerDirectUpdateResultPrivate* d;
+    QTrackerDirectResultPrivate* d;
+    friend class QTrackerDirectFetcherPrivate;
 };
-
-// A sync and forward-only Result class. The instance of this class is retreved
-// with QTrackerDirectDriver::syncExec().
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSparqlResult
-{
-    Q_OBJECT
-    friend class QTrackerDirectDriver;
-public:
-    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p);
-    ~QTrackerDirectSyncResult();
-
-    // Implementation of the QSparqlResult interface
-    virtual bool next();
-
-    virtual QSparqlResultRow current() const;
-    virtual QSparqlBinding binding(int i) const;
-    virtual QVariant value(int i) const;
-    virtual QString stringValue(int i) const;
-
-    virtual bool isFinished() const;
-
-    virtual bool hasFeature(QSparqlResult::Feature feature) const;
-    
-private Q_SLOTS:
-    void exec();
-    void update();
-
-private:
-    QTrackerDirectSyncResultPrivate* d;
-};
-
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectDriver : public QSparqlDriver
-{
-    Q_OBJECT
-public:
-    explicit QTrackerDirectDriver(QObject *parent=0);
-    ~QTrackerDirectDriver();
-
-    // Implementation of the QSparqlDriver interface
-    bool hasFeature(QSparqlConnection::Feature f) const;
-    bool open(const QSparqlConnectionOptions& options);
-    void close();
-    QSparqlResult* exec(const QString& query,
-                         QSparqlQuery::StatementType type);
-    QSparqlResult* syncExec(const QString& query,
-                            QSparqlQuery::StatementType type);
-
-Q_SIGNALS:
-    void opened();
-
-private:
-    friend class QTrackerDirectDriverPrivate;
-    QTrackerDirectDriverPrivate* d;
-};
-
-class QTrackerDirectDriverPrivate {
-public:
-    QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver);
-    ~QTrackerDirectDriverPrivate();
-
-    void setOpen(bool open);
-    void opened();
-    void addActiveResult(QTrackerDirectResult* result);
-
-    TrackerSparqlConnection *connection;
-    int dataReadyInterval;
-    // This mutex is for ensuring that only one thread at a time
-    // is using the connection to make tracker queries. This mutex
-    // probably isn't needed as a TrackerSparqlConnection is
-    // already thread safe.
-    QMutex connectionMutex;
-    QTrackerDirectDriver *driver;
-    bool asyncOpenCalled;
-    QString error;
-    QList<QPointer<QTrackerDirectResult> > activeResults;
-};
-
-QVariant readVariant(TrackerSparqlCursor* cursor, int col);
-QSparqlError::ErrorType errorCodeToType(gint code);
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_DIRECT_H
+#endif // QSPARQL_TRACKER_DIRECT_RESULT_P_H
