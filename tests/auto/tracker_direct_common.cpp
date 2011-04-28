@@ -833,6 +833,15 @@ TestData* createTestData(int testDataAmount, const QString& testSuiteTag, const 
 
     TestDataImpl* testData = new TestDataImpl(cleanupQuery, selectQuery);
 
+    QString insertTagsQuery = QString("insert { %1 a nie:InformationElement. "
+                                               "%2 a nie:InformationElement. "
+                                               "%2 nie:isLogicalPartOf %1. }")
+                                        .arg(testSuiteTag).arg(testCaseTag);
+    QScopedPointer<QSparqlResult> r(conn.syncExec(QSparqlQuery(insertTagsQuery, QSparqlQuery::InsertStatement)));
+    if (r.isNull() || r->hasError())
+        return testData;
+    r.reset();
+
     for (int item = 1; item <= testDataAmount; ) {
         QString insertQuery = "insert { ";
         int itemDozen = 10;
