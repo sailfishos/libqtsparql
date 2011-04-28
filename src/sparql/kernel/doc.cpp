@@ -139,6 +139,11 @@
     QTRACKER_DIRECT driver supports the following connection options:
     - custom: "dataReadyInterval" (int, default 1), controls the interval for
       emitting the dataReady signal.
+    - custom: "maxThread" (int), sets the maximum number of threads for the
+      thread pool to use. If not set the system default of the number of cores
+      available will be used.
+    - custom: "threadExpiry" (int, default 2000), controls the expiry time
+      (in milliseconds) of the threads created by the thread pool.
 
     QENDPOINT driver supports the following connection options:
     - hostName (QString)
