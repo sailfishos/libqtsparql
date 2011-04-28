@@ -81,6 +81,7 @@ public:
 
     void run()
     {
+        //check to make sure we are not going to do this twice
         if(!finished)
         {
             if(result->runQuery()) {
@@ -101,12 +102,14 @@ public:
 
     bool acquireSemaphore()
     {
-        return semaphore.tryAcquire(1); //acquire(1);
+        return semaphore.tryAcquire(1);
     }
 
     void wait()
     {
-        semaphore.acquire(1); //acquireSemaphore();
+        //if something has has acquired the semaphore (eg the fetcher thread)
+        //this will block until it is released in run
+        semaphore.acquire(1);
         semaphore.release(1);
     }
 
@@ -219,6 +222,9 @@ void QTrackerDirectResult::startFetcher()
     QMutexLocker resultLocker(&(d->resultMutex));
     if (d->fetcher && !d->fetcherStarted && !isFinished()) {
         d->fetcherStarted = true;
+        //first attempt to acquire the semaphore, if we can, then add the
+        //fetcher to the threadPool queue, if we can't then waitForFinished
+        //has it, so we don't need to refetch the results using this thread
         if(d->fetcher->acquireSemaphore())
             d->driverPrivate->threadPool.start(d->fetcher);
     }
@@ -389,7 +395,9 @@ void QTrackerDirectResult::waitForFinished()
         return;
     }
 
-    //call fetcher run directly
+    //if we can acquire the semaphore then run fetcher directly
+    //if we can't then fetcher is in the threadpool, so we wait
+    //for it to complete
     if(d->fetcher->acquireSemaphore())
         d->fetcher->run();
     else
