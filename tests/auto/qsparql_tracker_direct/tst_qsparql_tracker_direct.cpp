@@ -1412,7 +1412,7 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 2000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
 
@@ -1474,7 +1474,7 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 2000;
     const QString testTag("<qsparql-tracker-direct-tests-waitForFinished_after_dataReady>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
