@@ -772,13 +772,14 @@ private:
     bool ok;
 };
 
-TestData* createTestData(int testDataAmount, const QString& testTag)
+TestData* createTestData(int testDataAmount, const QString& testSuiteTag, const QString& testCaseTag)
 {
     const int insertBatchSize = 200;
     QSparqlConnection conn("QTRACKER");
     const QString insertQueryTemplate =
             "<urn:music:%1> a nmm:MusicPiece, nfo:FileDataObject, nfo:Audio;"
                 "nie:isLogicalPartOf %3 ;"
+                "nie:isLogicalPartOf %4 ;"
                 "tracker:available          true ;"
                 "nie:byteSize               \"0\" ;"
                 "nie:url                    \"file://music/Song_%1.mp3\" ;"
@@ -808,10 +809,11 @@ TestData* createTestData(int testDataAmount, const QString& testTag)
             "?u a rdfs:Resource . } "
             "where { "
             "?u nie:isLogicalPartOf %1 . "
+            "?u nie:isLogicalPartOf %2 . "
             "} "
             "delete {"
-            "<tracker-live-tests> a nie:InformationElement . "
-            "}").arg(testTag),
+            "%2 a rdfs:Resource . "
+            "}").arg(testSuiteTag).arg(testCaseTag),
         QSparqlQuery::DeleteStatement);
 
     const QSparqlQuery selectQuery(
@@ -819,21 +821,37 @@ TestData* createTestData(int testDataAmount, const QString& testTag)
             "{ "
             "?musicPiece a nmm:MusicPiece; "
             "nie:isLogicalPartOf %1; "
+            "nie:isLogicalPartOf %2; "
             "nie:title ?title; "
             "nmm:performer ?performer; "
             "nmm:musicAlbum ?album; "
             "nfo:duration ?duration; "
             "nie:contentCreated ?created. "
-            "} order by ?title ?created").arg(testTag));
+            "} order by ?title ?created")
+                .arg(testSuiteTag)
+                .arg(testCaseTag));
 
     TestDataImpl* testData = new TestDataImpl(cleanupQuery, selectQuery);
+
+    QString insertTagsQuery = QString("insert { %1 a nie:InformationElement. "
+                                               "%2 a nie:InformationElement. "
+                                               "%2 nie:isLogicalPartOf %1. }")
+                                        .arg(testSuiteTag).arg(testCaseTag);
+    QScopedPointer<QSparqlResult> r(conn.syncExec(QSparqlQuery(insertTagsQuery, QSparqlQuery::InsertStatement)));
+    if (r.isNull() || r->hasError())
+        return testData;
+    r.reset();
 
     for (int item = 1; item <= testDataAmount; ) {
         QString insertQuery = "insert { ";
         int itemDozen = 10;
         const int batchEnd = item + insertBatchSize;
         for (; item < batchEnd && item <= testDataAmount; ++item) {
-            insertQuery.append( insertQueryTemplate.arg(item).arg(itemDozen).arg(testTag) );
+            insertQuery.append( insertQueryTemplate
+                                    .arg(item)
+                                    .arg(itemDozen)
+                                    .arg(testSuiteTag)
+                                    .arg(testCaseTag) );
             if (item % 10 == 0) itemDozen += 10;
         }
         insertQuery.append(" }");

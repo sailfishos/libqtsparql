@@ -419,8 +419,9 @@ void tst_QSparqlTrackerDirect::delete_unfinished_result()
 void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
 {
     const int testDataAmount = 2000;
-    const QString testTag("<qsparql-tracker-direct-tests-delete_partially_iterated_result>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    const QString testCaseTag("<qsparql-tracker-direct-tests-delete_partially_iterated_result>");
+    QScopedPointer<TestData> testData(
+            createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
@@ -1378,8 +1379,9 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 {
     setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 2000;
-    const QString testTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    const QString testCaseTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
+    QScopedPointer<TestData> testData(
+            createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;

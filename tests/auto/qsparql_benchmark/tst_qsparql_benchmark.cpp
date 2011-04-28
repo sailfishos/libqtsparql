@@ -49,7 +49,8 @@
 #include <sys/time.h>
 #include <stdio.h>
 
-#define START_BENCHMARK { \
+#define START_BENCHMARK \
+    int benchmarkTotal=0; { \
     struct timeval benchmark_tv; \
     gettimeofday(&benchmark_tv, NULL); \
     const long benchmark_start = benchmark_tv.tv_sec * 1000 + (benchmark_tv.tv_usec + 500) / 1000; \
@@ -59,10 +60,20 @@
         gettimeofday(&benchmark_tv, NULL); \
         const long benchmark_end = benchmark_tv.tv_sec * 1000 + (benchmark_tv.tv_usec + 500) / 1000; \
         char benchmark_tsbuf[80]; \
-        qsnprintf(benchmark_tsbuf, sizeof(benchmark_tsbuf), "QSparql_bnechmark_data: %s %lu\n",  \
+        qsnprintf(benchmark_tsbuf, sizeof(benchmark_tsbuf), "QSparql_benchmark_data: %s %lu\n",  \
                   qPrintable(BENCHMARKNAME), benchmark_end - benchmark_start); \
         fwrite(benchmark_tsbuf, qstrnlen(benchmark_tsbuf, sizeof(benchmark_tsbuf)), 1, stderr); \
+        benchmarkTotal += benchmark_end - benchmark_start; \
     }
+
+#define PRINT_STATS(BENCHMARKNAME, LIST) { \
+    qSort(LIST); \
+    int median = (LIST.size()+1)/2; \
+    int average = 0; \
+    for(int i=0;i<LIST.size();i++) \
+        average += LIST[i]; \
+    fprintf(stderr, "%s median value = %i\n", qPrintable(BENCHMARKNAME), LIST[median]); \
+    fprintf(stderr, "%s mean value = %i\n", qPrintable(BENCHMARKNAME), average/LIST.size()); }
 
 #define NO_QUERIES 100
 
@@ -229,6 +240,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
     QTest::qWait(2000);
 
     QSparqlResult* r = 0;
+    QList<int> totalTimes;
     // We run multiple queries here (and don't leave it for QBENCHMARK to
     // run this multiple times, to be able to measure things like "how much
     // does adding a QThreadPool help".
@@ -241,7 +253,9 @@ void tst_QSparqlBenchmark::queryBenchmark()
             delete r;
         }
         END_BENCHMARK(benchmarkName);
+        totalTimes.append(benchmarkTotal);
     }
+    PRINT_STATS(benchmarkName, totalTimes);
 }
 
 void tst_QSparqlBenchmark::queryBenchmark_data()
@@ -284,6 +298,9 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     QString read = benchmarkName + "-read";
 
     QSparqlResult* r = 0;
+    QList<int> totalTimesFinished;
+    QList<int> totalTimesRead;
+
     for (int i = 0; i < NO_QUERIES; ++i) {
         {
             START_BENCHMARK {
@@ -293,6 +310,7 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
                 loop.exec();
             }
             END_BENCHMARK(finished);
+            totalTimesFinished.append(benchmarkTotal);
         }
         CHECK_ERROR(r);
         QVERIFY(r->size() > 0);
@@ -311,11 +329,14 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
                 }
             }
             END_BENCHMARK(read);
+            totalTimesRead.append(benchmarkTotal);
             // For verifying that enough data was really read
             // qDebug() << "No of results" << size;
         }
         delete r;
     }
+    PRINT_STATS(finished, totalTimesFinished);
+    PRINT_STATS(read, totalTimesRead);
 }
 
 void tst_QSparqlBenchmark::dataReadingBenchmark_data()
@@ -344,7 +365,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
     QVERIFY(connection);
     QVERIFY(error == 0);
-
+    QList<int> totalTimes;
     for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
             TrackerSparqlCursor* cursor =
@@ -365,9 +386,11 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
             g_object_unref(cursor);
         }
         END_BENCHMARK(benchmarkName);
+        totalTimes.append(benchmarkTotal);
     }
 
     g_object_unref(connection);
+    PRINT_STATS(benchmarkName,totalTimes);
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql_data()
@@ -433,7 +456,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
     TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
     QVERIFY(connection);
     QVERIFY(error == 0);
-
+    QList<int> totalTimes;
     for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
             QueryRunner runner(connection, queryString);
@@ -441,9 +464,11 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
             runner.wait();
         }
         END_BENCHMARK(benchmarkName);
+        totalTimes.append(benchmarkTotal);
     }
 
     g_object_unref(connection);
+    PRINT_STATS(benchmarkName, totalTimes);
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread_data()

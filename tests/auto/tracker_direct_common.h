@@ -93,6 +93,6 @@ public:
     virtual QSparqlQuery selectQuery() const = 0;
 };
 
-TestData* createTestData(int testDataAmount, const QString& testTag);
+TestData* createTestData(int testDataAmount, const QString& testSuiteTag, const QString& testCaseTag);
 
 #endif // QSPARQL_TRACKER_COMMON_H
