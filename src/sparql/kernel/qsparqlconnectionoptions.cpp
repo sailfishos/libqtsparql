@@ -81,6 +81,7 @@ static QString userKey = QString::fromLatin1("user");
 static QString passwordKey = QString::fromLatin1("password");
 static QString databaseKey = QString::fromLatin1("database");
 static QString maxThreadKey = QString::fromLatin1("maxThread");
+static QString threadExpiryKey = QString::fromLatin1("threadExpiry");
 
 template<> void QSharedDataPointer<QSparqlConnectionOptionsPrivate>::detach()
 {
@@ -216,7 +217,7 @@ void QSparqlConnectionOptions::setPort(int p)
 
 /*!
     Convenience function for setting the interval between when
-    dataReady(int) signals are emitted
+    dataReady(int) signals are emitted.
 
     \sa setOption()
 */
@@ -230,7 +231,7 @@ void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 
 /*!
     Convenience function for setting the maximum number of
-    threads for the thread pool to use
+    threads for the thread pool to use.
 
     \sa setOption()
 */
@@ -242,6 +243,18 @@ void QSparqlConnectionOptions::setMaxThreadCount(int p)
         qWarning() << "QSparqlConnectionOptions: invalid maxThread amount:" << p;
 }
 
+/*!
+    Convenience function for setting the expiry time (in milliseconds)
+    of threads created by the threadpool.
+
+    \sa setOption()
+*/
+void QSparqlConnectionOptions::setThreadExpiryTime(int p)
+{
+    //do not need to check for > 0, if the value is negative
+    //threads will not expire until the threadpool is destroyed
+    setOption(threadExpiryKey, p);
+}
 #ifndef QT_NO_NETWORKPROXY
 /*!
     Convenience function for setting the QNetworkProxy. Valid
@@ -344,13 +357,25 @@ int QSparqlConnectionOptions::dataReadyInterval() const
 }
 
 /*!
-    Convenience function for getting the max thread count.
+    Convenience function for getting the max thread count to be
+    used by the thread pool.
 
     \sa option()
 */
 int QSparqlConnectionOptions::maxThreadCount() const
 {
     QVariant v = option(maxThreadKey);
+    return v.canConvert(QVariant::Int) ? v.toInt() : -1;
+}
+
+/*!
+    Convenience function for getting the thread expiry time.
+
+    \sa option()
+*/
+int QSparqlConnectionOptions::threadExpiryTime() const
+{
+    QVariant v = option(threadExpiryKey);
     return v.canConvert(QVariant::Int) ? v.toInt() : -1;
 }
 

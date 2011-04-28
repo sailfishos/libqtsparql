@@ -257,18 +257,16 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     setOpen(true);
     setOpenError(false);
 
-    //initilise the threadpool, threads will expire after 2 seconds
-    d->threadPool.setExpiryTimeout(2000);
+    //Get the options for the thread pool, if no expiry time has been set
+    //set our own value of 2 seconds (the default value is 30 seconds)
+    if(options.threadExpiryTime() != -1)
+        d->threadPool.setExpiryTimeout(options.threadExpiryTime());
+    else
+        d->threadPool.setExpiryTimeout(2000);
 
-    if (options.maxThreadCount() >= 0) {
-        //can't have 0 threads
-        if(options.maxThreadCount() == 0) {
-            qWarning() << "QSparqlConnection : Cannot set a thread pool size of 0, setting to" <<
-                d->threadPool.maxThreadCount();
-        }
-        else
-            d->threadPool.setMaxThreadCount(options.maxThreadCount());
-    }
+    if(options.maxThreadCount() != -1)
+        d->threadPool.setMaxThreadCount(options.maxThreadCount());
+
     return true;
 }
 

@@ -83,6 +83,7 @@ public:
     void setPort(int p);
     void setDataReadyInterval(int p);
     void setMaxThreadCount(int p);
+    void setThreadExpiryTime(int p);
 
 #ifndef QT_NO_NETWORKPROXY
     void setProxy(const QNetworkProxy& proxy);
@@ -98,6 +99,7 @@ public:
     int port() const;
     int dataReadyInterval() const;
     int maxThreadCount() const;
+    int threadExpiryTime() const;
 
 #ifndef QT_NO_NETWORKPROXY
     QNetworkProxy proxy () const;
