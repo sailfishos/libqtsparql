@@ -119,6 +119,7 @@ private slots:
     void destroy_connection_verify_result_async();
     void destroy_connection_partially_iterated_results();
 
+    void validate_threadpool_results();
     void waitForFinished_after_dataReady();
 };
 
@@ -1403,13 +1404,74 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
         delete r;
     }
 }
-//todo add a test to validate a lot of results match the results from the threadpool
+
+void tst_QSparqlTrackerDirect::validate_threadpool_results()
+{
+    setMsgLogLevel(QtCriticalMsg);
+    const int testDataAmount = 2000;
+    const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
+    QTest::qWait(1000);
+    QVERIFY( testData->isOK() );
+
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1);
+    opts.setMaxThreadCount(1);
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+
+    //now read this back, each result will then be validated to ensure its the correct one
+    QList<QSparqlResult*> resultList;
+    QList<QSignalSpy*> resultSpys;
+
+    const int numberOfResults = 50;
+    const int resultRange = testDataAmount/numberOfResults;
+    for(int i=1;i<=numberOfResults;i++)
+    {
+        int lower = i*resultRange-39;
+        int upper = i*resultRange;
+
+        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
+                                "nmm:trackNumber ?t;"
+                                "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
+                                "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
+        QSparqlResult *r = conn.exec(select);
+        QVERIFY(r);
+        CHECK_ERROR(r);
+        QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
+        resultList.append(r);
+        resultSpys.append(resultSpy);
+    }
+
+    //check the signals
+    foreach(QSignalSpy *resultSpy, resultSpys) {
+        while(resultSpy->count() == 0)
+        {
+            QTest::qWait(1);
+        }
+        QCOMPARE(resultSpy->count(), 1);
+        delete resultSpy; //cleanup
+    }
+
+    for(int i=1;i<=numberOfResults;i++)
+    {
+        QSparqlResult *r = resultList.front();
+        QCOMPARE(r->size(), 40);
+
+        int start = i*resultRange-39;
+        while(r->next())
+            QCOMPARE(r->value(1).toInt(),r->pos()+start);
+
+        resultList.pop_front();
+        delete r; //cleanup
+    }
+
+}
 
 void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
 {
     setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 2000;
-    const QString testTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
+    const QString testTag("<qsparql-tracker-direct-tests-waitForFinished_after_dataReady>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );

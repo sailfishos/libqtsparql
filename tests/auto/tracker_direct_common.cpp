@@ -801,7 +801,7 @@ TestData* createTestData(int testDataAmount, const QString& testTag)
                 "nmm:musicAlbumDisc         <urn:album-disk:%2> ;"
                 "nmm:performer              <urn:artist:%2> ;"
                 "nfo:duration               \"1\" ;"
-                "nmm:trackNumber            \"1\" .";
+                "nmm:trackNumber            \"%1\" .";
 
     const QSparqlQuery cleanupQuery(
         QString("delete { "
