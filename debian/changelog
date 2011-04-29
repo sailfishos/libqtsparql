@@ -1,9 +1,9 @@
-libqtsparql (0.0.25~unreleased) unstable; urgency=low
+libqtsparql (0.0.25) unstable; urgency=low
 
   * Fixes: NB#246910
   * Tracker direct driver now uses a thread pool
 
- -- James Thomas <james.thomas@codethink.co.uk>  Fri, 29 Apr 2011 13:53:00 +0300
+ -- James Thomas <james.thomas@codethink.co.uk>  Fri, 29 Apr 2011 15:17:00 +0300
 
 libqtsparql (0.0.24) unstable; urgency=low
 
