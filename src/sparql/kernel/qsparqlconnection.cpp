@@ -489,8 +489,7 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
                                     QSparqlError::BackendError));
             qWarning("QSparqlConnection::exec: Unsupported statement type");
         } else {
-            Q_UNUSED(options); // TODO: Change driver interface to enable passing in query options
-            result = d->driver->exec(queryText, query.type());
+            result = d->driver->exec(queryText, query.type(), options);
         }
     }
     result->setParent(this);
@@ -531,7 +530,7 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
             result = d->driver->syncExec(queryText, query.type());
         }
         else {
-            result = d->driver->exec(queryText, query.type());
+            result = d->driver->exec(queryText, query.type(), QSparqlQueryOptions());
             result->waitForFinished();
         }
     }

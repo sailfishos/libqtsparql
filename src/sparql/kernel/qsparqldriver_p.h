@@ -61,6 +61,7 @@ QT_MODULE(Sparql)
 
 class QSparqlDriverPrivate;
 class QSparqlError;
+class QSparqlQueryOptions;
 class QSparqlResult;
 class QVariant;
 
@@ -83,7 +84,7 @@ public:
     virtual QVariant handle() const;
     virtual bool hasFeature(QSparqlConnection::Feature f) const = 0;
     virtual void close() = 0;
-    virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType type) = 0;
+    virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options) = 0;
     virtual QSparqlResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
 
     virtual bool open(const QSparqlConnectionOptions& options = QSparqlConnectionOptions()) = 0;

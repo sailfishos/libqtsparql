@@ -149,7 +149,7 @@ class MockDriver : public QSparqlDriver
             return true;
         return false;
     }
-    MockResult* exec(const QString&, QSparqlQuery::StatementType)
+    MockResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions&)
     {
         return new MockResult(this);
     }
