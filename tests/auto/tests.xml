@@ -42,7 +42,7 @@
       </get>
     </set>
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
-      <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct">
+      <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct" timeout="600">
         <step expected_result="0">
             su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct"
         </step>
