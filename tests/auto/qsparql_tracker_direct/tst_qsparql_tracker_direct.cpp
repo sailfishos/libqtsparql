@@ -419,7 +419,7 @@ void tst_QSparqlTrackerDirect::delete_unfinished_result()
 
 void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
 {
-    const int testDataAmount = 2000;
+    const int testDataAmount = 3000;
     const QString testCaseTag("<qsparql-tracker-direct-tests-delete_partially_iterated_result>");
     QScopedPointer<TestData> testData(
             createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
@@ -1379,7 +1379,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_verify_result_async()
 void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 {
     setMsgLogLevel(QtCriticalMsg);
-    const int testDataAmount = 2000;
+    const int testDataAmount = 3000;
     const QString testCaseTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
     QScopedPointer<TestData> testData(
             createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
@@ -1412,7 +1412,7 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
 {
     setMsgLogLevel(QtCriticalMsg);
     QFETCH(int, maxThreadCount);
-    const int testDataAmount = 2000;
+    const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
@@ -1489,7 +1489,7 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results_data()
 void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
 {
     setMsgLogLevel(QtCriticalMsg);
-    const int testDataAmount = 2000;
+    const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-waitForFinished_after_dataReady>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
