@@ -269,8 +269,10 @@ QVariant QSparqlDriver::handle() const
     return QVariant();
 }
 
-QSparqlResult* QSparqlDriver::syncExec(const QString& /*query*/, QSparqlQuery::StatementType)
+QSparqlResult* QSparqlDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
 {
+    Q_UNUSED(query);
+    Q_UNUSED(type);
     return 0;
 }
 
