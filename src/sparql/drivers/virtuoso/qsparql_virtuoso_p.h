@@ -150,7 +150,7 @@ public:
     void close();
     QVariant handle() const;
     bool open(const QSparqlConnectionOptions& options);
-    QVirtuosoAsyncResult* exec(const QString& query, QSparqlQuery::StatementType type);
+    QVirtuosoAsyncResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options);
     QVirtuosoResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
 
 protected:

@@ -81,7 +81,8 @@ public:
     bool open(const QSparqlConnectionOptions& options);
     void close();
     QSparqlResult* exec(const QString& query,
-                         QSparqlQuery::StatementType type);
+                         QSparqlQuery::StatementType type,
+                         const QSparqlQueryOptions& options);
     QSparqlResult* syncExec(const QString& query,
                             QSparqlQuery::StatementType type);
 

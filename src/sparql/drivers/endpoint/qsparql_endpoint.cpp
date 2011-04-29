@@ -394,8 +394,9 @@ QVariant EndpointResult::value(int field) const
 
 // This is just a temporary hack; eventually this should be refactored so that
 // the work is done here instead of Result::exec.
-EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::StatementType type)
+EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
+    Q_UNUSED(options);
     EndpointResult* res = createResult();
     res->exec(query, type, prefixes());
     return res;

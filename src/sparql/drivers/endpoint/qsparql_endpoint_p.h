@@ -101,7 +101,7 @@ public:
     bool open(const QSparqlConnectionOptions& options);
     void close();
     EndpointResult* createResult() const;
-    EndpointResult* exec(const QString& query, QSparqlQuery::StatementType type);
+    EndpointResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options);
 
 private:
     EndpointDriverPrivate* d;

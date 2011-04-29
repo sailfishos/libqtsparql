@@ -295,8 +295,9 @@ QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
     delete da;
 }
 
-QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
+QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
+    Q_UNUSED(options);
     QVirtuosoAsyncResult* res = new QVirtuosoAsyncResult(this, d, query, type, prefixes());
 
     // Queue calling exec() on the result. This way the finished() and

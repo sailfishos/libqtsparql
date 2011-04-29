@@ -253,8 +253,10 @@ QTrackerResult::~QTrackerResult()
 }
 
 QTrackerResult* QTrackerDriver::exec(const QString& query,
-                          QSparqlQuery::StatementType type)
+                          QSparqlQuery::StatementType type,
+                          const QSparqlQueryOptions& options)
 {
+    Q_UNUSED(options);
     QTrackerResult* res = new QTrackerResult(type);
     res->setQuery(query);
 

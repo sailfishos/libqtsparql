@@ -306,8 +306,9 @@ void QTrackerDirectDriver::close()
     }
 }
 
-QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type)
+QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
+    Q_UNUSED(options);
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         d->addActiveResult(result);
