@@ -46,7 +46,27 @@ QT_BEGIN_NAMESPACE
 class QSparqlQueryOptionsPrivate: public QSharedData
 {
 public:
+    QSparqlQueryOptionsPrivate();
+    // Compiler-generated copy ctor, assignment operator and destructor are OK for this class
+
+    bool operator==(const QSparqlQueryOptionsPrivate& other) const;
+
+    QSparqlQueryOptions::ExecutionMethod executionMethod;
+    QSparqlQueryOptions::Priority priority;
 };
+
+QSparqlQueryOptionsPrivate::QSparqlQueryOptionsPrivate()
+    // Set the options to their default values
+    : executionMethod(QSparqlQueryOptions::ExecAsync)
+    , priority(QSparqlQueryOptions::PriorityNormal)
+{
+}
+
+bool QSparqlQueryOptionsPrivate::operator==(const QSparqlQueryOptionsPrivate& other) const
+{
+    return (executionMethod == other.executionMethod &&
+            priority == other.priority);
+}
 
 /*!
     \class QSparqlQueryOptions
@@ -59,7 +79,7 @@ public:
 */
 
 QSparqlQueryOptions::QSparqlQueryOptions()
-    : d(0)
+    : d(new QSparqlQueryOptionsPrivate)
 {
 }
 
@@ -86,7 +106,7 @@ QSparqlQueryOptions& QSparqlQueryOptions::operator=(const QSparqlQueryOptions& o
 /// Returns true if the QSparqlQueryOptions objects are equal.
 bool QSparqlQueryOptions::operator==(const QSparqlQueryOptions &other) const
 {
-    return (d == other.d /*|| *d == *other.d*/);
+    return (d == other.d || *d == *other.d);
 }
 
 /*!
@@ -107,14 +127,14 @@ bool QSparqlQueryOptions::operator==(const QSparqlQueryOptions &other) const
 /// \sa executionMethod
 void QSparqlQueryOptions::setExecutionMethod(ExecutionMethod em)
 {
-    Q_UNUSED(em);
+    d->executionMethod = em;
 }
 
 /// Returns the exeuction method of the query.
 /// \sa setExecutionMethod
 QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::executionMethod() const
 {
-    return ExecAsync;
+    return d->executionMethod;
 }
 
 /*!
@@ -135,14 +155,14 @@ QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::executionMethod() cons
 /// \sa priority
 void QSparqlQueryOptions::setPriority(Priority p)
 {
-    Q_UNUSED(p);
+    d->priority = p;
 }
 
 /// Returns the priority of the query.
 /// \sa setPriority
 QSparqlQueryOptions::Priority QSparqlQueryOptions::priority() const
 {
-    return PriorityNormal;
+    return d->priority;
 }
 
 QT_END_NAMESPACE

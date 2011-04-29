@@ -212,6 +212,10 @@ private slots:
     void iterate_empty_fwonly_result();
     void iterate_nonempty_fwonly_result();
     void iterate_nonempty_fwonly_result_first();
+
+    void default_QSparqlQueryOptions();
+    void copies_of_QSparqlQueryOptions_are_equal_and_independent();
+    void assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy();
 };
 
 tst_QSparql::tst_QSparql()
@@ -438,6 +442,49 @@ void tst_QSparql::iterate_nonempty_fwonly_result_first()
     // another legal first(), we're at the first row already
     QVERIFY(res->first());
     QCOMPARE(res->pos(), 0);
+}
+
+void tst_QSparql::default_QSparqlQueryOptions()
+{
+    QSparqlQueryOptions opt;
+    QCOMPARE( opt.executionMethod(), QSparqlQueryOptions::ExecAsync );
+    QCOMPARE( opt.priority(), QSparqlQueryOptions::PriorityNormal );
+}
+
+void tst_QSparql::copies_of_QSparqlQueryOptions_are_equal_and_independent()
+{
+    QSparqlQueryOptions opt1;
+    opt1.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    QSparqlQueryOptions opt2(opt1);
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::ExecSync );
+    QVERIFY( opt2 == opt1 );
+
+    opt2.setPriority(QSparqlQueryOptions::PriorityLow);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::PriorityLow );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::PriorityNormal );
+    QVERIFY( !(opt2 == opt1) );
+
+    opt2.setPriority(QSparqlQueryOptions::PriorityNormal);
+    QVERIFY( opt2 == opt1 );
+}
+
+void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy()
+{
+    QSparqlQueryOptions opt1;
+    opt1.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    QSparqlQueryOptions opt2;
+    QVERIFY( !(opt2 == opt1) );
+    opt2 = opt1;
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::ExecSync );
+    QVERIFY( opt2 == opt1 );
+
+    opt2.setPriority(QSparqlQueryOptions::PriorityLow);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::PriorityLow );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::PriorityNormal );
+    QVERIFY( !(opt2 == opt1) );
+
+    opt2.setPriority(QSparqlQueryOptions::PriorityNormal);
+    QVERIFY( opt2 == opt1 );
 }
 
 QTEST_MAIN(tst_QSparql)
