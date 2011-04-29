@@ -120,6 +120,7 @@ private slots:
     void destroy_connection_partially_iterated_results();
 
     void validate_threadpool_results();
+    void validate_threadpool_results_data();
     void waitForFinished_after_dataReady();
 };
 
@@ -1410,6 +1411,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 void tst_QSparqlTrackerDirect::validate_threadpool_results()
 {
     setMsgLogLevel(QtCriticalMsg);
+    QFETCH(int, maxThreadCount);
     const int testDataAmount = 2000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
@@ -1418,7 +1420,7 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
 
     QSparqlConnectionOptions opts;
     opts.setDataReadyInterval(1);
-    opts.setMaxThreadCount(1);
+    opts.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
     //now read this back, each result will then be validated to ensure its the correct one
@@ -1429,13 +1431,13 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     const int resultRange = testDataAmount/numberOfResults;
     for(int i=1;i<=numberOfResults;i++)
     {
-        int lower = i*resultRange-39;
+        int lower = i*resultRange-(resultRange-1);
         int upper = i*resultRange;
-
         QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
                                 "nmm:trackNumber ?t;"
                                 "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
                                 "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
+
         QSparqlResult *r = conn.exec(select);
         QVERIFY(r);
         CHECK_ERROR(r);
@@ -1445,28 +1447,40 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     }
 
     //check the signals
+    QTime timer;
+
     foreach(QSignalSpy *resultSpy, resultSpys) {
-        while(resultSpy->count() == 0)
+        timer.restart();
+        while(resultSpy->count() == 0 && timer.elapsed() < 2000)
         {
             QTest::qWait(1);
         }
         QCOMPARE(resultSpy->count(), 1);
-        delete resultSpy; //cleanup
     }
+    qDeleteAll(resultSpys);
 
     for(int i=1;i<=numberOfResults;i++)
     {
         QSparqlResult *r = resultList.front();
-        QCOMPARE(r->size(), 40);
+        QCOMPARE(r->size(), resultRange);
 
-        int start = i*resultRange-39;
+        int start = i*resultRange-(resultRange-1);
         while(r->next())
             QCOMPARE(r->value(1).toInt(),r->pos()+start);
 
         resultList.pop_front();
-        delete r; //cleanup
     }
+    qDeleteAll(resultList);
 
+}
+
+void tst_QSparqlTrackerDirect::validate_threadpool_results_data()
+{
+    QTest::addColumn<int>("maxThreadCount");
+
+    QTest::newRow("1 Thread") << 1;
+    QTest::newRow("10 Threads") << 10;
+    QTest::newRow("100 Threads") << 100;
 }
 
 void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
@@ -1479,12 +1493,12 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
     opts.setDataReadyInterval(1);
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
     //run this bit serveral times since we are checking for threading issues
     for(int i=0;i<20;++i) {
-        QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
 
-        QSparqlResult* r = conn->exec(testData->selectQuery());
+        QSparqlResult* r = conn.exec(testData->selectQuery());
         QVERIFY(r != 0);
         CHECK_ERROR(r);
 
@@ -1496,7 +1510,7 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
         QVERIFY(!r->isFinished());
         r->waitForFinished();
         QCOMPARE(r->size(), testDataAmount);
-        delete conn; 
+        delete r;
     }
 }
 

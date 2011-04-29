@@ -74,15 +74,39 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
 class QTrackerDirectFetcherPrivate : public QRunnable
 {
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), finished(0), semaphore(1) { setAutoDelete(false); }
+    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
 
-    QAtomicInt finished;
-    QSemaphore semaphore;
+    void runOrWait()
+    {
+        if(acquireRunSemaphore())
+            run();
+        else
+            wait();
+    }
+
+    void queue(QThreadPool& threadPool)
+    {
+        if(acquireRunSemaphore())
+            threadPool.start(this);
+    }
+
+    void wait()
+    {
+        //if something has has acquired the semaphore (eg the fetcher thread)
+        //this will block until it is released in run
+        runSemaphore.acquire(1);
+        runSemaphore.release(1);
+    }
+
+private:
+    QTrackerDirectResult *result;
+    QAtomicInt runFinished;
+    QSemaphore runSemaphore;
 
     void run()
     {
         //check to make sure we are not going to do this twice
-        if(!finished)
+        if(!runFinished)
         {
             if(result->runQuery()) {
                 if (result->isTable()) {
@@ -96,25 +120,15 @@ public:
                 }
             }
         }
-        finished=1;
-        semaphore.release(1);
+        runFinished=1;
+        runSemaphore.release(1);
     }
 
-    bool acquireSemaphore()
+    bool acquireRunSemaphore()
     {
-        return semaphore.tryAcquire(1);
+        return runSemaphore.tryAcquire(1);
     }
 
-    void wait()
-    {
-        //if something has has acquired the semaphore (eg the fetcher thread)
-        //this will block until it is released in run
-        semaphore.acquire(1);
-        semaphore.release(1);
-    }
-
-private:
-    QTrackerDirectResult *result;
 };
 
 class QTrackerDirectResultPrivate : public QObject {
@@ -225,8 +239,7 @@ void QTrackerDirectResult::startFetcher()
         //first attempt to acquire the semaphore, if we can, then add the
         //fetcher to the threadPool queue, if we can't then waitForFinished
         //has it, so we don't need to refetch the results using this thread
-        if(d->fetcher->acquireSemaphore())
-            d->driverPrivate->threadPool.start(d->fetcher);
+        d->fetcher->queue(d->driverPrivate->threadPool);
     }
 }
 
@@ -398,10 +411,7 @@ void QTrackerDirectResult::waitForFinished()
     //if we can acquire the semaphore then run fetcher directly
     //if we can't then fetcher is in the threadpool, so we wait
     //for it to complete
-    if(d->fetcher->acquireSemaphore())
-        d->fetcher->run();
-    else
-        d->fetcher->wait();
+    d->fetcher->runOrWait();
 }
 
 bool QTrackerDirectResult::isFinished() const
