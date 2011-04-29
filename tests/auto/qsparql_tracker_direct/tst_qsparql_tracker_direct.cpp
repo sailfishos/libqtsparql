@@ -1462,9 +1462,15 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     int i=1;
     foreach(QSparqlResult *result, resultList) {
         QCOMPARE(result->size(), resultRange);
-        int start = i*resultRange-(resultRange-1);
+        const int start = i*resultRange-(resultRange-1);
         while(result->next())
-            QCOMPARE(result->value(1).toInt(),result->pos()+start);
+        {
+            //the id we are matching will be sequential and unique
+            //in all results, so we can calculate what it will be
+            //using the result position plus the start offset
+            int expectedValue = result->pos()+start;
+            QCOMPARE(result->value(1).toInt(),expectedValue);
+        }
         i++;
     }
     qDeleteAll(resultList);
