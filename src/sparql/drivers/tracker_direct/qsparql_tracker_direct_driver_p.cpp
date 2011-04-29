@@ -264,8 +264,14 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     else
         d->threadPool.setExpiryTimeout(2000);
 
+    //get the max thread count from an option if it was set, else
+    //we'll set it to 2 * the qt default of number of cores
     if(options.maxThreadCount() != -1)
         d->threadPool.setMaxThreadCount(options.maxThreadCount());
+    else {
+        int maxThreads = d->threadPool.maxThreadCount() * 2;
+        d->threadPool.setMaxThreadCount(maxThreads);
+    }
 
     return true;
 }
