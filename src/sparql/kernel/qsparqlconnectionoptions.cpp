@@ -48,8 +48,6 @@ QT_BEGIN_NAMESPACE
 class QSparqlConnectionOptionsPrivate: public QSharedData
 {
 public:
-    void copy(const QSparqlConnectionOptionsPrivate *other);
-
     QMap<QString,QVariant> map;
 
     // Settings that cannot easily be put in a QVariant
