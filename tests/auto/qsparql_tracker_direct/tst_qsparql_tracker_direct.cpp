@@ -1459,16 +1459,13 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     }
     qDeleteAll(resultSpys);
 
-    for(int i=1;i<=numberOfResults;i++)
-    {
-        QSparqlResult *r = resultList.front();
-        QCOMPARE(r->size(), resultRange);
-
+    int i=1;
+    foreach(QSparqlResult *result, resultList) {
+        QCOMPARE(result->size(), resultRange);
         int start = i*resultRange-(resultRange-1);
-        while(r->next())
-            QCOMPARE(r->value(1).toInt(),r->pos()+start);
-
-        resultList.pop_front();
+        while(result->next())
+            QCOMPARE(result->value(1).toInt(),result->pos()+start);
+        i++;
     }
     qDeleteAll(resultList);
 
