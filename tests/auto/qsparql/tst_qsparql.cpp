@@ -149,15 +149,18 @@ class MockDriver : public QSparqlDriver
             return true;
         return false;
     }
-    MockResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions&)
+    QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions& options)
     {
-        return new MockResult(this);
+        switch(options.executionMethod()) {
+        case QSparqlQueryOptions::ExecAsync:
+            return new MockResult(this);
+        case QSparqlQueryOptions::ExecSync:
+            return new MockSyncFwOnlyResult();
+        default:
+            return 0;
+        }
     }
 
-    MockSyncFwOnlyResult* syncExec(const QString&, QSparqlQuery::StatementType)
-    {
-        return new MockSyncFwOnlyResult();
-    }
     static int openCount;
     static int closeCount;
     static bool openRetVal;

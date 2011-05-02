@@ -269,13 +269,6 @@ QVariant QSparqlDriver::handle() const
     return QVariant();
 }
 
-QSparqlResult* QSparqlDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
-{
-    Q_UNUSED(query);
-    Q_UNUSED(type);
-    return 0;
-}
-
 /*!
     Adds a prefix/uri pair to the connection. Each SPARQL query made
     with the connection will have the prefixes prepended to it.

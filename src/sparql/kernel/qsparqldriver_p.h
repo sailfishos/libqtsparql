@@ -85,7 +85,6 @@ public:
     virtual bool hasFeature(QSparqlConnection::Feature f) const = 0;
     virtual void close() = 0;
     virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options) = 0;
-    virtual QSparqlResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
 
     virtual bool open(const QSparqlConnectionOptions& options = QSparqlConnectionOptions()) = 0;
 

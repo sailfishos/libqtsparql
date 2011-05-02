@@ -45,6 +45,7 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
+#include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 
 #include <qcoreapplication.h>
@@ -256,7 +257,9 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type,
                           const QSparqlQueryOptions& options)
 {
-    Q_UNUSED(options);
+    if (options.executionMethod() == QSparqlQueryOptions::ExecSync)
+        return 0;
+
     QTrackerResult* res = new QTrackerResult(type);
     res->setQuery(query);
 
@@ -270,7 +273,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
-        if (d->doBatch) {
+        if (d->doBatch || options.priority() == QSparqlQueryOptions::PriorityLow) {
             funcToCall = QString::fromLatin1("BatchSparqlUpdate");
         }
         else {

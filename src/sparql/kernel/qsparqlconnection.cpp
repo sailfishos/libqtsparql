@@ -526,11 +526,13 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
     if (!result) {
         // No error. FIXME: it's evil to return a 0 pointer to indicate "no
         // error".
+        QSparqlQueryOptions options;
         if (d->driver->hasFeature(QSparqlConnection::SyncExec)) {
-            result = d->driver->syncExec(queryText, query.type());
+            options.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+            result = d->driver->exec(queryText, query.type(), options);
         }
         else {
-            result = d->driver->exec(queryText, query.type(), QSparqlQueryOptions());
+            result = d->driver->exec(queryText, query.type(), options);
             result->waitForFinished();
         }
     }

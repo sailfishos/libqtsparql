@@ -63,6 +63,7 @@
 #include <QtSparql/qsparqlbinding.h>
 #include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlqueryoptions.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
 #define XSD_DATE
 #include "../../kernel/qsparqlxsd_p.h"
@@ -283,9 +284,24 @@ QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
     delete da;
 }
 
-QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
+QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    Q_UNUSED(options);
+    QVirtuosoResult* result = 0;
+
+    switch (options.executionMethod()) {
+    case QSparqlQueryOptions::ExecAsync:
+        result = asyncExec(query, type);
+        break;
+    case QSparqlQueryOptions::ExecSync:
+        result = syncExec(query, type);
+        break;
+    }
+
+    return result;
+}
+
+QVirtuosoAsyncResult* QVirtuosoDriver::asyncExec(const QString& query, QSparqlQuery::StatementType type)
+{
     QVirtuosoAsyncResult* res = new QVirtuosoAsyncResult(this, d, query, type, prefixes());
 
     // Queue calling exec() on the result. This way the finished() and
