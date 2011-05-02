@@ -50,6 +50,10 @@
     <tr valign="top" bgcolor="#f0f0f0"><td><b>QSparqlQuery</b></td><td>Means of
     executing and manipulating SPARQL statements.</td></tr>
 
+    <tr valign="top" bgcolor="#f0f0f0"><td><b>QSparqlQueryOptions</b></td>
+    <td>Encapsulates query execution options given to QSparqlConnection::exec(const  QSparqlQuery&, const QSparqlQueryOptions&)
+    Some options are used only by some drivers.</td></tr>
+
     <tr valign="top"
     bgcolor="#f0f0f0"><td><b>QSparqlQueryModel</b></td><td>Read-only data model
     for SPARQL result sets.</td></tr>
