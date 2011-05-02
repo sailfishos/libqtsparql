@@ -48,6 +48,7 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
+#include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 
 #include <QtCore/qcoreapplication.h>
@@ -62,7 +63,8 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectUpdateResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp);
+    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp,
+                                      const QSparqlQueryOptions& options);
 
     ~QTrackerDirectUpdateResultPrivate();
     void terminate();
@@ -74,6 +76,7 @@ public:
 
     QTrackerDirectUpdateResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
+    QSparqlQueryOptions options;
 };
 
 static void
@@ -109,9 +112,10 @@ async_update_callback( GObject *source_object,
 }
 
 QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
-                                                                     QTrackerDirectDriverPrivate *dpp)
+                                                                     QTrackerDirectDriverPrivate *dpp,
+                                                                     const QSparqlQueryOptions& options)
   : resultAlive(true), loop(0),
-  q(result), driverPrivate(dpp)
+  q(result), driverPrivate(dpp), options(options)
 {
 }
 
@@ -138,11 +142,12 @@ void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
 
 QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
-                                           QSparqlQuery::StatementType type)
+                                           QSparqlQuery::StatementType type,
+                                           const QSparqlQueryOptions& options)
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectUpdateResultPrivate(this, p);
+    d = new QTrackerDirectUpdateResultPrivate(this, p, options);
 }
 
 QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
@@ -171,7 +176,7 @@ void QTrackerDirectUpdateResult::exec()
 
     tracker_sparql_connection_update_async( d->driverPrivate->connection,
                                             query().toUtf8().constData(),
-                                            0,
+                                            qSparqlPriorityToGlib(d->options.priority()),
                                             0,
                                             async_update_callback,
                                             d);

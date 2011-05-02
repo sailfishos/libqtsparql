@@ -47,6 +47,7 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
+#include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
 
@@ -396,7 +397,9 @@ QVariant EndpointResult::value(int field) const
 // the work is done here instead of Result::exec.
 EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    Q_UNUSED(options);
+    if (options.executionMethod() == QSparqlQueryOptions::ExecSync)
+        return 0;
+
     EndpointResult* res = createResult();
     res->exec(query, type, prefixes());
     return res;

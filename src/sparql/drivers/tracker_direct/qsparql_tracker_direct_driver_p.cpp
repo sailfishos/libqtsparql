@@ -154,6 +154,17 @@ QSparqlError::ErrorType errorCodeToType(gint code)
     }
 }
 
+gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
+{
+    switch (priority) {
+    case QSparqlQueryOptions::PriorityLow:
+        return G_PRIORITY_LOW;
+    case QSparqlQueryOptions::PriorityNormal:
+    default:
+        return G_PRIORITY_DEFAULT;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 static void
@@ -308,7 +319,22 @@ void QTrackerDirectDriver::close()
 
 QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    Q_UNUSED(options);
+    QSparqlResult* result = 0;
+
+    switch (options.executionMethod()) {
+    case QSparqlQueryOptions::ExecAsync:
+        result = asyncExec(query, type, options);
+        break;
+    case QSparqlQueryOptions::ExecSync:
+        result = syncExec(query, type, options);
+        break;
+    }
+
+    return result;
+}
+
+QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
+{
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         d->addActiveResult(result);
@@ -321,7 +347,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 
         return result;
     } else {
-        QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type);
+        QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type, options);
 
         if (d->asyncOpenCalled) {
             result->exec();
@@ -333,9 +359,10 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
     }
 }
 
-QSparqlResult* QTrackerDirectDriver::syncExec(const QString& query, QSparqlQuery::StatementType type)
+QSparqlResult* QTrackerDirectDriver::syncExec
+        (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d);
+    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, options);
     result->setQuery(query);
     result->setStatementType(type);
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {

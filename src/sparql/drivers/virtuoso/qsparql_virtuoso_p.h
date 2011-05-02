@@ -150,8 +150,7 @@ public:
     void close();
     QVariant handle() const;
     bool open(const QSparqlConnectionOptions& options);
-    QVirtuosoAsyncResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options);
-    QVirtuosoResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
+    QVirtuosoResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options);
 
 protected:
     bool beginTransaction();
@@ -162,6 +161,8 @@ private:
     void init();
     bool endTrans();
     void cleanup();
+    QVirtuosoAsyncResult* asyncExec(const QString& query, QSparqlQuery::StatementType type);
+    QVirtuosoResult* syncExec(const QString& query, QSparqlQuery::StatementType type);
     QVirtuosoDriverPrivate* d;
     friend class QVirtuosoResultPrivate;
     friend class QVirtuosoAsyncResultPrivate;
