@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS = sparql plugins
+plugins.depends = sparql
 
 coverage {
 	coverage.CONFIG = recursive
