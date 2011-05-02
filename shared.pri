@@ -7,7 +7,7 @@ QMAKE_LIBDIR = $$QT_BUILD_TREE/lib
 isEmpty(PREFIX): PREFIX = $$QTSPARQL_INSTALL_PREFIX
 
 # this will be in the .so name
-VERSION = 0.0.0
+VERSION = 0.0.26
 
 # for documentation
 DOC_VERSION = 0.0.26
