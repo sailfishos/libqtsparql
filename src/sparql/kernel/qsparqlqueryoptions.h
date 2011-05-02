@@ -44,13 +44,11 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLCONNECTION_H
-#define QSPARQLCONNECTION_H
+#ifndef QSPARQLQUERYOPTIONS_H
+#define QSPARQLQUERYOPTIONS_H
 
-#include <QtCore/qstring.h>
 #include <QtSparql/qsparql.h>
-#include <QtSparql/qsparqlconnectionoptions.h>
-#include <QtSparql/qsparqlbinding.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_HEADER
 
@@ -58,55 +56,40 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class QSparqlError;
-class QSparqlQuery;
-class QSparqlResult;
-class QSparqlConnectionPrivate;
-class QSparqlQueryOptions;
+class QSparqlQueryOptionsPrivate;
 
-class Q_SPARQL_EXPORT QSparqlConnection : public QObject
+class Q_SPARQL_EXPORT QSparqlQueryOptions
 {
-    Q_OBJECT
 public:
-    enum Feature {  QuerySize, DefaultGraph,
-                    AskQueries, ConstructQueries, UpdateQueries,
-                    SyncExec, AsyncExec };
-    // TODO: QuerySize should be removed (API break).
+    QSparqlQueryOptions();
+    ~QSparqlQueryOptions();
 
-    explicit QSparqlConnection(QObject* parent = 0);
-    QSparqlConnection(const QString& type,
-                      const QSparqlConnectionOptions& options = QSparqlConnectionOptions(),
-                      QObject* parent = 0);
-    ~QSparqlConnection();
+    QSparqlQueryOptions(const QSparqlQueryOptions& other);
+    QSparqlQueryOptions& operator=(const QSparqlQueryOptions& other);
+    bool operator==(const QSparqlQueryOptions &other) const;
 
-    QSparqlResult* exec(const QSparqlQuery& query);
-    QSparqlResult* exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options);
-    QSparqlResult* syncExec(const QSparqlQuery& query);
+    enum ExecutionMethod {
+        ExecAsync = 1,
+        ExecSync  = 2
+    };
 
-    bool isValid() const;
-    QString driverName() const;
-    bool hasFeature(Feature feature) const;
+    void setExecutionMethod(ExecutionMethod em);
+    ExecutionMethod executionMethod() const;
 
-    void addPrefix(const QString& prefix, const QUrl& uri);
-    void clearPrefixes();
+    enum Priority {
+        PriorityNormal =  0,
+        PriorityLow    = 10
+    };
 
-    QUrl createUrn() const;
-    QSparqlBinding createUrn(const QString& name) const;
-
-    static QStringList drivers();
+    void setPriority(Priority p);
+    Priority priority() const;
 
 private:
-    friend class QSparqlConnectionPrivate;
-    QSparqlConnectionPrivate *d; // replace with Q_DECLARE_PRIVATE when Qt publishes it
+    QSharedDataPointer<QSparqlQueryOptionsPrivate> d;
 };
-// TODO: make "validness" of a connection a QObject property
-
-#ifndef QT_NO_DEBUG_STREAM
-Q_SPARQL_EXPORT QDebug operator<<(QDebug, const QSparqlConnection &);
-#endif
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQLCONNECTION_H
+#endif // QSparqlQueryOptions_H
