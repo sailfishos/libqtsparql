@@ -489,7 +489,18 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
                                     QSparqlError::BackendError));
             qWarning("QSparqlConnection::exec: Unsupported statement type");
         } else {
-            result = d->driver->exec(queryText, query.type(), options);
+            if (!d->driver->hasFeature(QSparqlConnection::SyncExec) &&
+                    options.executionMethod() == QSparqlQueryOptions::ExecSync) {
+                // If the driver does not support requested synchronous execution,
+                // emulate the synchronous execution with asynchronous exec + waitForFinished
+                QSparqlQueryOptions modifiedOptions(options);
+                modifiedOptions.setExecutionMethod(QSparqlQueryOptions::ExecAsync);
+                result = d->driver->exec(queryText, query.type(), modifiedOptions);
+                result->waitForFinished();
+            }
+            else {
+                result = d->driver->exec(queryText, query.type(), options);
+            }
         }
     }
     result->setParent(this);
@@ -521,23 +532,9 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
 */
 QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
 {
-    QString queryText = query.preparedQueryText();
-    QSparqlResult* result = d->checkErrors(queryText);
-    if (!result) {
-        // No error. FIXME: it's evil to return a 0 pointer to indicate "no
-        // error".
-        QSparqlQueryOptions options;
-        if (d->driver->hasFeature(QSparqlConnection::SyncExec)) {
-            options.setExecutionMethod(QSparqlQueryOptions::ExecSync);
-            result = d->driver->exec(queryText, query.type(), options);
-        }
-        else {
-            result = d->driver->exec(queryText, query.type(), options);
-            result->waitForFinished();
-        }
-    }
-    result->setParent(this);
-    return result;
+    QSparqlQueryOptions options;
+    options.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    return exec(query, options);
 }
 
 /*!
