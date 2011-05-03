@@ -341,6 +341,9 @@ void tst_QSparqlTracker::query_with_error()
 
 void tst_QSparqlTracker::batch_update()
 {
+    // The "batch" option has been removed from API documentation as it is replaced by
+    // QSparqlQueryOption::LowPriority. The implemenation and this test needs to be kept
+    // for backward compatibility.
     QSparqlConnectionOptions opts;
     opts.setOption(QString::fromLatin1("batch"), QVariant(true));
     // This test will leave unclean test data into tracker if it crashes.
