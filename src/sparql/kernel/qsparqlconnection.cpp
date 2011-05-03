@@ -324,10 +324,20 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
 
   \brief The QSparqlConnection class provides an interface for accessing an RDF store.
 
+    The user is responsible for freeing any QSparqlResult returned by the connection,
+    when they are no longer needed. However, since the QSparqlResult object is a child of
+    the QSparqlConnection, after the QSparqlConnection has been deleted the QSparqlResult
+    is no longer valid (and doesn't need to be freed).
+
+    If you change the parent of a returned QSparqlResult, the user will always be responsible for
+    deleting the result, and ensuring the connection is destroyed AFTER the QSparqlResult
+    has been deleted. Deleting the connection before the QSparqlResult in this scenario
+    will invalidate the result, do not do this.
+
 */
 
 /*!
-    Constructs and invalid QSparqlConnection.
+    Constructs an invalid QSparqlConnection.
 */
 QSparqlConnection::QSparqlConnection(QObject* parent)
     : QObject(parent)
@@ -339,10 +349,10 @@ QSparqlConnection::QSparqlConnection(QObject* parent)
 
 /*!
 
-Constructs a QSparqlConnection of the given \a type with the given \a options.
-The \a type is a string which identifies the driver.  To get a list of available
-drivers, use drivers().  The accepted connection options depend on the selected
-driver.  The drivers ignore unneeded connection options.
+    Constructs a QSparqlConnection of the given \a type with the given \a options.
+    The \a type is a string which identifies the driver. To get a list of available
+    drivers, use drivers(). The accepted connection options depend on the selected
+    driver. The drivers ignore unneeded connection options.
 
 */
 QSparqlConnection::QSparqlConnection(const QString& type,
@@ -358,8 +368,8 @@ QSparqlConnection::QSparqlConnection(const QString& type,
 /*!
     Destroys the QSparqlConnection object and frees up any
     resources. Note that QSparqlResult objects that are returned from
-    this class have this object set as their parents, which means that
-    they will be deleted along with it if you don't call
+    this class have this object set as their parent, which means that
+    they will be deleted along with the connection it if you don't call
     QObject::setParent() on them.
 */
 QSparqlConnection::~QSparqlConnection()
@@ -412,18 +422,7 @@ QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) c
     Executes a SPARQL query on the database asynchronously and returns a pointer
     to a QSparqlResult object.
 
-    The user is responsible for freeing the QSparqlResult when it's no longer
-    used (but not after the QSparqlConnection is deleted). The QSparqlResult
-    object is also a child of the QSparqlConnection, so after the
-    QSparqlConnection has been deleted, the QSparqlResult is no longer valid
-    (and doesn't need to be freed).
-
-    If you change the parent of a returned result, you must be responsible for
-    deleting the result, and ensuring the connection is destroyed AFTER the QSparqlResult
-    have been deleted. Deleting the connection before the QSparqlResult will invalidate the results,
-    do not do this.
-
-    If \a query is empty or if the this QSparqlConnection is not
+    If \a query is empty or if the QSparqlConnection is not
     valid, exec() returns a QSparqlResult which is in the error
     state. It won't emit the finished() signal.
 
@@ -465,14 +464,8 @@ QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
     The user can call QSparqlResult::next() to retrieve the next row of the
     result set synchronously.
 
-    The user is responsible for freeing the QSparqlResult when it's no longer
-    used (but not after the QSparqlConnection is deleted). The QSparqlResult
-    object is also a child of the QSparqlConnection, so after the
-    QSparqlConnection has been deleted, the QSparqlResult is no longer valid
-    (and doesn't need to be freed).
-
-    If \a query is empty or if the this QSparqlConnection is not
-    valid, exec() returns a QSparqlResult which is in the error
+    If \a query is empty or if the QSparqlConnection is not
+    valid, syncExec() returns a QSparqlResult which is in the error
     state.
 
     If this function fails with "connection not open" error, the
@@ -562,7 +555,7 @@ bool QSparqlConnection::hasFeature(Feature feature) const
 }
 
 /*!
-    Returns true if the QSparqlConnection has a valid driver, i.e.,
+    Returns true if the QSparqlConnection has a valid driver, i.e.
     the name of the driver given in the constructor was valid.
 */
 bool QSparqlConnection::isValid() const
