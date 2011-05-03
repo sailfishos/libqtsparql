@@ -56,13 +56,13 @@ class QSparqlResultPrivate
 {
 public:
     QSparqlResultPrivate()
-    : idx(QSparql::BeforeFirstRow), statementType(QSparqlQuery::SelectStatement), 
+    : idx(QSparql::BeforeFirstRow), statementType(QSparqlQuery::SelectStatement),
       boolValue(false)
     {}
 
 public:
     int idx;
-    QString sparql; // FIXME: needed? rdale: yes it is needed (for debugging)
+    QString sparql;
     QSparqlQuery::StatementType statementType;
     QSparqlError error;
     bool boolValue;
