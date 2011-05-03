@@ -127,7 +127,23 @@
 
     \section querymodels Query models
 
-    TODO: QSparlQueryModel
+    The QSparqlQueryModel class provides a convienient, read-only, data model for SPARQL results 
+    which can be used to provide data to view classes such as QTableView.
+
+    After creating the model, use QSparqlQueryModel::setQuery() to set the query for the connection,
+    header data for the model can also be set using QSparqlQueryModel::setHeaderData().
+
+    E.g.,
+    \dontinclude querymodel/main.cpp
+    \skip model;
+    \until setHeaderData
+
+    You can then use this in an a view class by using it's setModel() function.
+
+    E.g.,
+    \dontinclude querymodel/main.cpp
+    \skip *view
+    \until model
 
     \section connectionoptions Connection options supported by drivers
 
