@@ -47,7 +47,7 @@
 #ifndef QSPARQLERROR_H
 #define QSPARQLERROR_H
 
-#include "qsparql.h"
+#include <QtSparql/qsparql.h>
 
 #include <QtCore/qstring.h>
 
@@ -60,6 +60,8 @@ QT_MODULE(Sparql)
 // TODO: how to differentiate between fatal and non-fatal errors. (Fatal =
 // doesn't make sense to try to exec() anything ever, non-fatal: exec:in the
 // next query, or the same query again, makes sense.)
+
+class QString;
 
 class Q_SPARQL_EXPORT QSparqlError
 {
