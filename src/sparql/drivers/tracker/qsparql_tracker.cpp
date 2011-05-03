@@ -257,7 +257,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
                           QSparqlQuery::StatementType type,
                           const QSparqlQueryOptions& options)
 {
-    if (options.executionMethod() == QSparqlQueryOptions::ExecSync)
+    if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
         return 0;
 
     QTrackerResult* res = new QTrackerResult(type);
@@ -273,7 +273,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
-        if (d->doBatch || options.priority() == QSparqlQueryOptions::PriorityLow) {
+        if (d->doBatch || options.priority() == QSparqlQueryOptions::LowPriority) {
             funcToCall = QString::fromLatin1("BatchSparqlUpdate");
         }
         else {

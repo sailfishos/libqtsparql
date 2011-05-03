@@ -157,9 +157,9 @@ QSparqlError::ErrorType errorCodeToType(gint code)
 gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
 {
     switch (priority) {
-    case QSparqlQueryOptions::PriorityLow:
+    case QSparqlQueryOptions::LowPriority:
         return G_PRIORITY_LOW;
-    case QSparqlQueryOptions::PriorityNormal:
+    case QSparqlQueryOptions::NormalPriority:
     default:
         return G_PRIORITY_DEFAULT;
     }
@@ -322,10 +322,10 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
     QSparqlResult* result = 0;
 
     switch (options.executionMethod()) {
-    case QSparqlQueryOptions::ExecAsync:
+    case QSparqlQueryOptions::AsyncExec:
         result = asyncExec(query, type, options);
         break;
-    case QSparqlQueryOptions::ExecSync:
+    case QSparqlQueryOptions::SyncExec:
         result = syncExec(query, type, options);
         break;
     }

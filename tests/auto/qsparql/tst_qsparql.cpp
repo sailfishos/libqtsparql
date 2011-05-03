@@ -152,9 +152,9 @@ class MockDriver : public QSparqlDriver
     QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions& options)
     {
         switch(options.executionMethod()) {
-        case QSparqlQueryOptions::ExecAsync:
+        case QSparqlQueryOptions::AsyncExec:
             return new MockResult(this);
-        case QSparqlQueryOptions::ExecSync:
+        case QSparqlQueryOptions::SyncExec:
             return new MockSyncFwOnlyResult();
         default:
             return 0;
@@ -450,43 +450,43 @@ void tst_QSparql::iterate_nonempty_fwonly_result_first()
 void tst_QSparql::default_QSparqlQueryOptions()
 {
     QSparqlQueryOptions opt;
-    QCOMPARE( opt.executionMethod(), QSparqlQueryOptions::ExecAsync );
-    QCOMPARE( opt.priority(), QSparqlQueryOptions::PriorityNormal );
+    QCOMPARE( opt.executionMethod(), QSparqlQueryOptions::AsyncExec );
+    QCOMPARE( opt.priority(), QSparqlQueryOptions::NormalPriority );
 }
 
 void tst_QSparql::copies_of_QSparqlQueryOptions_are_equal_and_independent()
 {
     QSparqlQueryOptions opt1;
-    opt1.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    opt1.setExecutionMethod(QSparqlQueryOptions::SyncExec);
     QSparqlQueryOptions opt2(opt1);
-    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::ExecSync );
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::SyncExec );
     QVERIFY( opt2 == opt1 );
 
-    opt2.setPriority(QSparqlQueryOptions::PriorityLow);
-    QCOMPARE( opt2.priority(), QSparqlQueryOptions::PriorityLow );
-    QCOMPARE( opt1.priority(), QSparqlQueryOptions::PriorityNormal );
+    opt2.setPriority(QSparqlQueryOptions::LowPriority);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::LowPriority );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::NormalPriority );
     QVERIFY( !(opt2 == opt1) );
 
-    opt2.setPriority(QSparqlQueryOptions::PriorityNormal);
+    opt2.setPriority(QSparqlQueryOptions::NormalPriority);
     QVERIFY( opt2 == opt1 );
 }
 
 void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy()
 {
     QSparqlQueryOptions opt1;
-    opt1.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    opt1.setExecutionMethod(QSparqlQueryOptions::SyncExec);
     QSparqlQueryOptions opt2;
     QVERIFY( !(opt2 == opt1) );
     opt2 = opt1;
-    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::ExecSync );
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::SyncExec );
     QVERIFY( opt2 == opt1 );
 
-    opt2.setPriority(QSparqlQueryOptions::PriorityLow);
-    QCOMPARE( opt2.priority(), QSparqlQueryOptions::PriorityLow );
-    QCOMPARE( opt1.priority(), QSparqlQueryOptions::PriorityNormal );
+    opt2.setPriority(QSparqlQueryOptions::LowPriority);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::LowPriority );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::NormalPriority );
     QVERIFY( !(opt2 == opt1) );
 
-    opt2.setPriority(QSparqlQueryOptions::PriorityNormal);
+    opt2.setPriority(QSparqlQueryOptions::NormalPriority);
     QVERIFY( opt2 == opt1 );
 }
 

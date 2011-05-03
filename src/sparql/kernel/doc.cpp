@@ -139,7 +139,7 @@
     - custom: "batch" (bool), use BatchUpdate when writing data to
       Tracker. BatchUpdate will schedule the data to be written at a suitable
       moment, so it is not necessarity written when the query is finished.
-      This option can also be specified per query, see QSparqlQueryOptions::PriorityLow.
+      This option can also be specified per query, see QSparqlQueryOptions::LowPriority.
       The per-query option is supported also by the QTRACKER_DIRECT driver.
 
     QTRACKER_DIRECT driver supports the following connection options:

@@ -289,10 +289,10 @@ QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::State
     QVirtuosoResult* result = 0;
 
     switch (options.executionMethod()) {
-    case QSparqlQueryOptions::ExecAsync:
+    case QSparqlQueryOptions::AsyncExec:
         result = asyncExec(query, type);
         break;
-    case QSparqlQueryOptions::ExecSync:
+    case QSparqlQueryOptions::SyncExec:
         result = syncExec(query, type);
         break;
     }

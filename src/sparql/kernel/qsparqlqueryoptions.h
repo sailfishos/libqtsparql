@@ -69,16 +69,16 @@ public:
     bool operator==(const QSparqlQueryOptions &other) const;
 
     enum ExecutionMethod {
-        ExecAsync = 1,
-        ExecSync  = 2
+        AsyncExec = 1,
+        SyncExec  = 2
     };
 
     void setExecutionMethod(ExecutionMethod em);
     ExecutionMethod executionMethod() const;
 
     enum Priority {
-        PriorityNormal =  0,
-        PriorityLow    = 10
+        NormalPriority =  0,
+        LowPriority    = 10
     };
 
     void setPriority(Priority p);
