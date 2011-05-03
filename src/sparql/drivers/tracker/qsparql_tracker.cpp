@@ -421,6 +421,9 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
+    // This option has been removed from API documentation as it is replaced by
+    // QSparqlQueryOption::LowPriority. The implemenation needs to be kept
+    // for backward compatibility.
     QVariant batchOption = options.option(QString::fromLatin1("batch"));
     if (!batchOption.isNull()) {
         d->doBatch = batchOption.toBool();
