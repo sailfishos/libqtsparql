@@ -490,11 +490,11 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
             qWarning("QSparqlConnection::exec: Unsupported statement type");
         } else {
             if (!d->driver->hasFeature(QSparqlConnection::SyncExec) &&
-                    options.executionMethod() == QSparqlQueryOptions::ExecSync) {
+                    options.executionMethod() == QSparqlQueryOptions::SyncExec) {
                 // If the driver does not support requested synchronous execution,
                 // emulate the synchronous execution with asynchronous exec + waitForFinished
                 QSparqlQueryOptions modifiedOptions(options);
-                modifiedOptions.setExecutionMethod(QSparqlQueryOptions::ExecAsync);
+                modifiedOptions.setExecutionMethod(QSparqlQueryOptions::AsyncExec);
                 result = d->driver->exec(queryText, query.type(), modifiedOptions);
                 result->waitForFinished();
             }
@@ -533,7 +533,7 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
 QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
 {
     QSparqlQueryOptions options;
-    options.setExecutionMethod(QSparqlQueryOptions::ExecSync);
+    options.setExecutionMethod(QSparqlQueryOptions::SyncExec);
     return exec(query, options);
 }
 

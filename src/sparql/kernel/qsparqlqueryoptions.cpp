@@ -57,8 +57,8 @@ public:
 
 QSparqlQueryOptionsPrivate::QSparqlQueryOptionsPrivate()
     // Set the options to their default values
-    : executionMethod(QSparqlQueryOptions::ExecAsync)
-    , priority(QSparqlQueryOptions::PriorityNormal)
+    : executionMethod(QSparqlQueryOptions::AsyncExec)
+    , priority(QSparqlQueryOptions::NormalPriority)
 {
 }
 
@@ -113,17 +113,17 @@ bool QSparqlQueryOptions::operator==(const QSparqlQueryOptions &other) const
     \enum QSparqlQueryOptions::ExecutionMethod
     Execution method of the query.
 
-    \var QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::ExecAsync
+    \var QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::AsyncExec
     Query is to be executed asynchronously. This is the default value of QSparqlQueryOptions.
 
-    \var QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::ExecSync
+    \var QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::SyncExec
     Query is to be executed synchronously.
 
     \sa setExecutionMethod, executionMethod
 */
 
 /// Sets the exeuction method of the query.
-/// The default execution method is ExecAsync.
+/// The default execution method is QSparqlQueryOptions::AsyncExec.
 /// \sa executionMethod
 void QSparqlQueryOptions::setExecutionMethod(ExecutionMethod em)
 {
@@ -141,17 +141,17 @@ QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::executionMethod() cons
     \enum QSparqlQueryOptions::Priority
     Priority of the query.
 
-    \var QSparqlQueryOptions::Priority QSparqlQueryOptions::PriorityNormal
+    \var QSparqlQueryOptions::Priority QSparqlQueryOptions::NormalPriority
     Query is to be executed with normal priority. This is the default value of QSparqlQueryOptions.
 
-    \var QSparqlQueryOptions::Priority QSparqlQueryOptions::PriorityLow
+    \var QSparqlQueryOptions::Priority QSparqlQueryOptions::LowPriority
     Query is to be executed with low priority. Support for this option is driver-specfifc.
 
     \sa setPriority, priority
 */
 
 /// Sets the priority of the query.
-/// The default priority is PriorityNormal.
+/// The default priority is QSparqlQueryOptions::NormalPriority.
 /// \sa priority
 void QSparqlQueryOptions::setPriority(Priority p)
 {
