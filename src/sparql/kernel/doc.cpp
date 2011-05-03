@@ -137,12 +137,12 @@
       moment, so it is not necessarity written when the query is finished.
 
     QTRACKER_DIRECT driver supports the following connection options:
-    - custom: "dataReadyInterval" (int, default 1), controls the interval for
+    - dataReadyInterval (int, default 1), controls the interval for
       emitting the dataReady signal.
-    - custom: "maxThread" (int), sets the maximum number of threads for the
+    - maxThread (int), sets the maximum number of threads for the
       thread pool to use. If not set a default of number of cores * 2 will
       be used.
-    - custom: "threadExpiry" (int, default 2000), controls the expiry time
+    - threadExpiry (int, default 2000), controls the expiry time
       (in milliseconds) of the threads created by the thread pool.
 
     QENDPOINT driver supports the following connection options:
@@ -164,7 +164,11 @@
     - databaseName (QString)
 
     For setting custom options, use QSparqlConnectionOptions::setOption() and
-    give the option name as a string.
+    give the option name as a string, followed by the value.
+
+    Other options can be set using QSparqlConnectionOptions::setOption(), however
+    it is preferable to use the convinence functions in QSparqlConnectionOptions,
+    as these provide additional error checking.
 
     \section connectionfeatures Connection features
 
