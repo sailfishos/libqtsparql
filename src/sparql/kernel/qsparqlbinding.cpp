@@ -660,6 +660,7 @@ bool QSparqlBinding::isValid() const
 }
 
 #ifndef QT_NO_DEBUG_STREAM
+// LCOV_EXCL_START
 QDebug operator<<(QDebug dbg, const QSparqlBinding &f)
 {
 #ifndef Q_BROKEN_DEBUG_STREAM
@@ -672,6 +673,7 @@ QDebug operator<<(QDebug dbg, const QSparqlBinding &f)
     Q_UNUSED(f);
 #endif
 }
+// LCOV_EXCL_STOP
 #endif
 
 QT_END_NAMESPACE
