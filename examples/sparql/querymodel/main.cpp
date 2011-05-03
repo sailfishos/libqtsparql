@@ -40,15 +40,15 @@
 ****************************************************************************/
 
 #include <QtGui>
+#include <QtSparql>
 
-#include "../connection.h"
 #include "customsparqlmodel.h"
 
 QSparqlConnection* connection;
 
 void initializeModel(QSparqlQueryModel *model)
 {
-    model->setQuery(QSparqlQuery("select * from person"), *connection);
+    model->setQuery(QSparqlQuery("select ?u ?ng ?nf { ?u a nco:Contact; nco:nameGiven ?ng; nco:nameFamily ?nf . }"), *connection);
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("First name"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Last name"));
@@ -69,8 +69,8 @@ void createView(const QString &title, QSparqlQueryModel *model)
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    if (!createConnection())
-        return 1;
+
+    connection = new QSparqlConnection("QTRACKER_DIRECT");
 
     QSparqlQueryModel plainModel;
     CustomSparqlModel customModel;

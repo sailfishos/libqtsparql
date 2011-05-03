@@ -1,6 +1,5 @@
 include(../sparql-examples.pri)
-HEADERS       = ../connection.h \
-                customsparqlmodel.h 
+HEADERS       = customsparqlmodel.h
 SOURCES       = customsparqlmodel.cpp \
                 main.cpp
 #QT           += sparql #enable this later
