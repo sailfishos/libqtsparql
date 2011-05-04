@@ -1450,11 +1450,15 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     QTime timer;
 
     foreach(QSignalSpy *resultSpy, resultSpys) {
+        bool timeout = false;
         timer.restart();
-        while(resultSpy->count() == 0 && timer.elapsed() < 2000)
+        while(resultSpy->count() == 0 && !timeout)
         {
             QTest::qWait(1);
+            if (timer.elapsed() > 8000)
+                timeout = true;
         }
+        QVERIFY(!timeout);
         QCOMPARE(resultSpy->count(), 1);
     }
     qDeleteAll(resultSpys);
