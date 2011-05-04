@@ -75,11 +75,11 @@
       If necessary, specify the parameters by using QSparqlConnectionOptions and
       passing it to QSparqlConnection.
 
-    E.g., to use tracker:
+    E.g. to use tracker:
     \dontinclude simple/main.cpp
     \skipline QSparqlConnection
 
-    E.g., to use DBpedia:
+    E.g. to use DBpedia:
     \dontinclude dbpedia/main.cpp
     \skip QSparqlConnectionOptions
     \until QSPARQL_ENDPOINT
@@ -87,7 +87,7 @@
     - Construct a QSparqlQuery with the SPARQL query string.  Specify the query
       type, if needed.
 
-    E.g.,
+    E.g.
     \dontinclude simple/main.cpp
     \skipline QSparqlQuery
 
@@ -100,7 +100,7 @@
     - Use QSparqlConnection::exec() to execute the query. It returns a
       pointer to QSparqlResult.
 
-    E.g.,
+    E.g.
     \dontinclude simple/main.cpp
     \skipline QSparqlResult
 
@@ -112,7 +112,7 @@
       QSparqlResult::previous(), QSparqlResult::setPos(). The caller is
       responsible for deleting the QSparqlResult.
 
-    E.g.,
+    E.g.
     \dontinclude simple/main.cpp
     \skip result->next
     \until toString
@@ -133,14 +133,14 @@
     After creating the model, use QSparqlQueryModel::setQuery() to set the query for the connection,
     header data for the model can also be set using QSparqlQueryModel::setHeaderData().
 
-    E.g.,
+    E.g.
     \dontinclude querymodel/main.cpp
     \skip model;
     \until setHeaderData
 
     You can then use this in an a view class by using it's setModel() function.
 
-    E.g.,
+    E.g.
     \dontinclude querymodel/main.cpp
     \skip *view
     \until model
