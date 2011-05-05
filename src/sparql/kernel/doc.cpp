@@ -145,6 +145,9 @@
     \skip *view
     \until model
 
+    It is also easy to implement custom query models by reimplementing QSparqlQueryModel::data(), see
+    the querymodel example for an example of this.
+
     \section connectionoptions Connection options supported by drivers
 
     QTRACKER driver supports the following connection options:
