@@ -1200,6 +1200,7 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set()
             c = r->size();
         QCOMPARE(dataReadySpy[i][0].toInt(), c);
     }
+    delete r;
 
     // Clean up test data
     r = conn.syncExec(QSparqlQuery(deleteQuery, QSparqlQuery::InsertStatement));
