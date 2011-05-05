@@ -1402,12 +1402,14 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
         CHECK_ERROR(r);
 
         QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        QTest::qWait(1);
         while (spy.count() < 2)
             QTest::qWait(1);
         // Verify that the query is really deleted mid-way through
         QVERIFY(!r->isFinished());
         delete conn; conn = 0;
+        // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+        QTest::qWait(500);
+        // Finally delete the result
         delete r;
     }
 }
@@ -1514,13 +1516,15 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
         CHECK_ERROR(r);
 
         QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        QTest::qWait(1);
         while (spy.count() < 2)
             QTest::qWait(1);
         // Verify that the query is really deleted mid-way through
         QVERIFY(!r->isFinished());
         r->waitForFinished();
         QCOMPARE(r->size(), testDataAmount);
+        // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+        QTest::qWait(500);
+        // Finally delete the result
         delete r;
     }
 }
