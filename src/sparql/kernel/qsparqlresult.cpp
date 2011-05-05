@@ -509,11 +509,18 @@ bool QSparqlResult::setPos(int pos)
 
   \sa binding() value() current()
 */
+
 QString QSparqlResult::stringValue(int i) const
 {
     // Subclasses are free to implement this more efficiently
     return value(i).toString();
 }
+
+/*!
+    This function is provided for derived classes which handle position
+    tracking themselves, allowing them to record the current position in the 
+    results
+*/
 
 void QSparqlResult::updatePos(int index)
 {
@@ -534,7 +541,6 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 {
     d->error = error;
 }
-
 
 /*!
     Returns true if the query has finished and there is an error
