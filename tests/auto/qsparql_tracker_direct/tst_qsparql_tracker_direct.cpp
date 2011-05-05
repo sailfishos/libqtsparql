@@ -1241,6 +1241,9 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
 
 void tst_QSparqlTrackerDirect::destroy_connection_before_result()
 {
+    // This test will print out warnings
+    setMsgLogLevel(QtCriticalMsg);
+
     const QString connectionType("QTRACKER_DIRECT");
     QFETCH(int, waitForConnectionOpen);
     QSparqlConnection* conn = new QSparqlConnection(connectionType);
