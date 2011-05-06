@@ -120,7 +120,6 @@ private slots:
     void destroy_connection_partially_iterated_results();
 
     void validate_threadpool_results();
-    void validate_threadpool_results_data();
     void waitForFinished_after_dataReady();
 };
 
@@ -1417,83 +1416,74 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 void tst_QSparqlTrackerDirect::validate_threadpool_results()
 {
     setMsgLogLevel(QtCriticalMsg);
-    QFETCH(int, maxThreadCount);
     const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
 
-    QSparqlConnectionOptions opts;
-    opts.setDataReadyInterval(1);
-    opts.setMaxThreadCount(maxThreadCount);
-    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    for (int maxThreadCount = 1; maxThreadCount <= 100; maxThreadCount *= 10) {
+        QSparqlConnectionOptions opts;
+        opts.setDataReadyInterval(1);
+        opts.setMaxThreadCount(maxThreadCount);
+        QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    //now read this back, each result will then be validated to ensure its the correct one
-    QList<QSparqlResult*> resultList;
-    QList<QSignalSpy*> resultSpys;
+        //now read this back, each result will then be validated to ensure its the correct one
+        QList<QSparqlResult*> resultList;
+        QList<QSignalSpy*> resultSpys;
 
-    const int numberOfResults = 50;
-    const int resultRange = testDataAmount/numberOfResults;
-    for(int i=1;i<=numberOfResults;i++)
-    {
-        int lower = i*resultRange-(resultRange-1);
-        int upper = i*resultRange;
-        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
-                                "nmm:trackNumber ?t;"
-                                "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
-                                "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
-
-        QSparqlResult *r = conn.exec(select);
-        QVERIFY(r);
-        CHECK_ERROR(r);
-        QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
-        resultList.append(r);
-        resultSpys.append(resultSpy);
-    }
-
-    //check the signals
-    QTime timer;
-
-    foreach(QSignalSpy *resultSpy, resultSpys) {
-        bool timeout = false;
-        timer.restart();
-        while(resultSpy->count() == 0 && !timeout)
+        const int numberOfResults = 50;
+        const int resultRange = testDataAmount/numberOfResults;
+        for(int i=1;i<=numberOfResults;i++)
         {
-            QTest::qWait(1);
-            if (timer.elapsed() > 8000)
-                timeout = true;
+            int lower = i*resultRange-(resultRange-1);
+            int upper = i*resultRange;
+            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
+                                    "nmm:trackNumber ?t;"
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
+                                    "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
+
+            QSparqlResult *r = conn.exec(select);
+            QVERIFY(r);
+            CHECK_ERROR(r);
+            QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
+            resultList.append(r);
+            resultSpys.append(resultSpy);
         }
-        QVERIFY(!timeout);
-        QCOMPARE(resultSpy->count(), 1);
-    }
-    qDeleteAll(resultSpys);
 
-    int i=1;
-    foreach(QSparqlResult *result, resultList) {
-        QCOMPARE(result->size(), resultRange);
-        const int start = i*resultRange-(resultRange-1);
-        while(result->next())
-        {
-            //the id we are matching will be sequential and unique
-            //in all results, so we can calculate what it will be
-            //using the result position plus the start offset
-            int expectedValue = result->pos()+start;
-            QCOMPARE(result->value(1).toInt(),expectedValue);
+        //check the signals
+        QTime timer;
+
+        foreach(QSignalSpy *resultSpy, resultSpys) {
+            bool timeout = false;
+            timer.restart();
+            while(resultSpy->count() == 0 && !timeout)
+            {
+                QTest::qWait(1);
+                if (timer.elapsed() > 8000)
+                    timeout = true;
+            }
+            QVERIFY(!timeout);
+            QCOMPARE(resultSpy->count(), 1);
         }
-        i++;
+        qDeleteAll(resultSpys);
+
+        int i=1;
+        foreach(QSparqlResult *result, resultList) {
+            QCOMPARE(result->size(), resultRange);
+            const int start = i*resultRange-(resultRange-1);
+            while(result->next())
+            {
+                //the id we are matching will be sequential and unique
+                //in all results, so we can calculate what it will be
+                //using the result position plus the start offset
+                int expectedValue = result->pos()+start;
+                QCOMPARE(result->value(1).toInt(),expectedValue);
+            }
+            i++;
+        }
+        qDeleteAll(resultList);
     }
-    qDeleteAll(resultList);
-
-}
-
-void tst_QSparqlTrackerDirect::validate_threadpool_results_data()
-{
-    QTest::addColumn<int>("maxThreadCount");
-
-    QTest::newRow("1 Thread") << 1;
-    QTest::newRow("10 Threads") << 10;
-    QTest::newRow("100 Threads") << 100;
 }
 
 void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
