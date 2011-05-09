@@ -78,6 +78,7 @@ private slots:
     void delete_partially_iterated_result();
     void delete_nearly_finished_result();
     void cancel_insert_result();
+    void cancel_insert_result_data();
 
     void concurrent_queries();
     void concurrent_queries_2();
@@ -507,6 +508,11 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
 {
     // This test will leave unclean test data in tracker if it crashes.
     QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QFETCH(bool, waitForConnectionOpen);
+    if (waitForConnectionOpen)
+        QTest::qWait(2000);
+
     QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                      "nco:nameGiven \"addedname001\" .}",
@@ -515,7 +521,8 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     QSparqlResult* r = conn.exec(add);
     QVERIFY(r != 0);
     CHECK_ERROR(r);
-    delete r;
+
+    delete r; r = 0;
     QTest::qWait(3000);
 
     // Delete the uri
@@ -527,6 +534,13 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     r->waitForFinished(); // this test is synchronous only
     CHECK_ERROR(r);
     delete r;
+}
+
+void tst_QSparqlTrackerDirect::cancel_insert_result_data()
+{
+    QTest::addColumn<bool>("waitForConnectionOpen");
+    QTest::newRow("Connection is not open") << false;
+    QTest::newRow("Connection is open") << true;
 }
 
 void tst_QSparqlTrackerDirect::concurrent_queries()
