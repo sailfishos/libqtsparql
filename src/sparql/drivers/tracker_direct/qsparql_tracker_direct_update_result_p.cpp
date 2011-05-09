@@ -69,7 +69,6 @@ public:
     void setLastError(const QSparqlError& e);
 
     QAtomicInt isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
     QEventLoop *loop;
 
     QTrackerDirectUpdateResult* q;
@@ -83,7 +82,7 @@ async_update_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectUpdateResultPrivate *data = static_cast<QTrackerDirectUpdateResultPrivate*>(user_data);
-    if (!data->resultAlive) {
+    if (!data->q) {
         // The user has deleted the Result object before this callback was
         // called. Just delete the ResultPrivate here and do nothing.
         delete data;
@@ -110,7 +109,7 @@ async_update_callback( GObject *source_object,
 
 QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
                                                                      QTrackerDirectDriverPrivate *dpp)
-  : resultAlive(true), loop(0),
+  : loop(0),
   q(result), driverPrivate(dpp)
 {
 }
@@ -153,7 +152,7 @@ QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
         // some point, and that will have our ResultPrivate as user_data. Don't
         // delete the ResultPrivate here, but just mark that we're no longer
         // alive. The callback will then delete the ResultPrivate.
-        d->resultAlive = false;
+        d->q = 0;
         return;
     }
 
