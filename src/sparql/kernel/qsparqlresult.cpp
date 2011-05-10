@@ -248,6 +248,13 @@ void QSparqlResult::waitForFinished()
     been received. If this function returns true, the hasError() and lastError()
     methods should return valid information.
 
+    The useage of this function differs depending on the driver, and method of 
+    execution used. For asynchronous queries the results will be availible once the
+    finished() signal has been emitted. For synchronous execution, the value of isFinished()
+    will be false until all the results have been retrieved using next().
+
+    TODO: Add useage example
+
     Note that this function only changes state if you call waitForFinished(), or
     if an external event happens, which in general only happens if you return to
     the event loop execution.
