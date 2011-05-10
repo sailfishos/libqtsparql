@@ -432,10 +432,11 @@ bool QSparqlResult::last()
 }
 
 /*!
-  Returns the size of the result (number of rows returned), or -1 if
-  the size cannot be determined or if the database does not support
-  reporting information about query sizes. If the query is not
-  finished (isFinished() returns false), -1 is returned.
+  Returns the size of the result (number of rows returned).
+  
+  A return value of -1 is used if the result does not support QuerySize
+  information, or if the query has not yet finished (isFinished() returns
+  false)
 
   \sa isFinished() QSparqlResult::hasFeature()
 */
