@@ -42,10 +42,12 @@
 #include "qsparqlbinding.h"
 #include "qatomic.h"
 #include "qdebug.h"
-#include "qsparqlxsd_p.h"
 #include <QtCore/qurl.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qregexp.h>
+
+#define XSD_ALL
+#include "qsparqlxsd_p.h"
 
 QT_BEGIN_NAMESPACE
 

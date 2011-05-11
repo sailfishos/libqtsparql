@@ -64,6 +64,7 @@
 #include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
+#define XSD_DATE
 #include "../../kernel/qsparqlxsd_p.h"
 
 #include <QDebug>

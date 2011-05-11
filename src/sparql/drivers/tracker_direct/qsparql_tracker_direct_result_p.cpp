@@ -46,6 +46,7 @@
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
 #include <qsparqlresultrow.h>
+#define XSD_INTEGER
 #include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvariant.h>
