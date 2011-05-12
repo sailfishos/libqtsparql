@@ -61,6 +61,7 @@ private:
     QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q);
     void waitForQueryFinished(QSparqlResult* r);
     bool checkResultSize(QSparqlResult* r, int s);
+    bool ensureQueryExecuting(QSparqlResult* r);
 
 private slots:
     void initTestCase();
@@ -122,6 +123,9 @@ private slots:
 
     void validate_threadpool_results();
     void waitForFinished_after_dataReady();
+
+private:
+    QSharedPointer<QSignalSpy> dataReadySpy;
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -144,6 +148,14 @@ void tst_QSparqlTrackerDirect::waitForQueryFinished(QSparqlResult* r)
 
 bool tst_QSparqlTrackerDirect::checkResultSize(QSparqlResult* r, int s){
     return (r->size() == s);
+}
+
+bool tst_QSparqlTrackerDirect::ensureQueryExecuting(QSparqlResult* r)
+{
+    dataReadySpy = QSharedPointer<QSignalSpy>(new QSignalSpy(r, SIGNAL(dataReady(int))));
+    while (dataReadySpy->count() < 2)
+        QTest::qWait(1);
+    return (!r->isFinished());
 }
 
 void tst_QSparqlTrackerDirect::initTestCase()
@@ -171,6 +183,7 @@ void tst_QSparqlTrackerDirect::init()
 
 void tst_QSparqlTrackerDirect::cleanup()
 {
+    dataReadySpy.clear();
 }
 
 void tst_QSparqlTrackerDirect::qsparqlresultrow()
@@ -433,12 +446,8 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     QVERIFY(r != 0);
     CHECK_ERROR(r);
 
-    // Wait for some dataReady signals
-    QSignalSpy spy(r, SIGNAL(dataReady(int)));
-    while (spy.count() < 2)
-        QTest::qWait(1);
     // Verify that the query is really deleted mid-way through
-    QVERIFY(!r->isFinished());
+    QVERIFY(ensureQueryExecuting(r));
     delete r;
 
     // And then spin the event loop so that the async callback is called...
@@ -1414,11 +1423,8 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
         QVERIFY(r != 0);
         CHECK_ERROR(r);
 
-        QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        while (spy.count() < 2)
-            QTest::qWait(1);
-        // Verify that the query is really deleted mid-way through
-        QVERIFY(!r->isFinished());
+        // Verify that the connection is really closed mid-way through
+        QVERIFY(ensureQueryExecuting(r));
         delete conn; conn = 0;
         // Spin the event loop to ensure all asynchrnous activity has a chance to take place
         QTest::qWait(500);
@@ -1519,11 +1525,8 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
         QVERIFY(r != 0);
         CHECK_ERROR(r);
 
-        QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        while (spy.count() < 2)
-            QTest::qWait(1);
-        // Verify that the query is really deleted mid-way through
-        QVERIFY(!r->isFinished());
+        // Verify that the query is really mid-way through
+        QVERIFY(ensureQueryExecuting(r));
         r->waitForFinished();
         QCOMPARE(r->size(), testDataAmount);
         // Spin the event loop to ensure all asynchrnous activity has a chance to take place
