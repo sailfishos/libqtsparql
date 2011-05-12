@@ -442,13 +442,18 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    QSparqlResult* r = conn.exec(testData->selectQuery());
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
-
-    // Verify that the query is really deleted mid-way through
-    QVERIFY(ensureQueryExecuting(r));
-    delete r;
+    const int maxRounds = 20;
+    int succesfulRounds = 0;
+    for(int round=0; round < maxRounds; ++round) {
+        QSparqlResult* r = conn.exec(testData->selectQuery());
+        QVERIFY( r );
+        CHECK_ERROR(r);
+        // Verify that the query is really deleted mid-way through
+        if (ensureQueryExecuting(r))
+            ++succesfulRounds;
+        delete r;
+    }
+    QVERIFY( succesfulRounds >= 5 );
 
     // And then spin the event loop so that the async callback is called...
     QTest::qWait(1000);
@@ -1418,18 +1423,24 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
     for(int i=0;i<20;++i) {
         QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
 
-        QSparqlResult* r = conn->exec(testData->selectQuery());
-        r->setParent(this);
-        QVERIFY(r != 0);
-        CHECK_ERROR(r);
-
-        // Verify that the connection is really closed mid-way through
-        QVERIFY(ensureQueryExecuting(r));
-        delete conn; conn = 0;
-        // Spin the event loop to ensure all asynchrnous activity has a chance to take place
-        QTest::qWait(500);
-        // Finally delete the result
-        delete r;
+        const int maxRounds = 20;
+        int succesfulRounds = 0;
+        for(int round=0; round < maxRounds && succesfulRounds == 0; ++round) {
+            QSparqlResult* r = conn->exec(testData->selectQuery());
+            r->setParent(this);
+            QVERIFY( r );
+            CHECK_ERROR(r);
+            // Verify that the connection is really closed mid-way through
+            if (ensureQueryExecuting(r)) {
+                delete conn; conn = 0;
+                ++succesfulRounds;
+                // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+                QTest::qWait(500);
+            }
+            // Finally delete the result
+            delete r;
+        }
+        QCOMPARE( succesfulRounds, 1 );
     }
 }
 
@@ -1518,22 +1529,30 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    //run this bit serveral times since we are checking for threading issues
-    for(int i=0;i<20;++i) {
-
+    const int maxRounds = 20;
+    int succesfulRounds = 0;
+    for(int round=0; round < maxRounds; ++round) {
         QSparqlResult* r = conn.exec(testData->selectQuery());
         QVERIFY(r != 0);
         CHECK_ERROR(r);
 
         // Verify that the query is really mid-way through
-        QVERIFY(ensureQueryExecuting(r));
-        r->waitForFinished();
-        QCOMPARE(r->size(), testDataAmount);
-        // Spin the event loop to ensure all asynchrnous activity has a chance to take place
-        QTest::qWait(500);
-        // Finally delete the result
-        delete r;
+        if (!ensureQueryExecuting(r)) {
+            // The query was not executing anymore as we want it to be so retry
+            delete r;
+        }
+        else {
+            r->waitForFinished();
+            ++succesfulRounds;
+            QCOMPARE(r->size(), testDataAmount);
+            // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+            QTest::qWait(500);
+            // Finally delete the result
+            delete r;
+        }
     }
+
+    QVERIFY(succesfulRounds >= 5);
 }
 
 
