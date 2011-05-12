@@ -46,6 +46,7 @@
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
 #include <qsparqlresultrow.h>
+#include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
@@ -58,14 +59,6 @@
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
-
-////////////////////////////////////////////////////////////////////////////
-
-// TODO: centralize the xsd uris into one place
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
-}
 
 ////////////////////////////////////////////////////////////////////////////
 // FIXME: refactor QTrackerDirectResult to use QTrackerDirectSyncResult +
