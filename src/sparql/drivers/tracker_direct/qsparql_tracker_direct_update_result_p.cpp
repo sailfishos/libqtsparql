@@ -65,11 +65,14 @@ public:
     QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp);
 
     ~QTrackerDirectUpdateResultPrivate();
+    void startUpdate(const QString& query);
     void terminate();
     void setLastError(const QSparqlError& e);
 
-    QAtomicInt isFinished;
-    bool resultAlive; // whether the corresponding Result object is still alive
+    enum State {
+        Idle, Executing, Finished
+    };
+    State state;
     QEventLoop *loop;
 
     QTrackerDirectUpdateResult* q;
@@ -83,7 +86,7 @@ async_update_callback( GObject *source_object,
 {
     Q_UNUSED(source_object);
     QTrackerDirectUpdateResultPrivate *data = static_cast<QTrackerDirectUpdateResultPrivate*>(user_data);
-    if (!data->resultAlive) {
+    if (!data->q) {
         // The user has deleted the Result object before this callback was
         // called. Just delete the ResultPrivate here and do nothing.
         delete data;
@@ -110,7 +113,7 @@ async_update_callback( GObject *source_object,
 
 QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
                                                                      QTrackerDirectDriverPrivate *dpp)
-  : resultAlive(true), loop(0),
+  : state(Idle), loop(0),
   q(result), driverPrivate(dpp)
 {
 }
@@ -119,9 +122,20 @@ QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
 {
 }
 
+void QTrackerDirectUpdateResultPrivate::startUpdate(const QString& query)
+{
+    tracker_sparql_connection_update_async( driverPrivate->connection,
+                                            query.toUtf8().constData(),
+                                            0,
+                                            0,
+                                            async_update_callback,
+                                            this);
+    state = QTrackerDirectUpdateResultPrivate::Executing;
+}
+
 void QTrackerDirectUpdateResultPrivate::terminate()
 {
-    isFinished = 1;
+    state = Finished;
     q->Q_EMIT finished();
 
     if (loop)
@@ -147,13 +161,13 @@ QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPriva
 
 QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 {
-    if (d->isFinished == 0) {
+    if (d->state == QTrackerDirectUpdateResultPrivate::Executing) {
         // We're deleting the Result before the async update has
         // finished. There is a pending async callback that will be called at
         // some point, and that will have our ResultPrivate as user_data. Don't
         // delete the ResultPrivate here, but just mark that we're no longer
         // alive. The callback will then delete the ResultPrivate.
-        d->resultAlive = false;
+        d->q = 0;
         return;
     }
 
@@ -169,12 +183,7 @@ void QTrackerDirectUpdateResult::exec()
         return;
     }
 
-    tracker_sparql_connection_update_async( d->driverPrivate->connection,
-                                            query().toUtf8().constData(),
-                                            0,
-                                            0,
-                                            async_update_callback,
-                                            d);
+    d->startUpdate(query());
 }
 
 QSparqlBinding QTrackerDirectUpdateResult::binding(int /*field*/) const
@@ -189,7 +198,7 @@ QVariant QTrackerDirectUpdateResult::value(int /*field*/) const
 
 void QTrackerDirectUpdateResult::waitForFinished()
 {
-    if (d->isFinished == 1)
+    if (isFinished())
         return;
 
     // We first need the connection to be ready before doing anything
@@ -214,7 +223,7 @@ void QTrackerDirectUpdateResult::waitForFinished()
 
 bool QTrackerDirectUpdateResult::isFinished() const
 {
-    return d->isFinished == 1;
+    return (d->state == QTrackerDirectUpdateResultPrivate::Finished);
 }
 
 void QTrackerDirectUpdateResult::terminate()

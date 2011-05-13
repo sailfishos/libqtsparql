@@ -8,3 +8,5 @@ coverage {
 	QMAKE_EXTRA_TARGETS += coverage
 }
 
+memcheck.command = echo 'nothing' > /dev/null
+QMAKE_EXTRA_TARGETS += memcheck

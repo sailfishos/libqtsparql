@@ -29,7 +29,10 @@ include(doc/doc.pri)
 check.CONFIG = recursive
 check.recurse = tests
 
-QMAKE_EXTRA_TARGETS += xclean
+memcheck.CONFIG = recursive
+memcheck.recurse = src tests
+
+QMAKE_EXTRA_TARGETS += xclean memcheck
 
 # To measure code coverage:
 # 1) enable the coverage target - that implies building the plugins into the libqtsparql.so
@@ -49,4 +52,3 @@ coverage {
     clean.commands += rm -rf coverage src/sparql/*.gcno src/sparql/*.gcda src/sparql/*.gcov
     QMAKE_EXTRA_TARGETS += clean
 }
-

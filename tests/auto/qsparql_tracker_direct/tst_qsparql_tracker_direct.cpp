@@ -61,6 +61,7 @@ private:
     QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q);
     void waitForQueryFinished(QSparqlResult* r);
     bool checkResultSize(QSparqlResult* r, int s);
+    bool ensureQueryExecuting(QSparqlResult* r);
 
 private slots:
     void initTestCase();
@@ -78,6 +79,7 @@ private slots:
     void delete_partially_iterated_result();
     void delete_nearly_finished_result();
     void cancel_insert_result();
+    void cancel_insert_result_data();
 
     void concurrent_queries();
     void concurrent_queries_2();
@@ -120,8 +122,10 @@ private slots:
     void destroy_connection_partially_iterated_results();
 
     void validate_threadpool_results();
-    void validate_threadpool_results_data();
     void waitForFinished_after_dataReady();
+
+private:
+    QSharedPointer<QSignalSpy> dataReadySpy;
 };
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
@@ -144,6 +148,14 @@ void tst_QSparqlTrackerDirect::waitForQueryFinished(QSparqlResult* r)
 
 bool tst_QSparqlTrackerDirect::checkResultSize(QSparqlResult* r, int s){
     return (r->size() == s);
+}
+
+bool tst_QSparqlTrackerDirect::ensureQueryExecuting(QSparqlResult* r)
+{
+    dataReadySpy = QSharedPointer<QSignalSpy>(new QSignalSpy(r, SIGNAL(dataReady(int))));
+    while (dataReadySpy->count() < 2)
+        QTest::qWait(1);
+    return (!r->isFinished());
 }
 
 void tst_QSparqlTrackerDirect::initTestCase()
@@ -171,6 +183,7 @@ void tst_QSparqlTrackerDirect::init()
 
 void tst_QSparqlTrackerDirect::cleanup()
 {
+    dataReadySpy.clear();
 }
 
 void tst_QSparqlTrackerDirect::qsparqlresultrow()
@@ -425,16 +438,17 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    QSparqlResult* r = conn.exec(testData->selectQuery());
-    CHECK_QSPARQL_RESULT(r);
-
-    // Wait for some dataReady signals
-    QSignalSpy spy(r, SIGNAL(dataReady(int)));
-    while (spy.count() < 2)
-        QTest::qWait(1);
-    // Verify that the query is really deleted mid-way through
-    QVERIFY(!r->isFinished());
-    delete r;
+    const int maxRounds = 20;
+    int succesfulRounds = 0;
+    for(int round=0; round < maxRounds; ++round) {
+        QSparqlResult* r = conn.exec(testData->selectQuery());
+        CHECK_QSPARQL_RESULT(r);
+        // Verify that the query is really deleted mid-way through
+        if (ensureQueryExecuting(r))
+            ++succesfulRounds;
+        delete r;
+    }
+    QVERIFY( succesfulRounds >= 5 );
 
     // And then spin the event loop so that the async callback is called...
     QTest::qWait(1000);
@@ -502,6 +516,11 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
 {
     // This test will leave unclean test data in tracker if it crashes.
     QSparqlConnection conn("QTRACKER_DIRECT");
+
+    QFETCH(bool, waitForConnectionOpen);
+    if (waitForConnectionOpen)
+        QTest::qWait(2000);
+
     QSparqlQuery add("insert { <addeduri001> a nco:PersonContact; "
                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                      "nco:nameGiven \"addedname001\" .}",
@@ -509,7 +528,7 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
 
     QSparqlResult* r = conn.exec(add);
     CHECK_QSPARQL_RESULT(r);
-    delete r;
+    delete r; r = 0;
     QTest::qWait(3000);
 
     // Delete the uri
@@ -521,6 +540,13 @@ void tst_QSparqlTrackerDirect::cancel_insert_result()
     r->waitForFinished(); // this test is synchronous only
     CHECK_QSPARQL_RESULT(r);
     delete r;
+}
+
+void tst_QSparqlTrackerDirect::cancel_insert_result_data()
+{
+    QTest::addColumn<bool>("waitForConnectionOpen");
+    QTest::newRow("Connection is not open") << false;
+    QTest::newRow("Connection is open") << true;
 }
 
 void tst_QSparqlTrackerDirect::concurrent_queries()
@@ -1186,6 +1212,7 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set()
             c = r->size();
         QCOMPARE(dataReadySpy[i][0].toInt(), c);
     }
+    delete r;
 
     // Clean up test data
     r = conn.syncExec(QSparqlQuery(deleteQuery, QSparqlQuery::InsertStatement));
@@ -1226,6 +1253,9 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
 
 void tst_QSparqlTrackerDirect::destroy_connection_before_result()
 {
+    // This test will print out warnings
+    setMsgLogLevel(QtCriticalMsg);
+
     const QString connectionType("QTRACKER_DIRECT");
     QFETCH(int, waitForConnectionOpen);
     QSparqlConnection* conn = new QSparqlConnection(connectionType);
@@ -1376,97 +1406,96 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
     for(int i=0;i<20;++i) {
         QSparqlConnection *conn = new QSparqlConnection("QTRACKER_DIRECT", opts);
 
-        QSparqlResult* r = conn->exec(testData->selectQuery());
-        r->setParent(this);
-        QVERIFY(r != 0);
-        CHECK_QSPARQL_RESULT(r);
-
-        QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        QTest::qWait(1);
-        while (spy.count() < 2)
-            QTest::qWait(1);
-        // Verify that the query is really deleted mid-way through
-        QVERIFY(!r->isFinished());
-        delete conn; conn = 0;
-        delete r;
+        const int maxRounds = 20;
+        int succesfulRounds = 0;
+        for(int round=0; round < maxRounds && succesfulRounds == 0; ++round) {
+            QSparqlResult* r = conn->exec(testData->selectQuery());
+            CHECK_QSPARQL_RESULT(r);
+            r->setParent(this);
+            // Verify that the connection is really closed mid-way through
+            if (ensureQueryExecuting(r)) {
+                delete conn; conn = 0;
+                ++succesfulRounds;
+                // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+                QTest::qWait(500);
+            }
+            // Finally delete the result
+            delete r;
+        }
+        QCOMPARE( succesfulRounds, 1 );
     }
 }
 
 void tst_QSparqlTrackerDirect::validate_threadpool_results()
 {
     setMsgLogLevel(QtCriticalMsg);
-    QFETCH(int, maxThreadCount);
     const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
 
-    QSparqlConnectionOptions opts;
-    opts.setDataReadyInterval(1);
-    opts.setMaxThreadCount(maxThreadCount);
-    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    for (int maxThreadCount = 1; maxThreadCount <= 100; maxThreadCount *= 10) {
+        QSparqlConnectionOptions opts;
+        opts.setDataReadyInterval(1);
+        opts.setMaxThreadCount(maxThreadCount);
+        QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    //now read this back, each result will then be validated to ensure its the correct one
-    QList<QSparqlResult*> resultList;
-    QList<QSignalSpy*> resultSpys;
+        //now read this back, each result will then be validated to ensure its the correct one
+        QList<QSparqlResult*> resultList;
+        QList<QSignalSpy*> resultSpys;
 
-    const int numberOfResults = 50;
-    const int resultRange = testDataAmount/numberOfResults;
-    for(int i=1;i<=numberOfResults;i++)
-    {
-        int lower = i*resultRange-(resultRange-1);
-        int upper = i*resultRange;
-        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
-                                "nmm:trackNumber ?t;"
-                                "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
-                                "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
-
-        QSparqlResult *r = conn.exec(select);
-        CHECK_QSPARQL_RESULT(r);
-        QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
-        resultList.append(r);
-        resultSpys.append(resultSpy);
-    }
-
-    //check the signals
-    QTime timer;
-
-    foreach(QSignalSpy *resultSpy, resultSpys) {
-        timer.restart();
-        while(resultSpy->count() == 0 && timer.elapsed() < 2000)
+        const int numberOfResults = 50;
+        const int resultRange = testDataAmount/numberOfResults;
+        for(int i=1;i<=numberOfResults;i++)
         {
-            QTest::qWait(1);
+            int lower = i*resultRange-(resultRange-1);
+            int upper = i*resultRange;
+            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
+                                    "nmm:trackNumber ?t;"
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-validate_threadpool_results>"
+                                    "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(lower).arg(upper));
+
+            QSparqlResult *r = conn.exec(select);
+            CHECK_QSPARQL_RESULT(r);
+            QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
+            resultList.append(r);
+            resultSpys.append(resultSpy);
         }
-        QCOMPARE(resultSpy->count(), 1);
-    }
-    qDeleteAll(resultSpys);
 
-    int i=1;
-    foreach(QSparqlResult *result, resultList) {
-        QCOMPARE(result->size(), resultRange);
-        const int start = i*resultRange-(resultRange-1);
-        while(result->next())
-        {
-            //the id we are matching will be sequential and unique
-            //in all results, so we can calculate what it will be
-            //using the result position plus the start offset
-            int expectedValue = result->pos()+start;
-            QCOMPARE(result->value(1).toInt(),expectedValue);
+        //check the signals
+        QTime timer;
+
+        foreach(QSignalSpy *resultSpy, resultSpys) {
+            bool timeout = false;
+            timer.restart();
+            while(resultSpy->count() == 0 && !timeout)
+            {
+                QTest::qWait(1);
+                if (timer.elapsed() > 8000)
+                    timeout = true;
+            }
+            QVERIFY(!timeout);
+            QCOMPARE(resultSpy->count(), 1);
         }
-        i++;
+        qDeleteAll(resultSpys);
+
+        int i=1;
+        foreach(QSparqlResult *result, resultList) {
+            QCOMPARE(result->size(), resultRange);
+            const int start = i*resultRange-(resultRange-1);
+            while(result->next())
+            {
+                //the id we are matching will be sequential and unique
+                //in all results, so we can calculate what it will be
+                //using the result position plus the start offset
+                int expectedValue = result->pos()+start;
+                QCOMPARE(result->value(1).toInt(),expectedValue);
+            }
+            i++;
+        }
+        qDeleteAll(resultList);
     }
-    qDeleteAll(resultList);
-
-}
-
-void tst_QSparqlTrackerDirect::validate_threadpool_results_data()
-{
-    QTest::addColumn<int>("maxThreadCount");
-
-    QTest::newRow("1 Thread") << 1;
-    QTest::newRow("10 Threads") << 10;
-    QTest::newRow("100 Threads") << 100;
 }
 
 void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
@@ -1481,22 +1510,29 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     opts.setDataReadyInterval(1);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
 
-    //run this bit serveral times since we are checking for threading issues
-    for(int i=0;i<20;++i) {
-
+    const int maxRounds = 20;
+    int succesfulRounds = 0;
+    for(int round=0; round < maxRounds; ++round) {
         QSparqlResult* r = conn.exec(testData->selectQuery());
         CHECK_QSPARQL_RESULT(r);
 
-        QSignalSpy spy(r, SIGNAL(dataReady(int)));
-        QTest::qWait(1);
-        while (spy.count() < 2)
-            QTest::qWait(1);
-        // Verify that the query is really deleted mid-way through
-        QVERIFY(!r->isFinished());
-        r->waitForFinished();
-        QCOMPARE(r->size(), testDataAmount);
-        delete r;
+        // Verify that the query is really mid-way through
+        if (!ensureQueryExecuting(r)) {
+            // The query was not executing anymore as we want it to be so retry
+            delete r;
+        }
+        else {
+            r->waitForFinished();
+            ++succesfulRounds;
+            QCOMPARE(r->size(), testDataAmount);
+            // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+            QTest::qWait(500);
+            // Finally delete the result
+            delete r;
+        }
     }
+
+    QVERIFY(succesfulRounds >= 5);
 }
 
 
