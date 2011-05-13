@@ -40,6 +40,7 @@ namespace {
 
 
 TrackerDirectCommon::TrackerDirectCommon()
+    : origMsgHandler(0)
 {
 }
 
@@ -51,12 +52,12 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 {
     QSparqlResult* r = execQuery(conn, q);
     if (!r) {
-        qWarning() << "execQuery() returned empty result";
+        testError("execQuery() returned empty result");
         return 0;
     }
     waitForQueryFinished(r);
     if (r->hasError()) {
-        qWarning() << "QSparqlResult resulted with error: " << r->lastError().message();
+        testError(QString("QSparqlResult resulted with error: ") + r->lastError().message());
         return 0;
     }
     return r;
@@ -64,7 +65,9 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 
 void TrackerDirectCommon::installMsgHandler()
 {
-    qInstallMsgHandler(myMessageOutput);
+    QtMsgHandler prevHandler = qInstallMsgHandler(myMessageOutput);
+    if (!origMsgHandler)
+        origMsgHandler = prevHandler;
 }
 
 void TrackerDirectCommon::setMsgLogLevel(int logLevel)
@@ -96,12 +99,12 @@ bool TrackerDirectCommon::setupData()
     QSparqlResult* r = conn.exec(q);
     if (r == 0)
     {
-        qWarning() << "Error when inserting setup data for the test case - conn.exec() returned 0";
+        testError("Error when inserting setup data for the test case - conn.exec() returned 0");
         return false;
     }
     r->waitForFinished();
     if (r->hasError()) {
-        qWarning() << "Error when inserting setup data for the test case: " << r->lastError().message();
+        testError(QString("Error when inserting setup data for the test case: ") + r->lastError().message());
         return false;
     }
     delete r;
@@ -118,16 +121,28 @@ bool TrackerDirectCommon::cleanData()
     QSparqlResult* r = conn.exec(q);
     if (r == 0)
     {
-        qWarning() << "Error when deleting test data from tracker - conn.exec() returned 0";
+        testError("Error when deleting test data from tracker - conn.exec() returned 0");
         return false;
     }
     r->waitForFinished();
     if (r->hasError()) {
-        qWarning() << "Error when deleting test data from tracker: " << r->lastError().message();
+        testError(QString("Error when deleting test data from tracker: ") + r->lastError().message());
         return false;
     }
     delete r;
     return true;
+}
+
+void TrackerDirectCommon::testError(const QString& msg)
+{
+    QtMsgHandler currMsgHandler = 0;
+    if (origMsgHandler != 0)
+        currMsgHandler = qInstallMsgHandler(origMsgHandler);
+
+    qWarning() << "Test error:" << msg;
+
+    if (currMsgHandler != 0)
+        qInstallMsgHandler(currMsgHandler);
 }
 
 void TrackerDirectCommon::query_contacts()
