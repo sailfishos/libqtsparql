@@ -46,57 +46,10 @@
 #include <QtCore/qdatetime.h>
 #include <QtCore/qregexp.h>
 
+#define XSD_ALL
+#include "qsparqlxsd_p.h"
+
 QT_BEGIN_NAMESPACE
-
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Int,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#int")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, NonNegativeInteger,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#nonNegativeInteger")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, UnsignedInt,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#unsignedInt")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Decimal,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#decimal")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Short,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#short")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Long,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#long")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, UnsignedLong,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#unsignedLong")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Boolean,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#boolean")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Double,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#double")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Float,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#float")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, String,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#string")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Date,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#date")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Time,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#time")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Base64Binary,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#base64Binary")))
-}
 
 class QSparqlBindingPrivate
 {

@@ -64,6 +64,8 @@
 #include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
+#define XSD_DATE
+#include "../../kernel/qsparqlxsd_p.h"
 
 #include <QDebug>
 
@@ -77,20 +79,6 @@ QT_BEGIN_NAMESPACE
 # define QSQLLEN SQLLEN
 # define QSQLULEN SQLULEN
 #endif
-
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Decimal,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#decimal")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Date,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#date")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Time,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#time")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
-}
 
 static const int COLNAMESIZE = 256;
 
