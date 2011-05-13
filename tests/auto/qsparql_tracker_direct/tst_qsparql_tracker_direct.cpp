@@ -154,14 +154,14 @@ void tst_QSparqlTrackerDirect::initTestCase()
     installMsgHandler();
 
     // clean any remainings
-    QVERIFY(cleanData() != 0);
+    QVERIFY(cleanData());
 
-    QVERIFY(setupData() != 0);
+    QVERIFY(setupData());
 }
 
 void tst_QSparqlTrackerDirect::cleanupTestCase()
 {
-    QVERIFY(cleanData() != 0);
+    QVERIFY(cleanData());
 }
 
 void tst_QSparqlTrackerDirect::init()
