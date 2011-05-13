@@ -42,10 +42,11 @@
 #ifndef TESTHELPERS_H
 #define TESTHELPERS_H
 
-#define CHECK_ERROR(RES) \
-    if ((RES)->hasError()) {                                    \
-        qWarning() << "Error:" << (RES)->lastError().message();  \
-    }                                                            \
-    QVERIFY(!(RES)->hasError())
+#define CHECK_QSPARQL_RESULT(RES) \
+    do { \
+        QSparqlResult* result_to_check_ = (RES); \
+        QVERIFY( result_to_check_ ); \
+        QVERIFY2( !result_to_check_->hasError(), qPrintable(result_to_check_->lastError().message()) ); \
+    } while(false)
 
 #endif

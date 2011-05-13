@@ -248,7 +248,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
         START_BENCHMARK {
             r = conn.exec(query);
             r->waitForFinished();
-            CHECK_ERROR(r);
+            CHECK_QSPARQL_RESULT(r);
             QVERIFY(r->size() > 0);
             delete r;
         }
@@ -312,7 +312,7 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
             END_BENCHMARK(finished);
             totalTimesFinished.append(benchmarkTotal);
         }
-        CHECK_ERROR(r);
+        CHECK_QSPARQL_RESULT(r);
         QVERIFY(r->size() > 0);
         {
             int size = 0;

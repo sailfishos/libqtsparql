@@ -215,9 +215,9 @@ void tst_QSparqlThreading::initTestCase()
                    "DELETE { <qsparql-threading-tests> a rdfs:Resource . }",
                    QSparqlQuery::DeleteStatement);
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 }
 
@@ -259,8 +259,8 @@ void tst_QSparqlThreading::concurrentEndpointQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    CHECK_ERROR(r1);
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r1);
+    CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -302,8 +302,8 @@ void tst_QSparqlThreading::concurrentVirtuosoQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    CHECK_ERROR(r1);
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r1);
+    CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -340,8 +340,8 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    CHECK_ERROR(r1);
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r1);
+    CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -377,8 +377,8 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    CHECK_ERROR(r1);
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r1);
+    CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
 }
 
@@ -399,7 +399,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
     sem2.release();
     r2->waitForFinished();
 
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r2);
 
     delete r2;
 
@@ -426,7 +426,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
     qDebug() << "r2 delete query:" << r2->query();
     QVERIFY(r2 != 0);
     r2->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r2);
     delete r2;
 
     // Verify that it got deleted
@@ -458,7 +458,7 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
 
     r1->waitForFinished();
 
-    CHECK_ERROR(r1);
+    CHECK_QSPARQL_RESULT(r1);
 
     delete r1;
 
@@ -483,9 +483,9 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
     delete r1;
     r1 = conn1->exec(del);
     qDebug() << "r1 delete query:" << r1->query();
-    QVERIFY(r1 != 0);
+    CHECK_QSPARQL_RESULT(r1);
     r1->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r1);
+    CHECK_QSPARQL_RESULT(r1);
     delete r1;
 
     // Verify that it got deleted
@@ -524,7 +524,7 @@ void tst_QSparqlThreading::subThreadTrackerDirectQuery()
         waitForSignal(th, SIGNAL(finished()));
     }
 
-    CHECK_ERROR(r2);
+    CHECK_QSPARQL_RESULT(r2);
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
