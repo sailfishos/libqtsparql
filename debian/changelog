@@ -1,10 +1,10 @@
-libqtsparql (0.0.26~unreleased) unstable; urgency=low
+libqtsparql (0.0.26) unstable; urgency=low
 
   * Fixes: NB#212868
   * Added QSparqlQueryOptions.
   * Fix: Export only the needed symbols in the .so's.
 
- -- James Thomas <james.thomas@codethink.co.uk>  Mon, 16 May 2011 15:15:00 +0300
+ -- James Thomas <james.thomas@codethink.co.uk>  Mon, 16 May 2011 15:18:00 +0300
 
 libqtsparql (0.0.25) unstable; urgency=low
 
