@@ -51,6 +51,8 @@
 #include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 #include <qsparqlconnection.h>
+#define XSD_INTEGER
+#include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qpointer.h>
@@ -61,14 +63,6 @@
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
-
-////////////////////////////////////////////////////////////////////////////
-
-// TODO: centralize the xsd uris into one place
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
-}
 
 struct QTrackerDirectSyncResultPrivate
 {

@@ -22,7 +22,11 @@ check.CONFIG = recursive
 check.recurse = qsparql qsparqlquery qsparqlbinding qsparql_tracker \
                 qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples
 
-QMAKE_EXTRA_TARGETS += check
+memcheck.CONFIG = recursive
+memcheck.recurse = qsparql_tracker qsparql_tracker_direct qsparql_direct_sync \
+                   qsparql_direct_crashes
+
+QMAKE_EXTRA_TARGETS += check memcheck
 
 
 testdata.target = qsparql_threading/clean_data_threading.rq

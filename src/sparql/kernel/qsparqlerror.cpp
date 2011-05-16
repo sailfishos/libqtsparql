@@ -45,11 +45,13 @@
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_DEBUG_STREAM
+// LCOV_EXCL_START
 QDebug operator<<(QDebug dbg, const QSparqlError &s)
 {
     dbg.nospace() << "QSparqlError(" << s.number() << ", " << s.message() << ')';
     return dbg.space();
 }
+// LCOV_EXCL_STOP
 #endif
 
 /*!

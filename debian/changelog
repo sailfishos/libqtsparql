@@ -1,6 +1,6 @@
 libqtsparql (0.0.26~unreleased) unstable; urgency=low
 
-  *
+  * Fix: Export only the needed symbols in the .so's.
 
  -- James Thomas <james.thomas@codethink.co.uk>  Fri, 29 Apr 2011 16:17:00 +0300
 
