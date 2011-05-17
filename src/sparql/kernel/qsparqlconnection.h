@@ -62,7 +62,6 @@ class QSparqlError;
 class QSparqlQuery;
 class QSparqlResult;
 class QSparqlConnectionPrivate;
-class QSparqlQueryOptions;
 
 class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
@@ -80,7 +79,6 @@ public:
     ~QSparqlConnection();
 
     QSparqlResult* exec(const QSparqlQuery& query);
-    QSparqlResult* exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options);
     QSparqlResult* syncExec(const QSparqlQuery& query);
 
     bool isValid() const;

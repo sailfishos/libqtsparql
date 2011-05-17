@@ -102,8 +102,7 @@ public:
     bool open(const QSparqlConnectionOptions& options);
     void close();
     QTrackerResult* exec(const QString& query,
-                         QSparqlQuery::StatementType type,
-                         const QSparqlQueryOptions& options);
+                         QSparqlQuery::StatementType type);
 private:
     QTrackerDriverPrivate* d;
 };

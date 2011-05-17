@@ -101,7 +101,7 @@ public:
     inline bool open(const QSparqlConnectionOptions&)
         { return false; }
     inline void close() {}
-    inline QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions&)
+    inline QSparqlResult* exec(const QString&, QSparqlQuery::StatementType)
         { return new QSparqlNullResult(); }
 
 protected:

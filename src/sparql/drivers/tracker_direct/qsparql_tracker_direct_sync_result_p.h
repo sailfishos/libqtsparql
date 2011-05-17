@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectDriver;
 class QTrackerDirectSyncResultPrivate;
-class QSparqlQueryOptions;
 
 // A sync and forward-only Result class. The instance of this class is retreved
 // with QTrackerDirectDriver::syncExec().
@@ -66,7 +65,7 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSp
     Q_OBJECT
     friend class QTrackerDirectDriver;
 public:
-    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p, const QSparqlQueryOptions& options);
+    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p);
     ~QTrackerDirectSyncResult();
 
     // Implementation of the QSparqlResult interface

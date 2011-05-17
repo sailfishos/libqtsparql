@@ -62,7 +62,6 @@
 #include "qsparqlresult.h"
 #include "qsparqlerror.h"
 #include "qsparqlconnectionoptions.h"
-#include "qsparqlqueryoptions.h"
 #include "qsparqldriver_p.h"
 #include "qsparqldriverplugin_p.h"
 #if WE_ARE_QT
@@ -436,43 +435,6 @@ QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) c
 */
 QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
 {
-    return exec(query, QSparqlQueryOptions());
-}
-
-/*!
-    Executes a SPARQL \a query on the database and returns a pointer
-    to a QSparqlResult object. The query execution is controlled by \a options.
-
-    For asynchronous queries the user can connect to the returned QSparqlResult
-    object's dataReady() and finished() signals to get notified as the query
-    execution proceeds.
-
-    For synchronous queries the user can call QSparqlResult::next() to retrieve
-    the next row of the result set synchronously.
-
-    The user is responsible for freeing the QSparqlResult when it's no longer
-    used (but not after the QSparqlConnection is deleted). The QSparqlResult
-    object is also a child of the QSparqlConnection, so after the
-    QSparqlConnection has been deleted, the QSparqlResult is no longer valid
-    (and doesn't need to be freed).
-
-    If you change the parent of a returned result, you must be responsible for
-    deleting the result, and ensuring the connection is destroyed AFTER the QSparqlResult
-    have been deleted. Deleting the connection before the QSparqlResult will invalidate the results,
-    do not do this.
-
-    If \a query is empty or if the this QSparqlConnection is not
-    valid, exec() returns a QSparqlResult which is in the error
-    state. It won't emit the finished() signal for an asynchronous query.
-
-    If this function fails with "connection not open" error, the
-    most probable reason is that the required driver is not
-    installed.
-
-    \sa QSparqlQuery, QSparqlResult, QSparqlResult::dataReady, QSparqlResult::finished, QSparqlResult::hasError, QSparqlQueryOptions
-*/
-QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options)
-{
     QString queryText = query.preparedQueryText();
     QSparqlResult* result = d->checkErrors(queryText);
     if (!result) {
@@ -489,18 +451,7 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
                                     QSparqlError::BackendError));
             qWarning("QSparqlConnection::exec: Unsupported statement type");
         } else {
-            if (!d->driver->hasFeature(QSparqlConnection::SyncExec) &&
-                    options.executionMethod() == QSparqlQueryOptions::SyncExec) {
-                // If the driver does not support requested synchronous execution,
-                // emulate the synchronous execution with asynchronous exec + waitForFinished
-                QSparqlQueryOptions modifiedOptions(options);
-                modifiedOptions.setExecutionMethod(QSparqlQueryOptions::AsyncExec);
-                result = d->driver->exec(queryText, query.type(), modifiedOptions);
-                result->waitForFinished();
-            }
-            else {
-                result = d->driver->exec(queryText, query.type(), options);
-            }
+            result = d->driver->exec(queryText, query.type());
         }
     }
     result->setParent(this);
@@ -532,9 +483,21 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
 */
 QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
 {
-    QSparqlQueryOptions options;
-    options.setExecutionMethod(QSparqlQueryOptions::SyncExec);
-    return exec(query, options);
+    QString queryText = query.preparedQueryText();
+    QSparqlResult* result = d->checkErrors(queryText);
+    if (!result) {
+        // No error. FIXME: it's evil to return a 0 pointer to indicate "no
+        // error".
+        if (d->driver->hasFeature(QSparqlConnection::SyncExec)) {
+            result = d->driver->syncExec(queryText, query.type());
+        }
+        else {
+            result = d->driver->exec(queryText, query.type());
+            result->waitForFinished();
+        }
+    }
+    result->setParent(this);
+    return result;
 }
 
 /*!

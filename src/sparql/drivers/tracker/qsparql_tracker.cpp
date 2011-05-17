@@ -45,7 +45,6 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
-#include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 
 #include <qcoreapplication.h>
@@ -254,12 +253,8 @@ QTrackerResult::~QTrackerResult()
 }
 
 QTrackerResult* QTrackerDriver::exec(const QString& query,
-                          QSparqlQuery::StatementType type,
-                          const QSparqlQueryOptions& options)
+                          QSparqlQuery::StatementType type)
 {
-    if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
-        return 0;
-
     QTrackerResult* res = new QTrackerResult(type);
     res->setQuery(query);
 
@@ -273,7 +268,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
-        if (d->doBatch || options.priority() == QSparqlQueryOptions::LowPriority) {
+        if (d->doBatch) {
             funcToCall = QString::fromLatin1("BatchSparqlUpdate");
         }
         else {
@@ -421,9 +416,6 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
-    // This option has been removed from API documentation as it is replaced by
-    // QSparqlQueryOption::LowPriority. The implemenation needs to be kept
-    // for backward compatibility.
     QVariant batchOption = options.option(QString::fromLatin1("batch"));
     if (!batchOption.isNull()) {
         d->doBatch = batchOption.toBool();
