@@ -46,6 +46,7 @@
 
 #include <QtSparql/private/qsparqldriver_p.h>
 #include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlqueryoptions.h>
 #include <QtSparql/qsparqlerror.h>
 
 #include <QtCore/qlist.h>
@@ -81,12 +82,19 @@ public:
     bool open(const QSparqlConnectionOptions& options);
     void close();
     QSparqlResult* exec(const QString& query,
-                         QSparqlQuery::StatementType type);
-    QSparqlResult* syncExec(const QString& query,
-                            QSparqlQuery::StatementType type);
+                         QSparqlQuery::StatementType type,
+                         const QSparqlQueryOptions& options);
 
 Q_SIGNALS:
     void opened();
+
+private:
+    QSparqlResult* asyncExec(const QString& query,
+                            QSparqlQuery::StatementType type,
+                            const QSparqlQueryOptions& options);
+    QSparqlResult* syncExec(const QString& query,
+                            QSparqlQuery::StatementType type,
+                            const QSparqlQueryOptions& options);
 
 private:
     friend class QTrackerDirectDriverPrivate;
@@ -119,6 +127,7 @@ public:
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);
 QSparqlError::ErrorType errorCodeToType(gint code);
+gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority);
 
 QT_END_NAMESPACE
 
