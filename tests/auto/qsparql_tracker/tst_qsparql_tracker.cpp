@@ -196,7 +196,7 @@ void tst_QSparqlTracker::query_contacts_syncExec()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.syncExec(q);
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
