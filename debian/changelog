@@ -1,8 +1,11 @@
-libqtsparql (0.0.27~unreleased) unstable; urgency=low
+libqtsparql (0.0.27) unstable; urgency=low
 
-  * 
+  * Fixes: NB#212868 (re-integrated due to merging issue in 0.0.26)
+  * Fix memory leak in tracker direct driver update result
+  * Improve error reporting from tracker direct driver tests
+ 
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Tue, 17 May 2011 16:30:00 +0300
 
- -- James Thomas <james.thomas@codethink.co.uk>  Mon, 16 May 2011 15:18:00 +0300
 
 libqtsparql (0.0.26) unstable; urgency=low
 
