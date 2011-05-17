@@ -40,6 +40,7 @@ namespace {
 
 
 TrackerDirectCommon::TrackerDirectCommon()
+    : origMsgHandler(0)
 {
 }
 
@@ -51,12 +52,12 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 {
     QSparqlResult* r = execQuery(conn, q);
     if (!r) {
-        qWarning() << "execQuery() returned empty result";
+        testError("execQuery() returned empty result");
         return 0;
     }
     waitForQueryFinished(r);
     if (r->hasError()) {
-        qWarning() << "QSparqlResult resulted with error: " << r->lastError().message();
+        testError(QString("QSparqlResult resulted with error: ") + r->lastError().message());
         return 0;
     }
     return r;
@@ -64,7 +65,9 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 
 void TrackerDirectCommon::installMsgHandler()
 {
-    qInstallMsgHandler(myMessageOutput);
+    QtMsgHandler prevHandler = qInstallMsgHandler(myMessageOutput);
+    if (!origMsgHandler)
+        origMsgHandler = prevHandler;
 }
 
 void TrackerDirectCommon::setMsgLogLevel(int logLevel)
@@ -96,12 +99,12 @@ bool TrackerDirectCommon::setupData()
     QSparqlResult* r = conn.exec(q);
     if (r == 0)
     {
-        qWarning() << "Error when inserting setup data for the test case - conn.exec() returned 0";
+        testError("Error when inserting setup data for the test case - conn.exec() returned 0");
         return false;
     }
     r->waitForFinished();
     if (r->hasError()) {
-        qWarning() << "Error when inserting setup data for the test case: " << r->lastError().message();
+        testError(QString("Error when inserting setup data for the test case: ") + r->lastError().message());
         return false;
     }
     delete r;
@@ -118,16 +121,28 @@ bool TrackerDirectCommon::cleanData()
     QSparqlResult* r = conn.exec(q);
     if (r == 0)
     {
-        qWarning() << "Error when deleting test data from tracker - conn.exec() returned 0";
+        testError("Error when deleting test data from tracker - conn.exec() returned 0");
         return false;
     }
     r->waitForFinished();
     if (r->hasError()) {
-        qWarning() << "Error when deleting test data from tracker: " << r->lastError().message();
+        testError(QString("Error when deleting test data from tracker: ") + r->lastError().message());
         return false;
     }
     delete r;
     return true;
+}
+
+void TrackerDirectCommon::testError(const QString& msg)
+{
+    QtMsgHandler currMsgHandler = 0;
+    if (origMsgHandler != 0)
+        currMsgHandler = qInstallMsgHandler(origMsgHandler);
+
+    qWarning() << "Test error:" << msg;
+
+    if (currMsgHandler != 0)
+        qInstallMsgHandler(currMsgHandler);
 }
 
 void TrackerDirectCommon::query_contacts()
@@ -137,7 +152,7 @@ void TrackerDirectCommon::query_contacts()
                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = runQuery(conn, q);
-    QVERIFY(r != 0);
+    QVERIFY(r);
     QVERIFY(checkResultSize(r, 3));
     QHash<QString, QString> contactNames;
     while (r->next()) {
@@ -153,7 +168,7 @@ void TrackerDirectCommon::query_contacts()
     QCOMPARE(contactNames["uri002"], QString("name002"));
     QCOMPARE(contactNames["uri003"], QString("name003"));
 
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 }
 
@@ -168,7 +183,7 @@ void TrackerDirectCommon::insert_and_delete_contact()
                      QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = runQuery(conn, add);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     QVERIFY(r->isFinished());
     delete r;
 
@@ -178,7 +193,7 @@ void TrackerDirectCommon::insert_and_delete_contact()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
     r = runQuery(conn, q);
-    QVERIFY(r!=0);
+    QVERIFY(r);
 
     QVERIFY(checkResultSize(r, 4));
     while (r->next()) {
@@ -186,7 +201,7 @@ void TrackerDirectCommon::insert_and_delete_contact()
             r->value(1).toString();
     }
     QVERIFY(r->isFinished());
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri001"], QString("addedname001"));
     delete r;
@@ -196,14 +211,14 @@ void TrackerDirectCommon::insert_and_delete_contact()
                      QSparqlQuery::DeleteStatement);
 
     r = runQuery(conn, del);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     QVERIFY(r->isFinished());
     delete r;
 
     // Verify that it got deleted
     contactNames.clear();
     r = runQuery(conn, q);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     QVERIFY(checkResultSize(r, 3));
     while (r->next()) {
         // A different way for retrieving the results
@@ -367,7 +382,7 @@ void TrackerDirectCommon::special_chars()
                              QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = runQuery(conn, add);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     QVERIFY(r->isFinished());
     delete r;
 
@@ -377,13 +392,13 @@ void TrackerDirectCommon::special_chars()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
     r = runQuery(conn, q);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     QVERIFY(checkResultSize(r, 4));
     while (r->next()) {
         contactNames[r->value(0).toString()] =
             r->value(1).toString();
     }
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QVERIFY(r->isFinished());
     QCOMPARE(contactNames.size(), 4);
     QCOMPARE(contactNames["addeduri002"], withSpecialChars);
@@ -394,7 +409,7 @@ void TrackerDirectCommon::special_chars()
                      QSparqlQuery::DeleteStatement);
 
     r = runQuery(conn, del);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     delete r;
 }
 
@@ -410,7 +425,7 @@ void TrackerDirectCommon::data_types()
                            "\"a string\" "
                            "{ }");
     QSparqlResult* r = runQuery(conn, dataTypes);
-    QVERIFY(r!=0);
+    QVERIFY(r);
 
     QVERIFY(r->next());
     QCOMPARE(r->value(0),
@@ -456,7 +471,7 @@ void TrackerDirectCommon::explicit_data_types()
                                "\"2011-03-28T09:36:00+02:00\"^^xsd:dateTime "
                                "{ }");
     QSparqlResult* r = runQuery(conn, explicitTypes);
-    QVERIFY(r!=0);
+    QVERIFY(r);
 
     QVERIFY(r->next());
     QCOMPARE(r->value(0),
@@ -505,14 +520,14 @@ void TrackerDirectCommon::large_integer()
                         "nie:byteSize 5000000000 .}", QSparqlQuery::InsertStatement);
     QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlResult* r = runQuery(conn, insert);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     delete r;
     QSparqlQuery select("select ?do ?bs "
                         "{ ?do a nie:DataObject ; "
                         "nie:isLogicalPartOf <qsparql-tracker-live-tests> ;"
                         "nie:byteSize ?bs .}");
     r = runQuery(conn, select);
-    QVERIFY(r!=0);
+    QVERIFY(r);
 
     QVERIFY(r->next());
     QCOMPARE(r->value(1), QVariant(Q_UINT64_C(5000000000)));
@@ -521,7 +536,7 @@ void TrackerDirectCommon::large_integer()
     QSparqlQuery clean("delete {<mydataobject> a rdfs:Resource . }",
                        QSparqlQuery::DeleteStatement);
     r = runQuery(conn, clean);
-    QVERIFY(r!=0);
+    QVERIFY(r);
     delete r;
 }
 
@@ -715,8 +730,7 @@ void TrackerDirectCommon::datatypes_as_properties()
         QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = runQuery(conn, insertQuery);
-    QVERIFY(r!=0);
-    CHECK_ERROR(r);
+    QVERIFY(r);
     delete r;
 
     QSparqlQuery query(QString("select ?value { "
@@ -724,8 +738,7 @@ void TrackerDirectCommon::datatypes_as_properties()
                                 "}").arg(property));
 
     r = runQuery(conn, query);
-    QVERIFY(r!=0);
-    CHECK_ERROR(r);
+    QVERIFY(r);
 
     QVERIFY(r->next());
     QVariant value = r->value(0);
@@ -735,8 +748,7 @@ void TrackerDirectCommon::datatypes_as_properties()
     QSparqlQuery cleanString("delete { <testresource> a rdfs:Resource . }",
                              QSparqlQuery::DeleteStatement);
     QSparqlResult* deleteResult = runQuery(conn, cleanString);
-    QVERIFY(deleteResult!=0);
-    CHECK_ERROR(deleteResult);
+    QVERIFY(deleteResult);
     delete deleteResult;
 
     QCOMPARE(value.type(), expectedValue.type());

@@ -56,6 +56,7 @@ class TrackerDirectCommon : public QObject
         void setMsgLogLevel(int logLevel);
         bool setupData();
         bool cleanData();
+        void testError(const QString& msg);
 
     private:
         QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
@@ -83,6 +84,9 @@ class TrackerDirectCommon : public QObject
         void datatype_boolean_data();
         void datatypes_as_properties_data();
         void datatypes_as_properties();
+
+    private:
+        QtMsgHandler origMsgHandler;
 };
 
 class TestData : public QObject {

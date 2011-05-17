@@ -137,9 +137,9 @@ void tst_QSparqlTracker::initTestCase()
     QSparqlQuery q(insertQuery,
                    QSparqlQuery::InsertStatement);
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 }
 
@@ -151,9 +151,9 @@ void tst_QSparqlTracker::cleanupTestCase()
                     "DELETE { <qsparql-tracker-tests> a rdfs:Resource . }",
                     QSparqlQuery::DeleteStatement);
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 }
 
@@ -173,9 +173,9 @@ void tst_QSparqlTracker::query_contacts()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
@@ -196,7 +196,7 @@ void tst_QSparqlTracker::query_contacts_syncExec()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.syncExec(q);
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     QHash<QString, QString> contactNames;
     while (r->next()) {
@@ -220,9 +220,9 @@ void tst_QSparqlTracker::insert_and_delete_contact()
                      QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = conn.exec(add);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -231,8 +231,9 @@ void tst_QSparqlTracker::insert_and_delete_contact()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
     r = conn.exec(q);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
@@ -246,17 +247,17 @@ void tst_QSparqlTracker::insert_and_delete_contact()
                      QSparqlQuery::DeleteStatement);
 
     r = conn.exec(del);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that it got deleted
     contactNames.clear();
     r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->binding(0).value().toString()] = r->binding(1).value().toString();
@@ -275,9 +276,9 @@ void tst_QSparqlTracker::insert_new_urn()
                      QSparqlQuery::InsertStatement);
     add.bindValue(conn.createUrn("addeduri"));
     QSparqlResult* r = conn.exec(add);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -286,9 +287,9 @@ void tst_QSparqlTracker::insert_new_urn()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QSparqlBinding> contactNames;
     r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->binding(1).value().toString()] = r->binding(0);
@@ -307,9 +308,9 @@ void tst_QSparqlTracker::insert_new_urn()
     // and need to do a bit of hackery here
     del.bindValue("addeduri", QUrl(contactNames["addedname006"].value().toString()));
     r = conn.exec(del);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is synchronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that it got deleted
@@ -354,9 +355,9 @@ void tst_QSparqlTracker::batch_update()
                      QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = conn.exec(add);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that the insertion succeeded
@@ -365,9 +366,9 @@ void tst_QSparqlTracker::batch_update()
                    "nco:nameGiven ?ng .}");
     QHash<QString, QString> contactNames;
     r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 4);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
@@ -381,17 +382,17 @@ void tst_QSparqlTracker::batch_update()
                      QSparqlQuery::DeleteStatement);
 
     r = conn.exec(del);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
 
     // Verify that it got deleted
     contactNames.clear();
     r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         contactNames[r->value(0).toString()] = r->value(1).toString();
@@ -409,9 +410,9 @@ void tst_QSparqlTracker::iterate_result()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
@@ -455,8 +456,7 @@ void tst_QSparqlTracker::delete_unfinished_result()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     delete r;
     QTest::qWait(1000);
 }
@@ -470,9 +470,9 @@ void tst_QSparqlTracker::go_beyond_columns_number()
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
     QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
+    CHECK_QSPARQL_RESULT(r);
     r->waitForFinished(); // this test is syncronous only
-    CHECK_ERROR(r);
+    CHECK_QSPARQL_RESULT(r);
     QCOMPARE(r->size(), 3);
     while (r->next()) {
         QCOMPARE(r->current().count(), 2);
