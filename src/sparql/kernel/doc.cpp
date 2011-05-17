@@ -50,6 +50,10 @@
     <tr valign="top" bgcolor="#f0f0f0"><td><b>QSparqlQuery</b></td><td>Means of
     executing and manipulating SPARQL statements.</td></tr>
 
+    <tr valign="top" bgcolor="#f0f0f0"><td><b>QSparqlQueryOptions</b></td>
+    <td>Encapsulates query execution options given to QSparqlConnection::exec(const  QSparqlQuery&, const QSparqlQueryOptions&)
+    Some options are used only by some drivers.</td></tr>
+
     <tr valign="top"
     bgcolor="#f0f0f0"><td><b>QSparqlQueryModel</b></td><td>Read-only data model
     for SPARQL result sets.</td></tr>
@@ -130,11 +134,6 @@
     TODO: QSparlQueryModel
 
     \section connectionoptions Connection options supported by drivers
-
-    QTRACKER driver supports the following connection options:
-    - custom: "batch" (bool), use BatchUpdate when writing data to
-      Tracker. BatchUpdate will schedule the data to be written at a suitable
-      moment, so it is not necessarity written when the query is finished.
 
     QTRACKER_DIRECT driver supports the following connection options:
     - custom: "dataReadyInterval" (int, default 1), controls the interval for

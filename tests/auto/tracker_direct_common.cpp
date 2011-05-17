@@ -787,7 +787,7 @@ private:
 TestData* createTestData(int testDataAmount, const QString& testSuiteTag, const QString& testCaseTag)
 {
     const int insertBatchSize = 200;
-    QSparqlConnection conn("QTRACKER");
+    QSparqlConnection conn("QTRACKER_DIRECT");
     const QString insertQueryTemplate =
             "<urn:music:%1> a nmm:MusicPiece, nfo:FileDataObject, nfo:Audio;"
                 "nie:isLogicalPartOf %3 ;"
@@ -883,7 +883,7 @@ TestDataImpl::TestDataImpl(const QSparqlQuery& cleanupQuery, const QSparqlQuery&
 
 TestDataImpl::~TestDataImpl()
 {
-    QSparqlConnection conn("QTRACKER");
+    QSparqlConnection conn("QTRACKER_DIRECT");
     conn.syncExec(cleanupQuery);
 }
 
