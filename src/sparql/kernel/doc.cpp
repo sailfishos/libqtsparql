@@ -110,7 +110,8 @@
     \skipline QSparqlResult
 
     - You can then connect to the QSparqlResult::finished() and
-      QSparqlResult::dataReady signals.
+      QSparqlResult::dataReady signals. Alternatively for synchronous queries use
+      QSparqlResult::syncExec();
 
     - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),
