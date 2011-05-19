@@ -3,6 +3,7 @@ HEADERS +=      kernel/qsparql.h \
                 kernel/qsparqlconnection.h \
                 kernel/qsparqlconnection_p.h \
                 kernel/qsparqlconnectionoptions.h \
+                kernel/qsparqlqueryoptions.h \
                 kernel/qsparqlbinding.h \
                 kernel/qsparqlresultrow.h \
                 kernel/qsparqldriver_p.h \
@@ -15,6 +16,7 @@ HEADERS +=      kernel/qsparql.h \
 SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqlconnection.cpp \
                 kernel/qsparqlconnectionoptions.cpp \
+                kernel/qsparqlqueryoptions.cpp \
                 kernel/qsparqlbinding.cpp \
                 kernel/qsparqlresultrow.cpp \
                 kernel/qsparqldriver.cpp \

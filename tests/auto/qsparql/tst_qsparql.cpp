@@ -149,15 +149,18 @@ class MockDriver : public QSparqlDriver
             return true;
         return false;
     }
-    MockResult* exec(const QString&, QSparqlQuery::StatementType)
+    QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions& options)
     {
-        return new MockResult(this);
+        switch(options.executionMethod()) {
+        case QSparqlQueryOptions::AsyncExec:
+            return new MockResult(this);
+        case QSparqlQueryOptions::SyncExec:
+            return new MockSyncFwOnlyResult();
+        default:
+            return 0;
+        }
     }
 
-    MockSyncFwOnlyResult* syncExec(const QString&, QSparqlQuery::StatementType)
-    {
-        return new MockSyncFwOnlyResult();
-    }
     static int openCount;
     static int closeCount;
     static bool openRetVal;
@@ -212,6 +215,10 @@ private slots:
     void iterate_empty_fwonly_result();
     void iterate_nonempty_fwonly_result();
     void iterate_nonempty_fwonly_result_first();
+
+    void default_QSparqlQueryOptions();
+    void copies_of_QSparqlQueryOptions_are_equal_and_independent();
+    void assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy();
 };
 
 tst_QSparql::tst_QSparql()
@@ -438,6 +445,49 @@ void tst_QSparql::iterate_nonempty_fwonly_result_first()
     // another legal first(), we're at the first row already
     QVERIFY(res->first());
     QCOMPARE(res->pos(), 0);
+}
+
+void tst_QSparql::default_QSparqlQueryOptions()
+{
+    QSparqlQueryOptions opt;
+    QCOMPARE( opt.executionMethod(), QSparqlQueryOptions::AsyncExec );
+    QCOMPARE( opt.priority(), QSparqlQueryOptions::NormalPriority );
+}
+
+void tst_QSparql::copies_of_QSparqlQueryOptions_are_equal_and_independent()
+{
+    QSparqlQueryOptions opt1;
+    opt1.setExecutionMethod(QSparqlQueryOptions::SyncExec);
+    QSparqlQueryOptions opt2(opt1);
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::SyncExec );
+    QVERIFY( opt2 == opt1 );
+
+    opt2.setPriority(QSparqlQueryOptions::LowPriority);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::LowPriority );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::NormalPriority );
+    QVERIFY( !(opt2 == opt1) );
+
+    opt2.setPriority(QSparqlQueryOptions::NormalPriority);
+    QVERIFY( opt2 == opt1 );
+}
+
+void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy()
+{
+    QSparqlQueryOptions opt1;
+    opt1.setExecutionMethod(QSparqlQueryOptions::SyncExec);
+    QSparqlQueryOptions opt2;
+    QVERIFY( !(opt2 == opt1) );
+    opt2 = opt1;
+    QCOMPARE( opt2.executionMethod(), QSparqlQueryOptions::SyncExec );
+    QVERIFY( opt2 == opt1 );
+
+    opt2.setPriority(QSparqlQueryOptions::LowPriority);
+    QCOMPARE( opt2.priority(), QSparqlQueryOptions::LowPriority );
+    QCOMPARE( opt1.priority(), QSparqlQueryOptions::NormalPriority );
+    QVERIFY( !(opt2 == opt1) );
+
+    opt2.setPriority(QSparqlQueryOptions::NormalPriority);
+    QVERIFY( opt2 == opt1 );
 }
 
 QTEST_MAIN(tst_QSparql)

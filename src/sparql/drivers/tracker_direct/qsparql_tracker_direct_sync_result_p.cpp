@@ -48,8 +48,11 @@
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
+#include <qsparqlqueryoptions.h>
 #include <qsparqlresultrow.h>
 #include <qsparqlconnection.h>
+#define XSD_INTEGER
+#include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qpointer.h>
@@ -61,25 +64,19 @@
 
 QT_BEGIN_NAMESPACE
 
-////////////////////////////////////////////////////////////////////////////
-
-// TODO: centralize the xsd uris into one place
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Integer,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#integer")))
-}
-
 struct QTrackerDirectSyncResultPrivate
 {
-    QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp);
+    QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp, const QSparqlQueryOptions& options);
     ~QTrackerDirectSyncResultPrivate();
     TrackerSparqlCursor* cursor;
     int n_columns;
     QTrackerDirectDriverPrivate *driverPrivate;
+    QSparqlQueryOptions options;
 };
 
-QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp)
-    : cursor(0), n_columns(-1), driverPrivate(dpp)
+QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp,
+                                                                 const QSparqlQueryOptions& options)
+    : cursor(0), n_columns(-1), driverPrivate(dpp), options(options)
 {
 }
 
@@ -91,9 +88,10 @@ QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
 
 ////////////////////////////////////////////////////////////////////////////
 
-QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p)
+QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p,
+                                                   const QSparqlQueryOptions& options)
 {
-    d = new QTrackerDirectSyncResultPrivate(p);
+    d = new QTrackerDirectSyncResultPrivate(p, options);
 }
 
 QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
@@ -130,7 +128,11 @@ void QTrackerDirectSyncResult::update()
     }
 
     GError * error = 0;
-    tracker_sparql_connection_update(d->driverPrivate->connection, query().toUtf8().constData(), 0, 0, &error);
+    tracker_sparql_connection_update(d->driverPrivate->connection,
+                                     query().toUtf8().constData(),
+                                     qSparqlPriorityToGlib(d->options.priority()),
+                                     0,
+                                     &error);
     if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                         errorCodeToType(error->code),

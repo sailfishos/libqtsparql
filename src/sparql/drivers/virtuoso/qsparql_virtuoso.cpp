@@ -63,7 +63,10 @@
 #include <QtSparql/qsparqlbinding.h>
 #include <QtSparql/qsparqlresultrow.h>
 #include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlqueryoptions.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
+#define XSD_DATE
+#include "../../kernel/qsparqlxsd_p.h"
 
 #include <QDebug>
 
@@ -77,20 +80,6 @@ QT_BEGIN_NAMESPACE
 # define QSQLLEN SQLLEN
 # define QSQLULEN SQLULEN
 #endif
-
-namespace XSD {
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Decimal,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#decimal")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Date,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#date")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, Time,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#time")))
-
-Q_GLOBAL_STATIC_WITH_ARGS(QUrl, DateTime,
-                          (QLatin1String("http://www.w3.org/2001/XMLSchema#dateTime")))
-}
 
 static const int COLNAMESIZE = 256;
 
@@ -295,7 +284,23 @@ QVirtuosoAsyncResult::~QVirtuosoAsyncResult()
     delete da;
 }
 
-QVirtuosoAsyncResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type)
+QVirtuosoResult* QVirtuosoDriver::exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
+{
+    QVirtuosoResult* result = 0;
+
+    switch (options.executionMethod()) {
+    case QSparqlQueryOptions::AsyncExec:
+        result = asyncExec(query, type);
+        break;
+    case QSparqlQueryOptions::SyncExec:
+        result = syncExec(query, type);
+        break;
+    }
+
+    return result;
+}
+
+QVirtuosoAsyncResult* QVirtuosoDriver::asyncExec(const QString& query, QSparqlQuery::StatementType type)
 {
     QVirtuosoAsyncResult* res = new QVirtuosoAsyncResult(this, d, query, type, prefixes());
 

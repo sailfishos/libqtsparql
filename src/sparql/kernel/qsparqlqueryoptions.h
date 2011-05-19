@@ -1,4 +1,9 @@
-/****************************************************************************
+/***************************************************************************/
+/**
+** @copyright Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+**
+** @license Commercial Qt/LGPL 2.1 with Nokia exception/GPL 3.0
+**
 **
 ** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
@@ -39,58 +44,52 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
-#define QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
+#ifndef QSPARQLQUERYOPTIONS_H
+#define QSPARQLQUERYOPTIONS_H
 
-#include <QtSparql/qsparqlresult.h>
-
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
+#include <QtSparql/qsparql.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QTrackerDirectDriverPrivate;
-class QTrackerDirectDriver;
-class QTrackerDirectSyncResultPrivate;
-class QSparqlQueryOptions;
+QT_MODULE(Sparql)
 
-// A sync and forward-only Result class. The instance of this class is retreved
-// with QTrackerDirectDriver::syncExec().
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSparqlResult
+class QSparqlQueryOptionsPrivate;
+
+class Q_SPARQL_EXPORT QSparqlQueryOptions
 {
-    Q_OBJECT
-    friend class QTrackerDirectDriver;
 public:
-    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p, const QSparqlQueryOptions& options);
-    ~QTrackerDirectSyncResult();
+    QSparqlQueryOptions();
+    ~QSparqlQueryOptions();
 
-    // Implementation of the QSparqlResult interface
-    virtual bool next();
+    QSparqlQueryOptions(const QSparqlQueryOptions& other);
+    QSparqlQueryOptions& operator=(const QSparqlQueryOptions& other);
+    bool operator==(const QSparqlQueryOptions &other) const;
 
-    virtual QSparqlResultRow current() const;
-    virtual QSparqlBinding binding(int i) const;
-    virtual QVariant value(int i) const;
-    virtual QString stringValue(int i) const;
+    enum ExecutionMethod {
+        AsyncExec = 1,
+        SyncExec  = 2
+    };
 
-    virtual bool isFinished() const;
+    void setExecutionMethod(ExecutionMethod em);
+    ExecutionMethod executionMethod() const;
 
-    virtual bool hasFeature(QSparqlResult::Feature feature) const;
+    enum Priority {
+        NormalPriority =  0,
+        LowPriority    = 10
+    };
 
-private Q_SLOTS:
-    void exec();
-    void update();
+    void setPriority(Priority p);
+    Priority priority() const;
 
 private:
-    QTrackerDirectSyncResultPrivate* d;
+    QSharedDataPointer<QSparqlQueryOptionsPrivate> d;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
+#endif // QSparqlQueryOptions_H

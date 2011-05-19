@@ -4,4 +4,7 @@ SUBDIRS = auto
 check.CONFIG = recursive
 check.recurse = auto
 
-QMAKE_EXTRA_TARGETS += check
+memcheck.CONFIG = recursive
+memcheck.recurse = auto
+
+QMAKE_EXTRA_TARGETS += check memcheck

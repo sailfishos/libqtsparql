@@ -55,6 +55,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+class QSparqlQueryOptions;
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectUpdateResultPrivate;
 
@@ -66,7 +67,8 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public Q
 public:
     explicit QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
-                                  QSparqlQuery::StatementType type);
+                                  QSparqlQuery::StatementType type,
+                                  const QSparqlQueryOptions& options);
     ~QTrackerDirectUpdateResult();
 
     bool runQuery();
