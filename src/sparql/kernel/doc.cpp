@@ -23,7 +23,8 @@
       href="http://projects.gnome.org/tracker/">Tracker</a> over D-Bus
     - QTRACKER_DIRECT for accessing <a
       href="http://projects.gnome.org/tracker/">Tracker</a> via direct database
-      access and D-Bus
+      access and D-Bus. See the \ref trackerdirectspecific "specific useage section"
+      for more information
     - QSPARQL_ENDPOINT for accessing online RDF stores, e.g., <a
       href="http://dbpedia.org">DBpedia</a>
     - QVIRTUOSO backend for accessing <a
@@ -190,8 +191,8 @@
 
     \section connectionfeatures Connection features
 
-    The following table describes the features supported by each driver. The
-    features can be queried with QSparqlConnection::hasFeature().
+    The following table describes the QSparclConnection::Feature support of each
+    driver. The features can be queried with QSparqlConnection::hasFeature().
 
     <table>
     <tr>
@@ -248,6 +249,42 @@
 
     (*) The QVIRTUOSO driver is natively synchronous, but support for syncExec
     directly is not currently implemented.
+
+    \section trackerdirectspecific QTRACKER_DIRECT specific useage
+
+    There are two ways to use the QTRACKER_DIRECT driver, synchronously using
+    QSparqlConnection::syncExec(), and asynchronously using QSparqlConnection::exec().
+    The result behaviour is different, and supports different features, depending on
+    the method used.
+
+    The following table describes the QSparqlResult::Feature support of each method.
+
+    <table>
+    <tr>
+    <td></td>
+    <th>QuerySize</th>
+    <th>ForwardOnly</th>
+    <th>Sync</th>
+    </tr>
+    <tr>
+    <th>exec()</th>
+    <td>Yes</td>
+    <td>No</td>
+    <td>No</td>
+    </tr>
+    <tr>
+    <th>syncExec()</th>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Yes</td>
+    </tr>
+    </table>
+
+    When using synchronous execution, it is important to fully use the results returned
+    before making another query, either synchronously or asynchronously, by using
+    QSparqlResult::next until it returns false. If you fail to do this, any new results
+    that may have been added after your original query will not be included in any subsequent
+    queries you make.
 
     \section backendspecific Accessing backend-specific functionalities
 
