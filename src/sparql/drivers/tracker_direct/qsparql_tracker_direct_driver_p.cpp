@@ -183,7 +183,7 @@ async_open_callback(GObject         * /*source_object*/,
     }
 
     d->asyncOpenCalled = true;
-    d->opened();
+    d->emitOpened();
 }
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
@@ -201,7 +201,7 @@ void QTrackerDirectDriverPrivate::setOpen(bool open)
     driver->setOpen(open);
 }
 
-void QTrackerDirectDriverPrivate::opened()
+void QTrackerDirectDriverPrivate::emitOpened()
 {
     Q_EMIT driver->opened();
 }

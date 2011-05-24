@@ -105,7 +105,7 @@ public:
     ~QTrackerDirectDriverPrivate();
 
     void setOpen(bool open);
-    void opened();
+    void emitOpened();
     void addActiveResult(QTrackerDirectResult* result);
 
     TrackerSparqlConnection *connection;
