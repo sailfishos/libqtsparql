@@ -205,11 +205,7 @@ void QTrackerDirectUpdateResult::waitForFinished()
         return;
 
     // We first need the connection to be ready before doing anything
-    if (!d->driverPrivate->asyncOpenCalled) {
-        QEventLoop loop;
-        connect(d->driverPrivate->driver, SIGNAL(opened()), &loop, SLOT(quit()));
-        loop.exec();
-    }
+    d->driverPrivate->waitForConnectionOpen();
 
     if (!d->driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(d->driverPrivate->error,

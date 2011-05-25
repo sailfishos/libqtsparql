@@ -108,6 +108,7 @@ public:
     void emitOpened();
     void addActiveResult(QTrackerDirectResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
+    void waitForConnectionOpen();
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;

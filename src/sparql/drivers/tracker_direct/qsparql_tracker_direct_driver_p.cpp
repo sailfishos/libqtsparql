@@ -232,6 +232,20 @@ void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* 
     }
 }
 
+void QTrackerDirectDriverPrivate::waitForConnectionOpen()
+{
+    if (!asyncOpenCalled) {
+        if (QCoreApplication::instance()) {
+            QEventLoop loop;
+            QObject::connect(driver, SIGNAL(opened()), &loop, SLOT(quit()));
+            loop.exec();
+        }
+        else {
+            qWarning() << "QTRACKER_DIRECT: QCoreApplication instance not found: cannot wait for asynchronous connection open";
+        }
+    }
+}
+
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
@@ -309,11 +323,9 @@ void QTrackerDirectDriver::close()
     d->activeResults.clear();
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
-    if (!d->asyncOpenCalled && QCoreApplication::instance()) {
-        QEventLoop loop;
-        connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
-        loop.exec();
-    }
+    // Need to wait for the connection to open because there is no good way
+    // to cancel it synchronously
+    d->waitForConnectionOpen();
 
     if (d->connection) {
         g_object_unref(d->connection);
@@ -363,23 +375,11 @@ QSparqlResult* QTrackerDirectDriver::syncExec
     result->setQuery(query);
     result->setStatementType(type);
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        if (d->asyncOpenCalled) {
-            result->exec();
-        } else {
-            QEventLoop loop;
-            connect(this, SIGNAL(opened()), result, SLOT(exec()));
-            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
-            loop.exec();
-        }
+        d->waitForConnectionOpen();
+        result->exec();
     } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
-        if (d->asyncOpenCalled) {
-            result->update();
-        } else {
-            QEventLoop loop;
-            connect(this, SIGNAL(opened()), result, SLOT(update()));
-            connect(this, SIGNAL(opened()), &loop, SLOT(quit()));
-            loop.exec();
-        }
+        d->waitForConnectionOpen();
+        result->update();
     }
 
     return result;
