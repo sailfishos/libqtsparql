@@ -72,6 +72,7 @@
     int average = 0; \
     for(int i=0;i<LIST.size();i++) \
         average += LIST[i]; \
+    fprintf(stderr, "%s total time %i\n", qPrintable(BENCHMARKNAME), average); \
     fprintf(stderr, "%s median value = %i\n", qPrintable(BENCHMARKNAME), LIST[median]); \
     fprintf(stderr, "%s mean value = %i\n", qPrintable(BENCHMARKNAME), average/LIST.size()); }
 
@@ -98,6 +99,9 @@ private slots:
 
     void dataReadingBenchmark();
     void dataReadingBenchmark_data();
+
+    void dataReadingBenchmarkSync();
+    void dataReadingBenchmarkSync_data();
 
     // Reference benchmarks
     void queryWithLibtrackerSparql();
@@ -352,6 +356,84 @@ void tst_QSparqlBenchmark::dataReadingBenchmark_data()
 
     QTest::newRow("ReadingMusic")
         << "read-music"
+        << musicQuery
+        << musicQueryColumnCount;
+}
+
+void tst_QSparqlBenchmark::dataReadingBenchmarkSync()
+{
+    QFETCH(QString, benchmarkName);
+    QFETCH(QString, queryString);
+    QFETCH(int, columnCount);
+
+    // Set the dataReadyInterval to be large enough so that it won't affect this
+    // test case.
+    QSparqlConnectionOptions opts;
+    opts.setDataReadyInterval(1000000);
+
+    QSparqlConnection conn("QTRACKER_DIRECT", opts);
+    // Note: connection opening cost is left out of the benchmark. Connection
+    // opening is async, so we need to wait here long enough to know that it has
+    // opened (there is no signal sent or such to know it has opened).
+    QTest::qWait(2000);
+
+    QSparqlQuery query(queryString);
+
+    QString finished = benchmarkName + "-fin";
+    QString read = benchmarkName + "-read";
+
+    QSparqlResult* r = 0;
+    QList<int> totalTimesFinished;
+    QList<int> totalTimesRead;
+
+    for (int i = 0; i < NO_QUERIES; ++i) {
+        {
+            START_BENCHMARK {
+                r = conn.syncExec(query);               
+            }
+            END_BENCHMARK(finished);
+            totalTimesFinished.append(benchmarkTotal);
+        }
+        CHECK_QSPARQL_RESULT(r);
+        
+        {
+            int size = 0;
+            START_BENCHMARK {
+                while (r->next()) {
+                    for (int c = 0; c < columnCount; ++c) {
+                        QVariant var = r->value(c);
+                        // Probably it's enough not to do anything with the
+                        // value; the statement of getting the value won't be
+                        // optimized out since calling r->value() might have
+                        // side effects.
+                    }
+                    ++size;
+                }
+            }
+            END_BENCHMARK(read);
+            totalTimesRead.append(benchmarkTotal);
+            // For verifying that enough data was really read
+            // qDebug() << "No of results" << size;
+        }
+        delete r;
+    }
+    PRINT_STATS(finished, totalTimesFinished);
+    PRINT_STATS(read, totalTimesRead);
+}
+
+void tst_QSparqlBenchmark::dataReadingBenchmarkSync_data()
+{
+    QTest::addColumn<QString>("benchmarkName");
+    QTest::addColumn<QString>("queryString");
+    QTest::addColumn<int>("columnCount");
+
+    QTest::newRow("ReadingArtistsAndAlbums")
+        << "sync-read-artistsandalbums"
+        << artistsAndAlbumsQuery
+        << artistsAndAlbumsColumnCount;
+
+    QTest::newRow("ReadingMusic")
+        << "sync-read-music"
         << musicQuery
         << musicQueryColumnCount;
 }
