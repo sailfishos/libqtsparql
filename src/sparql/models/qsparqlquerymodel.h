@@ -99,6 +99,7 @@ protected:
     void setLastError(const QSparqlError &error);
 private:
     QSparqlQueryModelPrivate* d;
+    QHash<int, QByteArray> roleNames;
 };
 
 QT_END_NAMESPACE

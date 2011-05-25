@@ -206,13 +206,25 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
     if (!item.isValid() || !d->result)
         return QVariant();
 
+    int userRole = 0;
+    if (role >= Qt::UserRole) {
+        userRole = role;
+        role = Qt::DisplayRole;
+    }
+
     QVariant v;
     if (role & ~(Qt::DisplayRole | Qt::EditRole))
         return v;
 
-//    if (!d->resultRow.isGenerated(item.column()))
-//        return v;
-    QModelIndex dItem = indexInQuery(item);
+    QModelIndex dItem;
+    // if we have a userRole we need to set the correct column
+    if (userRole) {
+        int columnOffset = userRole - Qt::UserRole;
+        dItem = index(item.row(), item.column()+columnOffset, item.parent());
+    } else {
+        dItem = indexInQuery(item);
+    }
+
     if (dItem.row() > d->bottom.row())
         const_cast<QSparqlQueryModelPrivate *>(d)->prefetch(dItem.row());
 
@@ -322,8 +334,13 @@ void QSparqlQueryModel::clear()
 bool QSparqlQueryModel::setHeaderData(int section, Qt::Orientation orientation,
                                    const QVariant &value, int role)
 {
-    if (orientation != Qt::Horizontal || section < 0 || columnCount() <= section)
+
+    if (orientation != Qt::Horizontal || section < 0)
         return false;
+
+    //set role names for qml
+    roleNames[Qt::UserRole+section] = value.toString().toAscii();
+    setRoleNames(roleNames);
 
     if (d->headers.size() <= section)
         d->headers.resize(qMax(section + 1, 16));
