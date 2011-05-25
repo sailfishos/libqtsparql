@@ -199,7 +199,7 @@ static QString qWarnODBCHandle(int handleType, SQLHANDLE handle, int *nativeCode
 
     description_[0] = 0;
     SQLCHAR dummyBuffer[1]; // dummy buffer only used to determine length
-    r = SQLGetDiagRec(handleType, handle, i, state_, &nativeCode_, dummyBuffer, NULL, &msgLen);
+    r = SQLGetDiagRec(handleType, handle, i, state_, &nativeCode_, dummyBuffer, 0, &msgLen);
     if (r == SQL_NO_DATA)
         return QString();
     description_.resize(msgLen+1);
