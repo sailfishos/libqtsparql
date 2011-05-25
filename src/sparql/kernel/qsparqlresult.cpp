@@ -246,6 +246,13 @@ void QSparqlResult::waitForFinished()
     been received. If this function returns true, the hasError() and lastError()
     methods should return valid information.
 
+    The useage of this function differs depending on the driver, and method of 
+    execution used. For asynchronous queries the results will be availible once the
+    finished() signal has been emitted. For synchronous execution, the value of isFinished()
+    will be false until all the results have been retrieved using next().
+
+    TODO: Add useage example
+
     Note that this function only changes state if you call waitForFinished(), or
     if an external event happens, which in general only happens if you return to
     the event loop execution.
@@ -423,10 +430,11 @@ bool QSparqlResult::last()
 }
 
 /*!
-  Returns the size of the result (number of rows returned), or -1 if
-  the size cannot be determined or if the database does not support
-  reporting information about query sizes. If the query is not
-  finished (isFinished() returns false), -1 is returned.
+  Returns the size of the result (number of rows returned).
+  
+  A return value of -1 is used if the result does not support QuerySize
+  information, or if the query has not yet finished (isFinished() returns
+  false)
 
   \sa isFinished() QSparqlResult::hasFeature()
 */
@@ -507,11 +515,18 @@ bool QSparqlResult::setPos(int pos)
 
   \sa binding() value() current()
 */
+
 QString QSparqlResult::stringValue(int i) const
 {
     // Subclasses are free to implement this more efficiently
     return value(i).toString();
 }
+
+/*!
+    This function is provided for derived classes which handle position
+    tracking themselves, allowing them to record the current position in the 
+    results
+*/
 
 void QSparqlResult::updatePos(int index)
 {
@@ -532,7 +547,6 @@ void QSparqlResult::setLastError(const QSparqlError &error)
 {
     d->error = error;
 }
-
 
 /*!
     Returns true if the query has finished and there is an error

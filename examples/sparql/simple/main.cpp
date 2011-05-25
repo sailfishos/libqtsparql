@@ -44,16 +44,15 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QSparqlConnection connection("QTRACKER");
+    QSparqlConnection connection("QTRACKER_DIRECT");
     if (connection.isValid())
         qDebug() << "Driver found";
     else {
         qDebug() << "Driver not found";
         return 1;
     }
-    QSparqlQuery query("select ?u { ?u a nco:Contact . }");
-    QSparqlResult* result = connection.exec(query);
-    result->waitForFinished();
+    QSparqlQuery query("select ?u { ?u a nco:PersonContact . }");
+    QSparqlResult* result = connection.syncExec(query);
 
     if (!result->hasError())
         qDebug() << "Executing query ok";
@@ -61,7 +60,8 @@ int main(int argc, char *argv[])
         qDebug() << "Executing query failed";
         return 1;
     }
+
     while (result->next())
-        qDebug() << result->binding(0).value().toString();
+        qDebug() << result->value(0).toString();
     return 0;
 }

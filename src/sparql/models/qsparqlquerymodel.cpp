@@ -255,10 +255,9 @@ void QSparqlQueryModel::queryChange()
     // do nothing
 }
 
-/*! \overload
-
+/*! 
     Executes the query \a query for the given connection connection \a
-    db. If no connection is specified, the default connection is used.
+    connection. If no connection is specified, the default connection is used.
 
     lastError() can be used to retrieve verbose information if there
     was an error setting the query.
@@ -285,8 +284,8 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
 }
 
 /*!
-    Clears the model and releases any acquired resource. After this
-    function, the model is not usable until the setQuery() has been called.
+    Clears the model and releases any acquired resources. After this
+    function, the model is not usable until setQuery() has been called.
 
     \sa setQuery()
 */
