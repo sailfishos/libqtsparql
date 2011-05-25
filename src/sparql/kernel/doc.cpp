@@ -23,7 +23,7 @@
       href="http://projects.gnome.org/tracker/">Tracker</a> over D-Bus
     - QTRACKER_DIRECT for accessing <a
       href="http://projects.gnome.org/tracker/">Tracker</a> via direct database
-      access and D-Bus. See the \ref trackerdirectspecific "specific useage section"
+      access and D-Bus. See the \ref trackerdirectspecific "specific usage section"
       for more information
     - QSPARQL_ENDPOINT for accessing online RDF stores, e.g., <a
       href="http://dbpedia.org">DBpedia</a>
@@ -142,7 +142,7 @@
     E.g.
     \dontinclude querymodel/main.cpp
     \skip model;
-    \until setHeaderData
+    \until Last
 
     You can then use this in an a view class by using it's setModel() function.
 
@@ -224,7 +224,7 @@
     <td>No</td>
     <td>Yes</td>
     <td>Yes</td>
-    <td>No</td>
+    <td>Yes</td>
     </tr>
     <tr>
     <th>QSPARQL_ENDPOINT</th>
@@ -251,7 +251,7 @@
     (*) The QVIRTUOSO driver is natively synchronous, but support for syncExec
     directly is not currently implemented.
 
-    \section trackerdirectspecific QTRACKER_DIRECT specific useage
+    \section trackerdirectspecific QTRACKER_DIRECT specific usage
 
     There are two ways to use the QTRACKER_DIRECT driver, synchronously using
     QSparqlConnection::syncExec(), and asynchronously using QSparqlConnection::exec().
