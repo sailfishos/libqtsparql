@@ -60,7 +60,7 @@ QT_MODULE(Sparql)
 
 class QSparqlResultsListPrivate;
 
-class QSparqlResultsList : public QAbstractListModel
+class Q_SPARQL_EXPORT QSparqlResultsList : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(Status)
