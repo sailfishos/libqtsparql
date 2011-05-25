@@ -49,6 +49,7 @@
 #include <QtCore/qeventloop.h>
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -221,6 +222,16 @@ void QTrackerDirectDriverPrivate::addActiveResult(QTrackerDirectResult* result)
     activeResults.append(result);
 }
 
+void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* method, const char* slot)
+{
+    if (asyncOpenCalled) {
+        QMetaObject::invokeMethod(object, method, Qt::DirectConnection);
+    }
+    else {
+        QObject::connect(driver, SIGNAL(opened()), object, slot, Qt::UniqueConnection);
+    }
+}
+
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
@@ -336,23 +347,11 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
         d->addActiveResult(result);
-
-        if (d->asyncOpenCalled) {
-            result->exec();
-        } else {
-            connect(this, SIGNAL(opened()), result, SLOT(exec()));
-        }
-
+        d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     } else {
         QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type, options);
-
-        if (d->asyncOpenCalled) {
-            result->exec();
-        } else {
-            connect(this, SIGNAL(opened()), result, SLOT(exec()));
-        }
-
+        d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     }
 }
