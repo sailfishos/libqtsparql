@@ -102,16 +102,21 @@
     \skip QSparqlQuery insert
     \until InsertStatement
 
-    - Use QSparqlConnection::exec() to execute the query. It returns a
+    - Use QSparqlConnection::syncExec() to execute the query synchronously. It returns a
       pointer to QSparqlResult.
 
     E.g.
     \dontinclude simple/main.cpp
     \skipline QSparqlResult
 
-    - You can then connect to the QSparqlResult::finished() and
-      QSparqlResult::dataReady signals. Alternatively for synchronous queries use
-      QSparqlResult::syncExec();
+    - Alternatively you can call QSparqlConnection::exec() to exectute the query
+      asynchronously. You can then connect to the QSparqlResult::finished() and
+      QSparqlResult::dataReady() signals.
+
+    E.g.
+    \dontinclude asynctracker/main.cpp
+    \skip conn.exec(query)
+    \until onDataReady
 
     - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),

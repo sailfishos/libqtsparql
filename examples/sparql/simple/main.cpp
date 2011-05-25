@@ -53,15 +53,16 @@ int main(int argc, char *argv[])
         qDebug() << "Driver not found";
         return 1;
     }
-    QSparqlQuery query("select ?u { ?u a nfo:PersonContact . }");
-    QSparqlResult* result = connection.exec(query);
-    result->waitForFinished();
+    QSparqlQuery query("select ?u { ?u a nco:PersonContact . }");
+    QSparqlResult* result = connection.syncExec(query);
+
     if (!result->hasError())
         qDebug() << "Executing query ok";
     else {
         qDebug() << "Executing query failed";
         return 1;
     }
+
     while (result->next())
         qDebug() << result->value(0).toString();
     return 0;

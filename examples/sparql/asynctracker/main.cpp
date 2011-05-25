@@ -94,7 +94,7 @@ public slots:
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QSparqlConnection conn("QTRACKER");
+    QSparqlConnection conn("QTRACKER_DIRECT");
     QSparqlQuery query("select ?u ?p { ?u a nco:Contact ; nco:hasPhoneNumber ?pn . "
                        "?pn a nco:PhoneNumber ; nco:phoneNumber ?p }");
     QSparqlResult* result = conn.exec(query);
