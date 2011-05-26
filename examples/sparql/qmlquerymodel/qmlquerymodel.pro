@@ -5,11 +5,11 @@ CONFIG += qt
 SOURCES += main.cpp
 
 #QT += sparql #enable this later
-QT += network xml gui declarative
+QT += gui declarative
 
-copy2build.target = $$QT_BUILD_TREE/examples/sparql/qmlquerymodel/albums.qml
+copy2build.target = $$QT_BUILD_TREE/examples/sparql/qmlquerymodel/main.qml
 copy2build.commands = $$QMAKE_COPY $$PWD/albums.qml $$QT_BUILD_TREE/examples/sparql/qmlquerymodel
-copy2build.depends = $$PWD/albums.qml
+copy2build.depends = $$PWD/main.qml
 QMAKE_EXTRA_TARGETS += copy2build
 
 copy2buildhook.depends = copy2build
