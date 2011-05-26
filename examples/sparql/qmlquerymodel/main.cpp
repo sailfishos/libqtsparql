@@ -41,7 +41,6 @@
 
 #include <QtGui/QApplication>
 #include <QtDeclarative>
-#include "TrackerLiveQuery"
 #include <QtSparql>
 #include <QDebug>
 
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     // Now set the context property for the ListView model to the liveQuery model
     // access the values in qml using urn and subject
     ctxt->setContextProperty("contactModel", &model);
-    viewQml.setSource(QUrl::fromLocalFile("qml/liveQml/main.qml"));
+    viewQml.setSource(QUrl::fromLocalFile("main.qml"));
     viewQml.show();
 
     return app.exec();
