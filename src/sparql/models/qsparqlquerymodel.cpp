@@ -214,7 +214,7 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
         return QVariant();
 
     int userRole = 0;
-    if (role >= Qt::UserRole) {
+    if (role >= Qt::UserRole+1) {
         userRole = role;
         role = Qt::DisplayRole;
     }
@@ -227,7 +227,8 @@ QVariant QSparqlQueryModel::data(const QModelIndex &item, int role) const
     // if we have a userRole we need to set the correct column
     if (userRole) {
         int columnOffset = userRole - (Qt::UserRole + 1);
-        dItem = index(item.row(), item.column()+columnOffset, item.parent());
+        QModelIndex newItem = index(item.row(), item.column()+columnOffset, item.parent());
+        dItem = indexInQuery(newItem);
     } else {
         dItem = indexInQuery(item);
     }
