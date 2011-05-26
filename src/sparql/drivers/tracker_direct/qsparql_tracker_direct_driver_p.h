@@ -104,8 +104,7 @@ public:
     QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver);
     ~QTrackerDirectDriverPrivate();
 
-    void checkConnectionError(TrackerSparqlConnection *conn, GError* gerr);
-    void emitOpened();
+    void asyncOpenComplete(GAsyncResult* result);
     void addActiveResult(QTrackerDirectResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
     void waitForConnectionOpen();
@@ -119,11 +118,14 @@ public:
     // already thread safe.
     QMutex connectionMutex;
     QTrackerDirectDriver *driver;
-    bool asyncOpenCalled;
     QString error;
     QList<QPointer<QTrackerDirectResult> > activeResults;
 
     QThreadPool threadPool;
+
+private:
+    bool asyncOpenCalled;
+    void checkConnectionError(TrackerSparqlConnection *conn, GError* gerr);
 };
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);
