@@ -104,11 +104,12 @@ public:
     QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver);
     ~QTrackerDirectDriverPrivate();
 
-    void setOpen(bool open);
+    void checkConnectionError(TrackerSparqlConnection *conn, GError* gerr);
     void emitOpened();
     void addActiveResult(QTrackerDirectResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
     void waitForConnectionOpen();
+    void openConnectionSync();
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;

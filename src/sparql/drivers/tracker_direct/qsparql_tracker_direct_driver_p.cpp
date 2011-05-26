@@ -172,17 +172,11 @@ async_open_callback(GObject         * /*source_object*/,
                     gpointer         user_data)
 {
     QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
-    GError * error = 0;
-    d->connection = tracker_sparql_connection_get_finish(result, &error);
-
     if (!d->connection) {
-        d->error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: %1")
-                                        .arg(QString::fromUtf8(error ? error->message : "unknown error"));
-        qWarning() << d->error;
-        g_error_free(error);
-        d->setOpen(false);
+        GError * error = 0;
+        d->connection = tracker_sparql_connection_get_finish(result, &error);
+        d->checkConnectionError(d->connection, error);
     }
-
     d->asyncOpenCalled = true;
     d->emitOpened();
 }
@@ -197,10 +191,21 @@ QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 {
 }
 
-void QTrackerDirectDriverPrivate::setOpen(bool open)
+void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *conn, GError* gerr)
 {
-    driver->setOpen(open);
+    if (!conn) {
+        QString trackerErr(QString::fromUtf8("unknown error"));
+        if (gerr) {
+            if (gerr->message)
+                trackerErr = QString::fromUtf8(gerr->message);
+            g_error_free(gerr);
+        }
+        error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: ") + trackerErr;
+        qWarning() << error;
+        driver->setOpen(false);
+    }
 }
+
 
 void QTrackerDirectDriverPrivate::emitOpened()
 {
@@ -224,10 +229,10 @@ void QTrackerDirectDriverPrivate::addActiveResult(QTrackerDirectResult* result)
 
 void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* method, const char* slot)
 {
-    if (asyncOpenCalled) {
+    if (connection || asyncOpenCalled) {
         QMetaObject::invokeMethod(object, method, Qt::DirectConnection);
     }
-    else {
+    else if (!asyncOpenCalled) {
         QObject::connect(driver, SIGNAL(opened()), object, slot, Qt::UniqueConnection);
     }
 }
@@ -243,6 +248,16 @@ void QTrackerDirectDriverPrivate::waitForConnectionOpen()
         else {
             qWarning() << "QTRACKER_DIRECT: QCoreApplication instance not found: cannot wait for asynchronous connection open";
         }
+    }
+}
+
+void QTrackerDirectDriverPrivate::openConnectionSync()
+{
+
+    if (!asyncOpenCalled && !connection) {
+        GError* error = 0;
+        this->connection = tracker_sparql_connection_get(0, &error);
+        checkConnectionError(this->connection, error);
     }
 }
 
@@ -326,7 +341,6 @@ void QTrackerDirectDriver::close()
     // Need to wait for the connection to open because there is no good way
     // to cancel it synchronously
     d->waitForConnectionOpen();
-
     if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
@@ -375,10 +389,10 @@ QSparqlResult* QTrackerDirectDriver::syncExec
     result->setQuery(query);
     result->setStatementType(type);
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        d->waitForConnectionOpen();
+        d->openConnectionSync();
         result->exec();
     } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
-        d->waitForConnectionOpen();
+        d->openConnectionSync();
         result->update();
     }
 
