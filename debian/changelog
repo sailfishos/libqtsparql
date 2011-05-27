@@ -1,3 +1,9 @@
+libqtsparql (0.0.29~unreleased) unstable; urgency=low
+
+  *
+
+ -- James Thomas <james.thomas@codethink.co.uk>  Fri, 27 May 2011 11:37:00 +0300
+
 libqtsparql (0.0.28) unstable; urgency=low
 
   * Fixes: NB#257702
