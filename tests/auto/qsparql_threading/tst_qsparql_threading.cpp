@@ -198,6 +198,7 @@ void tst_QSparqlThreading::cleanup()
     QTest::qWait(500);
     delete conn1;
     conn1 = 0;
+
     delete conn2;
     conn2 = 0;
 }
@@ -346,14 +347,24 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
 void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
 {
     sem1.acquire();
+
     conn2 = new QSparqlConnection("QTRACKER_DIRECT");
 
     QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
+
     r2 = conn2->exec(q);
+
     connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
     connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
     sem2.release();
+
     r2->waitForFinished();
+
+    // set the parent to 0 so we don't delete the result with the connection
+    r2->setParent(0);
+    // Delete the connection now, so we don't delete it AFTER the thread has been deleted
+    delete conn2;
+    conn2=0;
 }
 
 void tst_QSparqlThreading::concurrentTrackerDirectQueries()
@@ -371,13 +382,16 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries()
 
     r1->waitForFinished();
 
-    if (!th.isNull()) {
+    if (!th.isNull())
         waitForSignal(th, SIGNAL(finished()));
-    }
-
     CHECK_QSPARQL_RESULT(r1);
     CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
+
+    // Delete r2 now since we reparented it to avoid it being deleted
+    // when we deleted the connection
+    delete r2;
+    r2 = 0;
 }
 
 void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
