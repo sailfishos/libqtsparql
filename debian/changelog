@@ -1,11 +1,11 @@
-libqtsparql (0.0.28~unreleased) unstable; urgency=low
+libqtsparql (0.0.28) unstable; urgency=low
 
   * Fixes: NB#257702
   * Fixes: NB#257928 - Copyright text in QtSparql has outdated year
   * QSparqlQueryModel can now be used in QML apps
   * Documentation updates
 
- -- James Thomas <james.thomas@codethink.co.uk>  Thu, 26 May 2011 17:43:00 +0300
+ -- James Thomas <james.thomas@codethink.co.uk>  Fri, 27 May 2011 11:37:00 +0300
 
 libqtsparql (0.0.27) unstable; urgency=low
 
