@@ -43,7 +43,6 @@
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
-
 #include <sys/time.h>
 #include <stdio.h>
 
@@ -70,10 +69,15 @@
     int average = 0; \
     for(int i=0;i<LIST.size();i++) \
         average += LIST[i]; \
-    fprintf(stderr, "%s total time %i\n", qPrintable(BENCHMARKNAME), average); \
-    fprintf(stderr, "%s median value = %i\n", qPrintable(BENCHMARKNAME), LIST[median]); \
-    fprintf(stderr, "%s mean value = %i\n", qPrintable(BENCHMARKNAME), average/LIST.size()); }
-
+    QString underline; \
+    for(int i=0;i<BENCHMARKNAME.size();i++) \
+    { \
+        underline.append("-"); \
+    } \
+    fprintf(stderr, "\n%s\n%s\n\n", qPrintable(BENCHMARKNAME), qPrintable(underline)); \
+    fprintf(stderr, "median\t\t\t\t\t\t\t%i\n", LIST[median]); \
+    fprintf(stderr, "mean\t\t\t\t\t\t\t%i\n", average/LIST.size());\
+    fprintf(stderr, "total time\t\t\t\t\t\t%i\n\n", average); }
 #define NO_QUERIES 100
 
 class tst_QSparqlBenchmark : public QObject
@@ -97,9 +101,6 @@ private slots:
 
     void dataReadingBenchmark();
     void dataReadingBenchmark_data();
-
-    void dataReadingBenchmarkSync();
-    void dataReadingBenchmarkSync_data();
 
     // Reference benchmarks
     void queryWithLibtrackerSparql();
@@ -233,13 +234,19 @@ void tst_QSparqlBenchmark::queryBenchmark()
     QFETCH(QString, benchmarkName);
     QFETCH(QString, connectionName);
     QFETCH(QString, queryString);
+    QFETCH(int, executionMethod);
 
     QSparqlQuery query(queryString);
     QSparqlConnection conn(connectionName);
-    // Note: connection opening cost is left out of the benchmark. Connection
-    // opening is async, so we need to wait here long enough to know that it has
+
+    // Note: connection opening cost is left out of the benchmark. If connection
+    // opening is async, we need to wait here long enough to know that it has
     // opened (there is no signal sent or such to know it has opened).
-    QTest::qWait(2000);
+    if (executionMethod == QSparqlQueryOptions::AsyncExec)
+        QTest::qWait(2000);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
 
     QSparqlResult* r = 0;
     QList<int> totalTimes;
@@ -248,10 +255,10 @@ void tst_QSparqlBenchmark::queryBenchmark()
     // does adding a QThreadPool help".
     for (int i = 0; i < NO_QUERIES; ++i) {
         START_BENCHMARK {
-            r = conn.exec(query);
-            r->waitForFinished();
+            r = conn.exec(query, queryOptions);
+            if (executionMethod == QSparqlQueryOptions::AsyncExec)
+                r->waitForFinished();
             CHECK_QSPARQL_RESULT(r);
-            QVERIFY(r->size() > 0);
             delete r;
         }
         END_BENCHMARK(benchmarkName);
@@ -264,17 +271,26 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
 {
     QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("connectionName");
+    QTest::addColumn<int>("executionMethod");
     QTest::addColumn<QString>("queryString");
 
     QTest::newRow("TrackerDBusArtistsAndAlbums")
         << "dbus-artistsandalbums"
         << "QTRACKER"
+        << (int)QSparqlQueryOptions::AsyncExec
         << artistsAndAlbumsQuery;
 
-    QTest::newRow("TrackerDirectArtistsAndAlbums")
-        << "direct-artistsandalbums"
+    QTest::newRow("TrackerDirectArtistsAndAlbums-Async")
+        << "direct-artistsandalbums-Async"
         << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::AsyncExec
         << artistsAndAlbumsQuery;
+    QTest::newRow("TrackerDirectArtistsAndAlbums-Sync")
+        << "direct-artistandalbums-Sync"
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::SyncExec
+        << artistsAndAlbumsQuery;
+
 }
 
 void tst_QSparqlBenchmark::dataReadingBenchmark()
@@ -282,12 +298,15 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     QFETCH(QString, benchmarkName);
     QFETCH(QString, queryString);
     QFETCH(int, columnCount);
+    QFETCH(int, executionMethod);
 
     // Set the dataReadyInterval to be large enough so that it won't affect this
     // test case.
     QSparqlConnectionOptions opts;
     opts.setDataReadyInterval(1000000);
 
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
     // Note: connection opening cost is left out of the benchmark. Connection
     // opening is async, so we need to wait here long enough to know that it has
@@ -306,16 +325,17 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     for (int i = 0; i < NO_QUERIES; ++i) {
         {
             START_BENCHMARK {
-                r = conn.exec(query);
-                QEventLoop loop;
-                connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
-                loop.exec();
+                r = conn.exec(query,queryOptions);
+                if(executionMethod == QSparqlQueryOptions::AsyncExec) {
+                    QEventLoop loop;
+                    connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
+                    loop.exec();
+                }
             }
             END_BENCHMARK(finished);
             totalTimesFinished.append(benchmarkTotal);
         }
         CHECK_QSPARQL_RESULT(r);
-        QVERIFY(r->size() > 0);
         {
             int size = 0;
             START_BENCHMARK {
@@ -346,94 +366,31 @@ void tst_QSparqlBenchmark::dataReadingBenchmark_data()
     QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("queryString");
     QTest::addColumn<int>("columnCount");
+    QTest::addColumn<int>("executionMethod");
 
-    QTest::newRow("ReadingArtistsAndAlbums")
-        << "read-artistsandalbums"
+    QTest::newRow("ReadingArtistsAndAlbums-Async")
+        << "read-artistsandalbums-Async"
         << artistsAndAlbumsQuery
-        << artistsAndAlbumsColumnCount;
+        << artistsAndAlbumsColumnCount
+        << (int)QSparqlQueryOptions::AsyncExec;
 
-    QTest::newRow("ReadingMusic")
-        << "read-music"
-        << musicQuery
-        << musicQueryColumnCount;
-}
-
-void tst_QSparqlBenchmark::dataReadingBenchmarkSync()
-{
-    QFETCH(QString, benchmarkName);
-    QFETCH(QString, queryString);
-    QFETCH(int, columnCount);
-
-    // Set the dataReadyInterval to be large enough so that it won't affect this
-    // test case.
-    QSparqlConnectionOptions opts;
-    opts.setDataReadyInterval(1000000);
-
-    QSparqlConnection conn("QTRACKER_DIRECT", opts);
-    // Note: connection opening cost is left out of the benchmark. Connection
-    // opening is async, so we need to wait here long enough to know that it has
-    // opened (there is no signal sent or such to know it has opened).
-    QTest::qWait(2000);
-
-    QSparqlQuery query(queryString);
-
-    QString finished = benchmarkName + "-fin";
-    QString read = benchmarkName + "-read";
-
-    QSparqlResult* r = 0;
-    QList<int> totalTimesFinished;
-    QList<int> totalTimesRead;
-
-    for (int i = 0; i < NO_QUERIES; ++i) {
-        {
-            START_BENCHMARK {
-                r = conn.syncExec(query);               
-            }
-            END_BENCHMARK(finished);
-            totalTimesFinished.append(benchmarkTotal);
-        }
-        CHECK_QSPARQL_RESULT(r);
-        
-        {
-            int size = 0;
-            START_BENCHMARK {
-                while (r->next()) {
-                    for (int c = 0; c < columnCount; ++c) {
-                        QVariant var = r->value(c);
-                        // Probably it's enough not to do anything with the
-                        // value; the statement of getting the value won't be
-                        // optimized out since calling r->value() might have
-                        // side effects.
-                    }
-                    ++size;
-                }
-            }
-            END_BENCHMARK(read);
-            totalTimesRead.append(benchmarkTotal);
-            // For verifying that enough data was really read
-            // qDebug() << "No of results" << size;
-        }
-        delete r;
-    }
-    PRINT_STATS(finished, totalTimesFinished);
-    PRINT_STATS(read, totalTimesRead);
-}
-
-void tst_QSparqlBenchmark::dataReadingBenchmarkSync_data()
-{
-    QTest::addColumn<QString>("benchmarkName");
-    QTest::addColumn<QString>("queryString");
-    QTest::addColumn<int>("columnCount");
-
-    QTest::newRow("ReadingArtistsAndAlbums")
-        << "sync-read-artistsandalbums"
+    QTest::newRow("ReadingArtistsAndAlbums-Sync")
+        << "read-artistsandalbums-Sync"
         << artistsAndAlbumsQuery
-        << artistsAndAlbumsColumnCount;
+        << artistsAndAlbumsColumnCount
+        << (int)QSparqlQueryOptions::SyncExec;
 
-    QTest::newRow("ReadingMusic")
-        << "sync-read-music"
+    QTest::newRow("ReadingMusic-Async")
+        << "read-music-Async"
         << musicQuery
-        << musicQueryColumnCount;
+        << musicQueryColumnCount
+        << (int)QSparqlQueryOptions::AsyncExec;
+
+    QTest::newRow("ReadingMusic-Sync")
+        << "read-music-Sync"
+        << musicQuery
+        << musicQueryColumnCount
+        << (int)QSparqlQueryOptions::SyncExec;
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
