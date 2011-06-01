@@ -253,10 +253,23 @@ void QSparqlResult::waitForFinished()
 
     The useage of this function differs depending on the driver, and method of 
     execution used. For asynchronous queries the results will be availible once the
-    finished() signal has been emitted. For synchronous execution, the value of isFinished()
-    will be false until all the results have been retrieved using next().
+    finished() signal has been emitted, or waitForFinished() has been called. For
+    synchronous execution, the value of isFinished() will be false until all the
+    results have been retrieved using next().
 
-    TODO: Add useage example
+    E.g For a synchronous result
+    @verbatim
+        QSparqlResult *result = connection.syncExec(query);
+        result->isFinished(); // will be false
+        while(result->next())
+            do something
+        result->isFinished() // now true @endverbatim
+
+    And for asynchronous execution
+    @verbatim
+        QSparqlResult *result = connection.exec(query);
+        result->waitForFinished();
+        result->isFinished(); // will be true @endverbatim
 
     Note that this function only changes state if you call waitForFinished(), or
     if an external event happens, which in general only happens if you return to

@@ -68,6 +68,12 @@ private slots:
 
     void ask_query();
     void ask_query_data();
+
+    void isFinished_test();
+    void isFinished_test_data();
+
+    void isFinished_asyncObject_test();
+    void isFinished_asyncObject_test_data();
 };
 
 namespace {
@@ -372,6 +378,122 @@ void tst_QSparqlAPI::ask_query_data()
         << (int)QSparqlQueryOptions::AsyncExec
         << askQueryFalse
         << false;
+}
+
+void tst_QSparqlAPI::isFinished_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+    QFETCH(int, executionMethod);
+
+    QSparqlConnection conn(connectionDriver);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+    QSparqlQuery q(query);
+
+    QSparqlResult* r = conn.exec(q,queryOptions);
+    CHECK_QSPARQL_RESULT(r);
+
+    if (executionMethod == QSparqlQueryOptions::AsyncExec)
+        r->waitForFinished();
+
+    CHECK_QSPARQL_RESULT(r);
+
+    // According to the documentation, isFinished() will be false for sync queries
+    // until the results have been iterated
+    if (executionMethod == QSparqlQueryOptions::SyncExec) {
+        QVERIFY(!r->isFinished());
+        int resultCount = 0;
+
+        while (r->next())
+            resultCount++;
+
+        QVERIFY(r->isFinished());
+        QCOMPARE(resultCount, expectedResultsSize);
+    }
+    else {
+        QVERIFY(r->isFinished());
+        // Async results should support size()
+        QCOMPARE(r->size(), expectedResultsSize);
+    }
+
+    delete r;
+}
+
+void tst_QSparqlAPI::isFinished_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+    QTest::addColumn<int>("executionMethod");
+
+    QTest::newRow("DBus Async Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << 3
+        << (int)QSparqlQueryOptions::AsyncExec;
+
+    QTest::newRow("Tracker Direct Async Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << 3
+        << (int)QSparqlQueryOptions::AsyncExec;
+
+    QTest::newRow("Tracker Direct Sync Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << 3
+        << (int)QSparqlQueryOptions::SyncExec;
+}
+
+void tst_QSparqlAPI::isFinished_asyncObject_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection conn(connectionDriver);
+    QSparqlQuery q(query);
+
+    MySignalObject signalObject;
+
+    QSparqlResult* r = conn.exec(q);
+    CHECK_QSPARQL_RESULT(r);
+
+    connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+
+    QSignalSpy spy(&signalObject, SIGNAL(finished()));
+
+    while (spy.count() == 0) {
+       QTest::qWait(100);
+    }
+
+    CHECK_QSPARQL_RESULT(r);
+
+    QVERIFY(r->isFinished());
+    QCOMPARE(r->size(), expectedResultsSize);
+
+    delete r;
+}
+
+void tst_QSparqlAPI::isFinished_asyncObject_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("DBus Async Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << 3;
+
+    QTest::newRow("Tracker Direct Async Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << 3;
+
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
