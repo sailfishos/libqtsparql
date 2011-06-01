@@ -364,6 +364,19 @@ QSparqlResultRow QTrackerResult::current() const
     return info;
 }
 
+bool QTrackerResult::hasFeature(QSparqlResult::Feature feature) const
+{
+    switch (feature) {
+        case QSparqlResult::Sync:
+        case QSparqlResult::ForwardOnly:
+            return false;
+        case QSparqlResult::QuerySize:
+            return true;
+        default:
+            return false;
+    }
+}
+
 QTrackerDriverPrivate::QTrackerDriverPrivate()
     : iface(0),  doBatch(false)
 {

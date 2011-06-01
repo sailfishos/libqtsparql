@@ -448,6 +448,19 @@ QSparqlResultRow QTrackerDirectResult::current() const
     return resultRow;
 }
 
+bool QTrackerDirectResult::hasFeature(QSparqlResult::Feature feature) const
+{
+    switch (feature) {
+        case QSparqlResult::Sync:
+        case QSparqlResult::ForwardOnly:
+            return false;
+        case QSparqlResult::QuerySize:
+            return true;
+        default:
+            return false;
+    }
+}
+
 QT_END_NAMESPACE
 
 #include "qsparql_tracker_direct_result_p.moc"

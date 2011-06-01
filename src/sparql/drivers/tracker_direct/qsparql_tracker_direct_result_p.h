@@ -81,6 +81,7 @@ public:
     virtual QSparqlBinding binding(int i) const;
     virtual QVariant value(int i) const;
     virtual int size() const;
+    virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
 private Q_SLOTS:
     void exec();
