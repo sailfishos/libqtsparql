@@ -80,6 +80,9 @@ private slots:
 
     void result_iteration_asyncObject_test();
     void result_iteration_asyncObject_test_data();
+
+    void queryModel_test();
+    void queryModel_test_data();
 };
 
 namespace {
@@ -687,6 +690,49 @@ void tst_QSparqlAPI::result_iteration_asyncObject_test_data()
         << contactSelectQuery
         << 3;
 
+}
+
+void tst_QSparqlAPI::queryModel_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection conn(connectionDriver);
+    QSparqlQueryModel model;
+
+    model.setQuery(QSparqlQuery(query), conn);
+
+    QSignalSpy spy(&model, SIGNAL(finished()));
+    while(spy.count() == 0)
+        QTest::qWait(100);
+
+    QCOMPARE(model.rowCount(), expectedResultsSize);
+    QCOMPARE(model.columnCount(), 2);
+
+    // Verify the data in the model
+    for (int i=0;i<model.rowCount();i++) {
+        QSparqlResultRow row = model.resultRow(i);
+        QCOMPARE(QString("uri00%1").arg(i+1), row.value(0).toString());
+        QCOMPARE(QString("name00%1").arg(i+1), row.value(1).toString());
+    }
+}
+
+void tst_QSparqlAPI::queryModel_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("DBus Query Model")
+        << "QTRACKER"
+        << contactSelectQuery
+        << 3;
+
+    QTest::newRow("Tracker Direct Query Model")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << 3;
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
