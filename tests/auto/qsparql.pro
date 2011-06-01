@@ -14,7 +14,8 @@ SUBDIRS = \
     qsparql_tracker_direct_sync \
     qsparql_tracker_direct_crashes \
     qsparql_virtuoso \
-    qsparql_virtuoso_endpoint
+    qsparql_virtuoso_endpoint \
+    qsparql_api
 
 contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 
