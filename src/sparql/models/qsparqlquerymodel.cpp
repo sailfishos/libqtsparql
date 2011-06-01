@@ -64,7 +64,7 @@ void QSparqlQueryModelPrivate::queryFinished()
     if (result->hasError())
         q->setLastError(result->lastError());
 
-    emit q->finished();
+    Q_EMIT q->finished();
 }
 
 void QSparqlQueryModelPrivate::beginQuery(int totalResults)
@@ -349,7 +349,7 @@ bool QSparqlQueryModel::setHeaderData(int section, Qt::Orientation orientation,
     if (d->headers.size() <= section)
         d->headers.resize(qMax(section + 1, 16));
     d->headers[section][role] = value;
-    emit headerDataChanged(orientation, section, section);
+    Q_EMIT headerDataChanged(orientation, section, section);
     return true;
 }
 

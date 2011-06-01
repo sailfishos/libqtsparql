@@ -122,7 +122,7 @@ void QSparqlResultsList::reload()
         d->status = Error;
     else
         d->status = Loading;
-    emit statusChanged(d->status);
+    Q_EMIT statusChanged(d->status);
 
     connect(d->result, SIGNAL(finished()), this, SIGNAL(finished()));
     connect(d->result, SIGNAL(finished()), this, SLOT(queryFinished()));
@@ -155,7 +155,7 @@ void QSparqlResultsList::queryData(int rowCount)
 
     d->lastRowCount = rowCount;
     QAbstractItemModel::endInsertRows();
-    emit countChanged();
+    Q_EMIT countChanged();
 }
 
 void QSparqlResultsList::queryFinished()
@@ -167,8 +167,8 @@ void QSparqlResultsList::queryFinished()
     else
         d->status = Ready;
 
-    emit statusChanged(d->status);
-    emit countChanged();
+    Q_EMIT statusChanged(d->status);
+    Q_EMIT countChanged();
 }
 
 QSparqlConnectionOptionsWrapper* QSparqlResultsList::options() const
@@ -180,7 +180,7 @@ void QSparqlResultsList::setOptions(QSparqlConnectionOptionsWrapper *options)
 {
     d->options = options;
     reload();
-    emit optionsChanged();
+    Q_EMIT optionsChanged();
 }
 
 QString QSparqlResultsList::query() const
@@ -193,7 +193,7 @@ void QSparqlResultsList::setQuery(const QString &query)
     if (d->query != query) {
         d->query = query;
         reload();
-        emit queryChanged();
+        Q_EMIT queryChanged();
     }
 }
 

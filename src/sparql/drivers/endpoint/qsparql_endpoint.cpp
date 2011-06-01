@@ -286,7 +286,7 @@ void EndpointResultPrivate::terminate()
         return;
 
     isFinished = true;
-    q->emit finished();
+    q->Q_EMIT finished();
     
     if (loop != 0)
         loop->exit();
@@ -325,7 +325,7 @@ void EndpointResultPrivate::readData()
         }
     }
 
-    q->emit dataReady(results.count());
+    q->Q_EMIT dataReady(results.count());
 }
 
 void EndpointResultPrivate::parseResults()

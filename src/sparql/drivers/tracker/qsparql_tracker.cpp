@@ -123,7 +123,7 @@ public:
     static TrackerSparqlError errorNameToCode(const QString& name);
     static QSparqlError::ErrorType errorCodeToType(TrackerSparqlError code);
 
-private slots:
+private Q_SLOTS:
     void onDBusCallFinished();
 private:
     QTrackerResult* q; // public part
@@ -223,7 +223,7 @@ void QTrackerResultPrivate::onDBusCallFinished()
         }
 
         q->setLastError(error);
-        emit q->finished();
+        Q_EMIT q->finished();
         return;
     }
     switch (type) {
@@ -231,14 +231,14 @@ void QTrackerResultPrivate::onDBusCallFinished()
     {
         QDBusPendingReply<QVector<QStringList> > reply = *watcher;
         data = reply.argumentAt<0>();
-        emit q->dataReady(data.size());
+        Q_EMIT q->dataReady(data.size());
         break;
     }
     default:
         // TODO: handle update results here
         break;
     }
-    emit q->finished();
+    Q_EMIT q->finished();
 }
 
 QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp)
@@ -354,7 +354,7 @@ QSparqlResultRow QTrackerResult::current() const
         return info;
 
     QStringList resultStrings = d->data[pos()];
-    foreach (const QString& str, resultStrings) {
+    Q_FOREACH (const QString& str, resultStrings) {
         // This only creates a binding with the values but with empty column
         // names.
         // TODO: how to add column names?

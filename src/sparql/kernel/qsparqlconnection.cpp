@@ -48,7 +48,7 @@
 #include "../drivers/tracker/qsparql_tracker_p.h"
 #endif
 #ifdef QT_SPARQL_TRACKER_DIRECT
-#include "../drivers/tracker_direct/qsparql_tracker_direct_p.h"
+#include "../drivers/tracker_direct/qsparql_tracker_direct.h"
 #endif
 #ifdef QT_SPARQL_ENDPOINT
 #include "../drivers/endpoint/qsparql_endpoint_p.h"
@@ -245,7 +245,7 @@ void QSparqlConnectionPrivate::initKeys()
     int debugLevel = QString::fromLatin1(getenv("QT_DEBUG_PLUGINS")).toInt();
 
     QStringList paths = QCoreApplication::libraryPaths();
-    foreach(const QString& path, paths) {
+    Q_FOREACH(const QString& path, paths) {
         QString realPath = path + QLatin1String("/sparqldrivers");
         QStringList pluginNames = QDir(realPath).entryList(QDir::Files);
         for (int j = 0; j < pluginNames.count(); ++j) {
@@ -374,7 +374,7 @@ QSparqlConnection::QSparqlConnection(const QString& type,
 QSparqlConnection::~QSparqlConnection()
 {
     QList<QSparqlResult*> children = findChildren<QSparqlResult *>();
-    foreach (QSparqlResult *result, children) {
+    Q_FOREACH (QSparqlResult *result, children) {
         if (!result->isFinished())
             qWarning() << "QSparqlConnection: Deleting active query:" <<
                 result->query();

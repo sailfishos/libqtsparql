@@ -333,7 +333,7 @@ QString QSparqlBinding::toString() const
         {
             quoted = true;
             literal.append(QLatin1Char('\"'));
-            foreach (const QChar ch, val.toString()) {
+            Q_FOREACH (const QChar ch, val.toString()) {
                 if (ch == QLatin1Char('\t'))
                     literal.append(QLatin1String("\\t"));
                 else if (ch == QLatin1Char('\n'))

@@ -13,9 +13,16 @@ contains(sparql-drivers, tracker) {
 }
 
 contains(sparql-drivers, tracker_direct) {
-    HEADERS +=      drivers/tracker_direct/qsparql_tracker_direct_p.h
-    SOURCES +=      drivers/tracker_direct/qsparql_tracker_direct.cpp
-    CONFIG += link_pkgconfig
+    HEADERS += drivers/tracker_direct/qsparql_tracker_direct.h \
+               drivers/tracker_direct/qsparql_tracker_direct_driver_p.h \
+               drivers/tracker_direct/qsparql_tracker_direct_result_p.h \
+               drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.h \
+               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.h
+    SOURCES += drivers/tracker_direct/qsparql_tracker_direct_driver_p.cpp \
+               drivers/tracker_direct/qsparql_tracker_direct_result_p.cpp \
+               drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.cpp \
+               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.cpp
+    CONFIG += no_keywords link_pkgconfig
     PKGCONFIG += tracker-sparql-0.10
     DEFINES += QT_SPARQL_TRACKER_DIRECT
 }
