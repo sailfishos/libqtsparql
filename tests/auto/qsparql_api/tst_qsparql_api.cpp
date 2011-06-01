@@ -196,25 +196,20 @@ void tst_QSparqlAPI::query_test()
     CHECK_QSPARQL_RESULT(r);
 
     if(executionMethod == QSparqlQueryOptions::AsyncExec)
-    {
-        QEventLoop loop;
-        connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
-        loop.exec();
-    }
+        r->waitForFinished();
 
-   CHECK_QSPARQL_RESULT(r);
+    CHECK_QSPARQL_RESULT(r);
 
-   if(r->hasFeature(QSparqlResult::QuerySize))
+    if(r->hasFeature(QSparqlResult::QuerySize))
         QCOMPARE(r->size(), expectedResultsSize);
 
-   int resultCount = 0;
-   while(r->next())
-   {
-       QVERIFY(r->isValid());
-       resultCount++;
-   }
-   QCOMPARE(resultCount, expectedResultsSize);
-   delete r;
+    int resultCount = 0;
+    while (r->next()) {
+        QVERIFY(r->isValid());
+        resultCount++;
+    }
+    QCOMPARE(resultCount, expectedResultsSize);
+    delete r;
 }
 
 void tst_QSparqlAPI::query_test_data()
@@ -265,8 +260,6 @@ void tst_QSparqlAPI::query_test_asyncObject()
     connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
 
     QSignalSpy spy(&signalObject, SIGNAL(finished()));
-    QTime timer;
-    timer.start();
     while (spy.count() == 0) {
        QTest::qWait(100);
     }
@@ -277,8 +270,7 @@ void tst_QSparqlAPI::query_test_asyncObject()
         QCOMPARE(r->size(), expectedResultsSize);
 
     int resultCount = 0;
-    while(r->next())
-    {
+    while (r->next()) {
         QVERIFY(r->isValid());
         resultCount++;
     }
@@ -312,7 +304,7 @@ void tst_QSparqlAPI::ask_query()
 
     QSparqlConnection conn(connectionDriver);
 
-    if  (conn.hasFeature(QSparqlConnection::AskQueries)) {
+    if (conn.hasFeature(QSparqlConnection::AskQueries)) {
 
         QSparqlQuery q(query, QSparqlQuery::AskStatement);
 
@@ -322,8 +314,7 @@ void tst_QSparqlAPI::ask_query()
         QSparqlResult *r = conn.exec(q, queryOptions);
         CHECK_QSPARQL_RESULT(r);
 
-        if(executionMethod == QSparqlQueryOptions::AsyncExec)
-        {
+        if (executionMethod == QSparqlQueryOptions::AsyncExec) {
             QEventLoop loop;
             connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
             loop.exec();
