@@ -8,7 +8,7 @@ DEFINES += QT_BUILD_SPARQL_LIB
 DEFINES += QT_NO_USING_NAMESPACE
 QT += network
 
-CONFIG += hide_symbols
+CONFIG += hide_symbols no_keywords
 
 DEFINES += QT_NO_CAST_FROM_ASCII
 
