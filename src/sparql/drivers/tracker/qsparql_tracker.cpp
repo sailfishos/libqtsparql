@@ -142,7 +142,7 @@ QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
                                              QSparqlQuery::StatementType tp)
 : watcher(0), type(tp), q(res)
-{
+{ 
 }
 
 void QTrackerResultPrivate::setCall(QDBusPendingCall& call)
@@ -226,12 +226,21 @@ void QTrackerResultPrivate::onDBusCallFinished()
         Q_EMIT q->finished();
         return;
     }
+
     switch (type) {
+    case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
     {
         QDBusPendingReply<QVector<QStringList> > reply = *watcher;
         data = reply.argumentAt<0>();
-        Q_EMIT q->dataReady(data.size());
+
+        if (type == QSparqlQuery::AskStatement && data.count() == 1 && data[0].count() == 1)
+        {
+            QVariant boolValue = data[0][0];
+            q->setBoolValue(boolValue.toBool());
+        }
+
+        emit q->dataReady(data.size());
         break;
     }
     default:
@@ -263,6 +272,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
 
     QString funcToCall;
     switch (type) {
+    case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
     {
         funcToCall = QString::fromLatin1("SparqlQuery");

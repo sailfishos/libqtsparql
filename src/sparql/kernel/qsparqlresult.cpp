@@ -176,13 +176,18 @@ bool QSparqlResult::isBool() const
 }
 
 /*!
-    Returns the boolean result of an ASK query
+    Returns the boolean result of an ASK query.
+
+    Note that this should only be used when isFinished() is true.
 
     \sa isBool() setBoolValue()
 */
 
 bool QSparqlResult::boolValue() const
 {
+    if(!isFinished())
+        qWarning() <<
+            "QSparqlResult: isFinished() is false, boolValue() may be incorrect";
     return d->boolValue;
 }
 

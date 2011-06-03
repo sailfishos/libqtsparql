@@ -149,6 +149,12 @@ bool QTrackerDirectSyncResult::next()
     GError * error = 0;
     const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
 
+    // if this is an ask query, get the result
+    if (isBool() && active && tracker_sparql_cursor_get_value_type(d->cursor, 0) == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN) {
+        const gboolean value = tracker_sparql_cursor_get_boolean(d->cursor, 0);
+        setBoolValue(value != FALSE);
+    }
+
     if (error) {
         setLastError(QSparqlError(QString::fromUtf8(error->message),
                        errorCodeToType(error->code),

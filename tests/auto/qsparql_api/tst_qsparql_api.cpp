@@ -65,6 +65,9 @@ private slots:
 
     void query_test_asyncObject();
     void query_test_asyncObject_data();
+
+    void ask_query();
+    void ask_query_data();
 };
 
 namespace {
@@ -199,7 +202,6 @@ void tst_QSparqlAPI::query_test()
         loop.exec();
     }
 
-   QVERIFY(!r->hasError());
    CHECK_QSPARQL_RESULT(r);
 
    if(r->hasFeature(QSparqlResult::QuerySize))
@@ -259,6 +261,7 @@ void tst_QSparqlAPI::query_test_asyncObject()
     MySignalObject signalObject;
 
     QSparqlResult *r = conn.exec(q);
+    CHECK_QSPARQL_RESULT(r);
     connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
 
     QSignalSpy spy(&signalObject, SIGNAL(finished()));
@@ -268,7 +271,7 @@ void tst_QSparqlAPI::query_test_asyncObject()
        QTest::qWait(100);
     }
 
-    QVERIFY(!r->hasError());
+    CHECK_QSPARQL_RESULT(r);
 
     if(r->hasFeature(QSparqlResult::QuerySize))
         QCOMPARE(r->size(), expectedResultsSize);
@@ -298,6 +301,86 @@ void tst_QSparqlAPI::query_test_asyncObject_data()
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << 3;
+}
+
+void tst_QSparqlAPI::ask_query()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, executionMethod);
+    QFETCH(bool, expectedResult);
+
+    QSparqlConnection conn(connectionDriver);
+
+    if  (conn.hasFeature(QSparqlConnection::AskQueries)) {
+
+        QSparqlQuery q(query, QSparqlQuery::AskStatement);
+
+        QSparqlQueryOptions queryOptions;
+        queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+
+        QSparqlResult *r = conn.exec(q, queryOptions);
+        CHECK_QSPARQL_RESULT(r);
+
+        if(executionMethod == QSparqlQueryOptions::AsyncExec)
+        {
+            QEventLoop loop;
+            connect(r, SIGNAL(finished()), &loop, SLOT(quit()));
+            loop.exec();
+        }
+
+        while(!r->isFinished())
+            r->next();
+
+        QVERIFY(r->isFinished());
+        QCOMPARE(r->boolValue(), expectedResult);
+
+        delete r;
+    }
+}
+
+void tst_QSparqlAPI::ask_query_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<int>("executionMethod");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<bool>("expectedResult");
+
+    QTest::newRow("Tracker Direct Async True Query")
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << askQueryTrue
+        << true;
+
+    QTest::newRow("Tracker Direct Sync True Query")
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::SyncExec
+        << askQueryTrue
+        << true;
+
+    QTest::newRow("Tracker Direct Async False Query")
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << askQueryFalse
+        << false;
+
+    QTest::newRow("Tracker Direct Sync False Query")
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << askQueryFalse
+        << false;
+
+    QTest::newRow("DBus Async True Ask Query")
+        << "QTRACKER"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << askQueryTrue
+        << true;
+
+    QTest::newRow("DBus Async False Ask Query")
+        << "QTRACKER"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << askQueryFalse
+        << false;
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
