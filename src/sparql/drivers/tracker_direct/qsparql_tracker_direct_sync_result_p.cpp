@@ -110,7 +110,7 @@ void QTrackerDirectSyncResult::exec()
     d->cursor = tracker_sparql_connection_query(d->driverPrivate->connection, query().toUtf8().constData(), 0, &error);
     if (error || !d->cursor) {
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
-                        QSparqlError::StatementError,
+                        error ? errorCodeToType(error->code) : QSparqlError::StatementError,
                         error ? error->code : -1));
         if (error)
             g_error_free(error);

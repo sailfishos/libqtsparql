@@ -97,9 +97,11 @@ int main(int argc, char *argv[])
                        "?pn a nco:PhoneNumber ; nco:phoneNumber ?p }");
     QSparqlResult* result = conn.exec(query);
     MyObject obj;
-    QObject::connect(result, SIGNAL(finished()), &obj, SLOT(onFinished()));
-    QObject::connect(result, SIGNAL(dataReady(int)),
+    if (!result->hasError()) {
+        QObject::connect(result, SIGNAL(finished()), &obj, SLOT(onFinished()));
+        QObject::connect(result, SIGNAL(dataReady(int)),
                      &obj, SLOT(onDataReady(int)));
+    }
 
     app.exec();
     qDebug() << "Exiting";

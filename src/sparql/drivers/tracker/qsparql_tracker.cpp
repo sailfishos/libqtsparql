@@ -208,9 +208,6 @@ QSparqlError::ErrorType QTrackerResultPrivate::errorCodeToType(TrackerSparqlErro
 void QTrackerResultPrivate::onDBusCallFinished()
 {
     if (watcher->isError()) {
-        qWarning() << "Tracker driver error:" << watcher->error().message();
-        qWarning() << "The query was" << q->query();
-
         QSparqlError error(watcher->error().message());
         if (watcher->error().type() == QDBusError::Other) {
             TrackerSparqlError code = errorNameToCode(watcher->error().name());
@@ -223,7 +220,8 @@ void QTrackerResultPrivate::onDBusCallFinished()
         }
 
         q->setLastError(error);
-        Q_EMIT q->finished();
+        emit q->finished();
+        qWarning() << "QTrackerResult:" << q->lastError() << q->query();
         return;
     }
 
@@ -290,10 +288,10 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
         break;
     }
     default:
-        qWarning() << "Tracker backend: non-supported statement";
         res->setLastError(QSparqlError(
                               QLatin1String("Non-supported statement type"),
                               QSparqlError::BackendError));
+        qWarning() << "QTrackerResult:" << res->lastError() << res->query();
         return res;
         break;
     }

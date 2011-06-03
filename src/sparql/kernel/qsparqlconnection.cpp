@@ -391,24 +391,23 @@ QSparqlResult* QSparqlConnectionPrivate::checkErrors(const QString& queryText) c
 {
     QSparqlResult* result = 0;
     if (driver->isOpenError()) {
-        qWarning("QSparqlConnection::exec: connection not open");
-
         result = new QSparqlNullResult();
         result->setLastError(driver->lastError());
+        qWarning() << "QSparqlConnection:" << result->lastError() << result->query();
     } else if (!driver->isOpen()) {
-        qWarning("QSparqlConnection::exec: connection not open");
-
         result = new QSparqlNullResult();
         result->setLastError(QSparqlError(QLatin1String("Connection not open"),
                                           QSparqlError::ConnectionError));
+        qWarning() << "QSparqlConnection:" << result->lastError() << result->query();
     } else {
         if (queryText.isEmpty()) {
-            qWarning("QSparqlConnection::exec: empty query");
             result = new QSparqlNullResult();
             result->setLastError(QSparqlError(QLatin1String("Query is empty"),
-                                            QSparqlError::ConnectionError));
+                                            QSparqlError::StatementError));
+            qWarning() << "QSparqlConnection:" << result->lastError() << result->query();
         }
     }
+
     return result;
 }
 
@@ -484,7 +483,7 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
             result->setLastError(QSparqlError(
                                     QLatin1String("Unsupported statement type"),
                                     QSparqlError::BackendError));
-            qWarning("QSparqlConnection::exec: Unsupported statement type");
+            qWarning() << "QSparqlConnection:" << result->lastError() << result->query();
         } else {
             if (!d->driver->hasFeature(QSparqlConnection::SyncExec) &&
                     options.executionMethod() == QSparqlQueryOptions::SyncExec) {

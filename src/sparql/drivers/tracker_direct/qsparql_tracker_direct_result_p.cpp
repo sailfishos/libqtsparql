@@ -251,12 +251,12 @@ bool QTrackerDirectResult::runQuery()
     if (error || !d->cursor) {
         QMutexLocker resultLocker(&(d->resultMutex));
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
-                        QSparqlError::StatementError,
+                        error ? errorCodeToType(error->code) : QSparqlError::StatementError,
                         error ? error->code : -1));
         if (error)
             g_error_free(error);
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         return false;
     }
 
@@ -275,8 +275,8 @@ bool QTrackerDirectResult::fetchNextResult()
                        errorCodeToType(error->code),
                        error->code));
         g_error_free(error);
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         return false;
     }
 
@@ -320,8 +320,8 @@ bool QTrackerDirectResult::fetchBoolResult()
                        errorCodeToType(error->code),
                        error->code));
         g_error_free(error);
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         terminate();
+        qWarning() << "QTrackerDirectResult:" << lastError() << query();
         return false;
     }
 

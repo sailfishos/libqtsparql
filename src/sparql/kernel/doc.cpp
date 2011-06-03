@@ -111,12 +111,14 @@
 
     - Alternatively you can call QSparqlConnection::exec() to exectute the query
       asynchronously. You can then connect to the QSparqlResult::finished() and
-      QSparqlResult::dataReady() signals.
+      QSparqlResult::dataReady() signals. Please note, it is always important to check
+      if the result has an error (using QSparqlResult::hasError()) before connecting the
+      signals.
 
     E.g.
     \dontinclude asynctracker/main.cpp
     \skip conn.exec(query)
-    \until onDataReady
+    \until }
 
     - The QSparqlResult can be iterated over by using the following functions:
       QSparqlResult::first(), QSparqlResult::last(), QSparqlResult::next(),
