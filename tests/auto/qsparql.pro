@@ -22,12 +22,12 @@ contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 check.CONFIG = recursive
 check.recurse = qsparql qsparqlquery qsparqlbinding qsparql_api qsparql_tracker \
                 qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples \
-                qsparql_tracker_direct_crashes
+                qsparql_tracker_direct_crashes qsparql_threading
 
 
 memcheck.CONFIG = recursive
 memcheck.recurse = qsparql_api qsparql_tracker qsparql_tracker_direct qsparql_direct_sync \
-                   qsparql_tracker_direct_crashes
+                   qsparql_tracker_direct_crashes qsparql_threading
 
 QMAKE_EXTRA_TARGETS += check memcheck
 
