@@ -8,7 +8,7 @@ check.depends = $$TARGET
 check.commands = ./tst_qsparql_tracker_direct_sync
 
 memcheck.depends = $$TARGET
-memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_tracker_sync
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_tracker_direct_sync
 
 QMAKE_EXTRA_TARGETS += check memcheck
 
