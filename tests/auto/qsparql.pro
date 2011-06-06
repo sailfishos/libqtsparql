@@ -27,7 +27,8 @@ check.recurse = qsparql qsparqlquery qsparqlbinding qsparql_api qsparql_tracker 
 
 
 memcheck.CONFIG = recursive
-memcheck.recurse = qsparql_api qsparql_tracker qsparql_tracker_direct qsparql_direct_sync \
+memcheck.recurse = qsparql qsparqlquery qsparqlbinding qsparql_api qsparql_tracker \
+                   qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples \
                    qsparql_tracker_direct_crashes qsparql_threading \
                    qsparqlresultrow
 
