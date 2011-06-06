@@ -7,6 +7,9 @@ SOURCES  += tst_qsparqlresultrow.cpp
 check.depends = $$TARGET
 check.commands = ./tst_qsparqlresultrow
 
-QMAKE_EXTRA_TARGETS += check
+memcheck.depends = $$TARGET
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparqlresultrow
+
+QMAKE_EXTRA_TARGETS += check memcheck
 
 #QT = sparql # enable this later
