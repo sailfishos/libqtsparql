@@ -116,6 +116,12 @@ private slots:
     void query_error_asyncObject_test();
     void query_error_asyncObject_test_data();
 
+    void update_query_test();
+    void update_query_test_data();
+
+    void update_query_asyncObject_test();
+    void update_query_asyncObject_test_data();
+
     void ask_query();
     void ask_query_data();
 
@@ -162,6 +168,12 @@ const QString contactSelectQuery =
     "select ?u ?ng {?u a nco:PersonContact; "
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
     "nco:nameGiven ?ng .}";
+
+const QString contactInsertQuery =
+    "insert { <uri004> a nco:PersonContact; "
+    "nie:isLogicalPartOf <qsparql-api-tests> ;"
+    "nco:nameGiven \"name004\" .}";
+
 const QString askQueryTrue =
     "ask { <uri001> a nco:PersonContact, nie:InformationElement ;"
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
@@ -522,6 +534,209 @@ void tst_QSparqlAPI::query_error_asyncObject_test_data()
         << constructQuery
         << (int)QSparqlError::BackendError;
 }
+
+void tst_QSparqlAPI::update_query_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+    QFETCH(int, executionMethod);
+
+    QSparqlConnection conn(connectionDriver);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+    QSparqlQuery q(query, QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn.exec(q,queryOptions);
+    CHECK_QSPARQL_RESULT(r);
+
+    if(executionMethod == QSparqlQueryOptions::AsyncExec)
+        r->waitForFinished();
+
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Verify the insertion
+    r = conn.exec(QSparqlQuery(contactSelectQuery), queryOptions);
+
+    if(executionMethod == QSparqlQueryOptions::AsyncExec)
+        r->waitForFinished();
+
+    if(r->hasFeature(QSparqlResult::QuerySize))
+        QCOMPARE(r->size(), expectedResultsSize);
+
+    QHash<QString, QString> contactNames;
+
+    while(r->next()) {
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+
+    QCOMPARE(contactNames.size(), expectedResultsSize);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+    QCOMPARE(contactNames["uri004"], QString("name004"));
+
+    delete r;
+
+    r = conn.exec(QSparqlQuery("delete { <uri004> a rdfs:Resource. }",
+                  QSparqlQuery::DeleteStatement), queryOptions);
+
+    CHECK_QSPARQL_RESULT(r);
+
+    if(executionMethod == QSparqlQueryOptions::AsyncExec)
+        r->waitForFinished();
+
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Now verify deletion
+
+    contactNames.clear();
+    r = conn.exec(QSparqlQuery(contactSelectQuery), queryOptions);
+
+    if(executionMethod == QSparqlQueryOptions::AsyncExec)
+        r->waitForFinished();
+
+    if(r->hasFeature(QSparqlResult::QuerySize))
+        QCOMPARE(r->size(), expectedResultsSize-1);
+
+    while(r->next())
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+
+    QCOMPARE(contactNames.size(), expectedResultsSize-1);
+    delete r;
+}
+
+void tst_QSparqlAPI::update_query_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+    QTest::addColumn<int>("executionMethod");
+
+    QTest::newRow("DBus Update Query")
+        << "QTRACKER"
+        << contactInsertQuery
+        << 4
+        << (int)QSparqlQueryOptions::AsyncExec;
+
+    QTest::newRow("Tracker Direct Async Update Query")
+        << "QTRACKER_DIRECT"
+        << contactInsertQuery
+        << 4
+        << (int)QSparqlQueryOptions::AsyncExec;
+
+    QTest::newRow("Tracker Direct Sync Update Query")
+        << "QTRACKER_DIRECT"
+        << contactInsertQuery
+        << 4
+        << (int)QSparqlQueryOptions::SyncExec;
+
+}
+
+void tst_QSparqlAPI::update_query_asyncObject_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection conn(connectionDriver);
+
+    QSparqlQuery q(query, QSparqlQuery::InsertStatement);
+
+    MySignalObject signalObject;
+
+    QSparqlResult *r = conn.exec(q);
+    CHECK_QSPARQL_RESULT(r);
+
+    connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+
+    QSignalSpy spy(&signalObject, SIGNAL(finished()));
+    while (spy.count() == 0) {
+       QTest::qWait(100);
+    }
+
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Verify the insertion
+    r = conn.exec(QSparqlQuery(contactSelectQuery));
+    connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+
+    while (spy.count() == 1) {
+       QTest::qWait(100);
+    }
+
+    if(r->hasFeature(QSparqlResult::QuerySize))
+        QCOMPARE(r->size(), expectedResultsSize);
+
+    QHash<QString, QString> contactNames;
+
+    while(r->next()) {
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+    }
+
+    QCOMPARE(contactNames.size(), expectedResultsSize);
+    QCOMPARE(contactNames["uri001"], QString("name001"));
+    QCOMPARE(contactNames["uri002"], QString("name002"));
+    QCOMPARE(contactNames["uri003"], QString("name003"));
+    QCOMPARE(contactNames["uri004"], QString("name004"));
+
+    delete r;
+
+    r = conn.exec(QSparqlQuery("delete { <uri004> a rdfs:Resource. }",
+                  QSparqlQuery::DeleteStatement));
+
+    CHECK_QSPARQL_RESULT(r);
+
+    connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+
+    while (spy.count() == 2) {
+       QTest::qWait(100);
+    }
+
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Now verify deletion
+    contactNames.clear();
+    r = conn.exec(QSparqlQuery(contactSelectQuery));
+    connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+
+    while (spy.count() == 3) {
+       QTest::qWait(100);
+    }
+
+    if(r->hasFeature(QSparqlResult::QuerySize))
+        QCOMPARE(r->size(), expectedResultsSize-1);
+
+    while(r->next())
+        contactNames[r->value(0).toString()] = r->value(1).toString();
+
+    QCOMPARE(contactNames.size(), expectedResultsSize-1);
+    delete r;
+}
+
+void tst_QSparqlAPI::update_query_asyncObject_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("DBus Async Object Update Query")
+        << "QTRACKER"
+        << contactInsertQuery
+        << 4;
+
+    QTest::newRow("Tracker Direct Async Object Update Query")
+        << "QTRACKER_DIRECT"
+        << contactInsertQuery
+        << 4;
+}
+
+
 
 void tst_QSparqlAPI::ask_query()
 {
