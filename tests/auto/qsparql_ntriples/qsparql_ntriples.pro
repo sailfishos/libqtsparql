@@ -8,7 +8,10 @@ HEADERS  += ../../../src/sparql/kernel/qsparqlntriples.h
 check.depends = $$TARGET
 check.commands = ./tst_qsparql_ntriples
 
-QMAKE_EXTRA_TARGETS += check
+memcheck.depends = $$TARGET
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_ntriples
+
+QMAKE_EXTRA_TARGETS += check memcheck
 
 #QT = sparql # enable this later
 
