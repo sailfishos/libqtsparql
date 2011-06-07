@@ -220,7 +220,7 @@ void QTrackerResultPrivate::onDBusCallFinished()
         }
 
         q->setLastError(error);
-        emit q->finished();
+        Q_EMIT q->finished();
         qWarning() << "QTrackerResult:" << q->lastError() << q->query();
         return;
     }
@@ -238,7 +238,7 @@ void QTrackerResultPrivate::onDBusCallFinished()
             q->setBoolValue(boolValue.toBool());
         }
 
-        emit q->dataReady(data.size());
+        Q_EMIT q->dataReady(data.size());
         break;
     }
     default:
