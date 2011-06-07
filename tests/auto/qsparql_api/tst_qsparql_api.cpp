@@ -128,6 +128,12 @@ private slots:
 
     void queryModel_test();
     void queryModel_test_data();
+
+    void syncExec_waitForFinished_query_test();
+    void syncExec_waitForFinished_query_test_data();
+
+    void syncExec_waitForFinished_update_query_test();
+    void syncExec_waitForFinished_update_query_test_data();
 };
 
 namespace {
@@ -162,6 +168,9 @@ const QString contactInsertQuery =
     "insert { <uri00%1> a nco:PersonContact; "
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
     "nco:nameGiven \"name00%1\" .}";
+
+const QString contactDeleteQuery =
+    "delete { <uri00%1> a rdfs:Resource. }";
 
 const QString askQueryTrue =
     "ask { <uri001> a nco:PersonContact, nie:InformationElement ;"
@@ -906,6 +915,86 @@ void tst_QSparqlAPI::queryModel_test_data()
     QTest::newRow("Tracker Direct Query Model")
         << "QTRACKER_DIRECT"
         << contactSelectQuery;
+}
+
+void tst_QSparqlAPI::syncExec_waitForFinished_query_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection conn(connectionDriver);
+    QSparqlQuery q(query);
+    QSparqlResult* r = conn.syncExec(q);
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+
+    validateResults(r, expectedResultsSize);
+    delete r;
+}
+
+void tst_QSparqlAPI::syncExec_waitForFinished_query_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("Tracker Direct Sync Select")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << NUMBER_OF_INSERTS;
+}
+
+void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection conn(connectionDriver);
+
+    QSparqlQuery q(query.arg(expectedResultsSize), QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn.syncExec(q);
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Verify the insertion
+    r = conn.syncExec(QSparqlQuery(contactSelectQuery));
+    r->waitForFinished();
+    validateResults(r, expectedResultsSize);
+    delete r;
+
+    r = conn.syncExec(QSparqlQuery(QString("delete { <uri00%1> a rdfs:Resource. }").arg(expectedResultsSize),
+                  QSparqlQuery::DeleteStatement));
+
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Now verify deletion
+    r = conn.syncExec(QSparqlQuery(contactSelectQuery));
+    r->waitForFinished();
+    validateResults(r, expectedResultsSize-1);
+    delete r;
+}
+
+void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("Tracker Direct Async Update Query")
+        << "QTRACKER_DIRECT"
+        << contactInsertQuery
+        << NUMBER_OF_INSERTS + 1;
+
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
