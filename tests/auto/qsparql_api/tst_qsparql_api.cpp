@@ -146,6 +146,11 @@ const QString contactSelectQuery =
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
     "nco:nameGiven ?ng .}";
 
+const QString contactSelectNothingQuery =
+    "select ?u ?ng {?u a nco:PersonContact; "
+    "nie:isLogicalPartOf <qsparql-api-tests-not-here> ;"
+    "nco:nameGiven ?ng .}";
+
 const int contactSelectColumnCount = 2;
 
 const QString contactInsertQuery =
@@ -203,48 +208,60 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     if (r->hasFeature(QSparqlResult::QuerySize))
         QCOMPARE(r->size(), expectedResultsSize);
 
-    QHash<QString, QString> contactNames;
+    QHash<QString, QString> contactNamesValue;
+    QHash<QString, QString> contactNamesBindings;
+    QHash<QString, QString> contactNamesStringValue;
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
     while (r->next()) {
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-        contactNames["binding-"+r->binding(0).value().toString()] = r->binding(1).value().toString();
+        contactNamesValue[r->value(0).toString()] = r->value(1).toString();
+        contactNamesBindings[r->binding(0).value().toString()] = r->binding(1).value().toString();
+        contactNamesStringValue[r->stringValue(0)] = r->stringValue(1);
     }
     QVERIFY(r->pos() == QSparql::AfterLastRow);
     // Verify that the values are correct, and also verify that the values
-    // are correct between usage, we store the results twice, so *2
-    QCOMPARE(contactNames.size(), expectedResultsSize*2);
-    for(int i=1;i<=expectedResultsSize;i++)
-    {
-        QString("uri00%1").arg(i);
-        QCOMPARE(contactNames[QString("uri00%1").arg(i)], QString("name00%1").arg(i));
-        QCOMPARE(contactNames[QString("uri00%1").arg(i)], contactNames[QString("binding-uri00%1").arg(i)]);
-    }
-
-    if (r->hasFeature(QSparqlResult::ForwardOnly)) {
-        QVERIFY(!r->previous());
-        QVERIFY(!r->next());
-        QVERIFY(r->pos() == QSparql::AfterLastRow);
-    } else {
-        QVERIFY(r->pos() == QSparql::AfterLastRow);
-        QVERIFY(r->previous());
-        QVERIFY(r->pos() != QSparql::AfterLastRow);
-        for (int i=expectedResultsSize;i>=1;i--) {
-            QCOMPARE(contactNames[QString("uri00%1").arg(i)], r->value(1).toString());
-            QCOMPARE(contactNames[QString("uri00%1").arg(i)], r->binding(1).value().toString());
-            if (i>1)
-                QVERIFY(r->previous());
-            else
-                QVERIFY(!r->previous());
+    // are correct between usage
+    QCOMPARE(contactNamesValue.size(), expectedResultsSize);
+    QCOMPARE(contactNamesBindings.size(), expectedResultsSize);
+    QCOMPARE(contactNamesStringValue.size(), expectedResultsSize);
+    // Checks for if we expect some results
+    if (expectedResultsSize != 0) {
+        for(int i=1;i<=expectedResultsSize;i++)
+        {
+            QCOMPARE(contactNamesValue[QString("uri00%1").arg(i)], QString("name00%1").arg(i));
+            QCOMPARE(contactNamesValue[QString("uri00%1").arg(i)], contactNamesBindings[QString("uri00%1").arg(i)]);
+            QCOMPARE(contactNamesValue[QString("uri00%1").arg(i)], contactNamesStringValue[QString("uri00%1").arg(i)]);
         }
 
-        // Now move forward one...
-        QVERIFY(r->pos() == QSparql::BeforeFirstRow);
-        QVERIFY(r->next());
-        QVERIFY(r->pos() != QSparql::BeforeFirstRow);
-        QCOMPARE(contactNames["uri001"], r->value(1).toString());
-        QCOMPARE(contactNames["uri001"], r->binding(1).value().toString());
+        if (r->hasFeature(QSparqlResult::ForwardOnly)) {
+            QVERIFY(!r->previous());
+            QVERIFY(!r->next());
+            QVERIFY(r->pos() == QSparql::AfterLastRow);
+        } else {
+            QVERIFY(r->pos() == QSparql::AfterLastRow);
+            QVERIFY(r->previous());
+            QVERIFY(r->pos() != QSparql::AfterLastRow);
+            for (int i=expectedResultsSize;i>=1;i--) {
+                QCOMPARE(contactNamesValue[r->value(0).toString()], r->value(1).toString());
+                QCOMPARE(contactNamesBindings[r->binding(0).value().toString()], r->binding(1).value().toString());
+                QCOMPARE(contactNamesStringValue[r->stringValue(0)], r->stringValue(1));
+                if (i>1)
+                    QVERIFY(r->previous());
+                else
+                    QVERIFY(!r->previous());
+            }
+
+            // Now move forward one...
+            QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+            QVERIFY(r->next());
+            QVERIFY(r->pos() != QSparql::BeforeFirstRow);
+            QCOMPARE(contactNamesValue["uri001"], r->value(1).toString());
+            QCOMPARE(contactNamesBindings["uri001"], r->binding(1).value().toString());
+            QCOMPARE(contactNamesStringValue["uri001"], r->stringValue(1));
+        }
     }
+    // TODO: Figure out some sane checks/changes that are needed for r->next(), r->previous()
+    // behaviour on queries with no results
 }
 
 } // end unnamed namespace
@@ -318,6 +335,7 @@ void tst_QSparqlAPI::query_test()
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
+    QFETCH(int, expectedResultsSize);
 
     QSparqlConnection conn(connectionDriver);
 
@@ -332,7 +350,7 @@ void tst_QSparqlAPI::query_test()
 
     CHECK_QSPARQL_RESULT(r);
 
-    validateResults(r, NUMBER_OF_INSERTS);
+    validateResults(r, expectedResultsSize);
 
     delete r;
 }
@@ -341,50 +359,94 @@ void tst_QSparqlAPI::query_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("asyncObject");
 
     QTest::newRow("DBus Async Query")
         << "QTRACKER"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("DBus Async No Results Query")
+        << "QTRACKER"
+        << contactSelectNothingQuery
+        << 0
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
     QTest::newRow("DBus Sync Query")
         << "QTRACKER"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
+        << (int)QSparqlQueryOptions::SyncExec
+        << false;
+
+    QTest::newRow("DBus Sync No Results Query")
+        << "QTRACKER"
+        << contactSelectNothingQuery
+        << 0
         << (int)QSparqlQueryOptions::SyncExec
         << false;
 
     QTest::newRow("DBus Async Object Query")
         << "QTRACKER"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << true;
 
-    QTest::newRow("DBus Sync Query")
+    QTest::newRow("DBus Async Object No Results Query")
         << "QTRACKER"
-        << contactSelectQuery
-        << (int)QSparqlQueryOptions::SyncExec
-        << false;
+        << contactSelectNothingQuery
+        << 0
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true;
 
     QTest::newRow("Tracker Direct Async Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("Tracker Direct Async No Results Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectNothingQuery
+        << 0
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
     QTest::newRow("Tracker Direct Async Object Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true;
+
+    QTest::newRow("Tracker Direct Async Object No Results Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectNothingQuery
+        << 0
         << (int)QSparqlQueryOptions::AsyncExec
         << true;
 
     QTest::newRow("Tracker Direct Sync Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUMBER_OF_INSERTS
         << (int)QSparqlQueryOptions::SyncExec
         << false;
+
+    QTest::newRow("Tracker Direct Sync No Results Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectNothingQuery
+        << 0
+        << (int)QSparqlQueryOptions::SyncExec
+        << false;
+
 }
 
 void tst_QSparqlAPI::query_error_test()
@@ -483,14 +545,14 @@ void tst_QSparqlAPI::query_error_test_data()
         << (int)QSparqlError::StatementError
         << false;
 
-    QTest::newRow("Tracker Dircet Async Invalid Query")
+    QTest::newRow("Tracker Direct Async Invalid Query")
         << "QTRACKER_DIRECT"
         << "invalid query"
         << (int)QSparqlQueryOptions::AsyncExec
         << (int)QSparqlError::StatementError
         << false;
 
-    QTest::newRow("Tracker Dircet Async Object Invalid Query")
+    QTest::newRow("Tracker Direct Async Object Invalid Query")
         << "QTRACKER_DIRECT"
         << "invalid query"
         << (int)QSparqlQueryOptions::AsyncExec
@@ -738,14 +800,14 @@ void tst_QSparqlAPI::update_query_error_test_data()
         << (int)QSparqlError::StatementError
         << false;
 
-    QTest::newRow("Tracker Dircet Async Invalid Query")
+    QTest::newRow("Tracker Direct Async Invalid Query")
         << "QTRACKER_DIRECT"
         << "invalid query"
         << (int)QSparqlQueryOptions::AsyncExec
         << (int)QSparqlError::StatementError
         << false;
 
-    QTest::newRow("Tracker Dircet Async Object Invalid Query")
+    QTest::newRow("Tracker Direct Async Object Invalid Query")
         << "QTRACKER_DIRECT"
         << "invalid query"
         << (int)QSparqlQueryOptions::AsyncExec
