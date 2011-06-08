@@ -112,6 +112,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void initTestCase();
+    void cleanupTestCase();
     void concurrentEndpointQueries();
     void concurrentVirtuosoQueries();
     void concurrentTrackerQueries();
@@ -215,6 +216,20 @@ void tst_QSparqlThreading::initTestCase()
                    "WHERE {?u nie:isLogicalPartOf <qsparql-threading-tests> .}"
                    "DELETE { <qsparql-threading-tests> a rdfs:Resource . }",
                    QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+}
+
+void tst_QSparqlThreading::cleanupTestCase()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery q("DELETE { ?u a rdfs:Resource . }"
+                   "WHERE  { ?u nie:isLogicalPartOf <qsparql-threading-tests> . }"
+                   "DELETE { <qsparql-threading-tests> a rdfs:Resource . }",
+                    QSparqlQuery::DeleteStatement);
     QSparqlResult* r = conn.exec(q);
     CHECK_QSPARQL_RESULT(r);
     r->waitForFinished();
