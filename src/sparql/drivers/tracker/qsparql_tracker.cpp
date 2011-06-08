@@ -220,8 +220,8 @@ void QTrackerResultPrivate::onDBusCallFinished()
         }
 
         q->setLastError(error);
-        Q_EMIT q->finished();
         qWarning() << "QTrackerResult:" << q->lastError() << q->query();
+        Q_EMIT q->finished();
         return;
     }
 

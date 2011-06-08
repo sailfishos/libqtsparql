@@ -139,6 +139,8 @@ void QTrackerDirectUpdateResultPrivate::startUpdate(const QString& query)
 void QTrackerDirectUpdateResultPrivate::terminate()
 {
     state = Finished;
+    if (q->hasError())
+        qWarning() << "QTrackerDirectUpdateResult:" << q->lastError() << q->query();
     q->Q_EMIT finished();
 
     if (loop)

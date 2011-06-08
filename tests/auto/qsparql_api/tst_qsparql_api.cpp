@@ -117,6 +117,9 @@ private slots:
     void update_query_test();
     void update_query_test_data();
 
+    void update_query_error_test();
+    void update_query_error_test_data();
+
     void ask_query_test();
     void ask_query_test_data();
 
@@ -137,32 +140,13 @@ private slots:
 };
 
 namespace {
-int testLogLevel = QtWarningMsg;
-void myMessageOutput(QtMsgType type, const char *msg)
-{
-    switch (type) {
-    case QtDebugMsg:
-        if (testLogLevel <= 0)
-            fprintf(stderr, "QDEBUG : %s\n", msg);
-        break;
-    case QtWarningMsg:
-        if (testLogLevel <= 1)
-            fprintf(stderr, "QWARN  : %s\n", msg);
-        break;
-    case QtCriticalMsg:
-        if (testLogLevel <= 2)
-            fprintf(stderr, "QCRITICAL: %s\n", msg);
-        break;
-    case QtFatalMsg:
-        if (testLogLevel <= 3)
-            fprintf(stderr, "QFATAL : %s\n", msg);
-        abort();
-    }
-}
+
 const QString contactSelectQuery =
     "select ?u ?ng {?u a nco:PersonContact; "
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
     "nco:nameGiven ?ng .}";
+
+const int contactSelectColumnCount = 2;
 
 const QString contactInsertQuery =
     "insert { <uri00%1> a nco:PersonContact; "
@@ -278,7 +262,6 @@ void tst_QSparqlAPI::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-    qInstallMsgHandler(myMessageOutput);
 
     // clean any remainings
     cleanupTestCase();
@@ -319,7 +302,6 @@ void tst_QSparqlAPI::cleanupTestCase()
 
 void tst_QSparqlAPI::init()
 {
-    testLogLevel = QtDebugMsg;
     msgRecorder = new MessageRecorder;
     msgRecorder->addMsgTypeToRecord(QtWarningMsg);
 }
@@ -366,6 +348,12 @@ void tst_QSparqlAPI::query_test_data()
         << "QTRACKER"
         << contactSelectQuery
         << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("DBus Sync Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << (int)QSparqlQueryOptions::SyncExec
         << false;
 
     QTest::newRow("DBus Async Object Query")
@@ -557,6 +545,16 @@ void tst_QSparqlAPI::update_query_test()
 
     checkExecutionMethod(executionMethod, asyncObject, r);
 
+    // Update query binding values will return empty bindings
+    QCOMPARE(QString(""), r->binding(0).value().toString());
+    QCOMPARE(QString(""), r->binding(1).value().toString());
+    // Check the value() for the same thing
+    QCOMPARE(QString(""), r->value(0).toString());
+    // for updates, current() should return a empty result row
+    QCOMPARE(QSparqlResultRow(), r->current());
+    // and size should be 0
+    if (r->hasFeature(QSparqlResult::QuerySize) )
+        QCOMPARE(r->size(), 0);
     CHECK_QSPARQL_RESULT(r);
     delete r;
 
@@ -630,6 +628,159 @@ void tst_QSparqlAPI::update_query_test_data()
         << false;
 
 }
+
+void tst_QSparqlAPI::update_query_error_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, executionMethod);
+    QFETCH(int, expectedErrorType);
+    QFETCH(bool, asyncObject);
+
+    QSparqlConnection conn(connectionDriver);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+    QSparqlQuery q(query, QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn.exec(q,queryOptions);
+
+    checkExecutionMethod(executionMethod, asyncObject, r);
+
+    QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+    QVERIFY(r->hasError());
+    // Check we got a warning
+    QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
+
+    delete r;
+
+    // also check delete statments
+    QSparqlQuery delQuery(query, QSparqlQuery::DeleteStatement);
+
+    r = conn.exec(delQuery,queryOptions);
+    checkExecutionMethod(executionMethod, asyncObject, r);
+
+    QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+    QVERIFY(r->hasError());
+    // Second warning
+    QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 2);
+    delete r;
+}
+
+void tst_QSparqlAPI::update_query_error_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("executionMethod");
+    QTest::addColumn<int>("expectedErrorType");
+    QTest::addColumn<bool>("asyncObject");
+
+    QTest::newRow("DBus Blank Query")
+        << "QTRACKER"
+        << ""
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+   QTest::newRow("DBus Blank Async Object Query")
+        << "QTRACKER"
+        << ""
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("DBus Invalid Query")
+        << "QTRACKER"
+        << "invalid query"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("DBus Invalid Async Object Query")
+        << "QTRACKER"
+        << "invalid query"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("DBus Invalid Construct Query")
+        << "QTRACKER"
+        << constructQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("DBus Invalid Construct Async Object Query")
+        << "QTRACKER"
+        << constructQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("Tracker Direct Async Blank Query")
+        << "QTRACKER_DIRECT"
+        << ""
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("Tracker Direct Async Object Blank Query")
+        << "QTRACKER_DIRECT"
+        << ""
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("Tracker Direct Sync Blank Query")
+        << "QTRACKER_DIRECT"
+        << ""
+        << (int)QSparqlQueryOptions::SyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("Tracker Dircet Async Invalid Query")
+        << "QTRACKER_DIRECT"
+        << "invalid query"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("Tracker Dircet Async Object Invalid Query")
+        << "QTRACKER_DIRECT"
+        << "invalid query"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("Tracker Direct Sync Invalid Query")
+        << "QTRACKER_DIRECT"
+        << "invalid query"
+        << (int)QSparqlQueryOptions::SyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("Tracker Direct Async Construct Query")
+        << "QTRACKER_DIRECT"
+        << constructQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+
+    QTest::newRow("Tracker Direct Async Object Construct Query")
+        << "QTRACKER_DIRECT"
+        << constructQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::StatementError
+        << true;
+
+    QTest::newRow("Tracker Direct Sync Construct Query")
+        << "QTRACKER_DIRECT"
+        << constructQuery
+        << (int)QSparqlQueryOptions::SyncExec
+        << (int)QSparqlError::StatementError
+        << false;
+}
+
 
 void tst_QSparqlAPI::ask_query_test()
 {
@@ -893,7 +1044,7 @@ void tst_QSparqlAPI::queryModel_test()
         QTest::qWait(100);
 
     QCOMPARE(model.rowCount(), NUMBER_OF_INSERTS);
-    QCOMPARE(model.columnCount(), 2);
+    QCOMPARE(model.columnCount(), contactSelectColumnCount);
 
     // Verify the data in the model
     for (int i=0;i<model.rowCount();i++) {
