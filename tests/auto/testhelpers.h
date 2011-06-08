@@ -40,6 +40,48 @@
 #ifndef TESTHELPERS_H
 #define TESTHELPERS_H
 
+class MessageRecorder {
+public:
+    MessageRecorder()
+    {
+        selfPtr = this;
+        prevMsgHandler = qInstallMsgHandler(&MessageRecorder::msgHandler);
+    }
+
+    ~MessageRecorder()
+    {
+        qInstallMsgHandler(prevMsgHandler);
+        selfPtr = 0;
+    }
+
+    void addMsgTypeToRecord(QtMsgType type)      { msgsToRecord.insert(type);    }
+    bool hasMsgsOfType(QtMsgType type) const     { return !msgs[type].isEmpty(); }
+    QStringList msgsOfType(QtMsgType type) const { return msgs[type];            }
+    QStringList operator[](QtMsgType type) const { return msgs[type];            }
+
+private:
+    static MessageRecorder* selfPtr;
+
+    void handleMsg(QtMsgType type, const char *msg)
+    {
+        if (msgsToRecord.contains(type))
+            msgs[type] << QString(msg);
+        else
+            (*prevMsgHandler)(type, msg);
+    }
+
+    static void msgHandler(QtMsgType type, const char *msg)
+    {
+        selfPtr->handleMsg(type, msg);
+    }
+
+private:
+    QtMsgHandler prevMsgHandler;
+    QSet<QtMsgType> msgsToRecord;
+    QMap<QtMsgType, QStringList> msgs;
+};
+MessageRecorder* MessageRecorder::selfPtr = 0;
+
 #define CHECK_QSPARQL_RESULT(RES) \
     do { \
         QSparqlResult* result_to_check_ = (RES); \
