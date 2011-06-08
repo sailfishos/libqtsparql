@@ -32,12 +32,7 @@ memcheck.recurse = $$QSPARQL_TESTS
 
 QMAKE_EXTRA_TARGETS += check memcheck
 
-
-testdata.target = qsparql_threading/clean_data_threading.rq
-
-testdata.files = $$testdata.target
-testdata.path = $$PREFIX/share/$$PACKAGENAME-tests/
 testxml.target = tests.xml
 install_testxml.files = $$testxml.target
 install_testxml.path = $$PREFIX/share/$$PACKAGENAME-tests/
-INSTALLS += target install_testxml testdata
+INSTALLS += target install_testxml
