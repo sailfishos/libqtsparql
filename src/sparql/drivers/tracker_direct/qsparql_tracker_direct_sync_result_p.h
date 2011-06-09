@@ -53,7 +53,6 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectDriver;
 class QTrackerDirectSyncResultPrivate;
 class QSparqlQueryOptions;
 
@@ -62,9 +61,11 @@ class QSparqlQueryOptions;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSparqlResult
 {
     Q_OBJECT
-    friend class QTrackerDirectDriver;
 public:
-    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p, const QSparqlQueryOptions& options);
+    explicit QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p,
+                                      const QString& query,
+                                      QSparqlQuery::StatementType type,
+                                      const QSparqlQueryOptions& options);
     ~QTrackerDirectSyncResult();
 
     // Implementation of the QSparqlResult interface
@@ -79,7 +80,7 @@ public:
 
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
-private Q_SLOTS:
+public Q_SLOTS:
     void exec();
     void update();
 

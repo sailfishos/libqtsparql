@@ -385,9 +385,7 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
 QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, options);
-    result->setQuery(query);
-    result->setStatementType(type);
+    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, query, type, options);
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         d->openConnectionSync();
         result->exec();

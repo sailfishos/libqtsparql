@@ -88,8 +88,12 @@ QTrackerDirectSyncResultPrivate::~QTrackerDirectSyncResultPrivate()
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* p,
+                                                   const QString& query,
+                                                   QSparqlQuery::StatementType type,
                                                    const QSparqlQueryOptions& options)
 {
+    setQuery(query);
+    setStatementType(type);
     d = new QTrackerDirectSyncResultPrivate(p, options);
 }
 

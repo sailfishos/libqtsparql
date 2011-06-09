@@ -60,7 +60,6 @@ class QTrackerDirectUpdateResultPrivate;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public QSparqlResult
 {
     Q_OBJECT
-    friend class QTrackerDirectDriver;
     friend class QTrackerDirectUpdateResultPrivate;
 public:
     explicit QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
