@@ -91,6 +91,12 @@ private slots:
 
     void syncExec_waitForFinished_update_query_test();
     void syncExec_waitForFinished_update_query_test_data();
+
+    void syncExec_delete_connection_before_result_test();
+    void syncExec_delete_connection_before_result_test_data();
+
+    void syncExec_delete_connection_before_update_result_test();
+    void syncExec_delete_connection_before_update_result_test_data();
 };
 
 namespace {
@@ -1194,10 +1200,118 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("expectedResultsSize");
 
-    QTest::newRow("Tracker Direct Async Update Query")
+    QTest::newRow("Tracker Direct Sync Update Query")
         << "QTRACKER_DIRECT"
         << contactInsertQuery
         << NUM_TRACKER_INSERTS + 1;
+
+}
+
+void tst_QSparqlAPI::syncExec_delete_connection_before_result_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection *conn = new QSparqlConnection(connectionDriver);
+    QSparqlQuery q(query);
+
+    QSparqlResult* r = conn->syncExec(q);
+    r->setParent(this);
+    delete conn;
+    validateResults(r, expectedResultsSize);
+    delete r;
+}
+
+// These syncExec_delete tests currently pass, but this may change
+// in the future. They pass on the condition that a TrackerSparqlCursor
+// is still active even after the connection has been deleted, unreferenced
+// which might(?) change in the future
+
+void tst_QSparqlAPI::syncExec_delete_connection_before_result_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
+
+    QTest::newRow("Tracker Direct Sync Select Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS;
+}
+
+void tst_QSparqlAPI::syncExec_delete_connection_before_update_result_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(QString, deleteQuery);
+    QFETCH(QString, validateQuery);
+    QFETCH(int, expectedResultsSize);
+    QFETCH(int, expectedResultsSizeAfterDelete);
+
+    QSparqlConnection *conn = new QSparqlConnection(connectionDriver);
+
+    QSparqlQuery q(query.arg(expectedResultsSize), QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn->syncExec(q);
+    r->setParent(this);
+    delete conn;
+
+    // Update query binding values will return empty bindings
+    QCOMPARE(QString(""), r->binding(0).value().toString());
+    QCOMPARE(QString(""), r->binding(1).value().toString());
+    // Check the value() for the same thing
+    QCOMPARE(QString(""), r->value(0).toString());
+    // for updates, current() should return a empty result row
+    QCOMPARE(QSparqlResultRow(), r->current());
+    // and size should be 0
+    if (r->hasFeature(QSparqlResult::QuerySize) )
+        QCOMPARE(r->size(), 0);
+    delete r;
+
+    // Verify the insertion
+    conn = new QSparqlConnection(connectionDriver);
+    r = conn->syncExec(QSparqlQuery(validateQuery));
+    r->setParent(this);
+    delete conn;
+    validateResults(r, expectedResultsSize);
+    delete r;
+
+    // Delete the insertion
+    conn = new QSparqlConnection(connectionDriver);
+    QSparqlQuery delQuery(deleteQuery.arg(expectedResultsSize), QSparqlQuery::DeleteStatement);
+    r = conn->syncExec(delQuery);
+    r->setParent(this);
+    delete conn;
+    delete r;
+
+    // Now verify deletion
+    conn = new QSparqlConnection(connectionDriver);
+    r = conn->syncExec(QSparqlQuery(validateQuery));
+    r->setParent(this);
+    delete conn;
+    validateResults(r, expectedResultsSizeAfterDelete);
+    delete r;
+
+
+}
+
+void tst_QSparqlAPI::syncExec_delete_connection_before_update_result_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QString>("deleteQuery");
+    QTest::addColumn<QString>("validateQuery");
+    QTest::addColumn<int>("expectedResultsSize");
+    QTest::addColumn<int>("expectedResultsSizeAfterDelete");
+
+    QTest::newRow("Tracker Direct Sync Update Query")
+        << "QTRACKER_DIRECT"
+        << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS;
 
 }
 
