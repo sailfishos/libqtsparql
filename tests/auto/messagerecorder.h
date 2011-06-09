@@ -37,14 +37,49 @@
 **
 ****************************************************************************/
 
-#ifndef TESTHELPERS_H
-#define TESTHELPERS_H
+#ifndef MESSAGERECORDER_H
+#define MESSAGERECORDER_H
 
-#define CHECK_QSPARQL_RESULT(RES) \
-    do { \
-        QSparqlResult* result_to_check_ = (RES); \
-        QVERIFY( result_to_check_ ); \
-        QVERIFY2( !result_to_check_->hasError(), qPrintable(result_to_check_->lastError().message()) ); \
-    } while(false)
+class MessageRecorder {
+public:
+    MessageRecorder()
+    {
+        selfPtr = this;
+        prevMsgHandler = qInstallMsgHandler(&MessageRecorder::msgHandler);
+    }
+
+    ~MessageRecorder()
+    {
+        qInstallMsgHandler(prevMsgHandler);
+        selfPtr = 0;
+    }
+
+    void addMsgTypeToRecord(QtMsgType type)      { msgsToRecord.insert(type);    }
+    bool hasMsgsOfType(QtMsgType type) const     { return !msgs[type].isEmpty(); }
+    QStringList msgsOfType(QtMsgType type) const { return msgs[type];            }
+    QStringList operator[](QtMsgType type) const { return msgs[type];            }
+
+private:
+    static MessageRecorder* selfPtr;
+
+    void handleMsg(QtMsgType type, const char *msg)
+    {
+        if (msgsToRecord.contains(type))
+            msgs[type] << QString(msg);
+        else
+            (*prevMsgHandler)(type, msg);
+    }
+
+    static void msgHandler(QtMsgType type, const char *msg)
+    {
+        selfPtr->handleMsg(type, msg);
+    }
+
+private:
+    QtMsgHandler prevMsgHandler;
+    QSet<QtMsgType> msgsToRecord;
+    QMap<QtMsgType, QStringList> msgs;
+};
+MessageRecorder* MessageRecorder::selfPtr = 0;
 
 #endif

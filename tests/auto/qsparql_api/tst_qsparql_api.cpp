@@ -40,7 +40,7 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
-#include "../testhelpers.h"
+#include "../messagerecorder.h"
 
 // define the amount of data we are going to insert for the tracker tests
 #define NUM_TRACKER_INSERTS 15
@@ -214,9 +214,13 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QCOMPARE(contactNamesBindings["uri001"], r->binding(1).value().toString());
             QCOMPARE(contactNamesStringValue["uri001"], r->stringValue(1));
         }
+    } else {
+        //Make sure using the result doesn't crash
+        QVERIFY(r->pos() < 0);
+        QVERIFY(!r->next());
+        QVERIFY(!r->previous());
+        QVERIFY(r->pos() < 0);
     }
-    // TODO: Figure out some sane checks/changes that are needed for r->next(), r->previous()
-    // behaviour on queries with no results
 }
 
 } // end unnamed namespace
@@ -416,9 +420,15 @@ void tst_QSparqlAPI::query_error_test()
     QSparqlResult* r = conn.exec(q,queryOptions);
 
     checkExecutionMethod(executionMethod, asyncObject, r);
-
     QVERIFY(r->hasError());
     QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+
+    // Check result behaviour
+    QVERIFY(r->pos() < 0);
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(r->pos() < 0);
+
     QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
 
     delete r;
@@ -542,7 +552,10 @@ void tst_QSparqlAPI::update_query_test()
 {
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
+    QFETCH(QString, deleteQuery);
+    QFETCH(QString, validateQuery);
     QFETCH(int, expectedResultsSize);
+    QFETCH(int, expectedResultsSizeAfterDelete);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
 
@@ -569,25 +582,21 @@ void tst_QSparqlAPI::update_query_test()
     delete r;
 
     // Verify the insertion
-    r = conn.exec(QSparqlQuery(contactSelectQuery), queryOptions);
-
+    r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
     checkExecutionMethod(executionMethod, asyncObject, r);
     validateResults(r, expectedResultsSize);
-
     delete r;
 
-    r = conn.exec(QSparqlQuery(QString("delete { <uri00%1> a rdfs:Resource. }").arg(expectedResultsSize),
-                  QSparqlQuery::DeleteStatement), queryOptions);
-
+    // Delete the insertion
+    QSparqlQuery delQuery(deleteQuery.arg(expectedResultsSize), QSparqlQuery::DeleteStatement);
+    r = conn.exec(delQuery, queryOptions);
     checkExecutionMethod(executionMethod, asyncObject, r);
-
     delete r;
 
     // Now verify deletion
-    r = conn.exec(QSparqlQuery(contactSelectQuery), queryOptions);
-
+    r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
     checkExecutionMethod(executionMethod, asyncObject, r);
-    validateResults(r, expectedResultsSize-1);
+    validateResults(r, expectedResultsSizeAfterDelete);
     delete r;
 }
 
@@ -595,42 +604,60 @@ void tst_QSparqlAPI::update_query_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
+    QTest::addColumn<QString>("deleteQuery");
+    QTest::addColumn<QString>("validateQuery");
     QTest::addColumn<int>("expectedResultsSize");
+    QTest::addColumn<int>("expectedResultsSizeAfterDelete");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("asyncObject");
 
     QTest::newRow("DBus Update Query")
         << "QTRACKER"
         << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
         << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
     QTest::newRow("DBus Update Async Object Query")
         << "QTRACKER"
         << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
         << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << true;
 
     QTest::newRow("Tracker Direct Async Update Query")
         << "QTRACKER_DIRECT"
         << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
         << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
     QTest::newRow("Tracker Direct Async Object Update Query")
         << "QTRACKER_DIRECT"
         << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
         << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << true;
 
     QTest::newRow("Tracker Direct Sync Update Query")
         << "QTRACKER_DIRECT"
         << contactInsertQuery
+        << contactDeleteQuery
+        << contactSelectQuery
         << NUM_TRACKER_INSERTS + 1
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::SyncExec
         << false;
 
@@ -656,6 +683,11 @@ void tst_QSparqlAPI::update_query_error_test()
 
     QVERIFY(r->hasError());
     QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+    // Check result Behaviour
+    QVERIFY(r->pos() < 0);
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(r->pos() < 0);
     // Check we got a warning
     QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
     delete r;
@@ -668,6 +700,12 @@ void tst_QSparqlAPI::update_query_error_test()
 
     QVERIFY(r->hasError());
     QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+    // Check result Behaviour
+    QVERIFY(r->pos() < 0);
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(r->pos() < 0);
+
     // Second warning
     QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 2);
     delete r;
