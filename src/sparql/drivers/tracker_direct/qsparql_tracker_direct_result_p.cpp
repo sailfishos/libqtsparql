@@ -389,7 +389,7 @@ void QTrackerDirectResult::waitForFinished()
         return;
 
     // We first need the connection to be ready before doing anything
-    d->driverPrivate->openConnectionSync();
+    d->driverPrivate->waitForConnectionOpen();
 
     if (!d->driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(d->driverPrivate->error,
