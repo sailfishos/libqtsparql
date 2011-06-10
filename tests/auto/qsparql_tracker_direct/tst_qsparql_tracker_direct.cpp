@@ -1260,11 +1260,10 @@ void tst_QSparqlTrackerDirect::destroy_connection_before_result()
     if (waitForConnectionOpen > 0)
         QTest::qWait(waitForConnectionOpen);
     QSparqlResult* r = 0;
-    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests>; "
-                         "nco:nameGiven ?ng. }");
+    QFETCH(QString, query);
+    QFETCH(int, queryType);
 
-    r = conn->exec(q);
+    r = conn->exec(QSparqlQuery(query, QSparqlQuery::StatementType(queryType)));
     QVERIFY( r );
     QVERIFY( !r->hasError() );
 
@@ -1280,15 +1279,62 @@ void tst_QSparqlTrackerDirect::destroy_connection_before_result()
     delete r; r = 0;
     // Wait in event loop to let any asynchronous activity complete
     QTest::qWait(500);
+
+    QFETCH(QString, cleanupQuery);
+    if (!cleanupQuery.isEmpty()) {
+        QSparqlConnection cleanupConnection("QTRACKER_DIRECT");
+        QSparqlResult* cleanupResult =
+            cleanupConnection.syncExec(
+                QSparqlQuery(cleanupQuery, QSparqlQuery::InsertStatement));
+        QVERIFY( cleanupResult );
+        QVERIFY( !cleanupResult->hasError() );
+        delete cleanupResult;
+    }
 }
 
 void tst_QSparqlTrackerDirect::destroy_connection_before_result_data()
 {
     QTest::addColumn<int>("waitForConnectionOpen");
+    QTest::addColumn<int>("queryType");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QString>("cleanupQuery");
+    const QString selectQuery("select ?u ?ng {?u a nco:PersonContact; "
+                              "nie:isLogicalPartOf <qsparql-tracker-direct-tests>; "
+                              "nco:nameGiven ?ng. }");
+    const QString updateQueryTemplate("insert { <uri%1> a nco:PersonContact, nie:InformationElement ;"
+                                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests>; "
+                                      "nie:isLogicalPartOf <qsparql-tracker-direct-tests-destroy_connection_before_result> ;"
+                                      "nco:nameGiven \"name%1\" . }");
+    const QString cleanupQuery("delete { "
+                                   "?r a rdfs:Resource . } "
+                                   "where { "
+                                   "?r nie:isLogicalPartOf <qsparql-tracker-direct-tests>; "
+                                   "   nie:isLogicalPartOf <qsparql-tracker-direct-tests-destroy_connection_before_result> ."
+                               "}");
 
-    QTest::newRow("Dbus connection") << 0;
-    QTest::newRow("Direct connection") << 0;
-    QTest::newRow("Direct connection") << 1000;
+    QTest::newRow("Direct connection - select query - don't wait for connection open")
+            << 0
+            << int(QSparqlQuery::SelectStatement)
+            << selectQuery
+            << "";
+
+    QTest::newRow("Direct connection - select query - wait for connection open")
+            << 1000
+            << int(QSparqlQuery::SelectStatement)
+            << selectQuery
+            << "";
+
+    QTest::newRow("Direct connection - update query - don't wait for connection open")
+            << 0
+            << int(QSparqlQuery::InsertStatement)
+            << updateQueryTemplate.arg("100")
+            << cleanupQuery;
+
+    QTest::newRow("Direct connection - update query - wait for connection open")
+            << 1000
+            << int(QSparqlQuery::InsertStatement)
+            << updateQueryTemplate.arg("101")
+            << cleanupQuery;
 }
 
 void tst_QSparqlTrackerDirect::destroy_connection_waitForFinished()

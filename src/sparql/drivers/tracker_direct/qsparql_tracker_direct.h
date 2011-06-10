@@ -74,6 +74,7 @@ public:
 
 Q_SIGNALS:
     void opened();
+    void closing();
 
 private:
     QSparqlResult* asyncExec(const QString& query,

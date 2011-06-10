@@ -327,6 +327,8 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 
 void QTrackerDirectDriver::close()
 {
+    Q_EMIT closing();
+
     Q_FOREACH(QPointer<QTrackerDirectResult> result, d->activeResults) {
         if (!result.isNull()) {
             qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<

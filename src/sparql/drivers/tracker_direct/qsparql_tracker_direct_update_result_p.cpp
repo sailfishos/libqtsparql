@@ -69,7 +69,12 @@ public:
     void startUpdate(const QString& query);
     void terminate();
     void setLastError(const QSparqlError& e);
+    bool checkConnection(const char* errorMsg);
 
+private Q_SLOTS:
+    void driverClosing();
+
+public:
     enum State {
         Idle, Executing, Finished
     };
@@ -95,15 +100,17 @@ async_update_callback( GObject *source_object,
         return;
     }
 
-    GError *error = 0;
-    tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
+    if (data->checkConnection("QSparqlConnection was closed before update query completed.")) {
+        GError *error = 0;
+        tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
-    if (error) {
-        QSparqlError e(QString::fromUtf8(error->message));
-        e.setType(errorCodeToType(error->code));
-        e.setNumber(error->code);
-        data->setLastError(e);
-        g_error_free(error);
+        if (error) {
+            QSparqlError e(QString::fromUtf8(error->message));
+            e.setType(errorCodeToType(error->code));
+            e.setNumber(error->code);
+            data->setLastError(e);
+            g_error_free(error);
+        }
     }
 
     // A workaround for http://bugreports.qt.nokia.com/browse/QTBUG-18434
@@ -119,6 +126,9 @@ QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDir
   : state(Idle), loop(0),
   q(result), driverPrivate(dpp), options(options)
 {
+    connect(driverPrivate->driver, SIGNAL(closing()),
+            this,                  SLOT(driverClosing()),
+            Qt::DirectConnection);
 }
 
 QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
@@ -152,6 +162,28 @@ void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
     q->setLastError(e);
 }
 
+bool QTrackerDirectUpdateResultPrivate::checkConnection(const char* errorMsg)
+{
+    if (!driverPrivate || !driverPrivate->connection) {
+        setLastError(QSparqlError(QString::fromUtf8(errorMsg),
+                                  QSparqlError::ConnectionError));
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+void QTrackerDirectUpdateResultPrivate::driverClosing()
+{
+    driverPrivate = 0;
+
+    QString withQuery;
+    if (q)
+       withQuery = QString::fromUtf8(" with update query: \"%1\"").arg(q->query());
+    qWarning().nospace() << "QSparqlConnection closed before QSparqlResult" << qPrintable(withQuery);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +214,9 @@ QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 
 void QTrackerDirectUpdateResult::exec()
 {
+    if (!d->checkConnection("QSparqlConnection was closed before update query could be started"))
+        return;
+
     if (!d->driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(d->driverPrivate->error,
                                   QSparqlError::ConnectionError));
