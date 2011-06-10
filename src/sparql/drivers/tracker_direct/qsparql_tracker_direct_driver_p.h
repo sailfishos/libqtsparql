@@ -63,6 +63,7 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriver;
 class QTrackerDirectResult;
+class QTrackerDirectDriverConnectionOpen;
 
 class QTrackerDirectDriverPrivate {
 public:
@@ -72,7 +73,7 @@ public:
     void asyncOpenComplete(GAsyncResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
     void waitForConnectionOpen();
-    void openConnectionSync();
+    void openConnection();
 
     TrackerSparqlConnection *connection;
     int dataReadyInterval;
@@ -89,6 +90,7 @@ public:
 private:
     bool asyncOpenCalled;
     void checkConnectionError(TrackerSparqlConnection *conn, GError* gerr);
+    QTrackerDirectDriverConnectionOpen *connectionOpener;
 };
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);
