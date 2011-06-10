@@ -69,6 +69,7 @@ public:
     void startUpdate(const QString& query);
     Q_INVOKABLE void terminate();
     void setLastError(const QSparqlError& e);
+    bool checkConnection(const char* errorMsg);
 
 private Q_SLOTS:
     void driverClosing();
@@ -161,18 +162,26 @@ void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
     q->setLastError(e);
 }
 
+bool QTrackerDirectUpdateResultPrivate::checkConnection(const char* errorMsg)
+{
+    if (!driverPrivate || !driverPrivate->connection) {
+        setLastError(QSparqlError(QString::fromUtf8(errorMsg),
+                                  QSparqlError::ConnectionError));
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 void QTrackerDirectUpdateResultPrivate::driverClosing()
 {
     driverPrivate = 0;
-    state = Finished;
 
-    const char* errorMsg = "QSparqlConnection closed before QSparqlResult";
     QString withQuery;
-    if (q) {
-        setLastError(QSparqlError(QString::fromUtf8(errorMsg), QSparqlError::ConnectionError));
-        withQuery = QString::fromUtf8(" with update query: \"%1\"").arg(q->query());
-    }
-    qWarning() << "QTrackerDirectUpdateResult:" << errorMsg << qPrintable(withQuery);
+    if (q)
+       withQuery = QString::fromUtf8(" with update query: \"%1\"").arg(q->query());
+    qWarning().nospace() << "QSparqlConnection closed before QSparqlResult" << qPrintable(withQuery);
 }
 
 
