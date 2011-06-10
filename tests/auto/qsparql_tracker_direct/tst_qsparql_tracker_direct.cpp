@@ -753,7 +753,7 @@ void tst_QSparqlTrackerDirect::result_immediately_finished2()
 
 void tst_QSparqlTrackerDirect::delete_connection_immediately()
 {
-    // QSparqlConnection conn("QTRACKER_DIRECT");
+    QSparqlConnection conn("QTRACKER_DIRECT");
 }
 
 void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
