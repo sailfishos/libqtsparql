@@ -1179,6 +1179,11 @@ void tst_QSparqlAPI::syncExec_waitForFinished_query_test_data()
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << NUM_TRACKER_INSERTS;
+
+    QTest::newRow("DBus Sync Select")
+        << "QTRACKER"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS;
 }
 
 void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
@@ -1253,6 +1258,15 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount;
+
+    QTest::newRow("DBus Sync Update Query")
+        << "QTRACKER"
+        << contactInsertQueryTemplate
+        << contactDeleteQueryTemplate
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS
+        << contactInsertAmount
+        << contactDeleteAmount;
 }
 
 void tst_QSparqlAPI::syncExec_delete_connection_before_result_test()
@@ -1284,6 +1298,11 @@ void tst_QSparqlAPI::syncExec_delete_connection_before_result_test_data()
 
     QTest::newRow("Tracker Direct Sync Select Query")
         << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS;
+
+    QTest::newRow("DBus Sync Select")
+        << "QTRACKER"
         << contactSelectQuery
         << NUM_TRACKER_INSERTS;
 }
@@ -1371,6 +1390,15 @@ void tst_QSparqlAPI::syncExec_delete_connection_before_update_result_test_data()
 
     QTest::newRow("Tracker Direct Sync Update Query")
         << "QTRACKER_DIRECT"
+        << contactInsertQueryTemplate
+        << contactDeleteQueryTemplate
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS
+        << contactInsertAmount
+        << contactDeleteAmount;
+
+    QTest::newRow("DBus Sync Update Query")
+        << "QTRACKER"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
         << contactSelectQuery
