@@ -252,9 +252,9 @@ void QSparqlResult::waitForFinished()
     methods should return valid information.
 
     The usage of this function differs depending on the driver, and method of
-    execution used. For asynchronous queries the results will be availible once the
+    execution used. For asynchronous queries the results will be available once the
     finished() signal has been emitted, or waitForFinished() has been called. For
-    synchronous execution, where the driver supports QSparqlConnection::AsyncExec,
+    synchronous execution, where the driver supports QSparqlConnection::SyncExec,
     the value of isFinished() will be false until all the results have been retrieved
     using next().
 
