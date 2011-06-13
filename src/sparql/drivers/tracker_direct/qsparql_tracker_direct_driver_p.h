@@ -62,7 +62,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriver;
-class QTrackerDirectResult;
+class QTrackerDirectSelectResult;
 class QTrackerDirectDriverConnectionOpen;
 
 class QTrackerDirectDriverPrivate {
