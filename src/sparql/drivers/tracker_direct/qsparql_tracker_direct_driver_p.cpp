@@ -351,6 +351,11 @@ void QTrackerDirectDriver::close()
 {
     Q_EMIT closing();
 
+    // We no longer want to emit any signals, since the driver is
+    // closing, so block all signals to prevent any exec methods being
+    // called
+    blockSignals(true);
+
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
     // We just check to see if we can get a semaphore here
@@ -387,6 +392,7 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
 {
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectSelectResult *result = new QTrackerDirectSelectResult(d, query, type);
+        connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
         d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     } else {

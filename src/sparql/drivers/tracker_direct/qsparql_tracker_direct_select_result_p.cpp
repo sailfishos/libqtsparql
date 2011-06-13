@@ -392,6 +392,7 @@ void QTrackerDirectSelectResult::stopAndWait()
         d->isFinished = 1;
         queryRunner->wait();
     }
+    terminate();
     delete queryRunner; queryRunner = 0;
 }
 
