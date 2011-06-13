@@ -61,10 +61,7 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectQueryRunner : public QRunnable
 {
 public:
-   // QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
-
-   QTrackerDirectQueryRunner() { setAutoDelete(false); }
-
+    QTrackerDirectQueryRunner() { setAutoDelete(false); }
     QAtomicInt runFinished;
     QSemaphore runSemaphore;
     bool started;
@@ -72,10 +69,7 @@ public:
     void runOrWait()
     {
         if(acquireRunSemaphore())
-        {
-            qDebug() << "going to run!";
             run();
-        }        
         else
             wait();
     }
@@ -90,7 +84,6 @@ public:
     {
         //if something has has acquired the semaphore (eg the fetcher thread)
         //this will block until it is released in run
-        qDebug() << "waiting in wait()";
         runSemaphore.acquire(1);
         runSemaphore.release(1);
     }
@@ -112,11 +105,6 @@ class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparql
 public:
    virtual void stopAndWait();
    QTrackerDirectQueryRunner *queryRunner;
-
-   QTrackerDirectDriverPrivate *driverPrivate;
-
-  // virtual void runQuery() const;
-
 public Q_SLOTS:
     void driverClosing();
 };

@@ -66,17 +66,19 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectFetcherPrivate : public QTrackerDirectQueryRunner
 {
-
- //   QTrackerDirectQueryRunner() : started(false), runFinished(0), runSemaphore(1) { setAutoDelete(false); };
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res)  { started = false; runFinished = 0; runSemaphore.release(1); setAutoDelete(false); }//runFinished = 0; runSemaphore.release(1);  }
-
+    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res)
+    {
+        started = false;
+        runFinished = 0;
+        runSemaphore.release(1);
+        setAutoDelete(false);
+    }
 private:
     QTrackerDirectSelectResult *result;
 
     void run()
     {
-        qWarning() << "Subclassed run!";
         //check to make sure we are not going to do this twice
         if(!runFinished)
         {
@@ -392,7 +394,6 @@ void QTrackerDirectSelectResult::stopAndWait()
         d->isFinished = 1;
         queryRunner->wait();
     }
-    terminate();
     delete queryRunner; queryRunner = 0;
 }
 
