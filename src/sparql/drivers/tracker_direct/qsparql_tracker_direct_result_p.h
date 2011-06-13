@@ -45,6 +45,7 @@
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtCore/qsemaphore.h>
+#include <QtSparql/qsparqlerror.h>
 #include <QDebug>
 
 #ifdef QT_PLUGIN
@@ -104,16 +105,20 @@ private:
 
 };
 
-
+class QTrackerDirectDriverPrivate;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
 public:
-
    virtual void stopAndWait();
    QTrackerDirectQueryRunner *queryRunner;
+
+   QTrackerDirectDriverPrivate *driverPrivate;
+
   // virtual void runQuery() const;
 
+public Q_SLOTS:
+    void driverClosing();
 };
 
 QT_END_NAMESPACE
