@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qsparql_tracker_direct_result_p.h"
+#include "qsparql_tracker_direct_select_result_p.h"
 #include "qsparql_tracker_direct.h"
 #include "qsparql_tracker_direct_driver_p.h"
 
@@ -61,13 +61,13 @@
 QT_BEGIN_NAMESPACE
 
 ////////////////////////////////////////////////////////////////////////////
-// FIXME: refactor QTrackerDirectResult to use QTrackerDirectSyncResult +
+// FIXME: refactor QTrackerDirectSelectResult to use QTrackerDirectSyncResult +
 // sync->async wrapper.
 
 class QTrackerDirectFetcherPrivate : public QRunnable
 {
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectResult *res) : result(res), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
+    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
 
     void runOrWait()
     {
@@ -92,7 +92,7 @@ public:
     }
 
 private:
-    QTrackerDirectResult *result;
+    QTrackerDirectSelectResult *result;
     QAtomicInt runFinished;
     QSemaphore runSemaphore;
 
@@ -124,12 +124,12 @@ private:
 
 };
 
-class QTrackerDirectResultPrivate : public QObject {
+class QTrackerDirectSelectResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectResultPrivate(QTrackerDirectResult* result, QTrackerDirectDriverPrivate *dpp, QTrackerDirectFetcherPrivate *f);
+    QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result, QTrackerDirectDriverPrivate *dpp, QTrackerDirectFetcherPrivate *f);
 
-    ~QTrackerDirectResultPrivate();
+    ~QTrackerDirectSelectResultPrivate();
     void terminate();
     void setBoolValue(bool v);
     void dataReady(int totalCount);
@@ -139,7 +139,7 @@ public:
     QList<QVector<QVariant> > results;
     QAtomicInt isFinished;
 
-    QTrackerDirectResult* q;
+    QTrackerDirectSelectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
     QTrackerDirectFetcherPrivate *fetcher;
     bool fetcherStarted;
@@ -150,7 +150,7 @@ public:
     QMutex resultMutex;
 };
 
-QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult* result,
+QTrackerDirectSelectResultPrivate::QTrackerDirectSelectResultPrivate(   QTrackerDirectSelectResult* result,
                                                             QTrackerDirectDriverPrivate *dpp,
                                                             QTrackerDirectFetcherPrivate *f)
   : cursor(0),
@@ -159,13 +159,13 @@ QTrackerDirectResultPrivate::QTrackerDirectResultPrivate(   QTrackerDirectResult
 {
 }
 
-QTrackerDirectResultPrivate::~QTrackerDirectResultPrivate()
+QTrackerDirectSelectResultPrivate::~QTrackerDirectSelectResultPrivate()
 {
     if (cursor)
         g_object_unref(cursor);
 }
 
-void QTrackerDirectResultPrivate::terminate()
+void QTrackerDirectSelectResultPrivate::terminate()
 {
     QMutexLocker resultLocker(&resultMutex);
 
@@ -181,35 +181,34 @@ void QTrackerDirectResultPrivate::terminate()
     }
 }
 
-void QTrackerDirectResultPrivate::setBoolValue(bool v)
+void QTrackerDirectSelectResultPrivate::setBoolValue(bool v)
 {
     q->setBoolValue(v);
 }
 
-void QTrackerDirectResultPrivate::dataReady(int totalCount)
+void QTrackerDirectSelectResultPrivate::dataReady(int totalCount)
 {
     Q_EMIT q->dataReady(totalCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
+QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
                                            QSparqlQuery::StatementType type)
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
-    connect(p->driver, SIGNAL(closing()), this, SLOT(driverClosing()));
+    d = new QTrackerDirectSelectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
 }
 
-QTrackerDirectResult::~QTrackerDirectResult()
+QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
 {
     stopAndWait();
     delete d;
 }
 
-void QTrackerDirectResult::exec()
+void QTrackerDirectSelectResult::exec()
 {
     if (!d->driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(d->driverPrivate->error,
@@ -225,7 +224,7 @@ void QTrackerDirectResult::exec()
     QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
 }
 
-void QTrackerDirectResult::startFetcher()
+void QTrackerDirectSelectResult::startFetcher()
 {
     QMutexLocker resultLocker(&(d->resultMutex));
     if (d->fetcher && !d->fetcherStarted && !isFinished()) {
@@ -237,7 +236,7 @@ void QTrackerDirectResult::startFetcher()
     }
 }
 
-bool QTrackerDirectResult::runQuery()
+bool QTrackerDirectSelectResult::runQuery()
 {
     if (isFinished())
         return false;
@@ -257,14 +256,14 @@ bool QTrackerDirectResult::runQuery()
         if (error)
             g_error_free(error);
         terminate();
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        qWarning() << "QTrackerDirectSelectResult:" << lastError() << query();
         return false;
     }
 
     return true;
 }
 
-bool QTrackerDirectResult::fetchNextResult()
+bool QTrackerDirectSelectResult::fetchNextResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
 
@@ -277,7 +276,7 @@ bool QTrackerDirectResult::fetchNextResult()
                        error->code));
         g_error_free(error);
         terminate();
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        qWarning() << "QTrackerDirectSelectResult:" << lastError() << query();
         return false;
     }
 
@@ -310,7 +309,7 @@ bool QTrackerDirectResult::fetchNextResult()
     return true;
 }
 
-bool QTrackerDirectResult::fetchBoolResult()
+bool QTrackerDirectSelectResult::fetchBoolResult()
 {
     QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
 
@@ -322,7 +321,7 @@ bool QTrackerDirectResult::fetchBoolResult()
                        error->code));
         g_error_free(error);
         terminate();
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
+        qWarning() << "QTrackerDirectSelectResult:" << lastError() << query();
         return false;
     }
 
@@ -338,7 +337,7 @@ bool QTrackerDirectResult::fetchBoolResult()
     return true;
 }
 
-QSparqlBinding QTrackerDirectResult::binding(int field) const
+QSparqlBinding QTrackerDirectSelectResult::binding(int field) const
 {
     QMutexLocker resultLocker(&(d->resultMutex));
 
@@ -347,7 +346,7 @@ QSparqlBinding QTrackerDirectResult::binding(int field) const
     }
 
     if (field >= d->results[pos()].count() || field < 0) {
-        qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
+        qWarning() << "QTrackerDirectSelectResult::data[" << pos() << "]: column" << field << "out of range";
         return QSparqlBinding();
     }
     // A special case: we store TRACKER_SPARQL_VALUE_TYPE_INTEGER as longlong,
@@ -367,7 +366,7 @@ QSparqlBinding QTrackerDirectResult::binding(int field) const
     return b;
 }
 
-QVariant QTrackerDirectResult::value(int field) const
+QVariant QTrackerDirectSelectResult::value(int field) const
 {
     QMutexLocker resultLocker(&(d->resultMutex));
 
@@ -376,14 +375,14 @@ QVariant QTrackerDirectResult::value(int field) const
     }
 
     if (field >= d->results[pos()].count() || field < 0) {
-        qWarning() << "QTrackerDirectResult::data[" << pos() << "]: column" << field << "out of range";
+        qWarning() << "QTrackerDirectSelectResult::data[" << pos() << "]: column" << field << "out of range";
         return QVariant();
     }
 
     return d->results[pos()].value(field);
 }
 
-void QTrackerDirectResult::waitForFinished()
+void QTrackerDirectSelectResult::waitForFinished()
 {
     if (d->isFinished == 1)
         return;
@@ -404,17 +403,17 @@ void QTrackerDirectResult::waitForFinished()
     d->fetcher->runOrWait();
 }
 
-bool QTrackerDirectResult::isFinished() const
+bool QTrackerDirectSelectResult::isFinished() const
 {
     return d->isFinished == 1;
 }
 
-void QTrackerDirectResult::terminate()
+void QTrackerDirectSelectResult::terminate()
 {
     d->terminate();
 }
 
-void QTrackerDirectResult::stopAndWait()
+void QTrackerDirectSelectResult::stopAndWait()
 {
     if (d->fetcher)
     {
@@ -424,25 +423,13 @@ void QTrackerDirectResult::stopAndWait()
     delete d->fetcher; d->fetcher = 0;
 }
 
-void QTrackerDirectResult::driverClosing()
-{
-    if (!isFinished()) {
-        // If a query is interrupted set the result to be in error
-        setLastError(QSparqlError(
-                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-                QSparqlError::ConnectionError));
-    }
-    qWarning() << "QTrackerDirectResult: QSparqlConnection closed before QSparqlResult with query:" << query();
-    stopAndWait();
-}
-
-int QTrackerDirectResult::size() const
+int QTrackerDirectSelectResult::size() const
 {
     QMutexLocker resultLocker(&(d->resultMutex));
     return d->results.size();
 }
 
-QSparqlResultRow QTrackerDirectResult::current() const
+QSparqlResultRow QTrackerDirectSelectResult::current() const
 {
     QMutexLocker resultLocker(&(d->resultMutex));
 
@@ -461,7 +448,7 @@ QSparqlResultRow QTrackerDirectResult::current() const
     return resultRow;
 }
 
-bool QTrackerDirectResult::hasFeature(QSparqlResult::Feature feature) const
+bool QTrackerDirectSelectResult::hasFeature(QSparqlResult::Feature feature) const
 {
     switch (feature) {
         case QSparqlResult::Sync:
@@ -476,4 +463,4 @@ bool QTrackerDirectResult::hasFeature(QSparqlResult::Feature feature) const
 
 QT_END_NAMESPACE
 
-#include "qsparql_tracker_direct_result_p.moc"
+#include "qsparql_tracker_direct_select_result_p.moc"

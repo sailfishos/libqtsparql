@@ -39,7 +39,7 @@
 
 #include "qsparql_tracker_direct.h"
 #include "qsparql_tracker_direct_driver_p.h"
-#include "qsparql_tracker_direct_result_p.h"
+#include "qsparql_tracker_direct_select_result_p.h"
 #include "qsparql_tracker_direct_sync_result_p.h"
 #include "qsparql_tracker_direct_update_result_p.h"
 
@@ -54,7 +54,7 @@
 #include <QtCore/qsemaphore.h>
 QT_BEGIN_NAMESPACE
 
-// Helper functions used both by QTrackerDirectResult and
+// Helper functions used both by QTrackerDirectSelectResult and
 // QTrackerDirectSyncResult
 
 namespace {
@@ -386,7 +386,7 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
+        QTrackerDirectSelectResult *result = new QTrackerDirectSelectResult(d, query, type);
         d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     } else {

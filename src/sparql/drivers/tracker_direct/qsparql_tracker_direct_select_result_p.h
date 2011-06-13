@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_RESULT_P_H
-#define QSPARQL_TRACKER_DIRECT_RESULT_P_H
+#ifndef QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
+#define QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
@@ -54,17 +54,17 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectResultPrivate;
+class QTrackerDirectSelectResultPrivate;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSelectResult : public QSparqlResult
 {
     Q_OBJECT
-    friend class QTrackerDirectResultPrivate; // for emitting signals
+    friend class QTrackerDirectSelectResultPrivate; // for emitting signals
 public:
-    explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
+    explicit QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
                                   QSparqlQuery::StatementType type);
-    ~QTrackerDirectResult();
+    ~QTrackerDirectSelectResult();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
@@ -88,7 +88,7 @@ private:
     bool fetchNextResult();
     bool fetchBoolResult();
 
-    QTrackerDirectResultPrivate* d;
+    QTrackerDirectSelectResultPrivate* d;
     friend class QTrackerDirectFetcherPrivate;
 };
 
