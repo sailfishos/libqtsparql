@@ -42,6 +42,7 @@
 
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
+#include "qsparql_tracker_direct_result_p.h"
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
@@ -56,7 +57,7 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectSelectResultPrivate;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSelectResult : public QSparqlResult
+class QTrackerDirectSelectResult : public QTrackerDirectResult
 {
     Q_OBJECT
     friend class QTrackerDirectSelectResultPrivate; // for emitting signals
@@ -65,6 +66,11 @@ public:
                                   const QString& query,
                                   QSparqlQuery::StatementType type);
     ~QTrackerDirectSelectResult();
+
+    Q_INVOKABLE void startFetcher();
+
+    virtual void stopAndWait();
+    bool runQuery();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
@@ -78,13 +84,9 @@ public:
 
 private Q_SLOTS:
     void exec();
-    void startFetcher();
-    void driverClosing();
 
 private:
-    bool runQuery();
     void terminate();
-    void stopAndWait();
     bool fetchNextResult();
     bool fetchBoolResult();
 
