@@ -42,12 +42,7 @@
 
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
-
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
+#include "qsparql_tracker_direct_result_p.h"
 
 QT_BEGIN_HEADER
 
@@ -57,7 +52,7 @@ class QSparqlQueryOptions;
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectUpdateResultPrivate;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectUpdateResult : public QSparqlResult
+class QTrackerDirectUpdateResult : public QTrackerDirectResult
 {
     Q_OBJECT
     friend class QTrackerDirectUpdateResultPrivate;
@@ -69,6 +64,7 @@ public:
     ~QTrackerDirectUpdateResult();
 
     bool runQuery();
+    virtual void stopAndWait();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();

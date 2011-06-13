@@ -828,10 +828,8 @@ void tst_QSparqlAPI::update_query_delete_connection_test()
     QFETCH(QString, connectionDriver);
     QFETCH(QString, insertTemplate);
     QFETCH(QString, deleteTemplate);
-    QFETCH(QString, validateQuery);
     QFETCH(int, initialSize);
     QFETCH(int, contactInserts);
-    QFETCH(int, contactDeletes);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
 
@@ -852,29 +850,9 @@ void tst_QSparqlAPI::update_query_delete_connection_test()
     r->setParent(this);
     delete conn;
     checkExecutionMethod(executionMethod, asyncObject, r);
-
-    // Update query binding values will return empty bindings
-    QCOMPARE(QString(""), r->binding(0).value().toString());
-    QCOMPARE(QString(""), r->binding(1).value().toString());
-    // Check the value() for the same thing
-    QCOMPARE(QString(""), r->value(0).toString());
-    // for updates, current() should return a empty result row
-    QCOMPARE(QSparqlResultRow(), r->current());
-    // and size should be 0
-    if (r->hasFeature(QSparqlResult::QuerySize) )
-        QCOMPARE(r->size(), 0);
     delete r;
 
-    // Verify the insertion
-    conn = new QSparqlConnection(connectionDriver);
-    r = conn->exec(QSparqlQuery(validateQuery), queryOptions);
-    r->setParent(this);
-    delete conn;
-    checkExecutionMethod(executionMethod, asyncObject, r);
-    validateResults(r, expectedResultsSize);
-    delete r;
-
-    // Delete the insertion
+    // Now delete what was inserted, for direct results we wait so it will have been inserted
     QString deleteQuery = "delete { <qsparql-api-tests> a nie:InformationElement .";
     for (int item = initialSize+1; item <= expectedResultsSize; item++) {
         deleteQuery.append( deleteTemplate.arg(item) );
@@ -889,15 +867,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test()
     checkExecutionMethod(executionMethod, asyncObject, r);
     delete r;
 
-    // Now verify deletion
-    conn = new QSparqlConnection(connectionDriver);
-    expectedResultsSize -= contactDeletes;
-    r = conn->exec(QSparqlQuery(validateQuery), queryOptions);
-    r->setParent(this);
-    delete conn;
-    checkExecutionMethod(executionMethod, asyncObject, r);
-    validateResults(r, expectedResultsSize);
-    delete r;
 }
 
 void tst_QSparqlAPI::update_query_delete_connection_test_data()
@@ -905,7 +874,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("insertTemplate");
     QTest::addColumn<QString>("deleteTemplate");
-    QTest::addColumn<QString>("validateQuery");
     QTest::addColumn<int>("initialSize");
     QTest::addColumn<int>("contactInserts");
     QTest::addColumn<int>("contactDeletes");
@@ -916,7 +884,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
         << "QTRACKER"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount
@@ -927,7 +894,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
         << "QTRACKER"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount
@@ -938,7 +904,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
         << "QTRACKER_DIRECT"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount
@@ -949,7 +914,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
         << "QTRACKER_DIRECT"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount
@@ -960,7 +924,6 @@ void tst_QSparqlAPI::update_query_delete_connection_test_data()
         << "QTRACKER_DIRECT"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery
         << NUM_TRACKER_INSERTS
         << contactInsertAmount
         << contactDeleteAmount

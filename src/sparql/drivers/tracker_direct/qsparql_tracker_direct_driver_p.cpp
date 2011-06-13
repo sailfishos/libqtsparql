@@ -218,15 +218,6 @@ private:
 
 };
 
-static void
-async_open_callback(GObject         * /*source_object*/,
-                    GAsyncResult    *result,
-                    gpointer         user_data)
-{
-    QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
-    d->asyncOpenComplete(result);
-}
-
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
       asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen(this))
@@ -235,6 +226,7 @@ QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *d
 
 QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 {
+    delete connectionOpener;
 }
 
 void QTrackerDirectDriverPrivate::asyncOpenComplete(GAsyncResult *result)
@@ -397,6 +389,7 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
         return result;
     } else {
         QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type, options);
+        connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
         d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     }
