@@ -704,42 +704,30 @@ void tst_QSparqlAPI::update_query_error_test()
 
     QSparqlConnection conn(connectionDriver);
 
-    QSparqlQueryOptions queryOptions;
-    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
-    QSparqlQuery q(query, QSparqlQuery::InsertStatement);
+    QSparqlQuery::StatementType queryType = QSparqlQuery::InsertStatement;
+    for (int round = 1; round <= 2; ++round) {
+        QSparqlQueryOptions queryOptions;
+        queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+        QSparqlQuery q(query, queryType);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+        QSparqlResult* r = conn.exec(q,queryOptions);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(executionMethod, asyncObject, r);
 
-    QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
-    // Check result Behaviour
-    QVERIFY(r->pos() < 0);
-    QVERIFY(!r->next());
-    QVERIFY(!r->previous());
-    QVERIFY(r->pos() < 0);
-    // Check we got a warning
-    QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
-    delete r;
+        QVERIFY(r->hasError());
+        QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+        // Check result Behaviour
+        QVERIFY(r->pos() < 0);
+        QVERIFY(!r->next());
+        QVERIFY(!r->previous());
+        QVERIFY(r->pos() < 0);
+        // Check we got a warning
+        QCOMPARE((*msgRecorder)[QtWarningMsg].count(), round);
+        delete r;
 
-    // also check delete statments
-    QSparqlQuery delQuery(query, QSparqlQuery::DeleteStatement);
-
-    r = conn.exec(delQuery,queryOptions);
-    checkExecutionMethod(executionMethod, asyncObject, r);
-
-    QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
-    // Check result Behaviour
-    QVERIFY(r->pos() < 0);
-    QVERIFY(!r->next());
-    QVERIFY(!r->previous());
-    QVERIFY(r->pos() < 0);
-
-    // Second warning
-    QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 2);
-    delete r;
+        // also check delete statments
+        queryType = QSparqlQuery::DeleteStatement;
+    }
 }
 
 void tst_QSparqlAPI::update_query_error_test_data()
