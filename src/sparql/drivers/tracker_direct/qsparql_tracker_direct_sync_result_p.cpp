@@ -95,6 +95,7 @@ QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* 
     setQuery(query);
     setStatementType(type);
     d = new QTrackerDirectSyncResultPrivate(p, options);
+    connect(p->driver, SIGNAL(closing()), this, SLOT(driverClosing()));
 }
 
 QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
@@ -143,6 +144,18 @@ void QTrackerDirectSyncResult::update()
         g_error_free(error);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
     }
+}
+
+void QTrackerDirectSyncResult::driverClosing()
+{
+    if (d->cursor) {
+        g_object_unref(d->cursor);
+        d->cursor = 0;
+    }
+    setLastError(QSparqlError(
+            QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+            QSparqlError::ConnectionError));
+    qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
 }
 
 bool QTrackerDirectSyncResult::next()

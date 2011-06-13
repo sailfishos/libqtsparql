@@ -115,6 +115,7 @@ private slots:
     void destroy_connection_before_result();
     void destroy_connection_before_result_data();
     void destroy_connection_waitForFinished();
+    void destroy_connection_waitForFinished_data();
     void destroy_connection_verify_result();
     void destroy_connection_verify_result_async();
     void destroy_connection_partially_iterated_results();
@@ -1282,12 +1283,11 @@ void tst_QSparqlTrackerDirect::destroy_connection_before_result()
 
     QFETCH(QString, cleanupQuery);
     if (!cleanupQuery.isEmpty()) {
-        QSparqlConnection cleanupConnection("QTRACKER_DIRECT");
+        QSparqlConnection cleanupConnection("QTRACKER");
         QSparqlResult* cleanupResult =
             cleanupConnection.syncExec(
                 QSparqlQuery(cleanupQuery, QSparqlQuery::InsertStatement));
-        QVERIFY( cleanupResult );
-        QVERIFY( !cleanupResult->hasError() );
+        CHECK_QSPARQL_RESULT(cleanupResult);
         delete cleanupResult;
     }
 }
@@ -1341,22 +1341,37 @@ void tst_QSparqlTrackerDirect::destroy_connection_waitForFinished()
 {
     setMsgLogLevel(QtCriticalMsg);
     const QString connectionType("QTRACKER_DIRECT");
-    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                         "nco:nameGiven ?ng .}");
+    QFETCH(int, waitForConnectionOpen);
     QSparqlConnection* conn = new QSparqlConnection(connectionType);
-    //wait for the connection to open
-    QTest::qWait(1000);
+    if (waitForConnectionOpen > 0)
+        QTest::qWait(waitForConnectionOpen);
+    QFETCH(QString, query);
+    QFETCH(int, queryType);
 
-    QSparqlResult* r = conn->exec(q);
+    QSparqlResult* r = conn->exec(QSparqlQuery(query, QSparqlQuery::StatementType(queryType)));
     r->setParent(this);
     delete conn; conn = 0;
     QTest::qWait(500);
 
     r->waitForFinished();
 
-    CHECK_QSPARQL_RESULT(r);
-    delete r;
+    delete r; r = 0;
+
+    QFETCH(QString, cleanupQuery);
+    if (!cleanupQuery.isEmpty()) {
+        QSparqlConnection cleanupConnection("QTRACKER");
+        QSparqlResult* cleanupResult =
+            cleanupConnection.syncExec(
+                QSparqlQuery(cleanupQuery, QSparqlQuery::InsertStatement));
+        CHECK_QSPARQL_RESULT(cleanupResult);
+        delete cleanupResult;
+    }
+}
+
+void tst_QSparqlTrackerDirect::destroy_connection_waitForFinished_data()
+{
+    // Reuse test data from another case
+    destroy_connection_before_result_data();
 }
 
 void tst_QSparqlTrackerDirect::destroy_connection_verify_result()

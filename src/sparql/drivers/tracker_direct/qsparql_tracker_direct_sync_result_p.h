@@ -84,6 +84,9 @@ public Q_SLOTS:
     void exec();
     void update();
 
+private Q_SLOTS:
+    void driverClosing();
+
 private:
     QTrackerDirectSyncResultPrivate* d;
 };

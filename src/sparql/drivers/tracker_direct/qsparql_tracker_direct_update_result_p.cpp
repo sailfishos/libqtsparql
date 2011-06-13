@@ -69,7 +69,6 @@ public:
     void startUpdate(const QString& query);
     void terminate();
     void setLastError(const QSparqlError& e);
-    bool checkConnection(const char* errorMsg);
 
 private Q_SLOTS:
     void driverClosing();
@@ -100,7 +99,7 @@ async_update_callback( GObject *source_object,
         return;
     }
 
-    if (data->checkConnection("QSparqlConnection was closed before update query completed.")) {
+    if (data->driverPrivate) {
         GError *error = 0;
         tracker_sparql_connection_update_finish(data->driverPrivate->connection, result, &error);
 
@@ -162,26 +161,18 @@ void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
     q->setLastError(e);
 }
 
-bool QTrackerDirectUpdateResultPrivate::checkConnection(const char* errorMsg)
-{
-    if (!driverPrivate || !driverPrivate->connection) {
-        setLastError(QSparqlError(QString::fromUtf8(errorMsg),
-                                  QSparqlError::ConnectionError));
-        return false;
-    }
-    else {
-        return true;
-    }
-}
-
 void QTrackerDirectUpdateResultPrivate::driverClosing()
 {
     driverPrivate = 0;
+    state = Finished;
 
+    const char* errorMsg = "QSparqlConnection closed before QSparqlResult";
     QString withQuery;
-    if (q)
-       withQuery = QString::fromUtf8(" with update query: \"%1\"").arg(q->query());
-    qWarning().nospace() << "QSparqlConnection closed before QSparqlResult" << qPrintable(withQuery);
+    if (q) {
+        setLastError(QSparqlError(QString::fromUtf8(errorMsg), QSparqlError::ConnectionError));
+        withQuery = QString::fromUtf8(" with update query: \"%1\"").arg(q->query());
+    }
+    qWarning() << "QTrackerDirectUpdateResult:" << errorMsg << qPrintable(withQuery);
 }
 
 
@@ -214,7 +205,10 @@ QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 
 void QTrackerDirectUpdateResult::exec()
 {
-    if (!d->checkConnection("QSparqlConnection was closed before update query could be started"))
+    if (d->state != QTrackerDirectUpdateResultPrivate::Idle)
+        return;
+
+    if (!d->driverPrivate)
         return;
 
     if (!d->driverPrivate->driver->isOpen()) {
@@ -242,14 +236,20 @@ void QTrackerDirectUpdateResult::waitForFinished()
     if (isFinished())
         return;
 
-    // We first need the connection to be ready before doing anything
-    d->driverPrivate->openConnectionSync();
+    if (d->driverPrivate) {
+        // We first need the connection to be ready before doing anything
+        d->driverPrivate->openConnectionSync();
 
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
-                                  QSparqlError::ConnectionError));
-        d->terminate();
-        return;
+        if (!d->driverPrivate->driver->isOpen()) {
+            setLastError(QSparqlError(d->driverPrivate->error,
+                                      QSparqlError::ConnectionError));
+            d->terminate();
+            return;
+        }
+    }
+    else {
+        if (d->state == QTrackerDirectUpdateResultPrivate::Idle)
+            return;
     }
 
     QEventLoop loop;
