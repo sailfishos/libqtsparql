@@ -64,40 +64,19 @@ QT_BEGIN_NAMESPACE
 // FIXME: refactor QTrackerDirectSelectResult to use QTrackerDirectSyncResult +
 // sync->async wrapper.
 
-class QTrackerDirectFetcherPrivate : public QRunnable
+class QTrackerDirectFetcherPrivate : public QTrackerDirectQueryRunner
 {
+
+ //   QTrackerDirectQueryRunner() : started(false), runFinished(0), runSemaphore(1) { setAutoDelete(false); };
 public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
-
-    void runOrWait()
-    {
-        if(acquireRunSemaphore())
-            run();
-        else
-            wait();
-    }
-
-    void queue(QThreadPool& threadPool)
-    {
-        if(acquireRunSemaphore())
-            threadPool.start(this);
-    }
-
-    void wait()
-    {
-        //if something has has acquired the semaphore (eg the fetcher thread)
-        //this will block until it is released in run
-        runSemaphore.acquire(1);
-        runSemaphore.release(1);
-    }
+    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res)  { started = false; runFinished = 0; runSemaphore.release(1); setAutoDelete(false); }//runFinished = 0; runSemaphore.release(1);  }
 
 private:
     QTrackerDirectSelectResult *result;
-    QAtomicInt runFinished;
-    QSemaphore runSemaphore;
 
     void run()
     {
+        qWarning() << "Subclassed run!";
         //check to make sure we are not going to do this twice
         if(!runFinished)
         {
@@ -117,17 +96,12 @@ private:
         runSemaphore.release(1);
     }
 
-    bool acquireRunSemaphore()
-    {
-        return runSemaphore.tryAcquire(1);
-    }
-
 };
 
 class QTrackerDirectSelectResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result, QTrackerDirectDriverPrivate *dpp, QTrackerDirectFetcherPrivate *f);
+    QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result, QTrackerDirectDriverPrivate *dpp);
 
     ~QTrackerDirectSelectResultPrivate();
     void terminate();
@@ -141,8 +115,6 @@ public:
 
     QTrackerDirectSelectResult* q;
     QTrackerDirectDriverPrivate *driverPrivate;
-    QTrackerDirectFetcherPrivate *fetcher;
-    bool fetcherStarted;
     // This mutex is for ensuring that only one thread at a time is accessing
     // the member variables of this class (mainly: "results").
     // Note that only the fetcher thread accesses the 'cursor', and so that
@@ -151,11 +123,10 @@ public:
 };
 
 QTrackerDirectSelectResultPrivate::QTrackerDirectSelectResultPrivate(   QTrackerDirectSelectResult* result,
-                                                            QTrackerDirectDriverPrivate *dpp,
-                                                            QTrackerDirectFetcherPrivate *f)
+                                                            QTrackerDirectDriverPrivate *dpp)
+                                                           // QTrackerDirectFetcherPrivate *f)
   : cursor(0),
-  q(result), driverPrivate(dpp), fetcher(f), fetcherStarted(false),
-  resultMutex(QMutex::Recursive)
+  q(result), driverPrivate(dpp), resultMutex(QMutex::Recursive)
 {
 }
 
@@ -199,7 +170,8 @@ QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPriva
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectSelectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
+    queryRunner = new QTrackerDirectFetcherPrivate(this);
+    d = new QTrackerDirectSelectResultPrivate(this, p);
 }
 
 QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
@@ -227,12 +199,12 @@ void QTrackerDirectSelectResult::exec()
 void QTrackerDirectSelectResult::startFetcher()
 {
     QMutexLocker resultLocker(&(d->resultMutex));
-    if (d->fetcher && !d->fetcherStarted && !isFinished()) {
-        d->fetcherStarted = true;
+    if (queryRunner && !queryRunner->started && !isFinished()) {
+        queryRunner->started = true;
         //first attempt to acquire the semaphore, if we can, then add the
         //fetcher to the threadPool queue, if we can't then waitForFinished
         //has it, so we don't need to refetch the results using this thread
-        d->fetcher->queue(d->driverPrivate->threadPool);
+        queryRunner->queue(d->driverPrivate->threadPool);
     }
 }
 
@@ -384,7 +356,7 @@ QVariant QTrackerDirectSelectResult::value(int field) const
 
 void QTrackerDirectSelectResult::waitForFinished()
 {
-    if (d->isFinished == 1)
+    if (isFinished())
         return;
 
     // We first need the connection to be ready before doing anything
@@ -400,12 +372,7 @@ void QTrackerDirectSelectResult::waitForFinished()
     //if we can acquire the semaphore then run fetcher directly
     //if we can't then fetcher is in the threadpool, so we wait
     //for it to complete
-    d->fetcher->runOrWait();
-}
-
-bool QTrackerDirectSelectResult::isFinished() const
-{
-    return d->isFinished == 1;
+    queryRunner->runOrWait();
 }
 
 void QTrackerDirectSelectResult::terminate()
@@ -413,14 +380,19 @@ void QTrackerDirectSelectResult::terminate()
     d->terminate();
 }
 
+bool QTrackerDirectSelectResult::isFinished() const
+{
+    return d->isFinished == 1;
+}
+
 void QTrackerDirectSelectResult::stopAndWait()
 {
-    if (d->fetcher)
+    if (queryRunner)
     {
         d->isFinished = 1;
-        d->fetcher->wait();
+        queryRunner->wait();
     }
-    delete d->fetcher; d->fetcher = 0;
+    delete queryRunner; queryRunner = 0;
 }
 
 int QTrackerDirectSelectResult::size() const
