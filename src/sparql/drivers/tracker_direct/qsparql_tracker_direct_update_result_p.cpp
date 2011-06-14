@@ -170,15 +170,6 @@ bool QTrackerDirectUpdateResultPrivate::checkConnection(const char* errorMsg)
     }
 }
 
-void QTrackerDirectUpdateResult::stopAndWait()
-{
-    d->driverPrivate = 0;
-    d->state = d->Finished;
-    if (queryRunner) {
-        queryRunner->wait();
-    }
-    delete queryRunner; queryRunner = 0;
-}
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
@@ -260,6 +251,15 @@ QSparqlResultRow QTrackerDirectUpdateResult::current() const
     return QSparqlResultRow();
 }
 
+void QTrackerDirectUpdateResult::stopAndWait()
+{
+    d->driverPrivate = 0;
+    d->state = QTrackerDirectUpdateResultPrivate::Finished;
+    if (queryRunner) {
+        queryRunner->wait();
+    }
+    delete queryRunner; queryRunner = 0;
+}
 QT_END_NAMESPACE
 
 #include "qsparql_tracker_direct_update_result_p.moc"

@@ -68,10 +68,14 @@ public:
 
     void runOrWait()
     {
-        if(acquireRunSemaphore())
-            run();
-        else
+        if(acquireRunSemaphore()) {
+            if (!runFinished)
+                run();
+            else
+                runSemaphore.release(1);
+        } else {
             wait();
+        }
     }
 
     void queue(QThreadPool& threadPool)
