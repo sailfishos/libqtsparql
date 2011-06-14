@@ -40,10 +40,6 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 #define TEST_PORT 1234
 // #define TEST_PORT 1111
 

@@ -42,10 +42,6 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 class tst_QSparqlTracker : public QObject
 {
     Q_OBJECT

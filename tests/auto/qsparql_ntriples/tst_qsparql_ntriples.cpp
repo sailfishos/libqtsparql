@@ -41,10 +41,6 @@
 #include <QtSparql/QtSparql>
 #include <QtSparql/private/qsparqlntriples_p.h>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 class tst_QSparqlNTriples : public QObject
 {
     Q_OBJECT

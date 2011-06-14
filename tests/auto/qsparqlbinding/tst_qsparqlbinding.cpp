@@ -46,10 +46,6 @@ Q_DECLARE_METATYPE(QSparqlBinding)
 
 #include <QUrl>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 class tst_QSparqlBinding : public QObject
 {
     Q_OBJECT

@@ -43,10 +43,6 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 class tst_QSparqlTrackerDirectSync : public TrackerDirectCommon
 {
     Q_OBJECT

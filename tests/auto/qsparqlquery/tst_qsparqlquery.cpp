@@ -42,10 +42,6 @@
 
 #include <QUrl>
 
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
-
 class tst_QSparqlQuery : public QObject
 {
     Q_OBJECT

@@ -42,9 +42,6 @@
 
 #include "private/qsparqlconnection_p.h"
 #include "private/qsparqldriver_p.h"
-//const QString qtest(qTableName( "qtest", __FILE__ )); // FIXME: what's this
-
-//TESTED_FILES=
 
 class MockDriver;
 
