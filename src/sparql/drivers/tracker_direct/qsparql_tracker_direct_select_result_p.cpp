@@ -148,6 +148,7 @@ void QTrackerDirectSelectResultPrivate::terminate()
 
     isFinished = 1;
     q->Q_EMIT finished();
+    q->disconnect(SIGNAL(finished()));
     if (cursor) {
         g_object_unref(cursor);
         cursor = 0;
