@@ -67,7 +67,7 @@ public:
 
     ~QTrackerDirectUpdateResultPrivate();
     void startUpdate(const QString& query);
-    void terminate();
+    Q_INVOKABLE void terminate();
     void setLastError(const QSparqlError& e);
 
 private Q_SLOTS:
@@ -116,7 +116,7 @@ async_update_callback( GObject *source_object,
 
     // We cannot emit the QSparqlResult::finished() signal directly here; so
     // delay it and emit it the next time the main loop spins.
-    QMetaObject::invokeMethod(data->q, "terminate", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(data, "terminate", Qt::QueuedConnection);
 }
 
 QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
@@ -261,11 +261,6 @@ void QTrackerDirectUpdateResult::waitForFinished()
 bool QTrackerDirectUpdateResult::isFinished() const
 {
     return (d->state == QTrackerDirectUpdateResultPrivate::Finished);
-}
-
-void QTrackerDirectUpdateResult::terminate()
-{
-    d->terminate();
 }
 
 int QTrackerDirectUpdateResult::size() const
