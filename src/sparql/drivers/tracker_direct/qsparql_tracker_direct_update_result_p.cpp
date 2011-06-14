@@ -121,7 +121,7 @@ private:
                     qWarning() << "QTrackerDirectUpdateResult:" << d->q->lastError() << d->q->query();
                 }
             }
-            d->terminate();
+            QMetaObject::invokeMethod(d->q, "terminate", Qt::QueuedConnection);
         }
         runFinished=1;
         runSemaphore.release(1);
@@ -151,6 +151,7 @@ void QTrackerDirectUpdateResultPrivate::terminate()
 {
     state = Finished;
     q->Q_EMIT finished();
+    q->disconnect(SIGNAL(finished()));
 }
 
 void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
@@ -233,6 +234,7 @@ void QTrackerDirectUpdateResult::waitForFinished()
             return;
         }
         queryRunner->runOrWait();
+        terminate();
     }
 }
 
