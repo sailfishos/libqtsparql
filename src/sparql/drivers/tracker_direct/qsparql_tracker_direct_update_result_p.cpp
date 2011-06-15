@@ -60,7 +60,7 @@ QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPriva
                                            const QString& query,
                                            QSparqlQuery::StatementType type,
                                            const QSparqlQueryOptions& options)
-  : state(Idle), options(options)
+  : options(options)
 {
     setQuery(query);
     setStatementType(type);
@@ -84,7 +84,6 @@ void QTrackerDirectUpdateResult::exec()
         return;
     }
     queryRunner->queue(driverPrivate->threadPool);
-    state = Executing;
 }
 
 void QTrackerDirectUpdateResult::run()
@@ -139,14 +138,9 @@ void QTrackerDirectUpdateResult::waitForFinished()
     }
 }
 
-bool QTrackerDirectUpdateResult::isFinished() const
-{
-    return (state == Finished);
-}
-
 void QTrackerDirectUpdateResult::terminate()
 {
-    state = Finished;
+    resultFinished = 1;
     Q_EMIT finished();
     this->disconnect(SIGNAL(finished()));
 }
@@ -167,7 +161,7 @@ void QTrackerDirectUpdateResult::stopAndWait()
         queryRunner->wait();
     }
     driverPrivate = 0;
-    state = Finished;
+    resultFinished = 1;
     delete queryRunner; queryRunner = 0;
 }
 QT_END_NAMESPACE

@@ -71,7 +71,6 @@ public:
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
-    virtual bool isFinished() const;
 
     virtual QSparqlResultRow current() const;
     virtual QSparqlBinding binding(int i) const;
@@ -83,11 +82,6 @@ private Q_SLOTS:
 
 private:
     Q_INVOKABLE void terminate();
-
-    enum State {
-        Idle, Executing, Finished
-    };
-    State state;
     QSparqlQueryOptions options;
 };
 

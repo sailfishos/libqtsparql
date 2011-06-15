@@ -53,16 +53,23 @@ QTrackerDirectResult::~QTrackerDirectResult()
     delete queryRunner; queryRunner = 0;
 }
 
-void QTrackerDirectResult::stopAndWait() {
+void QTrackerDirectResult::stopAndWait()
+{
     queryRunner->wait();
 }
 
-void QTrackerDirectResult::driverClosing() {
+void QTrackerDirectResult::driverClosing()
+{
     qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<
                   query();
     setLastError(QSparqlError(QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
                     QSparqlError::ConnectionError,
                     -1));
     stopAndWait();
+}
+
+bool QTrackerDirectResult::isFinished() const
+{
+    return resultFinished == 1;
 }
 

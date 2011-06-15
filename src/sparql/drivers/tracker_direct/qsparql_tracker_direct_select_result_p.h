@@ -78,7 +78,6 @@ public:
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
-    virtual bool isFinished() const;
 
     virtual QSparqlResultRow current() const;
     virtual QSparqlBinding binding(int i) const;
@@ -98,7 +97,6 @@ private:
     TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;
     QList<QVector<QVariant> > results;
-    QAtomicInt resultFinished;
 
     QTrackerDirectSelectResultPrivate* d;
 };
