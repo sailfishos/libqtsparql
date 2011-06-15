@@ -58,6 +58,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+class QTrackerDirectDriverPrivate;
 class QTrackerDirectQueryRunner;
 class QTrackerDirectDriverPrivate;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
@@ -70,6 +71,8 @@ public:
     virtual void run() { qDebug() << "Direct result run..."; }
 
     QTrackerDirectQueryRunner *queryRunner;
+protected:
+    QTrackerDirectDriverPrivate *driverPrivate;
 
 public Q_SLOTS:
     void driverClosing();

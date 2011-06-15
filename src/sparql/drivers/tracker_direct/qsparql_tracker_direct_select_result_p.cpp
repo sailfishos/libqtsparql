@@ -63,10 +63,10 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectSelectResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result, QTrackerDirectDriverPrivate *dpp);
+    QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result);
 
     ~QTrackerDirectSelectResultPrivate();
-    void terminate();
+    void setBoolValue(bool v);
     void dataReady(int totalCount);
 
     TrackerSparqlCursor* cursor;
@@ -75,7 +75,6 @@ public:
     QAtomicInt isFinished;
 
     QTrackerDirectSelectResult* q;
-    QTrackerDirectDriverPrivate *driverPrivate;
     // This mutex is for ensuring that only one thread at a time is accessing
     // the member variables of this class (mainly: "results").
     // Note that only the fetcher thread accesses the 'cursor', and so that
@@ -83,11 +82,9 @@ public:
     QMutex resultMutex;
 };
 
-QTrackerDirectSelectResultPrivate::QTrackerDirectSelectResultPrivate(   QTrackerDirectSelectResult* result,
-                                                            QTrackerDirectDriverPrivate *dpp)
-                                                           // QTrackerDirectFetcherPrivate *f)
+QTrackerDirectSelectResultPrivate::QTrackerDirectSelectResultPrivate(QTrackerDirectSelectResult* result)
   : cursor(0),
-  q(result), driverPrivate(dpp), resultMutex(QMutex::Recursive)
+  q(result), resultMutex(QMutex::Recursive)
 {
 }
 
@@ -97,24 +94,12 @@ QTrackerDirectSelectResultPrivate::~QTrackerDirectSelectResultPrivate()
         g_object_unref(cursor);
 }
 
-void QTrackerDirectSelectResultPrivate::terminate()
+void QTrackerDirectSelectResultPrivate::setBoolValue(bool v)
 {
-    QMutexLocker resultLocker(&resultMutex);
-
-    if (results.count() % driverPrivate->dataReadyInterval != 0) {
-        dataReady(results.count());
-    }
-
-    isFinished = 1;
-    q->Q_EMIT finished();
-    q->disconnect(SIGNAL(finished()));
-    if (cursor) {
-        g_object_unref(cursor);
-        cursor = 0;
-    }
+    q->setBoolValue(v);
 }
 
-void QTrackerDirectResultPrivate::dataReady(int totalCount)
+void QTrackerDirectSelectResultPrivate::dataReady(int totalCount)
 {
     Q_EMIT q->dataReady(totalCount);
 }
@@ -127,7 +112,8 @@ QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPriva
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectSelectResultPrivate(this, p);
+    driverPrivate = p;
+    d = new QTrackerDirectSelectResultPrivate(this);
 }
 
 QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
@@ -138,10 +124,10 @@ QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
 
 void QTrackerDirectSelectResult::exec()
 {
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
+    if (!driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
-        d->terminate();
+        terminate();
         return;
     }
 
@@ -160,7 +146,7 @@ void QTrackerDirectSelectResult::startFetcher()
         //first attempt to acquire the semaphore, if we can, then add the
         //fetcher to the threadPool queue, if we can't then waitForFinished
         //has it, so we don't need to refetch the results using this thread
-        queryRunner->queue(d->driverPrivate->threadPool);
+        queryRunner->queue(driverPrivate->threadPool);
     }
 }
 
@@ -184,10 +170,10 @@ bool QTrackerDirectSelectResult::runQuery()
     if (isFinished())
         return false;
 
-    QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
+    QMutexLocker connectionLocker(&(driverPrivate->connectionMutex));
 
     GError * error = 0;
-    d->cursor = tracker_sparql_connection_query(    d->driverPrivate->connection,
+    d->cursor = tracker_sparql_connection_query(    driverPrivate->connection,
                                                     query().toUtf8().constData(),
                                                     0,
                                                     &error );
@@ -208,7 +194,7 @@ bool QTrackerDirectSelectResult::runQuery()
 
 bool QTrackerDirectSelectResult::fetchNextResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
+    QMutexLocker connectionLocker(&(driverPrivate->connectionMutex));
 
     GError * error = 0;
     gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -245,7 +231,7 @@ bool QTrackerDirectSelectResult::fetchNextResult()
     }
 
     d->results.append(resultRow);
-    if (d->results.count() % d->driverPrivate->dataReadyInterval == 0) {
+    if (d->results.count() % driverPrivate->dataReadyInterval == 0) {
         d->dataReady(d->results.count());
     }
 
@@ -321,12 +307,12 @@ void QTrackerDirectSelectResult::waitForFinished()
         return;
 
     // We first need the connection to be ready before doing anything
-    d->driverPrivate->waitForConnectionOpen();
+    driverPrivate->waitForConnectionOpen();
 
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
+    if (!driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
-        d->terminate();
+        terminate();
         return;
     }
 
@@ -338,7 +324,20 @@ void QTrackerDirectSelectResult::waitForFinished()
 
 void QTrackerDirectSelectResult::terminate()
 {
-    d->terminate();
+
+    QMutexLocker resultLocker(&d->resultMutex);
+
+    if (d->results.count() % driverPrivate->dataReadyInterval != 0) {
+        dataReady(d->results.count());
+    }
+
+    d->isFinished = 1;
+    Q_EMIT finished();
+    this->disconnect(SIGNAL(finished()));
+    if (d->cursor) {
+        g_object_unref(d->cursor);
+        d->cursor = 0;
+    }
 }
 
 bool QTrackerDirectSelectResult::isFinished() const
