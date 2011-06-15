@@ -56,60 +56,20 @@
 
 QT_BEGIN_NAMESPACE
 
-////////////////////////////////////////////////////////////////////////////
-
-class QTrackerDirectUpdateResultPrivate : public QObject {
-    Q_OBJECT
-public:
-    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, const QSparqlQueryOptions& options);
-
-    ~QTrackerDirectUpdateResultPrivate();
-    void setLastError(const QSparqlError& e);
-    QString query;
-
-public:
-    enum State {
-        Idle, Executing, Finished
-    };
-    State state;
-
-    QTrackerDirectUpdateResult* q;
-    QSparqlQueryOptions options;
-};
-
-QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
-                                                                     const QSparqlQueryOptions& options)
-  : state(Idle), q(result), options(options)
-{
-
-}
-
-QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
-{
-}
-
-void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
-{
-    q->setLastError(e);
-}
-
-////////////////////////////////////////////////////////////////////////////
-
 QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
                                            QSparqlQuery::StatementType type,
                                            const QSparqlQueryOptions& options)
+  : state(Idle), options(options)
 {
     setQuery(query);
     setStatementType(type);
     driverPrivate = p;
-    d = new QTrackerDirectUpdateResultPrivate(this, options);
 }
 
 QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 {
     stopAndWait();
-    delete d;
 }
 
 void QTrackerDirectUpdateResult::exec()
@@ -124,7 +84,7 @@ void QTrackerDirectUpdateResult::exec()
         return;
     }
     queryRunner->queue(driverPrivate->threadPool);
-    d->state = QTrackerDirectUpdateResultPrivate::Executing;
+    state = Executing;
 }
 
 void QTrackerDirectUpdateResult::run()
@@ -133,12 +93,12 @@ void QTrackerDirectUpdateResult::run()
         GError * error = 0;
         tracker_sparql_connection_update(driverPrivate->connection,
                                          query().toUtf8().constData(),
-                                         qSparqlPriorityToGlib(d->options.priority()),
+                                         qSparqlPriorityToGlib(options.priority()),
                                          0,
                                          &error);
 
         if (error) {
-            d->setLastError(QSparqlError(QString::fromUtf8(error->message),
+            setLastError(QSparqlError(QString::fromUtf8(error->message),
                              errorCodeToType(error->code),
                              error->code));
             g_error_free(error);
@@ -181,12 +141,12 @@ void QTrackerDirectUpdateResult::waitForFinished()
 
 bool QTrackerDirectUpdateResult::isFinished() const
 {
-    return (d->state == QTrackerDirectUpdateResultPrivate::Finished);
+    return (state == Finished);
 }
 
 void QTrackerDirectUpdateResult::terminate()
 {
-    d->state = QTrackerDirectUpdateResultPrivate::Finished;
+    state = Finished;
     Q_EMIT finished();
     this->disconnect(SIGNAL(finished()));
 }
@@ -207,7 +167,7 @@ void QTrackerDirectUpdateResult::stopAndWait()
         queryRunner->wait();
     }
     driverPrivate = 0;
-    d->state = QTrackerDirectUpdateResultPrivate::Finished;
+    state = Finished;
     delete queryRunner; queryRunner = 0;
 }
 QT_END_NAMESPACE
