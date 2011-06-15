@@ -68,7 +68,7 @@ public:
 
     Q_INVOKABLE void startFetcher();
     bool runQuery();
-    void stopAndWait();
+    void driverClosing();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
@@ -85,6 +85,7 @@ private Q_SLOTS:
 
 private:
     void terminate();
+    void stopAndWait();
     bool fetchNextResult();
     bool fetchBoolResult();
 

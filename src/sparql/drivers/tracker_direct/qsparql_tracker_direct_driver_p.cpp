@@ -331,10 +331,7 @@ void QTrackerDirectDriver::close()
 
     Q_FOREACH(QPointer<QTrackerDirectResult> result, d->activeResults) {
         if (!result.isNull()) {
-            qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<
-                result->query();
-            disconnect(this, SIGNAL(opened()), result.data(), SLOT(exec()));
-            result->stopAndWait();
+            result->driverClosing();
         }
     }
     d->activeResults.clear();

@@ -108,8 +108,6 @@ private slots:
     void query_with_data_ready_set();
     void query_with_data_ready_set_data();
 
-    void destroy_connection_verify_result();
-    void destroy_connection_verify_result_async();
     void destroy_connection_partially_iterated_results();
 
     void validate_threadpool_results();
@@ -1240,81 +1238,6 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
 
     QTest::newRow("Query size >1 is indivisible by data ready interval")
             << 17 << 5 << 4;
-}
-
-void tst_QSparqlTrackerDirect::destroy_connection_verify_result()
-{
-    setMsgLogLevel(QtCriticalMsg);
-    const QString connectionType("QTRACKER_DIRECT");
-    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                         "nco:nameGiven ?ng .}");
-    QSparqlConnection* conn = new QSparqlConnection(connectionType);
-    //wait for the connection to open
-    QTest::qWait(1000);
-
-    QSparqlResult* r = conn->exec(q);
-    r->setParent(this);
-    r->waitForFinished();
-    QVERIFY(r != 0);
-
-    delete conn; conn = 0;
-    QTest::qWait(500);
-
-    QVERIFY(checkResultSize(r, 3));
-    QHash<QString, QString> contactNames;
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        QCOMPARE(r->stringValue(0), r->value(0).toString());
-        QCOMPARE(r->stringValue(1), r->value(1).toString());
-
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-    }
-    QVERIFY(r->isFinished());
-    QCOMPARE(contactNames.size(), 3);
-    QCOMPARE(contactNames["uri001"], QString("name001"));
-    QCOMPARE(contactNames["uri002"], QString("name002"));
-    QCOMPARE(contactNames["uri003"], QString("name003"));
-
-    CHECK_QSPARQL_RESULT(r);
-    delete r;
-}
-
-void tst_QSparqlTrackerDirect::destroy_connection_verify_result_async()
-{
-    setMsgLogLevel(QtCriticalMsg);
-    const QString connectionType("QTRACKER_DIRECT");
-    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                         "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                         "nco:nameGiven ?ng .}");
-    QSparqlConnection* conn = new QSparqlConnection(connectionType);
-    //wait for the connection to open
-    QTest::qWait(1000);
-
-    QSparqlResult* r = conn->exec(q);
-    CHECK_QSPARQL_RESULT(r);
-    r->setParent(this);
-
-    QTime timer;
-    timer.start();
-    QSignalSpy spy(r, SIGNAL(finished()));
-    while (spy.count() == 0 && timer.elapsed() < 5000) {
-        QTest::qWait(100);
-    }
-    QCOMPARE(spy.count(), 1);
-    CHECK_QSPARQL_RESULT(r);
-    delete conn; conn = 0;
-    QCOMPARE(r->size(), 3);
-    QHash<QString, QString> contactNames;
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-    }
-    QCOMPARE(contactNames.size(), 3);
-    QCOMPARE(contactNames["uri001"], QString("name001"));
-    QCOMPARE(contactNames["uri002"], QString("name002"));
-    QCOMPARE(contactNames["uri003"], QString("name003"));
-    delete r;
 }
 
 void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()

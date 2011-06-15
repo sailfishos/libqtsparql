@@ -423,6 +423,15 @@ void QTrackerDirectResult::stopAndWait()
     delete d->fetcher; d->fetcher = 0;
 }
 
+void QTrackerDirectResult::driverClosing()
+{
+    setLastError(QSparqlError(
+            QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+            QSparqlError::ConnectionError));
+    qWarning() << "QSparqlConnection closed before QSparqlResult with query:" << query();
+    stopAndWait();
+}
+
 int QTrackerDirectResult::size() const
 {
     QMutexLocker resultLocker(&(d->resultMutex));

@@ -601,7 +601,21 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("asyncObject");
 
-    // TODO: Extend for async queries when they are fixed
+    // TODO: Extend for Dbus driver when it is fixed
+
+    QTest::newRow("Tracker Direct Async Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::ConnectionError
+        << false;
+
+    QTest::newRow("Tracker Direct Async Query")
+        << "QTRACKER_DIRECT"
+        << contactSelectQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << (int)QSparqlError::ConnectionError
+        << true;
 
     QTest::newRow("Tracker Direct Sync Query")
         << "QTRACKER_DIRECT"
