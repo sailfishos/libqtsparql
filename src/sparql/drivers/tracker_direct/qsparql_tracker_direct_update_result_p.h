@@ -82,7 +82,13 @@ private Q_SLOTS:
     void exec();
 
 private:
-    QTrackerDirectUpdateResultPrivate* d;
+    Q_INVOKABLE void terminate();
+
+    enum State {
+        Idle, Executing, Finished
+    };
+    State state;
+    QSparqlQueryOptions options;
 };
 
 QT_END_NAMESPACE
