@@ -66,8 +66,6 @@ public:
                                   QSparqlQuery::StatementType type);
     ~QTrackerDirectResult();
 
-    Q_INVOKABLE void startFetcher();
-    bool runQuery();
     void driverClosing();
 
     // Implementation of the QSparqlResult interface
@@ -82,8 +80,10 @@ public:
 
 private Q_SLOTS:
     void exec();
+    void startFetcher();
 
 private:
+    bool runQuery();
     void terminate();
     void stopAndWait();
     bool fetchNextResult();
