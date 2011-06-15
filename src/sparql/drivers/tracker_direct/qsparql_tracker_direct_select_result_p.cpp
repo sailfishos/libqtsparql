@@ -60,46 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-////////////////////////////////////////////////////////////////////////////
-// FIXME: refactor QTrackerDirectSelectResult to use QTrackerDirectSyncResult +
-// sync->async wrapper.
-
-class QTrackerDirectFetcherPrivate : public QTrackerDirectQueryRunner
-{
-public:
-    QTrackerDirectFetcherPrivate(QTrackerDirectSelectResult *res) : result(res)
-    {
-        started = false;
-        runFinished = 0;
-        runSemaphore.release(1);
-        setAutoDelete(false);
-    }
-private:
-    QTrackerDirectSelectResult *result;
-
-    void run()
-    {
-        //check to make sure we are not going to do this twice
-        if(!runFinished)
-        {
-            if(result->runQuery()) {
-                if (result->isTable()) {
-                    while (!result->isFinished() && result->fetchNextResult()) {
-                        ;
-                    }
-                } else if (result->isBool()) {
-                    result->fetchBoolResult();
-                } else {
-                    result->terminate();
-                }
-            }
-        }
-        runFinished=1;
-        runSemaphore.release(1);
-    }
-
-};
-
 class QTrackerDirectSelectResultPrivate : public QObject {
     Q_OBJECT
 public:
@@ -167,7 +127,6 @@ QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPriva
 {
     setQuery(query);
     setStatementType(type);
-    queryRunner = new QTrackerDirectFetcherPrivate(this);
     d = new QTrackerDirectSelectResultPrivate(this, p);
 }
 
@@ -203,6 +162,21 @@ void QTrackerDirectSelectResult::startFetcher()
         //has it, so we don't need to refetch the results using this thread
         queryRunner->queue(d->driverPrivate->threadPool);
     }
+}
+
+void QTrackerDirectSelectResult::run()
+{
+    if(runQuery()) {
+        if (isTable()) {
+            while (!isFinished() && fetchNextResult()) {
+                ;
+            }
+        } else if (isBool()) {
+            fetchBoolResult();
+        } else {
+            terminate();
+        }
+     }
 }
 
 bool QTrackerDirectSelectResult::runQuery()

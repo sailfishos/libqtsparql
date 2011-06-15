@@ -201,8 +201,8 @@ private:
         if (!runFinished) {
             d->asyncOpenComplete(0);
             runFinished = true;
-            runSemaphore.release(1);
         }
+        runSemaphore.release(1);
     }
 
     void wait()
