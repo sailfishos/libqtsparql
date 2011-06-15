@@ -399,6 +399,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, query, type, options);
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         d->waitForConnectionOpen();
         result->exec();

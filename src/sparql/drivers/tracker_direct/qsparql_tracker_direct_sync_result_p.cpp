@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
 struct QTrackerDirectSyncResultPrivate
 {
-    QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp, const QSparqlQueryOptions& options);
+    QTrackerDirectSyncResultPrivate(const QSparqlQueryOptions& options);
     ~QTrackerDirectSyncResultPrivate();
     TrackerSparqlCursor* cursor;
     int n_columns;
@@ -72,9 +72,8 @@ struct QTrackerDirectSyncResultPrivate
     QSparqlQueryOptions options;
 };
 
-QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(QTrackerDirectDriverPrivate *dpp,
-                                                                 const QSparqlQueryOptions& options)
-    : cursor(0), n_columns(-1), driverPrivate(dpp), options(options)
+QTrackerDirectSyncResultPrivate::QTrackerDirectSyncResultPrivate(const QSparqlQueryOptions& options)
+    : cursor(0), n_columns(-1), options(options)
 {
 }
 
@@ -93,25 +92,26 @@ QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* 
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectSyncResultPrivate(p, options);
-    connect(p->driver, SIGNAL(closing()), this, SLOT(driverClosing()));
+    driverPrivate = p;
+    d = new QTrackerDirectSyncResultPrivate(options);
 }
 
 QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
 {
+    stopAndWait();
     delete d;
 }
 
 void QTrackerDirectSyncResult::exec()
 {
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
+    if (!driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
         return;
     }
 
     GError * error = 0;
-    d->cursor = tracker_sparql_connection_query(d->driverPrivate->connection, query().toUtf8().constData(), 0, &error);
+    d->cursor = tracker_sparql_connection_query(driverPrivate->connection, query().toUtf8().constData(), 0, &error);
     if (error || !d->cursor) {
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         error ? errorCodeToType(error->code) : QSparqlError::StatementError,
@@ -124,14 +124,14 @@ void QTrackerDirectSyncResult::exec()
 
 void QTrackerDirectSyncResult::update()
 {
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
+    if (!driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
         return;
     }
 
     GError * error = 0;
-    tracker_sparql_connection_update(d->driverPrivate->connection,
+    tracker_sparql_connection_update(driverPrivate->connection,
                                      query().toUtf8().constData(),
                                      qSparqlPriorityToGlib(d->options.priority()),
                                      0,
@@ -162,8 +162,12 @@ void QTrackerDirectSyncResult::driverClosing()
 
 bool QTrackerDirectSyncResult::next()
 {
-    if (!d->cursor)
+    if (!d->cursor) {        
+        // The cursor may have been unreferenced because the connection was deleted
+        // and now the user is calling next(), so set the row here
+        updatePos(QSparql::AfterLastRow);
         return false;
+    }
 
     GError * error = 0;
     const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
@@ -274,6 +278,13 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
         return QString();
 
     return QString::fromUtf8(tracker_sparql_cursor_get_string(d->cursor, i, 0));
+}
+
+void QTrackerDirectSyncResult::stopAndWait()
+{
+    if (d->cursor)
+        g_object_unref(d->cursor);
+    d->cursor = 0;
 }
 
 bool QTrackerDirectSyncResult::isFinished() const

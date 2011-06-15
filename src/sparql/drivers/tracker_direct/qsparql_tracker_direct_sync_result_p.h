@@ -41,12 +41,7 @@
 #define QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
 
 #include <QtSparql/qsparqlresult.h>
-
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
+#include "qsparql_tracker_direct_result_p.h"
 
 QT_BEGIN_HEADER
 
@@ -58,7 +53,7 @@ class QSparqlQueryOptions;
 
 // A sync and forward-only Result class. The instance of this class is retreved
 // with QTrackerDirectDriver::syncExec().
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectSyncResult : public QSparqlResult
+class QTrackerDirectSyncResult : public QTrackerDirectResult
 {
     Q_OBJECT
 public:
@@ -67,6 +62,8 @@ public:
                                       QSparqlQuery::StatementType type,
                                       const QSparqlQueryOptions& options);
     ~QTrackerDirectSyncResult();
+
+    virtual void stopAndWait();
 
     // Implementation of the QSparqlResult interface
     virtual bool next();
