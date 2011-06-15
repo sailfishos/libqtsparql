@@ -49,8 +49,6 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
 
-#include <QtCore/qdebug.h>
-
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectSelectResultPrivate : public QObject {
