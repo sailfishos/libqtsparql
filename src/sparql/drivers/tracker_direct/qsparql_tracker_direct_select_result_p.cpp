@@ -313,11 +313,6 @@ void QTrackerDirectSelectResult::terminate()
     }
 }
 
-bool QTrackerDirectSelectResult::isFinished() const
-{
-    return resultFinished == 1;
-}
-
 void QTrackerDirectSelectResult::stopAndWait()
 {
     if (queryRunner)

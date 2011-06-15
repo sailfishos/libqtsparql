@@ -67,15 +67,20 @@ class QTrackerDirectDriverPrivate;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
+
 public:
     QTrackerDirectResult();
     ~QTrackerDirectResult();
+
+    virtual bool isFinished() const;
+
     virtual void stopAndWait();
     virtual void run() { qDebug() << "Direct result run..."; }
 
-    QTrackerDirectQueryRunner *queryRunner;
 protected:
     QTrackerDirectDriverPrivate *driverPrivate;
+    QAtomicInt resultFinished;
+    QTrackerDirectQueryRunner *queryRunner;
 
 public Q_SLOTS:
     void driverClosing();
