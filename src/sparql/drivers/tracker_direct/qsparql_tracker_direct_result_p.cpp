@@ -200,6 +200,7 @@ QTrackerDirectResult::QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
     setQuery(query);
     setStatementType(type);
     d = new QTrackerDirectResultPrivate(this, p, new QTrackerDirectFetcherPrivate(this));
+    connect(p->driver, SIGNAL(closing()), this, SLOT(driverClosing()));
 }
 
 QTrackerDirectResult::~QTrackerDirectResult()

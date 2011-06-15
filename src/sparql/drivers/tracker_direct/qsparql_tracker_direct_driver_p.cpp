@@ -212,21 +212,6 @@ void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *
     }
 }
 
-void QTrackerDirectDriverPrivate::addActiveResult(QTrackerDirectResult* result)
-{
-    for (QList<QPointer<QTrackerDirectResult> >::iterator it = activeResults.begin();
-            it != activeResults.end(); ++it) {
-        if (it->isNull()) {
-            // Replace entry for deleted result if one is found. This is done
-            // to avoid the activeResults list from growing indefinitely.
-            *it = result;
-            return;
-        }
-    }
-    // No deleted result found, append new one
-    activeResults.append(result);
-}
-
 void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* method, const char* slot)
 {
     if (connection || asyncOpenCalled) {
@@ -329,12 +314,6 @@ void QTrackerDirectDriver::close()
 {
     Q_EMIT closing();
 
-    Q_FOREACH(QPointer<QTrackerDirectResult> result, d->activeResults) {
-        if (!result.isNull()) {
-            result->driverClosing();
-        }
-    }
-    d->activeResults.clear();
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
     // Need to wait for the connection to open because there is no good way
@@ -371,7 +350,6 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
 {
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
         QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
-        d->addActiveResult(result);
         d->onConnectionOpen(result, "exec", SLOT(exec()));
         return result;
     } else {

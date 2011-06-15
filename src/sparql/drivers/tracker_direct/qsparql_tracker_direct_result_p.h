@@ -66,8 +66,6 @@ public:
                                   QSparqlQuery::StatementType type);
     ~QTrackerDirectResult();
 
-    void driverClosing();
-
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
     virtual bool isFinished() const;
@@ -81,6 +79,7 @@ public:
 private Q_SLOTS:
     void exec();
     void startFetcher();
+    void driverClosing();
 
 private:
     bool runQuery();

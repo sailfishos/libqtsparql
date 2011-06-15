@@ -70,7 +70,6 @@ public:
     ~QTrackerDirectDriverPrivate();
 
     void asyncOpenComplete(GAsyncResult* result);
-    void addActiveResult(QTrackerDirectResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
     void waitForConnectionOpen();
     void openConnectionSync();
@@ -84,7 +83,6 @@ public:
     QMutex connectionMutex;
     QTrackerDirectDriver *driver;
     QString error;
-    QList<QPointer<QTrackerDirectResult> > activeResults;
 
     QThreadPool threadPool;
 
