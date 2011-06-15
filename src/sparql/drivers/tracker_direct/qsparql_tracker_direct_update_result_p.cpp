@@ -61,12 +61,9 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectUpdateResultPrivate : public QObject {
     Q_OBJECT
 public:
-    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, QTrackerDirectDriverPrivate *dpp,
-                                      const QSparqlQueryOptions& options);
+    QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result, const QSparqlQueryOptions& options);
 
     ~QTrackerDirectUpdateResultPrivate();
-    void startUpdate(const QString& query);
-    Q_INVOKABLE void terminate();
     void setLastError(const QSparqlError& e);
     QString query;
 
@@ -75,37 +72,20 @@ public:
         Idle, Executing, Finished
     };
     State state;
-    QEventLoop *loop;
 
     QTrackerDirectUpdateResult* q;
-    QTrackerDirectDriverPrivate *driverPrivate;
     QSparqlQueryOptions options;
 };
 
 QTrackerDirectUpdateResultPrivate::QTrackerDirectUpdateResultPrivate(QTrackerDirectUpdateResult* result,
-                                                                     QTrackerDirectDriverPrivate *dpp,
                                                                      const QSparqlQueryOptions& options)
-  : state(Idle), loop(0),
-  q(result), driverPrivate(dpp), options(options)
+  : state(Idle), q(result), options(options)
 {
 
 }
 
 QTrackerDirectUpdateResultPrivate::~QTrackerDirectUpdateResultPrivate()
 {
-}
-
-void QTrackerDirectUpdateResultPrivate::startUpdate(const QString& query)
-{
-    q->queryRunner->queue(driverPrivate->threadPool);
-    state = QTrackerDirectUpdateResultPrivate::Executing;
-}
-
-void QTrackerDirectUpdateResultPrivate::terminate()
-{
-    state = Finished;
-    q->Q_EMIT finished();
-    q->disconnect(SIGNAL(finished()));
 }
 
 void QTrackerDirectUpdateResultPrivate::setLastError(const QSparqlError& e)
@@ -122,7 +102,8 @@ QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPriva
 {
     setQuery(query);
     setStatementType(type);
-    d = new QTrackerDirectUpdateResultPrivate(this, p, options);
+    driverPrivate = p;
+    d = new QTrackerDirectUpdateResultPrivate(this, options);
 }
 
 QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
@@ -133,24 +114,24 @@ QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 
 void QTrackerDirectUpdateResult::exec()
 {
-    if (!d->driverPrivate)
+    if (!driverPrivate)
         return;
 
-    if (!d->driverPrivate->driver->isOpen()) {
-        setLastError(QSparqlError(d->driverPrivate->error,
+    if (!driverPrivate->driver->isOpen()) {
+        setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
-        d->terminate();
+        terminate();
         return;
     }
-    queryRunner->queue(d->driverPrivate->threadPool);
+    queryRunner->queue(driverPrivate->threadPool);
     d->state = QTrackerDirectUpdateResultPrivate::Executing;
 }
 
 void QTrackerDirectUpdateResult::run()
 {
-    if (d->driverPrivate) {
+    if (driverPrivate) {
         GError * error = 0;
-        tracker_sparql_connection_update(d->driverPrivate->connection,
+        tracker_sparql_connection_update(driverPrivate->connection,
                                          query().toUtf8().constData(),
                                          qSparqlPriorityToGlib(d->options.priority()),
                                          0,
@@ -184,13 +165,13 @@ void QTrackerDirectUpdateResult::waitForFinished()
         return;
 
     // We first need the connection to be ready before doing anything
-    if (d->driverPrivate) {
-        d->driverPrivate->waitForConnectionOpen();
+    if (driverPrivate) {
+        driverPrivate->waitForConnectionOpen();
 
-        if (!d->driverPrivate->driver->isOpen()) {
-            setLastError(QSparqlError(d->driverPrivate->error,
+        if (!driverPrivate->driver->isOpen()) {
+            setLastError(QSparqlError(driverPrivate->error,
                                       QSparqlError::ConnectionError));
-            d->terminate();
+            terminate();
             return;
         }
         queryRunner->runOrWait();
@@ -225,7 +206,7 @@ void QTrackerDirectUpdateResult::stopAndWait()
     if (queryRunner) {
         queryRunner->wait();
     }
-    d->driverPrivate = 0;
+    driverPrivate = 0;
     d->state = QTrackerDirectUpdateResultPrivate::Finished;
     delete queryRunner; queryRunner = 0;
 }
