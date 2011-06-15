@@ -42,11 +42,14 @@
 
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlerror.h>
+
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtCore/qsemaphore.h>
-#include <QtSparql/qsparqlerror.h>
-#include <QDebug>
+#include <QtCore/qdebug.h>
+
+#include <tracker-sparql.h>
 
 #include "qsparql_tracker_direct_driver_p.h"
 #include "qsparql_tracker_direct.h"

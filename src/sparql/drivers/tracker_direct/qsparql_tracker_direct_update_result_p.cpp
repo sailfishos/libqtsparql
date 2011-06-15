@@ -37,22 +37,7 @@
 **
 ****************************************************************************/
 
-#include <tracker-sparql.h>
-
 #include "qsparql_tracker_direct_update_result_p.h"
-#include "qsparql_tracker_direct.h"
-#include "qsparql_tracker_direct_driver_p.h"
-
-#include <qsparqlerror.h>
-#include <qsparqlbinding.h>
-#include <qsparqlquery.h>
-#include <qsparqlqueryoptions.h>
-#include <qsparqlresultrow.h>
-
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qeventloop.h>
-
-#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -164,6 +149,6 @@ void QTrackerDirectUpdateResult::stopAndWait()
     resultFinished = 1;
     delete queryRunner; queryRunner = 0;
 }
+
 QT_END_NAMESPACE
 
-#include "qsparql_tracker_direct_update_result_p.moc"
