@@ -40,6 +40,19 @@
 #include "qsparql_tracker_direct_result_p.h"
 #include <QDebug>
 
+
+QTrackerDirectResult::QTrackerDirectResult()
+{
+    queryRunner = new QTrackerDirectQueryRunner(this);
+}
+
+QTrackerDirectResult::~QTrackerDirectResult()
+{
+    if (queryRunner)
+        queryRunner->wait();
+    delete queryRunner; queryRunner = 0;
+}
+
 void QTrackerDirectResult::stopAndWait() {
     queryRunner->wait();
 }

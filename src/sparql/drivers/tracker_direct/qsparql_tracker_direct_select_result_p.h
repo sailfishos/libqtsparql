@@ -69,8 +69,11 @@ public:
 
     Q_INVOKABLE void startFetcher();
 
-    virtual void stopAndWait();
     bool runQuery();
+
+    //QTrackerDirectResult implementation
+    virtual void stopAndWait();
+    virtual void run();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();

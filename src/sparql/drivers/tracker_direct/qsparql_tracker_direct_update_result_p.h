@@ -64,7 +64,10 @@ public:
     ~QTrackerDirectUpdateResult();
 
     bool runQuery();
+
+    // QTrackerDirectResult implementation
     virtual void stopAndWait();
+    virtual void run();
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();

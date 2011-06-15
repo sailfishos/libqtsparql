@@ -58,13 +58,36 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+class QTrackerDirectQueryRunner;
+class QTrackerDirectDriverPrivate;
+class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
+{
+    Q_OBJECT
+public:
+    QTrackerDirectResult();
+    ~QTrackerDirectResult();
+    virtual void stopAndWait();
+    virtual void run() { qDebug() << "Direct result run..."; }
+
+    QTrackerDirectQueryRunner *queryRunner;
+
+public Q_SLOTS:
+    void driverClosing();
+};
+
+
 class QTrackerDirectQueryRunner : public QRunnable
 {
 public:
-    QTrackerDirectQueryRunner() { setAutoDelete(false); }
+    QTrackerDirectResult *result;
     QAtomicInt runFinished;
     QSemaphore runSemaphore;
     bool started;
+
+    QTrackerDirectQueryRunner(QTrackerDirectResult *result) : result(result), runFinished(0), runSemaphore(1), started(false)
+    {
+        setAutoDelete(false);
+    }
 
     void runOrWait()
     {
@@ -93,24 +116,19 @@ public:
     }
 
 private:
+    void run()
+    {
+        if (!runFinished) {
+            result->run();
+        }
+        runFinished=1;
+        runSemaphore.release(1);
+    }
 
-    void run() {}
     bool acquireRunSemaphore()
     {
         return runSemaphore.tryAcquire(1);
     }
-
-};
-
-class QTrackerDirectDriverPrivate;
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
-{
-    Q_OBJECT
-public:
-   virtual void stopAndWait();
-   QTrackerDirectQueryRunner *queryRunner;
-public Q_SLOTS:
-    void driverClosing();
 };
 
 QT_END_NAMESPACE
