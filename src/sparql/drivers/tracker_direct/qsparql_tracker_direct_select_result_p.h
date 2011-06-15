@@ -40,6 +40,7 @@
 #ifndef QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 #define QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 
+#include <QtCore/qmutex.h>
 #include <QtSparql/qsparqlresult.h>
 #include <QtSparql/qsparqlquery.h>
 #include "qsparql_tracker_direct_result_p.h"
@@ -92,9 +93,14 @@ private:
     void terminate();
     bool fetchNextResult();
     bool fetchBoolResult();
+    void emitDataReady(int totalCount);
+
+    TrackerSparqlCursor* cursor;
+    QVector<QString> columnNames;
+    QList<QVector<QVariant> > results;
+    QAtomicInt resultFinished;
 
     QTrackerDirectSelectResultPrivate* d;
-    friend class QTrackerDirectFetcherPrivate;
 };
 
 QT_END_NAMESPACE
