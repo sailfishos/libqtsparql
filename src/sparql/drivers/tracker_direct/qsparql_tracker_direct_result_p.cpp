@@ -426,10 +426,13 @@ void QTrackerDirectResult::stopAndWait()
 
 void QTrackerDirectResult::driverClosing()
 {
-    setLastError(QSparqlError(
-            QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-            QSparqlError::ConnectionError));
-    qWarning() << "QSparqlConnection closed before QSparqlResult with query:" << query();
+    if (!isFinished()) {
+        // If a query is interrupted set the result to be in error
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
+    qWarning() << "QTrackerDirectResult: QSparqlConnection closed before QSparqlResult with query:" << query();
     stopAndWait();
 }
 

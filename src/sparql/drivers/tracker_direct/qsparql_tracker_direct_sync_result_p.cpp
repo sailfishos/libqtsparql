@@ -148,14 +148,17 @@ void QTrackerDirectSyncResult::update()
 
 void QTrackerDirectSyncResult::driverClosing()
 {
+    if (!isFinished()) {
+        // If connection is closed before all results have been accessed set the result to be in error
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
     if (d->cursor) {
         g_object_unref(d->cursor);
         d->cursor = 0;
     }
-    setLastError(QSparqlError(
-            QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-            QSparqlError::ConnectionError));
-    qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
+    qWarning() << "QTrackerDirectSyncResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 bool QTrackerDirectSyncResult::next()

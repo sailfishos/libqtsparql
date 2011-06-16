@@ -66,6 +66,9 @@ private slots:
     void query_test();
     void query_test_data();
 
+    void query_destroy_connection_after_finished_test();
+    void query_destroy_connection_after_finished_test_data();
+
     void query_error_test();
     void query_error_test_data();
 
@@ -414,6 +417,50 @@ void tst_QSparqlAPI::query_test_data()
 
 }
 
+void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, query);
+    QFETCH(int, executionMethod);
+    QFETCH(bool, asyncObject);
+    QFETCH(int, expectedResultsSize);
+
+    QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+    QSparqlQuery q(query);
+
+    QSparqlResult* r = conn->exec(q,queryOptions);
+
+    // Re-parent the result to release from the ownership of conn
+    r->setParent(this);
+
+    checkExecutionMethod(executionMethod, asyncObject, r);
+    if (r->isFinished())
+    {
+        // Result is finished after wait: destroy connection and validate result
+        delete conn; conn = 0;
+    }
+
+    // Check that result is not in error and valid
+    QVERIFY( !r->hasError() );
+    validateResults(r, expectedResultsSize);
+
+    QVERIFY( r->isFinished() );
+    // Destroying connection after validation must not raise an error in the result
+    delete conn; conn = 0;
+    QVERIFY( !r->hasError() );
+
+    delete r;
+}
+
+void tst_QSparqlAPI::query_destroy_connection_after_finished_test_data()
+{
+    // Reuse test data from query_test
+    query_test_data();
+}
+
 void tst_QSparqlAPI::query_error_test()
 {
     QFETCH(QString, connectionDriver);
@@ -564,7 +611,6 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
-    QFETCH(int, expectedErrorType);
     QFETCH(bool, asyncObject);
 
     QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
@@ -578,9 +624,13 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     r->setParent(this);
     delete conn; conn = 0;
 
+    // The result should be in error immediately after connection is destroyed
+    QVERIFY(r->hasError());
+    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
+
     checkExecutionMethod(executionMethod, asyncObject, r);
     QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
     // Check result behaviour
     QVERIFY(r->pos() < 0);
@@ -598,7 +648,6 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("asyncObject");
 
     // TODO: Extend for Dbus driver when it is fixed
@@ -607,21 +656,18 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << (int)QSparqlQueryOptions::AsyncExec
-        << (int)QSparqlError::ConnectionError
         << false;
 
     QTest::newRow("Tracker Direct Async Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << (int)QSparqlQueryOptions::AsyncExec
-        << (int)QSparqlError::ConnectionError
         << true;
 
     QTest::newRow("Tracker Direct Sync Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << (int)QSparqlQueryOptions::SyncExec
-        << (int)QSparqlError::ConnectionError
         << false;
 }
 
@@ -915,7 +961,6 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
-    QFETCH(int, expectedErrorType);
     QFETCH(bool, asyncObject);
     QFETCH(QString, deleteQuery);
 
@@ -928,14 +973,19 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
         QSparqlQuery q(query, queryType);
 
         QSparqlResult* r = conn->exec(q,queryOptions);
+        const bool immediatelyFinished = r->isFinished();
         // Re-parent the result to release it from the connection's ownership
         r->setParent(this);
         delete conn; conn = 0;
 
         checkExecutionMethod(executionMethod, asyncObject, r);
 
-        QVERIFY(r->hasError());
-        QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
+        if (!immediatelyFinished) {
+            // If the result was not immediately finished after exec it should have an error
+            QVERIFY(r->hasError());
+            QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
+        }
+
         // Check result Behaviour
         QVERIFY(r->pos() < 0);
         QVERIFY(!r->next());
@@ -960,7 +1010,6 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("asyncObject");
     QTest::addColumn<QString>("deleteQuery");
 
@@ -976,7 +1025,6 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::AsyncExec
-        << (int)QSparqlError::ConnectionError
         << false
         << deleteQuery;
 
@@ -984,7 +1032,6 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::AsyncExec
-        << (int)QSparqlError::ConnectionError
         << true
         << deleteQuery;
 
@@ -992,7 +1039,6 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::SyncExec
-        << (int)QSparqlError::ConnectionError
         << false
         << deleteQuery;
 }
