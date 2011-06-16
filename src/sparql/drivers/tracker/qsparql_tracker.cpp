@@ -142,7 +142,7 @@ QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
                                              QSparqlQuery::StatementType tp)
 : watcher(0), type(tp), q(res)
-{ 
+{
 }
 
 void QTrackerResultPrivate::setCall(QDBusPendingCall& call)
@@ -267,6 +267,7 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
 
     QTrackerResult* res = new QTrackerResult(type);
     res->setQuery(query);
+    connect(this, SIGNAL(closing()), res, SLOT(driverClosing()));
 
     QString funcToCall;
     switch (type) {
@@ -344,6 +345,18 @@ bool QTrackerResult::isFinished() const
     if (d->watcher)
         return d->watcher->isFinished();
     return true;
+}
+
+void QTrackerResult::driverClosing()
+{
+    if (!isFinished()) {
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
+    delete d->watcher;
+    d->watcher = 0;
+    qWarning() << "QTrackerResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 int QTrackerResult::size() const
@@ -463,6 +476,7 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 void QTrackerDriver::close()
 {
     if (isOpen()) {
+        Q_EMIT closing();
         delete d->iface;
         d->iface = 0;
         setOpen(false);

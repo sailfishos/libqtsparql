@@ -82,6 +82,9 @@ public:
     virtual QVariant value(int i) const;
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
+public Q_SLOTS:
+    void driverClosing();
+
 protected:
     int size() const;
 
@@ -103,6 +106,9 @@ public:
     QTrackerResult* exec(const QString& query,
                          QSparqlQuery::StatementType type,
                          const QSparqlQueryOptions& options);
+Q_SIGNALS:
+    void closing();
+
 private:
     QTrackerDriverPrivate* d;
 };

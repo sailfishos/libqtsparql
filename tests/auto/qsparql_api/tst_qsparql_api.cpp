@@ -610,34 +610,48 @@ void tst_QSparqlAPI::query_destroy_connection_test()
 {
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
 
     QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
 
     QSparqlQueryOptions queryOptions;
-    queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
+    queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
     QSparqlQuery q(query);
 
     QSparqlResult* r = conn->exec(q,queryOptions);
+    const bool immediatelyFinished = r->isFinished();
+
     // Re-parent the result to release it from the connection's ownership
     r->setParent(this);
     delete conn; conn = 0;
 
-    // The result should be in error immediately after connection is destroyed
-    QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
+    if (immediatelyFinished) {
+        // If the query completes immediately, before the connection is
+        // destroyed, it should not be in error and should contain valid data
+        QVERIFY(!r->hasError());
+        checkExecutionMethod(executionMethod, asyncObject, r);
+        validateResults(r, expectedResultsSize);
+    }
+    else {
+        // If the result was not finished immediately after exec, it should be in
+        // error after connection close
+        QVERIFY(r->hasError());
+        QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
-    QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
+        checkExecutionMethod(executionMethod, asyncObject, r);
+        QVERIFY(r->hasError());
+        QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
-    // Check result behaviour
-    QVERIFY(r->pos() < 0);
-    QVERIFY(!r->next());
-    QVERIFY(!r->previous());
-    QVERIFY(r->pos() < 0);
+        // Check result behaviour
+        QVERIFY(r->pos() < 0);
+        QVERIFY(!r->next());
+        QVERIFY(!r->previous());
+        QVERIFY(r->pos() < 0);
+    }
 
+    // There must always be a warning about connection closed before result
     QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
 
     delete r;
@@ -647,26 +661,49 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("asyncObject");
 
-    // TODO: Extend for Dbus driver when it is fixed
+    QTest::newRow("DBus Async Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("DBus Async Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true;
+
+    QTest::newRow("DBus Sync Query")
+        << "QTRACKER"
+        << contactSelectQuery
+        << NUM_TRACKER_INSERTS
+        << (int)QSparqlQueryOptions::SyncExec
+        << true;
 
     QTest::newRow("Tracker Direct Async Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
     QTest::newRow("Tracker Direct Async Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::AsyncExec
         << true;
 
     QTest::newRow("Tracker Direct Sync Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
+        << NUM_TRACKER_INSERTS
         << (int)QSparqlQueryOptions::SyncExec
         << false;
 }
@@ -1021,21 +1058,42 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     deleteQuery.append(contactDeleteQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     deleteQuery.append(" }");
 
-    QTest::newRow("Tracker Direct Async Query destroy connection before result")
+    QTest::newRow("DBus Async Query")
+        << "QTRACKER"
+        << insertQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false
+        << deleteQuery;
+
+    QTest::newRow("DBus Async Object Query")
+        << "QTRACKER"
+        << insertQuery
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true
+        << deleteQuery;
+
+    QTest::newRow("DBus Sync Query")
+        << "QTRACKER"
+        << insertQuery
+        << (int)QSparqlQueryOptions::SyncExec
+        << false
+        << deleteQuery;
+
+    QTest::newRow("Tracker Direct Async Query")
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::AsyncExec
         << false
         << deleteQuery;
 
-    QTest::newRow("Tracker Direct Async Object Query destroy connection before result")
+    QTest::newRow("Tracker Direct Async Object Query")
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::AsyncExec
         << true
         << deleteQuery;
 
-    QTest::newRow("Tracker Direct Sync Query destroy connection before result")
+    QTest::newRow("Tracker Direct Sync Query")
         << "QTRACKER_DIRECT"
         << insertQuery
         << (int)QSparqlQueryOptions::SyncExec

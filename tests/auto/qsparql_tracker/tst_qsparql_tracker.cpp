@@ -70,8 +70,6 @@ private slots:
     void delete_unfinished_result();
 
     void go_beyond_columns_number();
-
-    void destroy_connection_before_result();
 };
 
 namespace {
@@ -474,33 +472,6 @@ void tst_QSparqlTracker::go_beyond_columns_number()
         QCOMPARE(r->binding(5).toString(), QString());
     }
     delete r;
-}
-
-void tst_QSparqlTracker::destroy_connection_before_result()
-{
-    const QString connectionType("QTRACKER");
-    QSparqlConnection* conn = new QSparqlConnection(connectionType);
-    QSparqlResult* r = 0;
-    const QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
-                   "nco:nameGiven ?ng .}");
-
-    r = conn->exec(q);
-    QVERIFY( r );
-    QVERIFY( !r->hasError() );
-
-    // Take ownership of the result to prevent connection from deleting it
-    r->setParent(this);
-    // Delete the connection before the result
-    delete conn; conn = 0;
-
-    // Wait in event loop to let any asynchronous activity complete
-    QTest::qWait(500);
-
-    // Delete the result
-    delete r; r = 0;
-    // Wait in event loop to let any asynchronous activity complete
-    QTest::qWait(500);
 }
 
 QTEST_MAIN( tst_QSparqlTracker )
