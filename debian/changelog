@@ -1,8 +1,10 @@
-libqtsparql (0.0.29~unreleased) unstable; urgency=low
+libqtsparql (0.0.29) unstable; urgency=low
 
-  *
+  * Fixes: NB#264179 - Crash if QSparqlConnection is destroyed before a re-parented async update query finishes
+  * Fixes: NB#266153 - legal fix to a few source file headers
+  * Unifies QSparqlResult behavior and warning messages when a connection is deleted before result
 
- -- James Thomas <james.thomas@codethink.co.uk>  Fri, 27 May 2011 11:37:00 +0300
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Fri, 17 Jun 2011 13:20:00 +0300
 
 libqtsparql (0.0.28) unstable; urgency=low
 
