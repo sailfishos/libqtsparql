@@ -52,6 +52,8 @@
 
 #include <QtSparql/QtSparql>
 
+#include "../messagerecorder.h"
+
 #define TEST_PORT 1111
 
 class Thread : public QThread
@@ -362,13 +364,18 @@ void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
 
     // set the parent to 0 so we don't delete the result with the connection
     r2->setParent(0);
-    // Delete the connection now, so we don't delete it AFTER the thread has been deleted
+    // Delete the connection now, so we don't delete it AFTER the thread has been deleted.
+    // This will emit a warning, which is suppressed in the test function.
     delete conn2;
     conn2=0;
 }
 
 void tst_QSparqlThreading::concurrentTrackerDirectQueries()
 {
+    // Suppress warning message from conn2 deletion in the test thread
+    MessageRecorder messageRecorder;
+    messageRecorder.addMsgTypeToRecord(QtWarningMsg);
+
     QPointer<Thread> th = new Thread;
 
     sem1.release();
