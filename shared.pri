@@ -13,10 +13,10 @@ QMAKE_INCDIR_QT  =
 isEmpty(PREFIX): PREFIX = $$QTSPARQL_INSTALL_PREFIX
 
 # this will be in the .so name
-VERSION = 0.0.29
+VERSION = 0.0.30
 
 # for documentation
-DOC_VERSION = 0.0.29
+DOC_VERSION = 0.0.30
 LIBRARYNAME = QtSparql
 PACKAGENAME = libqtsparql
 
