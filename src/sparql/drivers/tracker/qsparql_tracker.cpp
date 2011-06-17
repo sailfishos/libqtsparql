@@ -263,18 +263,6 @@ QTrackerResult::~QTrackerResult()
     delete d;
 }
 
-QTrackerResult* QTrackerDriver::exec(const QString& query,
-                          QSparqlQuery::StatementType type,
-                          const QSparqlQueryOptions& options)
-{
-    if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
-        return 0;
-
-    QTrackerResult* res = new QTrackerResult(query, type, this);
-    res->exec(options);
-    return res;
-}
-
 QSparqlBinding QTrackerResult::binding(int field) const
 {
     if (!isValid()) {
@@ -318,18 +306,6 @@ bool QTrackerResult::isFinished() const
     if (d->watcher)
         return d->watcher->isFinished();
     return true;
-}
-
-void QTrackerResult::driverClosing()
-{
-    if (!isFinished()) {
-        setLastError(QSparqlError(
-                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-                QSparqlError::ConnectionError));
-    }
-    delete d->watcher;
-    d->watcher = 0;
-    qWarning() << "QTrackerResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 int QTrackerResult::size() const
@@ -402,6 +378,18 @@ void QTrackerResult::exec(const QSparqlQueryOptions& options)
     QDBusPendingCall call = d->driverPrivate->iface->asyncCall(funcToCall,
                                                 QVariant(query()));
     d->setCall(call);
+}
+
+void QTrackerResult::driverClosing()
+{
+    if (!isFinished()) {
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
+    delete d->watcher;
+    d->watcher = 0;
+    qWarning() << "QTrackerResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
@@ -488,6 +476,18 @@ void QTrackerDriver::close()
         setOpen(false);
         setOpenError(false);
     }
+}
+
+QTrackerResult* QTrackerDriver::exec(const QString& query,
+                          QSparqlQuery::StatementType type,
+                          const QSparqlQueryOptions& options)
+{
+    if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
+        return 0;
+
+    QTrackerResult* res = new QTrackerResult(query, type, this);
+    res->exec(options);
+    return res;
 }
 
 QT_END_NAMESPACE
