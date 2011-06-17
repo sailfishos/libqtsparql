@@ -67,10 +67,9 @@ class QTrackerDriver;
 class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerResult : public QSparqlResult
 {
     Q_OBJECT
-    friend class QTrackerDriver;
     friend class QTrackerResultPrivate; // for emitting signals
 public:
-    explicit QTrackerResult(QSparqlQuery::StatementType type);
+    explicit QTrackerResult(const QString& query, QSparqlQuery::StatementType type, QTrackerDriver* driver);
     ~QTrackerResult();
 
     // Implementation of the QSparqlResult interface
@@ -82,7 +81,10 @@ public:
     virtual QVariant value(int i) const;
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
-public Q_SLOTS:
+public:
+    void exec(const QSparqlQueryOptions& options);
+
+private Q_SLOTS:
     void driverClosing();
 
 protected:
@@ -95,6 +97,7 @@ private:
 class Q_EXPORT_SPARQLDRIVER_TRACKER QTrackerDriver : public QSparqlDriver
 {
     Q_OBJECT
+    friend class QTrackerResult;
 public:
     explicit QTrackerDriver(QObject *parent=0);
     ~QTrackerDriver();

@@ -113,12 +113,14 @@ class QTrackerResultPrivate : public QObject {
     Q_OBJECT
 public:
     QTrackerResultPrivate(QTrackerResult* res,
-                          QSparqlQuery::StatementType tp);
+                          QSparqlQuery::StatementType tp,
+                          QTrackerDriverPrivate* dp);
 
     ~QTrackerResultPrivate();
     QDBusPendingCallWatcher* watcher;
     QVector<QStringList> data;
     QSparqlQuery::StatementType type;
+    QTrackerDriverPrivate* driverPrivate;
     void setCall(QDBusPendingCall& call);
     static TrackerSparqlError errorNameToCode(const QString& name);
     static QSparqlError::ErrorType errorCodeToType(TrackerSparqlError code);
@@ -140,8 +142,9 @@ QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
 } // end of unnamed namespace
 
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
-                                             QSparqlQuery::StatementType tp)
-: watcher(0), type(tp), q(res)
+                                             QSparqlQuery::StatementType tp,
+                                             QTrackerDriverPrivate* dp)
+: watcher(0), type(tp), driverPrivate(dp), q(res)
 {
 }
 
@@ -248,9 +251,11 @@ void QTrackerResultPrivate::onDBusCallFinished()
     Q_EMIT q->finished();
 }
 
-QTrackerResult::QTrackerResult(QSparqlQuery::StatementType tp)
+QTrackerResult::QTrackerResult(const QString& query, QSparqlQuery::StatementType tp, QTrackerDriver* driver)
 {
-    d = new QTrackerResultPrivate(this, tp);
+    setQuery(query);
+    d = new QTrackerResultPrivate(this, tp, driver->d);
+    connect(driver, SIGNAL(closing()), this, SLOT(driverClosing()));
 }
 
 QTrackerResult::~QTrackerResult()
@@ -265,40 +270,8 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
     if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
         return 0;
 
-    QTrackerResult* res = new QTrackerResult(type);
-    res->setQuery(query);
-    connect(this, SIGNAL(closing()), res, SLOT(driverClosing()));
-
-    QString funcToCall;
-    switch (type) {
-    case QSparqlQuery::AskStatement:
-    case QSparqlQuery::SelectStatement:
-    {
-        funcToCall = QString::fromLatin1("SparqlQuery");
-        break;
-    }
-    case QSparqlQuery::InsertStatement: // fall-through
-    case QSparqlQuery::DeleteStatement:
-    {
-        if (d->doBatch || options.priority() == QSparqlQueryOptions::LowPriority) {
-            funcToCall = QString::fromLatin1("BatchSparqlUpdate");
-        }
-        else {
-            funcToCall = QString::fromLatin1("SparqlUpdateBlank");
-        }
-        break;
-    }
-    default:
-        res->setLastError(QSparqlError(
-                              QLatin1String("Non-supported statement type"),
-                              QSparqlError::BackendError));
-        qWarning() << "QTrackerResult:" << res->lastError() << res->query();
-        return res;
-        break;
-    }
-    QDBusPendingCall call = d->iface->asyncCall(funcToCall,
-                                                QVariant(query));
-    res->d->setCall(call);
+    QTrackerResult* res = new QTrackerResult(query, type, this);
+    res->exec(options);
     return res;
 }
 
@@ -396,6 +369,39 @@ bool QTrackerResult::hasFeature(QSparqlResult::Feature feature) const
         default:
             return false;
     }
+}
+
+void QTrackerResult::exec(const QSparqlQueryOptions& options)
+{
+    QString funcToCall;
+    switch (d->type) {
+    case QSparqlQuery::AskStatement:
+    case QSparqlQuery::SelectStatement:
+    {
+        funcToCall = QString::fromLatin1("SparqlQuery");
+        break;
+    }
+    case QSparqlQuery::InsertStatement: // fall-through
+    case QSparqlQuery::DeleteStatement:
+    {
+        if (d->driverPrivate->doBatch || options.priority() == QSparqlQueryOptions::LowPriority) {
+            funcToCall = QString::fromLatin1("BatchSparqlUpdate");
+        }
+        else {
+            funcToCall = QString::fromLatin1("SparqlUpdateBlank");
+        }
+        break;
+    }
+    default:
+        setLastError(QSparqlError(
+                QLatin1String("Non-supported statement type"),
+                QSparqlError::BackendError));
+        qWarning() << "QTrackerResult:" << lastError() << query();
+        return;
+    }
+    QDBusPendingCall call = d->driverPrivate->iface->asyncCall(funcToCall,
+                                                QVariant(query()));
+    d->setCall(call);
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
