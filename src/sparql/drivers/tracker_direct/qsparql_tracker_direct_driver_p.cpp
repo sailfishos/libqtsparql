@@ -228,7 +228,8 @@ void QTrackerDirectDriverPrivate::waitForConnectionOpen()
         if (QCoreApplication::instance()) {
             QEventLoop loop;
             QObject::connect(driver, SIGNAL(opened()), &loop, SLOT(quit()));
-            loop.exec();
+            if (loop.exec() < 0)
+                qWarning() << "QTRACKER_DIRECT: Cannot wait for asynchronous connection opening, check the lifetime of your thread";
         }
         else {
             qWarning() << "QTRACKER_DIRECT: QCoreApplication instance not found: cannot wait for asynchronous connection open";
