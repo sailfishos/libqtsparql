@@ -70,15 +70,18 @@ class QTrackerDirectDriverPrivate;
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
-
+    friend class QTrackerDirectQueryRunner;
 public:
     QTrackerDirectResult();
     ~QTrackerDirectResult();
 
     virtual bool isFinished() const;
 
-    virtual void stopAndWait();
-    virtual void run() { qDebug() << "Direct result run..."; }
+private:
+    // Will be called by the query runner to execute the query, results that don't
+    // need a thread to run in (sync) do not need to implement this
+    virtual void run() {}
+    virtual void stopAndWait() = 0;
 
 protected:
     QTrackerDirectDriverPrivate *driverPrivate;
@@ -86,9 +89,10 @@ protected:
     QTrackerDirectQueryRunner *queryRunner;
 
 public Q_SLOTS:
+    virtual void exec() = 0;
     void driverClosing();
-};
 
+};
 
 class QTrackerDirectQueryRunner : public QRunnable
 {

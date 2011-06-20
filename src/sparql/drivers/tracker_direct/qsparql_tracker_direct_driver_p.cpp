@@ -215,7 +215,6 @@ private:
     {
         return runSemaphore.tryAcquire(1);
     }
-
 };
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
@@ -367,7 +366,6 @@ void QTrackerDirectDriver::close()
 QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QSparqlResult* result = 0;
-
     switch (options.executionMethod()) {
     case QSparqlQueryOptions::AsyncExec:
         result = asyncExec(query, type, options);
@@ -382,32 +380,24 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 
 QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
+    QTrackerDirectResult *result = 0;
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        QTrackerDirectSelectResult *result = new QTrackerDirectSelectResult(d, query, type);
-        connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
-        d->onConnectionOpen(result, "exec", SLOT(exec()));
-        return result;
+        result = new QTrackerDirectSelectResult(d, query, type);
     } else {
-        QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type, options);
-        connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
-        d->onConnectionOpen(result, "exec", SLOT(exec()));
-        return result;
+        result = new QTrackerDirectUpdateResult(d, query, type, options);
     }
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    d->onConnectionOpen(result, "exec", SLOT(exec()));
+    return result;
 }
 
 QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, query, type, options);
+    QTrackerDirectResult* result = new QTrackerDirectSyncResult(d, query, type, options);
     connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
-    if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        d->waitForConnectionOpen();
-        result->exec();
-    } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
-        d->waitForConnectionOpen();
-        result->update();
-    }
-
+    d->waitForConnectionOpen();
+    result->exec();
     return result;
 }
 

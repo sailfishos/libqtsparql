@@ -94,6 +94,15 @@ QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
 
 void QTrackerDirectSyncResult::exec()
 {
+    if (statementType() == QSparqlQuery::AskStatement || statementType() == QSparqlQuery::SelectStatement) {
+        selectQuery();
+    } else if (statementType() == QSparqlQuery::InsertStatement || statementType() == QSparqlQuery::DeleteStatement) {
+        updateQuery();
+    }
+}
+
+void QTrackerDirectSyncResult::selectQuery()
+{
     if (!driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(driverPrivate->error,
                                   QSparqlError::ConnectionError));
@@ -112,7 +121,7 @@ void QTrackerDirectSyncResult::exec()
     }
 }
 
-void QTrackerDirectSyncResult::update()
+void QTrackerDirectSyncResult::updateQuery()
 {
     if (!driverPrivate->driver->isOpen()) {
         setLastError(QSparqlError(driverPrivate->error,
@@ -133,21 +142,6 @@ void QTrackerDirectSyncResult::update()
         g_error_free(error);
         qWarning() << "QTrackerDirectSyncResult:" << lastError() << query();
     }
-}
-
-void QTrackerDirectSyncResult::driverClosing()
-{
-    if (!isFinished()) {
-        // If connection is closed before all results have been accessed set the result to be in error
-        setLastError(QSparqlError(
-                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-                QSparqlError::ConnectionError));
-    }
-    if (d->cursor) {
-        g_object_unref(d->cursor);
-        d->cursor = 0;
-    }
-    qWarning() << "QTrackerDirectSyncResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 bool QTrackerDirectSyncResult::next()

@@ -53,11 +53,6 @@ QTrackerDirectResult::~QTrackerDirectResult()
     delete queryRunner; queryRunner = 0;
 }
 
-void QTrackerDirectResult::stopAndWait()
-{
-    queryRunner->wait();
-}
-
 void QTrackerDirectResult::driverClosing()
 {
     qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<

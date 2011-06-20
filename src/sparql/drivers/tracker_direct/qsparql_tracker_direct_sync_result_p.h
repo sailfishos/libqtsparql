@@ -62,8 +62,6 @@ public:
                                       const QSparqlQueryOptions& options);
     ~QTrackerDirectSyncResult();
 
-    virtual void stopAndWait();
-
     // Implementation of the QSparqlResult interface
     virtual bool next();
 
@@ -77,14 +75,13 @@ public:
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
 public Q_SLOTS:
-    void exec();
-    void update();
-
-private Q_SLOTS:
-    void driverClosing();
+    virtual void exec();
 
 private:
     QTrackerDirectSyncResultPrivate* d;
+    virtual void stopAndWait();
+    void updateQuery();
+    void selectQuery();
 };
 
 QT_END_NAMESPACE
