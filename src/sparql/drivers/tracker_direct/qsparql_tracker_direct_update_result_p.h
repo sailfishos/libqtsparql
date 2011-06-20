@@ -63,10 +63,6 @@ public:
 
     bool runQuery();
 
-    // QTrackerDirectResult implementation
-    virtual void stopAndWait();
-    virtual void run();
-
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
 
@@ -75,12 +71,16 @@ public:
     virtual QVariant value(int i) const;
     virtual int size() const;
 
-private Q_SLOTS:
-    void exec();
+public Q_SLOTS:
+    virtual void exec();
 
 private:
     Q_INVOKABLE void terminate();
     QSparqlQueryOptions options;
+
+    // QTrackerDirectResult implementation
+    virtual void stopAndWait();
+    virtual void run();
 };
 
 QT_END_NAMESPACE

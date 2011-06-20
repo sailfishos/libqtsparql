@@ -72,10 +72,6 @@ public:
 
     bool runQuery();
 
-    //QTrackerDirectResult implementation
-    virtual void stopAndWait();
-    virtual void run();
-
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
 
@@ -85,14 +81,18 @@ public:
     virtual int size() const;
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
-private Q_SLOTS:
-    void exec();
+public Q_SLOTS:
+    virtual void exec();
 
 private:
     void terminate();
     bool fetchNextResult();
     bool fetchBoolResult();
     void emitDataReady(int totalCount);
+
+    //QTrackerDirectResult implementation
+    virtual void stopAndWait();
+    virtual void run();
 
     TrackerSparqlCursor* cursor;
     QVector<QString> columnNames;

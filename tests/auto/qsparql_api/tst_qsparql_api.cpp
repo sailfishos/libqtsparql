@@ -692,7 +692,7 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
         << (int)QSparqlQueryOptions::AsyncExec
         << false;
 
-    QTest::newRow("Tracker Direct Async Query")
+    QTest::newRow("Tracker Direct Async Object Query")
         << "QTRACKER_DIRECT"
         << contactSelectQuery
         << NUM_TRACKER_INSERTS
