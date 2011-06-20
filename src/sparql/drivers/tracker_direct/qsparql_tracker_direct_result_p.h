@@ -46,12 +46,6 @@
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qsemaphore.h>
 
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -59,7 +53,7 @@ QT_BEGIN_NAMESPACE
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectQueryRunner;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
+class QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
     friend class QTrackerDirectQueryRunner;
