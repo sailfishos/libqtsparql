@@ -50,11 +50,13 @@ QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPriva
     setQuery(query);
     setStatementType(type);
     driverPrivate = p;
+    queryRunner = new QTrackerDirectQueryRunner(this);
 }
 
 QTrackerDirectUpdateResult::~QTrackerDirectUpdateResult()
 {
     stopAndWait();
+    delete queryRunner;
 }
 
 void QTrackerDirectUpdateResult::exec()
