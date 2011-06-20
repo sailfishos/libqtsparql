@@ -644,11 +644,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
-        // Check result behaviour
-        QVERIFY(r->pos() < 0);
-        QVERIFY(!r->next());
-        QVERIFY(!r->previous());
-        QVERIFY(r->pos() < 0);
+        validateResults(r, 0);
     }
 
     // There must always be a warning about connection closed before result
@@ -1022,12 +1018,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
             QVERIFY(r->hasError());
             QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
         }
-
-        // Check result Behaviour
-        QVERIFY(r->pos() < 0);
-        QVERIFY(!r->next());
-        QVERIFY(!r->previous());
-        QVERIFY(r->pos() < 0);
+        validateResults(r, 0);
         // Check we got a warning
         QCOMPARE((*msgRecorder)[QtWarningMsg].count(), round);
         delete r;
