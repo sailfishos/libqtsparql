@@ -38,6 +38,15 @@
 ****************************************************************************/
 
 #include "qsparql_tracker_direct_update_result_p.h"
+#include "qsparql_tracker_direct.h"
+#include "qsparql_tracker_direct_driver_p.h"
+
+#include <QtSparql/qsparqlbinding.h>
+#include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlresultrow.h>
+
+#include <QtCore/qvariant.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

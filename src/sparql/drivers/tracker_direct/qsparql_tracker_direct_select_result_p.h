@@ -40,10 +40,11 @@
 #ifndef QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 #define QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 
-#include <QtCore/qmutex.h>
-#include <QtSparql/qsparqlresult.h>
-#include <QtSparql/qsparqlquery.h>
 #include "qsparql_tracker_direct_result_p.h"
+#include <QtCore/qvector.h>
+#include <QtCore/qstring.h>
+
+#include <tracker-sparql.h>
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT

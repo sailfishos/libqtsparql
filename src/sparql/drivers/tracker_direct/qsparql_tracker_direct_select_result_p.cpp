@@ -38,16 +38,20 @@
 ****************************************************************************/
 
 #include "qsparql_tracker_direct_select_result_p.h"
+#include "qsparql_tracker_direct.h"
+#include "qsparql_tracker_direct_driver_p.h"
 
-#include <qsparqlerror.h>
-#include <qsparqlbinding.h>
-#include <qsparqlquery.h>
-#include <qsparqlresultrow.h>
+#include <QtSparql/qsparqlerror.h>
+#include <QtSparql/qsparqlbinding.h>
+#include <QtSparql/qsparqlquery.h>
+#include <QtSparql/qsparqlresultrow.h>
 #define XSD_INTEGER
 #include "../../kernel/qsparqlxsd_p.h"
 
-#include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qvariant.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

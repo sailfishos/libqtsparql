@@ -38,10 +38,12 @@
 ****************************************************************************/
 
 #include "qsparql_tracker_direct_result_p.h"
-#include <QDebug>
+#include <QtSparql/qsparqlerror.h>
+#include <QtCore/qdebug.h>
 
 // Query Runner Implementation
-QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *result) : result(result), runFinished(0), runSemaphore(1), started(false)
+QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *result)
+  : result(result), runFinished(0), runSemaphore(1), started(false)
 {
     setAutoDelete(false);
 }

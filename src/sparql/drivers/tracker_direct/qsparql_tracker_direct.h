@@ -41,9 +41,6 @@
 #define QSPARQL_TRACKER_DIRECT_H
 
 #include <QtSparql/private/qsparqldriver_p.h>
-#include <QtSparql/qsparqlquery.h>
-
-class QSparqlResult;
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
