@@ -76,11 +76,13 @@ QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPriva
     setStatementType(type);
     driverPrivate = p;
     d = new QTrackerDirectSelectResultPrivate();
+    queryRunner = new QTrackerDirectQueryRunner(this);
 }
 
 QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
 {
     stopAndWait();
+    delete queryRunner;
     delete d;
 }
 

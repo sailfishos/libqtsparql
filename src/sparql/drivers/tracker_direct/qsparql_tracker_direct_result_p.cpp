@@ -40,17 +40,61 @@
 #include "qsparql_tracker_direct_result_p.h"
 #include <QDebug>
 
+// Query Runner Implementation
+QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *result) : result(result), runFinished(0), runSemaphore(1), started(false)
+{
+    setAutoDelete(false);
+}
+
+void QTrackerDirectQueryRunner::runOrWait()
+{
+    if(acquireRunSemaphore()) {
+        if (!runFinished)
+            run();
+        else
+            runSemaphore.release(1);
+    } else {
+        wait();
+    }
+}
+
+void QTrackerDirectQueryRunner::queue(QThreadPool& threadPool)
+{
+    if(acquireRunSemaphore())
+        threadPool.start(this);
+}
+
+void QTrackerDirectQueryRunner::wait()
+{
+    //if something has has acquired the semaphore (eg the fetcher thread)
+    //this will block until it is released in run
+    runSemaphore.acquire(1);
+    runSemaphore.release(1);
+}
+
+void QTrackerDirectQueryRunner::run()
+{
+    if (!runFinished) {
+        result->run();
+    }
+    runFinished=1;
+    runSemaphore.release(1);
+}
+
+bool QTrackerDirectQueryRunner::acquireRunSemaphore()
+{
+    return runSemaphore.tryAcquire(1);
+}
+
+////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectResult::QTrackerDirectResult()
+  : queryRunner(0)
 {
-    queryRunner = new QTrackerDirectQueryRunner(this);
 }
 
 QTrackerDirectResult::~QTrackerDirectResult()
 {
-    if (queryRunner)
-        queryRunner->wait();
-    delete queryRunner; queryRunner = 0;
 }
 
 void QTrackerDirectResult::driverClosing()

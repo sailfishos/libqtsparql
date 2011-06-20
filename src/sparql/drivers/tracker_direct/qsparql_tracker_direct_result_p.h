@@ -102,51 +102,15 @@ public:
     QSemaphore runSemaphore;
     bool started;
 
-    QTrackerDirectQueryRunner(QTrackerDirectResult *result) : result(result), runFinished(0), runSemaphore(1), started(false)
-    {
-        setAutoDelete(false);
-    }
-
-    void runOrWait()
-    {
-        if(acquireRunSemaphore()) {
-            if (!runFinished)
-                run();
-            else
-                runSemaphore.release(1);
-        } else {
-            wait();
-        }
-    }
-
-    void queue(QThreadPool& threadPool)
-    {
-        if(acquireRunSemaphore())
-            threadPool.start(this);
-    }
-
-    void wait()
-    {
-        //if something has has acquired the semaphore (eg the fetcher thread)
-        //this will block until it is released in run
-        runSemaphore.acquire(1);
-        runSemaphore.release(1);
-    }
+    QTrackerDirectQueryRunner(QTrackerDirectResult *result);
+    void runOrWait();
+    void queue(QThreadPool& threadPool);
+    void wait();
 
 private:
-    void run()
-    {
-        if (!runFinished) {
-            result->run();
-        }
-        runFinished=1;
-        runSemaphore.release(1);
-    }
+    void run();
+    bool acquireRunSemaphore();
 
-    bool acquireRunSemaphore()
-    {
-        return runSemaphore.tryAcquire(1);
-    }
 };
 
 QT_END_NAMESPACE
