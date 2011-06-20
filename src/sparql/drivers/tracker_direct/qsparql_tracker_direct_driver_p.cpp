@@ -46,12 +46,11 @@
 #include <qsparqlconnection.h>
 
 #include <QtCore/qdatetime.h>
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qeventloop.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qsemaphore.h>
+
 QT_BEGIN_NAMESPACE
 
 // Helper functions used both by QTrackerDirectSelectResult and

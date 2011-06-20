@@ -42,14 +42,11 @@
 
 #include <tracker-sparql.h>
 
-#include <QtSparql/qsparqlquery.h>
 #include <QtSparql/qsparqlqueryoptions.h>
 #include <QtSparql/qsparqlerror.h>
 
-#include <QtCore/qlist.h>
-#include <QtCore/qpointer.h>
 #include <QtCore/qmutex.h>
-#include <QThreadPool>
+#include <QtCore/qthreadpool.h>
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT

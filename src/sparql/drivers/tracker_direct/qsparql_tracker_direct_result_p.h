@@ -41,18 +41,10 @@
 #define QSPARQL_TRACKER_DIRECT_RESULT_P_H
 
 #include <QtSparql/qsparqlresult.h>
-#include <QtSparql/qsparqlquery.h>
-#include <QtSparql/qsparqlerror.h>
 
-#include <QRunnable>
-#include <QThreadPool>
+#include <QtCore/qrunnable.h>
+#include <QtCore/qthreadpool.h>
 #include <QtCore/qsemaphore.h>
-#include <QtCore/qdebug.h>
-
-#include <tracker-sparql.h>
-
-#include "qsparql_tracker_direct_driver_p.h"
-#include "qsparql_tracker_direct.h"
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
@@ -66,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectQueryRunner;
-class QTrackerDirectDriverPrivate;
+
 class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT

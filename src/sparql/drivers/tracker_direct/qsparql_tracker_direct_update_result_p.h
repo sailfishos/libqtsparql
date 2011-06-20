@@ -41,12 +41,12 @@
 #define QSPARQL_TRACKER_DIRECT_UPDATE_RESULT_P_H
 
 #include "qsparql_tracker_direct_result_p.h"
+#include <QtSparql/qsparqlqueryoptions.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QSparqlQueryOptions;
 class QTrackerDirectDriverPrivate;
 class QTrackerDirectUpdateResultPrivate;
 
