@@ -166,11 +166,18 @@ gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-class QTrackerDirectDriverConnectionOpen : public QRunnable
+class QTrackerDirectDriverConnectionOpen : public QObject, public QRunnable
 {
-
+    Q_OBJECT
 public:
-    QTrackerDirectDriverConnectionOpen(QTrackerDirectDriverPrivate *d) : d(d), runFinished(0), runSemaphore(1) { setAutoDelete(false); }
+    QTrackerDirectDriverConnectionOpen(QTrackerDirectDriverPrivate *d)
+        : connection(0), runSemaphore(1), d(d), runFinished(0)
+    {
+        setAutoDelete(false);
+    }
+
+    GError *error;
+    TrackerSparqlConnection *connection;
 
     void runOrWait()
     {
@@ -191,6 +198,8 @@ public:
             threadPool.start(this);
     }
 
+Q_SIGNALS:
+    void connectionOpened();
 private:
     QSemaphore runSemaphore;
     QTrackerDirectDriverPrivate *d;
@@ -199,7 +208,9 @@ private:
     void run()
     {
         if (!runFinished) {
-            d->asyncOpenComplete(0);
+            error = 0;
+            connection = tracker_sparql_connection_get(0, &error);
+            Q_EMIT connectionOpened();
             runFinished = true;
         }
         runSemaphore.release(1);
@@ -221,6 +232,7 @@ QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *d
     : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
       asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen(this))
 {
+    QObject::connect(connectionOpener, SIGNAL(connectionOpened()), this, SLOT(asyncOpenComplete()));
 }
 
 QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
@@ -228,13 +240,15 @@ QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
     delete connectionOpener;
 }
 
-void QTrackerDirectDriverPrivate::asyncOpenComplete(GAsyncResult *result)
+void QTrackerDirectDriverPrivate::asyncOpenComplete()
 {
-    GError * error = 0;
-    connection = tracker_sparql_connection_get(0, &error);
-    checkConnectionError(connection, error);
-    asyncOpenCalled = true;
-    Q_EMIT driver->opened();
+    if (connection == 0) {
+        GError *error = connectionOpener->error;
+        connection = connectionOpener->connection;
+        checkConnectionError(connection, error);
+        asyncOpenCalled = true;
+        Q_EMIT driver->opened();
+    }
 }
 
 void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *conn, GError* gerr)
@@ -265,6 +279,7 @@ void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* 
 void QTrackerDirectDriverPrivate::waitForConnectionOpen()
 {
     connectionOpener->runOrWait();
+    asyncOpenComplete();
 }
 
 void QTrackerDirectDriverPrivate::openConnection()
@@ -402,3 +417,5 @@ QSparqlResult* QTrackerDirectDriver::syncExec
 }
 
 QT_END_NAMESPACE
+
+#include "qsparql_tracker_direct_driver_p.moc"

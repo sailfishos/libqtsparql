@@ -65,12 +65,13 @@ class QTrackerDirectDriver;
 class QTrackerDirectSelectResult;
 class QTrackerDirectDriverConnectionOpen;
 
-class QTrackerDirectDriverPrivate {
+class QTrackerDirectDriverPrivate : public QObject
+{
+    Q_OBJECT
 public:
     QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver);
     ~QTrackerDirectDriverPrivate();
 
-    void asyncOpenComplete(GAsyncResult* result);
     void onConnectionOpen(QObject* object,  const char* method, const char* slot);
     void waitForConnectionOpen();
     void openConnection();
@@ -84,11 +85,15 @@ public:
     QMutex connectionMutex;
     QTrackerDirectDriver *driver;
     QString error;
+    bool asyncOpenCalled;
 
     QThreadPool threadPool;
 
+private Q_SLOTS:
+    void asyncOpenComplete();
+
 private:
-    bool asyncOpenCalled;
+    friend class QTrackerDirectDriverConnectionOpen;
     void checkConnectionError(TrackerSparqlConnection *conn, GError* gerr);
     QTrackerDirectDriverConnectionOpen *connectionOpener;
 };
