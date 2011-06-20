@@ -48,12 +48,6 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qthreadpool.h>
 
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
