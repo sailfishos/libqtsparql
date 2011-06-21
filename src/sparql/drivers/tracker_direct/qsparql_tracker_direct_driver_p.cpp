@@ -169,8 +169,8 @@ class QTrackerDirectDriverConnectionOpen : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    QTrackerDirectDriverConnectionOpen(QTrackerDirectDriverPrivate *d)
-        : connection(0), runSemaphore(1), d(d), runFinished(0)
+    QTrackerDirectDriverConnectionOpen()
+        : connection(0), runSemaphore(1), runFinished(0)
     {
         setAutoDelete(false);
     }
@@ -201,7 +201,6 @@ Q_SIGNALS:
     void connectionOpened();
 private:
     QSemaphore runSemaphore;
-    QTrackerDirectDriverPrivate *d;
     bool runFinished;
 
     void run()
@@ -229,7 +228,7 @@ private:
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
-      asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen(this))
+      asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen)
 {
     QObject::connect(connectionOpener, SIGNAL(connectionOpened()), this, SLOT(asyncOpenComplete()));
 }
