@@ -43,6 +43,7 @@
 #include "qsparql_tracker_direct_result_p.h"
 #include <QtCore/qvector.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qmutex.h>
 
 #include <tracker-sparql.h>
 
@@ -51,12 +52,10 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectSelectResultPrivate;
 
 class QTrackerDirectSelectResult : public QTrackerDirectResult
 {
     Q_OBJECT
-    friend class QTrackerDirectSelectResultPrivate; // for emitting signals
 public:
     explicit QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
@@ -90,10 +89,9 @@ private:
     virtual void run();
 
     TrackerSparqlCursor* cursor;
+    mutable QMutex resultMutex;
     QVector<QString> columnNames;
     QList<QVector<QVariant> > results;
-
-    QTrackerDirectSelectResultPrivate* d;
 };
 
 QT_END_NAMESPACE
