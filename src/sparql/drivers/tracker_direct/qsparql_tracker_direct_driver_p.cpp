@@ -164,19 +164,37 @@ gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
     }
 }
 
+struct QTrackerDirectDriverConnectionData
+{
+    QTrackerDirectDriverConnectionData() : error(0), connection(0) { }
+
+    QTrackerDirectDriverConnectionData take()
+    {
+        QTrackerDirectDriverConnectionData result(*this);
+        this->error = 0;
+        this->connection = 0;
+        return result;
+    }
+
+    GError *error;
+    TrackerSparqlConnection *connection;
+};
+
 ////////////////////////////////////////////////////////////////////////////
 class QTrackerDirectDriverConnectionOpen : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
     QTrackerDirectDriverConnectionOpen()
-        : connection(0), runSemaphore(1), runFinished(0)
+        : runSemaphore(1), runFinished(0)
     {
         setAutoDelete(false);
     }
 
-    GError *error;
-    TrackerSparqlConnection *connection;
+    QTrackerDirectDriverConnectionData takeConnection()
+    {
+        return cd.take();
+    }
 
     void runOrWait()
     {
@@ -199,15 +217,16 @@ public:
 
 Q_SIGNALS:
     void connectionOpened();
+
 private:
+    QTrackerDirectDriverConnectionData cd;
     QSemaphore runSemaphore;
     bool runFinished;
 
     void run()
     {
         if (!runFinished) {
-            error = 0;
-            connection = tracker_sparql_connection_get(0, &error);
+            cd.connection = tracker_sparql_connection_get(0, &cd.error);
             Q_EMIT connectionOpened();
             runFinished = true;
         }
@@ -241,9 +260,9 @@ QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 void QTrackerDirectDriverPrivate::asyncOpenComplete()
 {
     if (connection == 0) {
-        GError *error = connectionOpener->error;
-        connection = connectionOpener->connection;
-        checkConnectionError(connection, error);
+        QTrackerDirectDriverConnectionData cd = connectionOpener->takeConnection();
+        connection = cd.connection;
+        checkConnectionError(connection, cd.error);
         asyncOpenCalled = true;
         Q_EMIT driver->opened();
     }
