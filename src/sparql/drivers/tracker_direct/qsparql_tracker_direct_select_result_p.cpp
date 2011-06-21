@@ -50,36 +50,20 @@
 
 #include <QtCore/qvector.h>
 #include <QtCore/qvariant.h>
-#include <QtCore/qmutex.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
-
-class QTrackerDirectSelectResultPrivate : public QObject {
-    Q_OBJECT
-public:
-    QTrackerDirectSelectResultPrivate();
-    // This mutex is for ensuring that only one thread at a time is accessing
-    // the member variables of this class (mainly: "results").
-    QMutex resultMutex;
-};
-
-QTrackerDirectSelectResultPrivate::QTrackerDirectSelectResultPrivate()
-  : resultMutex(QMutex::Recursive)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
                                            QSparqlQuery::StatementType type)
-  : cursor(0)
+  : cursor(0), resultMutex(QMutex::Recursive)
 {
     setQuery(query);
     setStatementType(type);
     driverPrivate = p;
-    d = new QTrackerDirectSelectResultPrivate();
     queryRunner = new QTrackerDirectQueryRunner(this);
 }
 
@@ -87,7 +71,6 @@ QTrackerDirectSelectResult::~QTrackerDirectSelectResult()
 {
     stopAndWait();
     delete queryRunner;
-    delete d;
 }
 
 void QTrackerDirectSelectResult::exec()
@@ -108,7 +91,7 @@ void QTrackerDirectSelectResult::exec()
 
 void QTrackerDirectSelectResult::startFetcher()
 {
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
     if (queryRunner && !queryRunner->started && !isFinished()) {
         queryRunner->started = true;
         //first attempt to acquire the semaphore, if we can, then add the
@@ -146,7 +129,7 @@ bool QTrackerDirectSelectResult::runQuery()
                                                     0,
                                                     &error );
     if (error || !cursor) {
-        QMutexLocker resultLocker(&(d->resultMutex));
+        QMutexLocker resultLocker(&resultMutex);
         setLastError(QSparqlError(QString::fromUtf8(error ? error->message : "unknown error"),
                         error ? errorCodeToType(error->code) : QSparqlError::StatementError,
                         error ? error->code : -1));
@@ -181,7 +164,7 @@ bool QTrackerDirectSelectResult::fetchNextResult()
         return false;
     }
 
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     const gint n_columns = tracker_sparql_cursor_get_n_columns(cursor);
 
@@ -221,7 +204,7 @@ bool QTrackerDirectSelectResult::fetchBoolResult()
         return false;
     }
 
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     if (tracker_sparql_cursor_get_n_columns(cursor) == 1 &&
         tracker_sparql_cursor_get_value_type(cursor, 0) == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN)  {
@@ -235,7 +218,7 @@ bool QTrackerDirectSelectResult::fetchBoolResult()
 
 QSparqlBinding QTrackerDirectSelectResult::binding(int field) const
 {
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     if (!isValid()) {
         return QSparqlBinding();
@@ -264,7 +247,7 @@ QSparqlBinding QTrackerDirectSelectResult::binding(int field) const
 
 QVariant QTrackerDirectSelectResult::value(int field) const
 {
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     if (!isValid()) {
         return QVariant();
@@ -302,7 +285,7 @@ void QTrackerDirectSelectResult::waitForFinished()
 void QTrackerDirectSelectResult::terminate()
 {
 
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     if (results.count() % driverPrivate->dataReadyInterval != 0) {
         emitDataReady(results.count());
@@ -335,14 +318,14 @@ void QTrackerDirectSelectResult::stopAndWait()
 
 int QTrackerDirectSelectResult::size() const
 {
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
     return results.size();
 }
 
 QSparqlResultRow QTrackerDirectSelectResult::current() const
 {
 
-    QMutexLocker resultLocker(&(d->resultMutex));
+    QMutexLocker resultLocker(&resultMutex);
 
     if (!isValid()) {
         return QSparqlResultRow();
@@ -378,5 +361,3 @@ bool QTrackerDirectSelectResult::hasFeature(QSparqlResult::Feature feature) cons
 }
 
 QT_END_NAMESPACE
-
-#include "qsparql_tracker_direct_select_result_p.moc"
