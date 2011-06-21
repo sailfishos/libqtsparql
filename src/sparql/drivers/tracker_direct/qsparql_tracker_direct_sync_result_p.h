@@ -40,6 +40,7 @@
 #ifndef QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
 #define QSPARQL_TRACKER_DIRECT_SYNC_RESULT_P_H
 
+#include <tracker-sparql.h>
 #include "qsparql_tracker_direct_result_p.h"
 
 QT_BEGIN_HEADER
@@ -47,7 +48,6 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectSyncResultPrivate;
 class QSparqlQueryOptions;
 
 // A sync and forward-only Result class. The instance of this class is retreved
@@ -78,7 +78,10 @@ public Q_SLOTS:
     virtual void exec();
 
 private:
-    QTrackerDirectSyncResultPrivate* d;
+    TrackerSparqlCursor* cursor;
+    mutable int n_columns;
+    const QSparqlQueryOptions* options;
+
     virtual void stopAndWait();
     void updateQuery();
     void selectQuery();
