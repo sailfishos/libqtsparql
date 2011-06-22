@@ -163,8 +163,12 @@ void QTrackerDirectSyncResult::driverClosing()
 
 bool QTrackerDirectSyncResult::next()
 {
-    if (!d->cursor)
+    if (!d->cursor) {
+        // The cursor may have been unreferenced because the connection was deleted
+        // and now the user is calling next(), so set the row here
+        updatePos(QSparql::AfterLastRow);
         return false;
+    }
 
     GError * error = 0;
     const gboolean active = tracker_sparql_cursor_next(d->cursor, 0, &error);
