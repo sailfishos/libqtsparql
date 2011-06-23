@@ -110,14 +110,16 @@ private:
 namespace {
 
 const QString contactSelectQuery =
-    "select ?u ?ng {?u a nco:PersonContact; "
-    "nie:isLogicalPartOf <qsparql-api-tests> ;"
-    "nco:nameGiven ?ng .}";
+    "select ?u ?ng {"
+    "    ?u a nco:PersonContact; "
+    "    nie:isLogicalPartOf <qsparql-api-tests> ;"
+    "    nco:nameGiven ?ng .}";
 
 const QString contactSelectNothingQuery =
-    "select ?u ?ng {?u a nco:PersonContact; "
-    "nie:isLogicalPartOf <qsparql-api-tests-not-here> ;"
-    "nco:nameGiven ?ng .}";
+    "select ?u ?ng {"
+    "    ?u a nco:PersonContact; "
+    "    nie:isLogicalPartOf <qsparql-api-tests-not-here> ;"
+    "    nco:nameGiven ?ng .}";
 
 const int contactSelectColumnCount = 2;
 
@@ -134,17 +136,20 @@ const QString contactDeleteQueryTemplate =
 const int contactDeleteAmount = 1;
 
 const QString askQueryTrue =
-    "ask { <uri001> a nco:PersonContact, nie:InformationElement ;"
-    "nie:isLogicalPartOf <qsparql-api-tests> ;"
-    "nco:nameGiven \"name001\" .}";
+    "ask {"
+    "    <uri001> a nco:PersonContact, nie:InformationElement ;"
+    "    nie:isLogicalPartOf <qsparql-api-tests> ;"
+    "    nco:nameGiven \"name001\" .}";
 
 const QString askQueryFalse =
-    "ask { <uri001> a nco:PersonContact, nie:InformationElement ;"
-    "nie:isLogicalPartOf <qsparql-api-tests> ;"
-    "nco:nameGiven \"name002\" .}";
+    "ask {"
+    "    <uri001> a nco:PersonContact, nie:InformationElement ;"
+    "    nie:isLogicalPartOf <qsparql-api-tests> ;"
+    "    nco:nameGiven \"name002\" .}";
 
 const QString constructQuery =
-    "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH <http://example.org/aGraph> { ?s ?p ?o } . }";
+    "CONSTRUCT { ?s ?p ?o }"
+    "    WHERE { GRAPH <http://example.org/aGraph> { ?s ?p ?o } . }";
 
     class MySignalObject : public QObject
     {
@@ -274,8 +279,7 @@ void tst_QSparqlAPI::insertTrackerTestData()
     insertQuery.append(" }");
 
     QSparqlConnection conn("QTRACKER");
-    QSparqlQuery q(insertQuery,
-                   QSparqlQuery::InsertStatement);
+    const QSparqlQuery q(insertQuery,QSparqlQuery::InsertStatement);
     QSparqlResult* r = conn.exec(q);
     QVERIFY(!r->hasError());
     r->waitForFinished();
@@ -291,9 +295,9 @@ void tst_QSparqlAPI::cleanupTestCase()
 void tst_QSparqlAPI::cleanupTrackerTestData()
 {
     QSparqlConnection conn("QTRACKER");
-    QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
-                    "WHERE { ?u nie:isLogicalPartOf <qsparql-api-tests> . }"
-                    "DELETE { <qsparql-api-tests> a rdfs:Resource . }",
+    const QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
+                         "  WHERE { ?u nie:isLogicalPartOf <qsparql-api-tests> . }"
+                         "DELETE { <qsparql-api-tests> a rdfs:Resource . }",
                     QSparqlQuery::DeleteStatement);
     QSparqlResult* r = conn.exec(q);
     QVERIFY(!r->hasError());
@@ -318,17 +322,17 @@ void tst_QSparqlAPI::query_test()
 {
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
-    QFETCH(int, expectedResultsSize);
 
     QSparqlConnection conn(connectionDriver);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+    QSparqlResult* r = conn.exec(q, queryOptions);
     checkExecutionMethod(r, executionMethod, asyncObject);
     validateResults(r, expectedResultsSize);
 
@@ -433,17 +437,17 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
 {
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
+    QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, asyncObject);
-    QFETCH(int, expectedResultsSize);
 
     QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn->exec(q,queryOptions);
+    QSparqlResult* r = conn->exec(q, queryOptions);
 
     // Re-parent the result to release from the ownership of conn
     r->setParent(this);
@@ -485,9 +489,9 @@ void tst_QSparqlAPI::query_error_test()
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+    QSparqlResult* r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, asyncObject);
     QVERIFY(r->hasError());
@@ -630,9 +634,9 @@ void tst_QSparqlAPI::query_destroy_connection_test()
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn->exec(q,queryOptions);
+    QSparqlResult* r = conn->exec(q, queryOptions);
     const bool immediatelyFinished = r->isFinished();
 
     // Re-parent the result to release it from the connection's ownership
@@ -729,7 +733,7 @@ void tst_QSparqlAPI::update_query_test()
     QFETCH(bool, asyncObject);
 
     QSparqlConnection conn(connectionDriver);
-    int expectedResultsSize = initialSize + contactInserts;
+    const int expectedResultsSize = initialSize + contactInserts;
 
     QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
     for (int item = initialSize+1; item <= expectedResultsSize; item++) {
@@ -739,9 +743,9 @@ void tst_QSparqlAPI::update_query_test()
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(insertQuery, QSparqlQuery::InsertStatement);
+    const QSparqlQuery q(insertQuery, QSparqlQuery::InsertStatement);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+    QSparqlResult* r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, asyncObject);
 
@@ -770,16 +774,15 @@ void tst_QSparqlAPI::update_query_test()
     }
     deleteQuery.append(" }");
 
-    QSparqlQuery delQuery(deleteQuery, QSparqlQuery::DeleteStatement);
+    const QSparqlQuery delQuery(deleteQuery, QSparqlQuery::DeleteStatement);
     r = conn.exec(delQuery, queryOptions);
     checkExecutionMethod(r, executionMethod, asyncObject);
     delete r;
 
     // Now verify deletion
-    expectedResultsSize -= contactDeletes;
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
     checkExecutionMethod(r, executionMethod, asyncObject);
-    validateResults(r, expectedResultsSize);
+    validateResults(r, expectedResultsSize - contactDeletes);
     delete r;
 }
 
@@ -849,7 +852,6 @@ void tst_QSparqlAPI::update_query_test_data()
         << contactDeleteAmount
         << int(QSparqlQueryOptions::SyncExec)
         << false;
-
 }
 
 void tst_QSparqlAPI::update_query_error_test()
@@ -865,9 +867,9 @@ void tst_QSparqlAPI::update_query_error_test()
         QSparqlConnection conn(connectionDriver);
         QSparqlQueryOptions queryOptions;
         queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-        QSparqlQuery q(query, queryType);
+        const QSparqlQuery q(query, queryType);
 
-        QSparqlResult* r = conn.exec(q,queryOptions);
+        QSparqlResult* r = conn.exec(q, queryOptions);
 
         checkExecutionMethod(r, executionMethod, asyncObject);
 
@@ -1015,9 +1017,9 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
         QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
         QSparqlQueryOptions queryOptions;
         queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-        QSparqlQuery q(query, queryType);
+        const QSparqlQuery q(query, queryType);
 
-        QSparqlResult* r = conn->exec(q,queryOptions);
+        QSparqlResult* r = conn->exec(q, queryOptions);
         const bool immediatelyFinished = r->isFinished();
         // Re-parent the result to release it from the connection's ownership
         r->setParent(this);
@@ -1113,26 +1115,24 @@ void tst_QSparqlAPI::ask_query_test()
     QFETCH(bool, asyncObject);
 
     QSparqlConnection conn(connectionDriver);
+    QVERIFY(conn.hasFeature(QSparqlConnection::AskQueries));
 
-    if (conn.hasFeature(QSparqlConnection::AskQueries)) {
+    const QSparqlQuery q(query, QSparqlQuery::AskStatement);
 
-        QSparqlQuery q(query, QSparqlQuery::AskStatement);
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
-        QSparqlQueryOptions queryOptions;
-        queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
+    QSparqlResult *r = conn.exec(q, queryOptions);
 
-        QSparqlResult *r = conn.exec(q, queryOptions);
+    checkExecutionMethod(r, executionMethod, asyncObject);
 
-        checkExecutionMethod(r, executionMethod, asyncObject);
+    while (!r->isFinished())
+        r->next();
 
-        while (!r->isFinished())
-            r->next();
+    QVERIFY(r->isFinished());
+    QCOMPARE(r->boolValue(), expectedResult);
 
-        QVERIFY(r->isFinished());
-        QCOMPARE(r->boolValue(), expectedResult);
-
-        delete r;
-    }
+    delete r;
 }
 
 void tst_QSparqlAPI::ask_query_test_data()
@@ -1227,9 +1227,9 @@ void tst_QSparqlAPI::isFinished_test()
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+    QSparqlResult* r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, asyncObject);
 
@@ -1303,9 +1303,9 @@ void tst_QSparqlAPI::result_iteration_test()
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
 
-    QSparqlResult* r = conn.exec(q,queryOptions);
+    QSparqlResult* r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, asyncObject);
 
@@ -1407,7 +1407,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_query_test()
     QFETCH(int, expectedResultsSize);
 
     QSparqlConnection conn(connectionDriver);
-    QSparqlQuery q(query);
+    const QSparqlQuery q(query);
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(!r->hasError());
     r->waitForFinished();
@@ -1445,7 +1445,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
     QFETCH(int, contactDeletes);
 
     QSparqlConnection conn(connectionDriver);
-    int expectedResultsSize = initialSize + contactInserts;
+    const int expectedResultsSize = initialSize + contactInserts;
 
     QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
     for (int item = initialSize+1; item <= expectedResultsSize; item++) {
@@ -1453,7 +1453,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
     }
     insertQuery.append(" }");
 
-    QSparqlQuery q(insertQuery, QSparqlQuery::InsertStatement);
+    const QSparqlQuery q(insertQuery, QSparqlQuery::InsertStatement);
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(!r->hasError());
     r->waitForFinished();
@@ -1481,10 +1481,9 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
     delete r;
 
     // Now verify deletion
-    expectedResultsSize -= contactDeletes;
     r = conn.syncExec(QSparqlQuery(validateQuery));
     r->waitForFinished();
-    validateResults(r, expectedResultsSize);
+    validateResults(r, expectedResultsSize - contactDeletes);
     delete r;
 }
 
