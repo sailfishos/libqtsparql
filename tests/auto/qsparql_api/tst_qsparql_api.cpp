@@ -246,6 +246,19 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     }
 }
 
+void validateErrorResult(QSparqlResult *r, int expectedErrorType)
+{
+    QVERIFY(r);
+    QVERIFY(r->hasError());
+    QVERIFY(r->lastError().type() == expectedErrorType);
+
+    // Check iteration behaviour
+    QVERIFY(r->pos() < 0);
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(r->pos() < 0);
+}
+
 } // end unnamed namespace
 
 tst_QSparqlAPI::tst_QSparqlAPI()
@@ -494,15 +507,7 @@ void tst_QSparqlAPI::query_error_test()
     QSparqlResult* r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, useAsyncObject);
-    QVERIFY(r->hasError());
-    QVERIFY(r->lastError().type() == QSparqlError::ErrorType(expectedErrorType));
-
-    // Check result behaviour
-    QVERIFY(r->pos() < 0);
-    QVERIFY(!r->next());
-    QVERIFY(!r->previous());
-    QVERIFY(r->pos() < 0);
-
+    validateErrorResult(r, expectedErrorType);
     QCOMPARE((*msgRecorder)[QtWarningMsg].count(), 1);
 
     delete r;
@@ -872,18 +877,10 @@ void tst_QSparqlAPI::update_query_error_test()
         QSparqlResult* r = conn.exec(q, queryOptions);
 
         checkExecutionMethod(r, executionMethod, useAsyncObject);
-
-        QVERIFY(r->hasError());
-        QVERIFY(r->lastError().type() == QSparqlError::ErrorType(expectedErrorType));
-        // Check result Behaviour
-        QVERIFY(r->pos() < 0);
-        QVERIFY(!r->next());
-        QVERIFY(!r->previous());
-        QVERIFY(r->pos() < 0);
-        // Check we got a warning
+        validateErrorResult(r, expectedErrorType);
         QCOMPARE((*msgRecorder)[QtWarningMsg].count(), round);
-        delete r;
 
+        delete r;
         // also check delete statments
         queryType = QSparqlQuery::DeleteStatement;
     }
