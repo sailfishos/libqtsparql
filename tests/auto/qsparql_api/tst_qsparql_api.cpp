@@ -101,6 +101,10 @@ private slots:
 
     void syncExec_waitForFinished_update_query_test();
     void syncExec_waitForFinished_update_query_test_data();
+
+private:
+    void insertTrackerTestData();
+    void cleanupTrackerTestData();
 };
 
 namespace {
@@ -253,9 +257,12 @@ void tst_QSparqlAPI::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
 
-    // clean any remainings
     cleanupTestCase();
+    insertTrackerTestData();
+}
 
+void tst_QSparqlAPI::insertTrackerTestData()
+{
     const QString insertQueryTemplate =
         "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
         "nie:isLogicalPartOf <qsparql-api-tests> ;"
@@ -277,6 +284,11 @@ void tst_QSparqlAPI::initTestCase()
 }
 
 void tst_QSparqlAPI::cleanupTestCase()
+{
+    cleanupTrackerTestData();
+}
+
+void tst_QSparqlAPI::cleanupTrackerTestData()
 {
     QSparqlConnection conn("QTRACKER");
     QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
