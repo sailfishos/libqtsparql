@@ -191,20 +191,19 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     QHash<QString, QString> contactNamesStringValue;
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+    int resultSize = 0;
     while (r->next()) {
         contactNamesValue[r->value(0).toString()] = r->value(1).toString();
         contactNamesBindings[r->binding(0).value().toString()] = r->binding(1).value().toString();
         contactNamesStringValue[r->stringValue(0)] = r->stringValue(1);
+        ++resultSize;
     }
     QVERIFY(r->pos() == QSparql::AfterLastRow);
-    // Verify that the values are correct, and also verify that the values
-    // are correct between usage
-    QCOMPARE(contactNamesValue.size(), expectedResultsSize);
-    QCOMPARE(contactNamesBindings.size(), expectedResultsSize);
-    QCOMPARE(contactNamesStringValue.size(), expectedResultsSize);
+    QCOMPARE(resultSize, expectedResultsSize);
+
     // Checks for if we expect some results
     if (expectedResultsSize != 0) {
-        for(int i=1;i<=expectedResultsSize;i++)
+        for(int i=1; i<=expectedResultsSize; i++)
         {
             QCOMPARE(contactNamesValue[QString("uri00%1").arg(i)], QString("name00%1").arg(i));
             QCOMPARE(contactNamesValue[QString("uri00%1").arg(i)], contactNamesBindings[QString("uri00%1").arg(i)]);
@@ -216,19 +215,16 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QVERIFY(!r->next());
             QVERIFY(r->pos() == QSparql::AfterLastRow);
         } else {
-            QVERIFY(r->pos() == QSparql::AfterLastRow);
-            QVERIFY(r->previous());
-            QVERIFY(r->pos() != QSparql::AfterLastRow);
-            for (int i=expectedResultsSize;i>=1;i--) {
+            // Iterate the result backwards
+            int resultSize = 0;
+            while (r->previous()) {
+                QVERIFY(r->pos() != QSparql::AfterLastRow);
                 QCOMPARE(contactNamesValue[r->value(0).toString()], r->value(1).toString());
                 QCOMPARE(contactNamesBindings[r->binding(0).value().toString()], r->binding(1).value().toString());
                 QCOMPARE(contactNamesStringValue[r->stringValue(0)], r->stringValue(1));
-                if (i>1)
-                    QVERIFY(r->previous());
-                else
-                    QVERIFY(!r->previous());
+                ++resultSize;
             }
-
+            QCOMPARE(resultSize, expectedResultsSize);
             // Now move forward one...
             QVERIFY(r->pos() == QSparql::BeforeFirstRow);
             QVERIFY(r->next());
