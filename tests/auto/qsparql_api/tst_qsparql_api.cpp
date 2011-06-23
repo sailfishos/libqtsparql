@@ -151,7 +151,7 @@ const QString constructQuery =
             void finished();
     };
 
-void checkExecutionMethod(const int executionMethod, const bool asyncObject, QSparqlResult* r)
+void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool asyncObject)
 {
     QVERIFY(r);
     if (executionMethod == QSparqlQueryOptions::AsyncExec) {
@@ -317,7 +317,7 @@ void tst_QSparqlAPI::query_test()
     QSparqlQuery q(query);
 
     QSparqlResult* r = conn.exec(q,queryOptions);
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     validateResults(r, expectedResultsSize);
 
     delete r;
@@ -436,7 +436,7 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
     // Re-parent the result to release from the ownership of conn
     r->setParent(this);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     if (r->isFinished())
     {
         // Result is finished after wait: destroy connection and validate result
@@ -477,7 +477,7 @@ void tst_QSparqlAPI::query_error_test()
 
     QSparqlResult* r = conn.exec(q,queryOptions);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     QVERIFY(r->hasError());
     QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
 
@@ -631,7 +631,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
         // If the query completes immediately, before the connection is
         // destroyed, it should not be in error and should contain valid data
         QVERIFY(!r->hasError());
-        checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(r, executionMethod, asyncObject);
         validateResults(r, expectedResultsSize);
     }
     else {
@@ -640,7 +640,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
-        checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(r, executionMethod, asyncObject);
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
@@ -731,7 +731,7 @@ void tst_QSparqlAPI::update_query_test()
 
     QSparqlResult* r = conn.exec(q,queryOptions);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
 
     // Update query binding values will return empty bindings
     QCOMPARE(QString(""), r->binding(0).value().toString());
@@ -747,7 +747,7 @@ void tst_QSparqlAPI::update_query_test()
 
     // Verify the insertion
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     validateResults(r, expectedResultsSize);
     delete r;
 
@@ -760,13 +760,13 @@ void tst_QSparqlAPI::update_query_test()
 
     QSparqlQuery delQuery(deleteQuery, QSparqlQuery::DeleteStatement);
     r = conn.exec(delQuery, queryOptions);
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     delete r;
 
     // Now verify deletion
     expectedResultsSize -= contactDeletes;
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
     validateResults(r, expectedResultsSize);
     delete r;
 }
@@ -857,7 +857,7 @@ void tst_QSparqlAPI::update_query_error_test()
 
         QSparqlResult* r = conn.exec(q,queryOptions);
 
-        checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(r, executionMethod, asyncObject);
 
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == (QSparqlError::ErrorType)expectedErrorType);
@@ -1011,7 +1011,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
         r->setParent(this);
         delete conn; conn = 0;
 
-        checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(r, executionMethod, asyncObject);
 
         if (!immediatelyFinished) {
             // If the result was not immediately finished after exec it should have an error
@@ -1111,7 +1111,7 @@ void tst_QSparqlAPI::ask_query_test()
 
         QSparqlResult *r = conn.exec(q, queryOptions);
 
-        checkExecutionMethod(executionMethod, asyncObject, r);
+        checkExecutionMethod(r, executionMethod, asyncObject);
 
         while (!r->isFinished())
             r->next();
@@ -1219,7 +1219,7 @@ void tst_QSparqlAPI::isFinished_test()
 
     QSparqlResult* r = conn.exec(q,queryOptions);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
 
     // According to the documentation, isFinished() will be false for sync queries
     // until the results have been iterated
@@ -1295,7 +1295,7 @@ void tst_QSparqlAPI::result_iteration_test()
 
     QSparqlResult* r = conn.exec(q,queryOptions);
 
-    checkExecutionMethod(executionMethod, asyncObject, r);
+    checkExecutionMethod(r, executionMethod, asyncObject);
 
     validateResults(r, expectedResultsSize);
     delete r;
