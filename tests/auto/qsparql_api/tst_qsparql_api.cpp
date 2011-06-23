@@ -160,11 +160,11 @@ const QString constructQuery =
             void finished();
     };
 
-void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool asyncObject)
+void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool useAsyncObject)
 {
     QVERIFY(r);
     if (executionMethod == QSparqlQueryOptions::AsyncExec) {
-        if (asyncObject) {
+        if (useAsyncObject) {
             // As per documentation requirement, only attempt to connect the
             // signals after first validating that there is no error
             if (!r->hasError()) {
@@ -324,7 +324,7 @@ void tst_QSparqlAPI::query_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
 
@@ -333,7 +333,7 @@ void tst_QSparqlAPI::query_test()
     const QSparqlQuery q(query);
 
     QSparqlResult* r = conn.exec(q, queryOptions);
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     validateResults(r, expectedResultsSize);
 
     delete r;
@@ -345,7 +345,7 @@ void tst_QSparqlAPI::query_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Async Query")
         << "QTRACKER"
@@ -439,7 +439,7 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
 
@@ -452,7 +452,7 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
     // Re-parent the result to release from the ownership of conn
     r->setParent(this);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     if (r->isFinished())
     {
         // Result is finished after wait: destroy connection and validate result
@@ -483,7 +483,7 @@ void tst_QSparqlAPI::query_error_test()
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
     QFETCH(int, expectedErrorType);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
 
@@ -493,7 +493,7 @@ void tst_QSparqlAPI::query_error_test()
 
     QSparqlResult* r = conn.exec(q, queryOptions);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     QVERIFY(r->hasError());
     QVERIFY(r->lastError().type() == QSparqlError::ErrorType(expectedErrorType));
 
@@ -514,7 +514,7 @@ void tst_QSparqlAPI::query_error_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Blank Query")
         << "QTRACKER"
@@ -628,7 +628,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
 
@@ -647,7 +647,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
         // If the query completes immediately, before the connection is
         // destroyed, it should not be in error and should contain valid data
         QVERIFY(!r->hasError());
-        checkExecutionMethod(r, executionMethod, asyncObject);
+        checkExecutionMethod(r, executionMethod, useAsyncObject);
         validateResults(r, expectedResultsSize);
     }
     else {
@@ -656,7 +656,7 @@ void tst_QSparqlAPI::query_destroy_connection_test()
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
-        checkExecutionMethod(r, executionMethod, asyncObject);
+        checkExecutionMethod(r, executionMethod, useAsyncObject);
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ConnectionError);
 
@@ -675,7 +675,7 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Async Query")
         << "QTRACKER"
@@ -730,7 +730,7 @@ void tst_QSparqlAPI::update_query_test()
     QFETCH(int, contactInserts);
     QFETCH(int, contactDeletes);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
     const int expectedResultsSize = initialSize + contactInserts;
@@ -747,7 +747,7 @@ void tst_QSparqlAPI::update_query_test()
 
     QSparqlResult* r = conn.exec(q, queryOptions);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
 
     // Update query binding values will return empty bindings
     QCOMPARE(QString(""), r->binding(0).value().toString());
@@ -763,7 +763,7 @@ void tst_QSparqlAPI::update_query_test()
 
     // Verify the insertion
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     validateResults(r, expectedResultsSize);
     delete r;
 
@@ -776,12 +776,12 @@ void tst_QSparqlAPI::update_query_test()
 
     const QSparqlQuery delQuery(deleteQuery, QSparqlQuery::DeleteStatement);
     r = conn.exec(delQuery, queryOptions);
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     delete r;
 
     // Now verify deletion
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
     validateResults(r, expectedResultsSize - contactDeletes);
     delete r;
 }
@@ -796,7 +796,7 @@ void tst_QSparqlAPI::update_query_test_data()
     QTest::addColumn<int>("contactInserts");
     QTest::addColumn<int>("contactDeletes");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Update Query")
         << "QTRACKER"
@@ -860,7 +860,7 @@ void tst_QSparqlAPI::update_query_error_test()
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
     QFETCH(int, expectedErrorType);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlQuery::StatementType queryType = QSparqlQuery::InsertStatement;
     for (int round = 1; round <= 2; ++round) {
@@ -871,7 +871,7 @@ void tst_QSparqlAPI::update_query_error_test()
 
         QSparqlResult* r = conn.exec(q, queryOptions);
 
-        checkExecutionMethod(r, executionMethod, asyncObject);
+        checkExecutionMethod(r, executionMethod, useAsyncObject);
 
         QVERIFY(r->hasError());
         QVERIFY(r->lastError().type() == QSparqlError::ErrorType(expectedErrorType));
@@ -895,7 +895,7 @@ void tst_QSparqlAPI::update_query_error_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Blank Query")
         << "QTRACKER"
@@ -1008,7 +1008,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
     QFETCH(QString, connectionDriver);
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
     QFETCH(QString, deleteQuery);
 
     QSparqlConnection cleanupConn("QTRACKER");
@@ -1025,7 +1025,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
         r->setParent(this);
         delete conn; conn = 0;
 
-        checkExecutionMethod(r, executionMethod, asyncObject);
+        checkExecutionMethod(r, executionMethod, useAsyncObject);
 
         if (!immediatelyFinished) {
             // If the result was not immediately finished after exec it should have an error
@@ -1052,7 +1052,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     QTest::addColumn<QString>("connectionDriver");
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
     QTest::addColumn<QString>("deleteQuery");
 
     QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
@@ -1112,7 +1112,7 @@ void tst_QSparqlAPI::ask_query_test()
     QFETCH(QString, query);
     QFETCH(int, executionMethod);
     QFETCH(bool, expectedResult);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
     QVERIFY(conn.hasFeature(QSparqlConnection::AskQueries));
@@ -1124,7 +1124,7 @@ void tst_QSparqlAPI::ask_query_test()
 
     QSparqlResult *r = conn.exec(q, queryOptions);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
 
     while (!r->isFinished())
         r->next();
@@ -1141,7 +1141,7 @@ void tst_QSparqlAPI::ask_query_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<QString>("query");
     QTest::addColumn<bool>("expectedResult");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("Tracker Direct Async True Query")
         << "QTRACKER_DIRECT"
@@ -1221,7 +1221,7 @@ void tst_QSparqlAPI::isFinished_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
 
@@ -1231,7 +1231,7 @@ void tst_QSparqlAPI::isFinished_test()
 
     QSparqlResult* r = conn.exec(q, queryOptions);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
 
     // According to the documentation, isFinished() will be false for sync queries
     // until the results have been iterated
@@ -1253,7 +1253,7 @@ void tst_QSparqlAPI::isFinished_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Async Query")
         << "QTRACKER"
@@ -1297,7 +1297,7 @@ void tst_QSparqlAPI::result_iteration_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
-    QFETCH(bool, asyncObject);
+    QFETCH(bool, useAsyncObject);
 
     QSparqlConnection conn(connectionDriver);
 
@@ -1307,7 +1307,7 @@ void tst_QSparqlAPI::result_iteration_test()
 
     QSparqlResult* r = conn.exec(q, queryOptions);
 
-    checkExecutionMethod(r, executionMethod, asyncObject);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
 
     validateResults(r, expectedResultsSize);
     delete r;
@@ -1319,7 +1319,7 @@ void tst_QSparqlAPI::result_iteration_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("asyncObject");
+    QTest::addColumn<bool>("useAsyncObject");
 
     QTest::newRow("DBus Async Query")
         << "QTRACKER"
