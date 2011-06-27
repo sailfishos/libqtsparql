@@ -1138,6 +1138,7 @@ void tst_QSparqlAPI::ask_query_test()
     }
     QCOMPARE(resultSize, 1);
 
+    QVERIFY(!r->hasError());
     QVERIFY(r->isBool());
     QCOMPARE(r->boolValue(), expectedResult);
 
