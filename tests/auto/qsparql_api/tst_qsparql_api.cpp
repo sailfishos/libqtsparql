@@ -160,11 +160,15 @@ public:
     FinishedSignalReceiver() : finished(false)
     { }
 
-    void waitForFinished()
+    void waitForFinished(int timeoutMs)
     {
-        while (!finished) {
-            QTest::qWait(100);
+        QTime timeoutTimer;
+        timeoutTimer.start();
+        bool timeout = false;
+        while (!finished && !(timeout = (timeoutTimer.elapsed() > timeoutMs))) {
+            QTest::qWait(qMax(20, timeoutMs / 100));
         }
+        QVERIFY(!timeout);
     }
 
 public slots:
@@ -181,7 +185,7 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
             if (!r->hasError()) {
                 FinishedSignalReceiver signalObject;
                 QObject::connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
-                signalObject.waitForFinished();
+                signalObject.waitForFinished(2000);
             }
         } else {
             r->waitForFinished();
