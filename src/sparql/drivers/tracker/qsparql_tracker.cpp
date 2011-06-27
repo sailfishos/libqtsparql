@@ -113,13 +113,11 @@ class QTrackerResultPrivate : public QObject {
     Q_OBJECT
 public:
     QTrackerResultPrivate(QTrackerResult* res,
-                          QSparqlQuery::StatementType tp,
                           QTrackerDriverPrivate* dp);
 
     ~QTrackerResultPrivate();
     QDBusPendingCallWatcher* watcher;
     QVector<QStringList> data;
-    QSparqlQuery::StatementType type;
     QTrackerDriverPrivate* driverPrivate;
     void setCall(QDBusPendingCall& call);
     static TrackerSparqlError errorNameToCode(const QString& name);
@@ -142,9 +140,8 @@ QLatin1String resourcesPath("/org/freedesktop/Tracker1/Resources");
 } // end of unnamed namespace
 
 QTrackerResultPrivate::QTrackerResultPrivate(QTrackerResult* res,
-                                             QSparqlQuery::StatementType tp,
                                              QTrackerDriverPrivate* dp)
-: watcher(0), type(tp), driverPrivate(dp), q(res)
+: watcher(0), driverPrivate(dp), q(res)
 {
 }
 
@@ -228,14 +225,14 @@ void QTrackerResultPrivate::onDBusCallFinished()
         return;
     }
 
-    switch (type) {
+    switch (q->statementType()) {
     case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
     {
         QDBusPendingReply<QVector<QStringList> > reply = *watcher;
         data = reply.argumentAt<0>();
 
-        if (type == QSparqlQuery::AskStatement && data.count() == 1 && data[0].count() == 1)
+        if (q->statementType() == QSparqlQuery::AskStatement && data.count() == 1 && data[0].count() == 1)
         {
             QVariant boolValue = data[0][0];
             q->setBoolValue(boolValue.toBool());
@@ -254,7 +251,8 @@ void QTrackerResultPrivate::onDBusCallFinished()
 QTrackerResult::QTrackerResult(const QString& query, QSparqlQuery::StatementType tp, QTrackerDriver* driver)
 {
     setQuery(query);
-    d = new QTrackerResultPrivate(this, tp, driver->d);
+    setStatementType(tp);
+    d = new QTrackerResultPrivate(this, driver->d);
     connect(driver, SIGNAL(closing()), this, SLOT(driverClosing()));
 }
 
@@ -350,7 +348,7 @@ bool QTrackerResult::hasFeature(QSparqlResult::Feature feature) const
 void QTrackerResult::exec(const QSparqlQueryOptions& options)
 {
     QString funcToCall;
-    switch (d->type) {
+    switch (statementType()) {
     case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
     {

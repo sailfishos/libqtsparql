@@ -102,6 +102,7 @@ public:
     QSparqlError lastError() const;
 
     QString query() const;
+    QSparqlQuery::StatementType statementType() const;
 
     bool isTable() const;
     bool isGraph() const;

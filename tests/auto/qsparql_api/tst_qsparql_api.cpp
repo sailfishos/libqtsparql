@@ -1131,7 +1131,7 @@ void tst_QSparqlAPI::ask_query_test()
     while (!r->isFinished())
         r->next();
 
-    QVERIFY(r->isFinished());
+    QVERIFY(r->isBool());
     QCOMPARE(r->boolValue(), expectedResult);
 
     delete r;
