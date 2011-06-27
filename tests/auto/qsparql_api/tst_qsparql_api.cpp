@@ -52,10 +52,7 @@ class tst_QSparqlAPI : public QObject
 
 public:
     tst_QSparqlAPI();
-    virtual ~tst_QSparqlAPI();
-
-    MessageRecorder *msgRecorder;
-    //void validateResults(QSparqlResult* result, const int expectedResultsSize);
+    ~tst_QSparqlAPI();
 
 private slots:
     void initTestCase();
@@ -105,6 +102,9 @@ private slots:
 private:
     void insertTrackerTestData();
     void cleanupTrackerTestData();
+
+private:
+    MessageRecorder *msgRecorder;
 };
 
 namespace {
