@@ -151,25 +151,25 @@ const QString constructQuery =
     "CONSTRUCT { ?s ?p ?o }"
     "    WHERE { GRAPH <http://example.org/aGraph> { ?s ?p ?o } . }";
 
-    class MySignalObject : public QObject
+class FinishedSignalReceiver : public QObject
+{
+    Q_OBJECT
+    bool finished;
+
+public:
+    FinishedSignalReceiver() : finished(false)
+    { }
+
+    void waitForFinished()
     {
-        Q_OBJECT
-        bool finished;
-
-    public:
-        MySignalObject() : finished(false)
-        { }
-
-        void waitForFinished()
-        {
-            while (!finished) {
-                QTest::qWait(100);
-            }
+        while (!finished) {
+            QTest::qWait(100);
         }
+    }
 
-    public slots:
-        void onFinished() { finished = true; }
-    };
+public slots:
+    void onFinished() { finished = true; }
+};
 
 void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool useAsyncObject)
 {
@@ -179,7 +179,7 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
             // As per documentation requirement, only attempt to connect the
             // signals after first validating that there is no error
             if (!r->hasError()) {
-                MySignalObject signalObject;
+                FinishedSignalReceiver signalObject;
                 QObject::connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
                 signalObject.waitForFinished();
             }
