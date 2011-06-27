@@ -87,9 +87,6 @@ private slots:
     void isFinished_test();
     void isFinished_test_data();
 
-    void result_iteration_test();
-    void result_iteration_test_data();
-
     void queryModel_test();
     void queryModel_test_data();
 
@@ -1268,72 +1265,6 @@ void tst_QSparqlAPI::isFinished_test_data()
         << false;
 
    QTest::newRow("DBus Async Object Query")
-        << "QTRACKER"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << true;
-
-    QTest::newRow("Tracker Direct Async Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << true;
-
-    QTest::newRow("Tracker Direct Sync Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::SyncExec)
-        << false;
-}
-
-void tst_QSparqlAPI::result_iteration_test()
-{
-    QFETCH(QString, connectionDriver);
-    QFETCH(QString, query);
-    QFETCH(int, expectedResultsSize);
-    QFETCH(int, executionMethod);
-    QFETCH(bool, useAsyncObject);
-
-    QSparqlConnection conn(connectionDriver);
-
-    QSparqlQueryOptions queryOptions;
-    queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
-    const QSparqlQuery q(query);
-
-    QSparqlResult* r = conn.exec(q, queryOptions);
-
-    checkExecutionMethod(r, executionMethod, useAsyncObject);
-
-    validateResults(r, expectedResultsSize);
-    delete r;
-}
-
-void tst_QSparqlAPI::result_iteration_test_data()
-{
-    QTest::addColumn<QString>("connectionDriver");
-    QTest::addColumn<QString>("query");
-    QTest::addColumn<int>("expectedResultsSize");
-    QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("useAsyncObject");
-
-    QTest::newRow("DBus Async Query")
-        << "QTRACKER"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << false;
-
-    QTest::newRow("DBus Async Object Query")
         << "QTRACKER"
         << contactSelectQuery
         << NUM_TRACKER_INSERTS
