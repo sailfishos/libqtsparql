@@ -1127,9 +1127,16 @@ void tst_QSparqlAPI::ask_query_test()
     QSparqlResult *r = conn.exec(q, queryOptions);
 
     checkExecutionMethod(r, executionMethod, useAsyncObject);
+    const bool immediatelyFinished = r->isFinished();
 
-    while (!r->isFinished())
-        r->next();
+    int resultSize = r->size();
+    if (!immediatelyFinished) {
+        resultSize = 0;
+        while (r->next())
+            ++resultSize;
+        QVERIFY(r->isFinished());
+    }
+    QCOMPARE(resultSize, 1);
 
     QVERIFY(r->isBool());
     QCOMPARE(r->boolValue(), expectedResult);

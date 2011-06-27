@@ -131,7 +131,6 @@ public:
 
     ~QTrackerDirectResultPrivate();
     void terminate();
-    void setBoolValue(bool v);
     void dataReady(int totalCount);
 
     TrackerSparqlCursor* cursor;
@@ -179,11 +178,6 @@ void QTrackerDirectResultPrivate::terminate()
         g_object_unref(cursor);
         cursor = 0;
     }
-}
-
-void QTrackerDirectResultPrivate::setBoolValue(bool v)
-{
-    q->setBoolValue(v);
 }
 
 void QTrackerDirectResultPrivate::dataReady(int totalCount)
@@ -312,26 +306,16 @@ bool QTrackerDirectResult::fetchNextResult()
 
 bool QTrackerDirectResult::fetchBoolResult()
 {
-    QMutexLocker connectionLocker(&(d->driverPrivate->connectionMutex));
-
-    GError * error = 0;
-    tracker_sparql_cursor_next(d->cursor, 0, &error);
-    if (error) {
-        setLastError(QSparqlError(QString::fromUtf8(error->message),
-                       errorCodeToType(error->code),
-                       error->code));
-        g_error_free(error);
-        terminate();
-        qWarning() << "QTrackerDirectResult:" << lastError() << query();
-        return false;
-    }
-
     QMutexLocker resultLocker(&(d->resultMutex));
 
-    if (tracker_sparql_cursor_get_n_columns(d->cursor) == 1 &&
-        tracker_sparql_cursor_get_value_type(d->cursor, 0) == TRACKER_SPARQL_VALUE_TYPE_BOOLEAN)  {
-        const gboolean value = tracker_sparql_cursor_get_boolean(d->cursor, 0);
-        d->setBoolValue(value != FALSE);
+    if (!fetchNextResult())
+        return false;
+
+    if (d->results.count() == 1 && d->results[0].count() == 1) {
+        const QVariant result = d->results[0][0];
+        if (result.canConvert<bool>()) {
+            setBoolValue(result.toBool());
+        }
     }
 
     terminate();
