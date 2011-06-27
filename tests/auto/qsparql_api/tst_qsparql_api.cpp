@@ -1237,13 +1237,15 @@ void tst_QSparqlAPI::isFinished_test()
 
     // According to the documentation, isFinished() will be false for sync queries
     // until the results have been iterated
-    if (executionMethod == QSparqlQueryOptions::SyncExec) {
+    if (executionMethod == QSparqlQueryOptions::SyncExec &&
+            conn.hasFeature(QSparqlConnection::SyncExec)) {
         QVERIFY(!r->isFinished());
         validateResults(r, expectedResultsSize);
         QVERIFY(r->isFinished());
     } else {
         QVERIFY(r->isFinished());
         validateResults(r, expectedResultsSize);
+        QVERIFY(r->isFinished());
     }
 
     delete r;
@@ -1251,46 +1253,7 @@ void tst_QSparqlAPI::isFinished_test()
 
 void tst_QSparqlAPI::isFinished_test_data()
 {
-    QTest::addColumn<QString>("connectionDriver");
-    QTest::addColumn<QString>("query");
-    QTest::addColumn<int>("expectedResultsSize");
-    QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("useAsyncObject");
-
-    QTest::newRow("DBus Async Query")
-        << "QTRACKER"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << false;
-
-   QTest::newRow("DBus Async Object Query")
-        << "QTRACKER"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << true;
-
-    QTest::newRow("Tracker Direct Async Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::AsyncExec)
-        << true;
-
-    QTest::newRow("Tracker Direct Sync Query")
-        << "QTRACKER_DIRECT"
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
-        << int(QSparqlQueryOptions::SyncExec)
-        << false;
+    query_test_data();
 }
 
 void tst_QSparqlAPI::queryModel_test()
