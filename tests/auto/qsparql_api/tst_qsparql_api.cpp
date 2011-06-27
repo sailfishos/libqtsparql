@@ -251,6 +251,48 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     }
 }
 
+void validateBoolVariant_impl(bool& result, const QVariant& variant, const bool expectedResult)
+{
+    result = false;
+    QVERIFY(variant.canConvert<bool>());
+    QCOMPARE(variant.toBool(), expectedResult);
+    result = true;
+}
+
+bool validateBoolVariant(const QVariant& variant, const bool expectedResult)
+{
+    bool result = false;
+    validateBoolVariant_impl(result, variant, expectedResult);
+    return result;
+}
+
+void validateCurrentBoolResult_impl(bool& result, QSparqlResult* r, const bool expectedResult)
+{
+    result = false;
+
+    QVERIFY(r->isValid());
+    QVERIFY(r->isBool());
+    QCOMPARE(r->boolValue(), expectedResult);
+
+    QCOMPARE(r->current().count(), 1);
+    QVERIFY(validateBoolVariant(r->current().value(0), expectedResult));
+
+    QVERIFY(validateBoolVariant(r->value(0), expectedResult));
+
+    QVERIFY(r->binding(0).isValid());
+    QVERIFY(r->binding(0).isLiteral());
+    QVERIFY(validateBoolVariant(r->binding(0).value(), expectedResult));
+
+    result = true;
+}
+
+bool validateCurrentBoolResult(QSparqlResult* r, const bool expectedResult)
+{
+    bool result = false;
+    validateCurrentBoolResult_impl(result, r, expectedResult);
+    return result;
+}
+
 void validateErrorResult(QSparqlResult *r, int expectedErrorType)
 {
     QVERIFY(r);
@@ -1129,18 +1171,19 @@ void tst_QSparqlAPI::ask_query_test()
     checkExecutionMethod(r, executionMethod, useAsyncObject);
     const bool immediatelyFinished = r->isFinished();
 
-    int resultSize = r->size();
-    if (!immediatelyFinished) {
-        resultSize = 0;
-        while (r->next())
-            ++resultSize;
-        QVERIFY(r->isFinished());
+    if (immediatelyFinished) {
+        QVERIFY(r->isBool());
+        QCOMPARE(r->boolValue(), expectedResult);
+        QCOMPARE(r->size(), 1);
     }
-    QCOMPARE(resultSize, 1);
 
-    QVERIFY(!r->hasError());
-    QVERIFY(r->isBool());
-    QCOMPARE(r->boolValue(), expectedResult);
+    int resultSize = 0;
+    while (r->next()) {
+        ++resultSize;
+        QVERIFY(validateCurrentBoolResult(r, expectedResult));
+    }
+    QVERIFY(r->isFinished());
+    QCOMPARE(resultSize, 1);
 
     delete r;
 }
