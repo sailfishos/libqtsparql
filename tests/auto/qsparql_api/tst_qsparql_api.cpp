@@ -154,10 +154,21 @@ const QString constructQuery =
     class MySignalObject : public QObject
     {
         Q_OBJECT
-        public slots:
-            void onFinished() { emit finished(); }
-        signals:
-            void finished();
+        bool finished;
+
+    public:
+        MySignalObject() : finished(false)
+        { }
+
+        void waitForFinished()
+        {
+            while (!finished) {
+                QTest::qWait(100);
+            }
+        }
+
+    public slots:
+        void onFinished() { finished = true; }
     };
 
 void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool useAsyncObject)
@@ -170,10 +181,7 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
             if (!r->hasError()) {
                 MySignalObject signalObject;
                 QObject::connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
-                QSignalSpy spy(&signalObject, SIGNAL(finished()));
-                while (spy.count() == 0) {
-                    QTest::qWait(100);
-                }
+                signalObject.waitForFinished();
             }
         } else {
             r->waitForFinished();
