@@ -1101,6 +1101,36 @@ void tst_QSparqlAPI::add_update_query_error_test_data(const QString& connectionD
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::StatementError)
         << false;
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Blank Query")
+            << "QSPARQL_ENDPOINT"
+            << ""
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << false;
+
+        QTest::newRow("Endpoint Blank Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << ""
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << true;
+
+        QTest::newRow("Endpoint Invalid Query")
+            << "QSPARQL_ENDPOINT"
+            << "invalid query"
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << false;
+
+        QTest::newRow("Endpoint Invalid Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << "invalid query"
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << true;
+    }
 }
 
 void tst_QSparqlAPI::update_query_error_test_data()
@@ -1162,11 +1192,11 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
 
 void tst_QSparqlAPI::add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
 {
-    QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
+    QString insertQuery = contactInsertHeader;
     insertQuery.append(contactInsertQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     insertQuery.append(" }");
 
-    QString deleteQuery = "delete { <qsparql-api-tests> a nie:InformationElement .";
+    QString deleteQuery = contactDeleteHeader;
     deleteQuery.append(contactDeleteQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     deleteQuery.append(" }");
 
@@ -1201,6 +1231,30 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     QTest::addColumn<QString>("deleteQuery");
     add_update_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_update_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
+
+    if (testEndpoint) {
+        QString endpointInsertQuery = endpointInsertHeader;
+        endpointInsertQuery.append(contactInsertQueryTemplate.arg(NUM_ENDPOINT_INSERTS+1));
+        endpointInsertQuery.append(" }");
+
+        QString endpointDeleteQuery = endpointDeleteHeader;
+        endpointDeleteQuery.append(contactDeleteQueryTemplate.arg(NUM_ENDPOINT_INSERTS+1));
+        endpointDeleteQuery.append(" }");
+
+        QTest::newRow("Endpoint Async Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointInsertQuery
+            << int(QSparqlQueryOptions::AsyncExec)
+            << false
+            << endpointDeleteQuery;
+
+        QTest::newRow("Endpoint Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointInsertQuery
+            << int(QSparqlQueryOptions::AsyncExec)
+            << true
+            << endpointDeleteQuery;
+    }
 }
 
 void tst_QSparqlAPI::ask_query_test()
