@@ -102,12 +102,14 @@ private:
     void insertEndpointTestData();
     void cleanupTrackerTestData();
     void cleanupEndpointTestData();
-    void add_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
-    void add_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
-    void add_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
-    void add_update_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
-    void add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
-    void add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
+    void add_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& selectQuery, int resultSize);
+    void add_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix, bool supportsConstruct);
+    void add_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& selectQuery, int resultSize);
+    void add_update_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix,
+                                    const QString& insertHeader, const QString& deleteHeader,
+                                    const QString& validateQuery, int initialSize);
+    void add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix, bool supportsConstruct);
+    void add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& insertHeader, const QString& deleteHeader);
     void add_ask_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
 
 private:
@@ -139,11 +141,11 @@ const QString contactSelectNothingQuery =
 const int contactSelectColumnCount = 2;
 
 const QString contactInsertHeader =
-    "insert { <qsparql-api-tests> a nie:InformationElement .";
+    "insert { <qsparql-api-tests> a nie:InformationElement.";
 const QString endpointInsertHeader =
     "insert into <http://virtuoso_endpoint/testgraph> { <qsparql-api-tests> a nie:InformationElement .";
 const QString contactInsertQueryTemplate =
-    "<uri00%1> a nco:PersonContact; "
+    "<uri00%1> a nco:PersonContact;"
     "nie:isLogicalPartOf <qsparql-api-tests> ;"
     "nco:nameGiven \"name00%1\" .";
 const int contactInsertAmount = 1;
@@ -153,9 +155,10 @@ const QString contactDeleteHeader =
 const QString endpointDeleteHeader =
     "delete FROM <http://virtuoso_endpoint/testgraph> { <qsparql-api-tests> a nie:InformationElement .";
 const QString contactDeleteQueryTemplate =
-    "<uri00%1> a rdfs:Resource .";
-const QString endPointDeleteQueryTemplate =
     "<uri00%1> a nco:PersonContact .";
+
+//const QString endPointDeleteQueryTemplate =
+//    "<uri00%1> a nco:PersonContact .";
 const int contactDeleteAmount = 1;
 
 const QString askQueryTrue =
@@ -497,12 +500,12 @@ void tst_QSparqlAPI::query_test()
     delete r;
 }
 
-void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& selectQuery, int resultSize)
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::AsyncExec)
         << false;
 
@@ -515,8 +518,8 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::SyncExec)
         << false;
 
@@ -529,8 +532,8 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::AsyncExec)
         << true;
 
@@ -549,31 +552,10 @@ void tst_QSparqlAPI::query_test_data()
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
-    add_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_query_test_data("QTRACKER", "Tracker DBus");
-
-    if (testEndpoint) {
-        QTest::newRow("Endpoint Async Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointSelectQuery
-            << NUM_ENDPOINT_INSERTS
-            << int(QSparqlQueryOptions::AsyncExec)
-            << false;
-
-        QTest::newRow("Endpoint Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointSelectQuery
-            << NUM_ENDPOINT_INSERTS
-            << int(QSparqlQueryOptions::AsyncExec)
-            << true;
-
-        QTest::newRow("Endpoint Sync Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointSelectQuery
-            << NUM_ENDPOINT_INSERTS
-            << int(QSparqlQueryOptions::SyncExec)
-            << false;
-    }
+    add_query_test_data("QTRACKER_DIRECT", "Tracker Direct", contactSelectQuery, NUM_TRACKER_INSERTS);
+    add_query_test_data("QTRACKER", "Tracker DBus", contactSelectQuery, NUM_TRACKER_INSERTS);
+    if (testEndpoint)
+        add_query_test_data("QSPARQL_ENDPOINT", "Endpoint", endpointSelectQuery, NUM_ENDPOINT_INSERTS);
 
 }
 
@@ -646,7 +628,7 @@ void tst_QSparqlAPI::query_error_test()
     delete r;
 }
 
-void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix, bool supportsConstruct)
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Empty Query")))
         << connectionDriver
@@ -690,55 +672,27 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
         << int(QSparqlError::StatementError)
         << false;
 
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::BackendError)
-        << false;
-
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::BackendError)
-        << true;
-
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::SyncExec)
-        << int(QSparqlError::BackendError)
-        << false;
-
-    if (testEndpoint) {
-        QTest::newRow("Endpoint Blank Query")
-            << "QSPARQL_ENDPOINT"
-            << ""
+    if (!supportsConstruct) {
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
-            << int(QSparqlError::StatementError)
+            << int(QSparqlError::BackendError)
             << false;
 
-        QTest::newRow("Endpoint Blank Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << ""
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
-            << int(QSparqlError::StatementError)
+            << int(QSparqlError::BackendError)
             << true;
 
-        QTest::newRow("Endpoint Invalid Query")
-            << "QSPARQL_ENDPOINT"
-            << "invalid query"
-            << int(QSparqlQueryOptions::AsyncExec)
-            << int(QSparqlError::StatementError)
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
+            << int(QSparqlQueryOptions::SyncExec)
+            << int(QSparqlError::BackendError)
             << false;
-
-        QTest::newRow("Endpoint Invalid Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << "invalid query"
-            << int(QSparqlQueryOptions::AsyncExec)
-            << int(QSparqlError::StatementError)
-            << true;
     }
 }
 
@@ -749,8 +703,10 @@ void tst_QSparqlAPI::query_error_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("useAsyncObject");
-    add_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_query_error_test_data("QTRACKER", "Tracker DBus");
+    add_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct", false);
+    add_query_error_test_data("QTRACKER", "Tracker DBus", false);
+    if (testEndpoint)
+        add_query_error_test_data("QSPARQL_ENDPOINT", "Endpoint", true);
 }
 
 void tst_QSparqlAPI::query_destroy_connection_test()
@@ -801,26 +757,26 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     delete r;
 }
 
-void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& selectQuery, int resultSize)
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::AsyncExec)
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::AsyncExec)
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
         << connectionDriver
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << selectQuery
+        << resultSize
         << int(QSparqlQueryOptions::SyncExec)
         << false;
 }
@@ -832,25 +788,10 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
-    add_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
-
-    if (testEndpoint) {
-        QTest::newRow("Endpoint Async Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointSelectQuery
-            << NUM_ENDPOINT_INSERTS
-            << int(QSparqlQueryOptions::AsyncExec)
-            << false;
-
-        QTest::newRow("Endpoint Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointSelectQuery
-            << NUM_ENDPOINT_INSERTS
-            << int(QSparqlQueryOptions::AsyncExec)
-            << true;
-
-    }
+    add_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct", contactSelectQuery, NUM_TRACKER_INSERTS);
+    add_query_destroy_connection_test_data("QTRACKER", "Tracker DBus", contactSelectQuery, NUM_TRACKER_INSERTS);
+    if (testEndpoint)
+        add_query_destroy_connection_test_data("QSPARQL_ENDPOINT", "Endpoint", endpointSelectQuery, NUM_ENDPOINT_INSERTS);
 }
 
 void tst_QSparqlAPI::update_query_test()
@@ -922,16 +863,18 @@ void tst_QSparqlAPI::update_query_test()
     delete r;
 }
 
-void tst_QSparqlAPI::add_update_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_update_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix,
+                                                const QString& insertHeader, const QString& deleteHeader,
+                                                const QString& validateQuery, int initialSize)
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Update Query")))
         << connectionDriver
-        << contactInsertHeader
+        << insertHeader
         << contactInsertQueryTemplate
-        << contactDeleteHeader
+        << deleteHeader
         << contactDeleteQueryTemplate
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << validateQuery
+        << initialSize
         << contactInsertAmount
         << contactDeleteAmount
         << int(QSparqlQueryOptions::AsyncExec)
@@ -939,12 +882,12 @@ void tst_QSparqlAPI::add_update_query_test_data(const QString& connectionDriver,
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Update Query")))
         << connectionDriver
-        << contactInsertHeader
+        << insertHeader
         << contactInsertQueryTemplate
-        << contactDeleteHeader
+        << deleteHeader
         << contactDeleteQueryTemplate
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << validateQuery
+        << initialSize
         << contactInsertAmount
         << contactDeleteAmount
         << int(QSparqlQueryOptions::AsyncExec)
@@ -952,12 +895,12 @@ void tst_QSparqlAPI::add_update_query_test_data(const QString& connectionDriver,
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Update Query")))
         << connectionDriver
-        << contactInsertHeader
+        << insertHeader
         << contactInsertQueryTemplate
-        << contactDeleteHeader
+        << deleteHeader
         << contactDeleteQueryTemplate
-        << contactSelectQuery
-        << NUM_TRACKER_INSERTS
+        << validateQuery
+        << initialSize
         << contactInsertAmount
         << contactDeleteAmount
         << int(QSparqlQueryOptions::SyncExec)
@@ -977,36 +920,10 @@ void tst_QSparqlAPI::update_query_test_data()
     QTest::addColumn<int>("contactDeletes");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
-    add_update_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_update_query_test_data("QTRACKER", "Tracker DBus");
-
-    if (testEndpoint) {
-        QTest::newRow("Endpoint Update Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointInsertHeader
-            << contactInsertQueryTemplate
-            << endpointDeleteHeader
-            << endPointDeleteQueryTemplate
-            << endpointSelectQuery
-            << NUM_TRACKER_INSERTS
-            << contactInsertAmount
-            << contactDeleteAmount
-            << int(QSparqlQueryOptions::AsyncExec)
-            << false;
-
-        QTest::newRow("Endpoint Update Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointInsertHeader
-            << contactInsertQueryTemplate
-            << endpointDeleteHeader
-            << endPointDeleteQueryTemplate
-            << endpointSelectQuery
-            << NUM_TRACKER_INSERTS
-            << contactInsertAmount
-            << contactDeleteAmount
-            << int(QSparqlQueryOptions::AsyncExec)
-            << true;
-    }
+    add_update_query_test_data("QTRACKER_DIRECT", "Tracker Direct", contactInsertHeader, contactDeleteHeader, contactSelectQuery, NUM_TRACKER_INSERTS);
+    add_update_query_test_data("QTRACKER", "Tracker DBus", contactInsertHeader, contactDeleteHeader, contactSelectQuery, NUM_TRACKER_INSERTS);
+    if (testEndpoint)
+        add_update_query_test_data("QSPARQL_ENDPOINT", "Endpoint", endpointInsertHeader, endpointDeleteHeader, endpointSelectQuery, NUM_ENDPOINT_INSERTS);
 }
 
 void tst_QSparqlAPI::update_query_error_test()
@@ -1037,7 +954,7 @@ void tst_QSparqlAPI::update_query_error_test()
     }
 }
 
-void tst_QSparqlAPI::add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix, bool supportsConstruct)
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Empty Query")))
         << connectionDriver
@@ -1081,55 +998,27 @@ void tst_QSparqlAPI::add_update_query_error_test_data(const QString& connectionD
         << int(QSparqlError::StatementError)
         << false;
 
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
-        << connectionDriver
-        << constructQuery
-        << int(QSparqlQueryOptions::SyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    if (testEndpoint) {
-        QTest::newRow("Endpoint Blank Query")
-            << "QSPARQL_ENDPOINT"
-            << ""
+    if (!supportsConstruct) {
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
             << int(QSparqlError::StatementError)
             << false;
 
-        QTest::newRow("Endpoint Blank Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << ""
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
             << int(QSparqlError::StatementError)
             << true;
 
-        QTest::newRow("Endpoint Invalid Query")
-            << "QSPARQL_ENDPOINT"
-            << "invalid query"
-            << int(QSparqlQueryOptions::AsyncExec)
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
+            << connectionDriver
+            << constructQuery
+            << int(QSparqlQueryOptions::SyncExec)
             << int(QSparqlError::StatementError)
             << false;
-
-        QTest::newRow("Endpoint Invalid Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << "invalid query"
-            << int(QSparqlQueryOptions::AsyncExec)
-            << int(QSparqlError::StatementError)
-            << true;
     }
 }
 
@@ -1140,8 +1029,10 @@ void tst_QSparqlAPI::update_query_error_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("useAsyncObject");
-    add_update_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_update_query_error_test_data("QTRACKER", "Tracker DBus");
+    add_update_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct", false);
+    add_update_query_error_test_data("QTRACKER", "Tracker DBus", false);
+    if (testEndpoint)
+        add_update_query_error_test_data("QSPARQL_ENDPOINT", "Endpoint", true);
 }
 
 void tst_QSparqlAPI::update_query_destroy_connection_test()
@@ -1190,13 +1081,13 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
     }
 }
 
-void tst_QSparqlAPI::add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+void tst_QSparqlAPI::add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix, const QString& insertHeader, const QString& deleteHeader)
 {
-    QString insertQuery = contactInsertHeader;
+    QString insertQuery = insertHeader;
     insertQuery.append(contactInsertQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     insertQuery.append(" }");
 
-    QString deleteQuery = contactDeleteHeader;
+    QString deleteQuery = deleteHeader;
     deleteQuery.append(contactDeleteQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     deleteQuery.append(" }");
 
@@ -1229,32 +1120,8 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
     QTest::addColumn<QString>("deleteQuery");
-    add_update_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
-    add_update_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
-
-    if (testEndpoint) {
-        QString endpointInsertQuery = endpointInsertHeader;
-        endpointInsertQuery.append(contactInsertQueryTemplate.arg(NUM_ENDPOINT_INSERTS+1));
-        endpointInsertQuery.append(" }");
-
-        QString endpointDeleteQuery = endpointDeleteHeader;
-        endpointDeleteQuery.append(contactDeleteQueryTemplate.arg(NUM_ENDPOINT_INSERTS+1));
-        endpointDeleteQuery.append(" }");
-
-        QTest::newRow("Endpoint Async Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointInsertQuery
-            << int(QSparqlQueryOptions::AsyncExec)
-            << false
-            << endpointDeleteQuery;
-
-        QTest::newRow("Endpoint Async Object Query")
-            << "QSPARQL_ENDPOINT"
-            << endpointInsertQuery
-            << int(QSparqlQueryOptions::AsyncExec)
-            << true
-            << endpointDeleteQuery;
-    }
+    add_update_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct", contactInsertHeader, contactDeleteHeader);
+    add_update_query_destroy_connection_test_data("QTRACKER", "Tracker DBus", contactInsertHeader, contactDeleteHeader);
 }
 
 void tst_QSparqlAPI::ask_query_test()
