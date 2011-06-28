@@ -148,6 +148,9 @@ const QString constructQuery =
     "CONSTRUCT { ?s ?p ?o }"
     "    WHERE { GRAPH <http://example.org/aGraph> { ?s ?p ?o } . }";
 
+const QString invalidQuery =
+    "Invalid query";
+
 class FinishedSignalReceiver : public QObject
 {
     Q_OBJECT
@@ -585,14 +588,14 @@ void tst_QSparqlAPI::query_error_test_data()
 
     QTest::newRow("DBus Invalid Query")
         << "QTRACKER"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << false;
 
     QTest::newRow("DBus Invalid Async Object Query")
         << "QTRACKER"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << true;
@@ -634,21 +637,21 @@ void tst_QSparqlAPI::query_error_test_data()
 
     QTest::newRow("Tracker Direct Async Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << false;
 
     QTest::newRow("Tracker Direct Async Object Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << true;
 
     QTest::newRow("Tracker Direct Sync Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::StatementError)
         << false;
@@ -958,14 +961,14 @@ void tst_QSparqlAPI::update_query_error_test_data()
 
     QTest::newRow("DBus Invalid Query")
         << "QTRACKER"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << false;
 
     QTest::newRow("DBus Invalid Async Object Query")
         << "QTRACKER"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << true;
@@ -1007,21 +1010,21 @@ void tst_QSparqlAPI::update_query_error_test_data()
 
     QTest::newRow("Tracker Direct Async Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << false;
 
     QTest::newRow("Tracker Direct Async Object Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
         << true;
 
     QTest::newRow("Tracker Direct Sync Invalid Query")
         << "QTRACKER_DIRECT"
-        << "invalid query"
+        << invalidQuery
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::StatementError)
         << false;
