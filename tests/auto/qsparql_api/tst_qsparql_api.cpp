@@ -99,6 +99,7 @@ private slots:
 private:
     void insertTrackerTestData();
     void cleanupTrackerTestData();
+    void add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
     void add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
     void add_ask_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
 
@@ -939,6 +940,72 @@ void tst_QSparqlAPI::update_query_error_test()
     }
 }
 
+void tst_QSparqlAPI::add_update_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+{
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Empty Query")))
+        << connectionDriver
+        << ""
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << false;
+
+   QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Empty Query")))
+        << connectionDriver
+        << ""
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << true;
+
+   QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Empty Query")))
+       << connectionDriver
+       << ""
+       << int(QSparqlQueryOptions::SyncExec)
+       << int(QSparqlError::StatementError)
+       << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Invalid Query")))
+        << connectionDriver
+        << invalidQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Invalid Query")))
+        << connectionDriver
+        << invalidQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << true;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Invalid Query")))
+        << connectionDriver
+        << invalidQuery
+        << int(QSparqlQueryOptions::SyncExec)
+        << int(QSparqlError::StatementError)
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query")))
+        << connectionDriver
+        << constructQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
+        << connectionDriver
+        << constructQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << true;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
+        << connectionDriver
+        << constructQuery
+        << int(QSparqlQueryOptions::SyncExec)
+        << int(QSparqlError::StatementError)
+        << false;
+}
+
 void tst_QSparqlAPI::update_query_error_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
@@ -946,111 +1013,8 @@ void tst_QSparqlAPI::update_query_error_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("useAsyncObject");
-
-    QTest::newRow("DBus Blank Query")
-        << "QTRACKER"
-        << ""
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-   QTest::newRow("DBus Blank Async Object Query")
-        << "QTRACKER"
-        << ""
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("DBus Invalid Query")
-        << "QTRACKER"
-        << invalidQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("DBus Invalid Async Object Query")
-        << "QTRACKER"
-        << invalidQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("DBus Unsupported Construct Query")
-        << "QTRACKER"
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("DBus Async Object Unsupported Construct Query")
-        << "QTRACKER"
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("Tracker Direct Async Blank Query")
-        << "QTRACKER_DIRECT"
-        << ""
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object Blank Query")
-        << "QTRACKER_DIRECT"
-        << ""
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("Tracker Direct Sync Blank Query")
-        << "QTRACKER_DIRECT"
-        << ""
-        << int(QSparqlQueryOptions::SyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Invalid Query")
-        << "QTRACKER_DIRECT"
-        << invalidQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object Invalid Query")
-        << "QTRACKER_DIRECT"
-        << invalidQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("Tracker Direct Sync Invalid Query")
-        << "QTRACKER_DIRECT"
-        << invalidQuery
-        << int(QSparqlQueryOptions::SyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Unsupported Construct Query")
-        << "QTRACKER_DIRECT"
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object Unsupported Construct Query")
-        << "QTRACKER_DIRECT"
-        << constructQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << int(QSparqlError::StatementError)
-        << true;
-
-    QTest::newRow("Tracker Direct Sync Unsupported Construct Query")
-        << "QTRACKER_DIRECT"
-        << constructQuery
-        << int(QSparqlQueryOptions::SyncExec)
-        << int(QSparqlError::StatementError)
-        << false;
+    add_update_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct");
+    add_update_query_error_test_data("QTRACKER", "Tracker DBus");
 }
 
 void tst_QSparqlAPI::update_query_destroy_connection_test()
