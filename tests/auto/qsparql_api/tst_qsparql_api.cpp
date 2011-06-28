@@ -45,6 +45,7 @@
 
 // define the amount of data we are going to insert for the tracker tests
 #define NUM_TRACKER_INSERTS 15
+#define NUM_ENDPOINT_INSERTS 15
 
 class tst_QSparqlAPI : public QObject
 {
@@ -98,7 +99,9 @@ private slots:
 
 private:
     void insertTrackerTestData();
+    void insertEndpointTestData();
     void cleanupTrackerTestData();
+    void cleanupEndpointTestData();
     void add_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
     void add_query_error_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
     void add_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
@@ -113,8 +116,16 @@ private:
 
 namespace {
 
+bool testEndpoint = false;
+
 const QString contactSelectQuery =
     "select ?u ?ng {"
+    "    ?u a nco:PersonContact; "
+    "    nie:isLogicalPartOf <qsparql-api-tests> ;"
+    "    nco:nameGiven ?ng .}";
+
+const QString endpointSelectQuery =
+    "select ?u ?ng FROM <http://virtuoso_endpoint/testgraph> {"
     "    ?u a nco:PersonContact; "
     "    nie:isLogicalPartOf <qsparql-api-tests> ;"
     "    nco:nameGiven ?ng .}";
@@ -332,6 +343,17 @@ void validateErrorResult(QSparqlResult *r, int expectedErrorType)
     QVERIFY(!r->isValid());
 }
 
+QSparqlConnectionOptions getConnectionOptions(QString driver)
+{
+    QSparqlConnectionOptions options;
+    if (driver == "QSPARQL_ENDPOINT") {
+        options.setHostName("localhost");
+        options.setPort(8890);
+        return options;
+    }
+    return options;
+}
+
 } // end unnamed namespace
 
 tst_QSparqlAPI::tst_QSparqlAPI()
@@ -350,6 +372,7 @@ void tst_QSparqlAPI::initTestCase()
 
     cleanupTestCase();
     insertTrackerTestData();
+    insertEndpointTestData();
 }
 
 void tst_QSparqlAPI::insertTrackerTestData()
@@ -373,9 +396,33 @@ void tst_QSparqlAPI::insertTrackerTestData()
     delete r;
 }
 
+void tst_QSparqlAPI::insertEndpointTestData()
+{
+    const QString insertQueryTemplate =
+        "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
+        "nie:isLogicalPartOf <qsparql-api-tests> ;"
+        "nco:nameGiven \"name00%1\" .";
+    QString insertQuery = "insert into <http://virtuoso_endpoint/testgraph> { <qsparql-api-tests> a nie:InformationElement .";
+    for (int item = 1; item <= NUM_ENDPOINT_INSERTS; item++) {
+        insertQuery.append( insertQueryTemplate.arg(item) );
+    }
+    insertQuery.append(" }");
+    QSparqlConnectionOptions options = getConnectionOptions("QSPARQL_ENDPOINT");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+    const QSparqlQuery q(insertQuery,QSparqlQuery::InsertStatement);
+    QSparqlResult* r = conn.exec(q);
+    r->waitForFinished();
+    if (!r->hasError())
+        testEndpoint = true;
+    delete r;
+
+}
+
 void tst_QSparqlAPI::cleanupTestCase()
 {
     cleanupTrackerTestData();
+    if (testEndpoint)
+        cleanupEndpointTestData();
 }
 
 void tst_QSparqlAPI::cleanupTrackerTestData()
@@ -385,6 +432,21 @@ void tst_QSparqlAPI::cleanupTrackerTestData()
                          "  WHERE { ?u nie:isLogicalPartOf <qsparql-api-tests> . }"
                          "DELETE { <qsparql-api-tests> a rdfs:Resource . }",
                     QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(!r->hasError());
+    r->waitForFinished();
+    QVERIFY(!r->hasError());
+    delete r;
+}
+
+void tst_QSparqlAPI::cleanupEndpointTestData()
+{
+    QSparqlConnectionOptions options = getConnectionOptions("QSPARQL_ENDPOINT");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+    const QSparqlQuery q("DELETE FROM <http://virtuoso_endpoint/testgraph> { ?u a nco:PersonContact . } "
+                         "WHERE { ?u nie:isLogicalPartOf <qsparql-api-tests> .}",
+                     QSparqlQuery::DeleteStatement);
+
     QSparqlResult* r = conn.exec(q);
     QVERIFY(!r->hasError());
     r->waitForFinished();
@@ -412,7 +474,8 @@ void tst_QSparqlAPI::query_test()
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
 
-    QSparqlConnection conn(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
@@ -479,6 +542,30 @@ void tst_QSparqlAPI::query_test_data()
     QTest::addColumn<bool>("useAsyncObject");
     add_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_query_test_data("QTRACKER", "Tracker DBus");
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Async Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointSelectQuery
+            << NUM_ENDPOINT_INSERTS
+            << int(QSparqlQueryOptions::AsyncExec)
+            << false;
+
+        QTest::newRow("Endpoint Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointSelectQuery
+            << NUM_ENDPOINT_INSERTS
+            << int(QSparqlQueryOptions::AsyncExec)
+            << true;
+
+        QTest::newRow("Endpoint Sync Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointSelectQuery
+            << NUM_ENDPOINT_INSERTS
+            << int(QSparqlQueryOptions::SyncExec)
+            << false;
+    }
+
 }
 
 void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
@@ -489,7 +576,8 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
 
-    QSparqlConnection* conn = new QSparqlConnection(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection* conn = new QSparqlConnection(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
@@ -533,7 +621,8 @@ void tst_QSparqlAPI::query_error_test()
     QFETCH(int, expectedErrorType);
     QFETCH(bool, useAsyncObject);
 
-    QSparqlConnection conn(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
@@ -612,6 +701,36 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::BackendError)
         << false;
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Blank Query")
+            << "QSPARQL_ENDPOINT"
+            << ""
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << false;
+
+        QTest::newRow("Endpoint Blank Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << ""
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << true;
+
+        QTest::newRow("Endpoint Invalid Query")
+            << "QSPARQL_ENDPOINT"
+            << "invalid query"
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << false;
+
+        QTest::newRow("Endpoint Invalid Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << "invalid query"
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::StatementError)
+            << true;
+    }
 }
 
 void tst_QSparqlAPI::query_error_test_data()
@@ -705,6 +824,23 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<bool>("useAsyncObject");
     add_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Async Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointSelectQuery
+            << NUM_ENDPOINT_INSERTS
+            << int(QSparqlQueryOptions::AsyncExec)
+            << false;
+
+        QTest::newRow("Endpoint Async Object Query")
+            << "QSPARQL_ENDPOINT"
+            << endpointSelectQuery
+            << NUM_ENDPOINT_INSERTS
+            << int(QSparqlQueryOptions::AsyncExec)
+            << true;
+
+    }
 }
 
 void tst_QSparqlAPI::update_query_test()

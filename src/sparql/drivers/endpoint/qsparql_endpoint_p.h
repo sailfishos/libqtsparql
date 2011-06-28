@@ -84,6 +84,9 @@ public:
 protected:
     void cleanup();
 
+private Q_SLOTS:
+    void driverClosing();
+
 private:
     EndpointResultPrivate* d;
 };
@@ -100,6 +103,9 @@ public:
     void close();
     EndpointResult* createResult() const;
     EndpointResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options);
+
+Q_SIGNALS:
+    void closing();
 
 private:
     EndpointDriverPrivate* d;

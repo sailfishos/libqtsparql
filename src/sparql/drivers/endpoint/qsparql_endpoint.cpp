@@ -142,7 +142,11 @@ public:
 
     ~EndpointResultPrivate()
     {
-        delete reply;
+        // the reply belongs to the network manager
+        // which may have been deleted before the result
+        // if the connection was deleted
+        if (reply)
+            delete reply;
         delete xml;
         delete parser;
         delete reader;
@@ -272,11 +276,11 @@ void EndpointResultPrivate::authenticate(QNetworkReply * reply, QAuthenticator *
 
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 {
-    if (code == QNetworkReply::UnknownContentError)
-        q->setLastError(QSparqlError(QString::fromLatin1(buffer), QSparqlError::StatementError, code));
-    else
+    if (code != QNetworkReply::UnknownContentError) {
         q->setLastError(QSparqlError(reply->errorString(), QSparqlError::ConnectionError, code));
-
+        terminate();
+        qWarning() << "QEndpoint:" << q->lastError() << q->query();
+    }
     terminate();
 }
 
@@ -313,6 +317,7 @@ void EndpointResultPrivate::readData()
         if (!reader->parse(xml, true)) {
             q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
+            qWarning() << "QEndpoint:" << q->lastError() << q->query();
             return;
         }
     }
@@ -321,6 +326,7 @@ void EndpointResultPrivate::readData()
         if (!reader->parseContinue()) {
             q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
+            qWarning() << "QEndpoint:" << q->lastError() << q->query();
             return;
         }
     }
@@ -360,6 +366,7 @@ QVariant EndpointResult::handle() const
 
 void EndpointResult::cleanup()
 {
+    d->reply = 0;
     setPos(QSparql::BeforeFirstRow);
 }
 
@@ -423,7 +430,7 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
         queryUrl.addQueryItem(QLatin1String("maxrows"), maxrows.toString());
     }
 
-    qDebug() << "Real url to run.... " << queryUrl.toString();
+    // qDebug() << "Real url to run.... " << queryUrl.toString();
 
     d->buffer.clear();
     QNetworkRequest request(queryUrl);
@@ -497,8 +504,10 @@ EndpointDriver::EndpointDriver(QObject * parent)
 
 EndpointDriver::~EndpointDriver()
 {
-    if (d->managerOwned)
+    if (d->managerOwned) {
         delete d->manager;
+        d->managerOwned = false;
+    }
     delete d;
 }
 
@@ -564,6 +573,7 @@ bool EndpointDriver::open(const QSparqlConnectionOptions& options)
 
 void EndpointDriver::close()
 {
+    Q_EMIT closing();
     if (isOpen()) {
         setOpen(false);
         setOpenError(false);
@@ -575,7 +585,24 @@ void EndpointDriver::close()
 
 EndpointResult* EndpointDriver::createResult() const
 {
-    return new EndpointResult(d);
+    EndpointResult *result = new EndpointResult(d);
+    QObject::connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    return result;
+}
+
+void EndpointResult::driverClosing()
+{
+    if (!isFinished()) {
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
+    d->terminate();
+
+    if (!d->driverPrivate->managerOwned)
+        d->driverPrivate->managerOwned = 0;
+
+    qWarning() << "QEndpointResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 QT_END_NAMESPACE
