@@ -99,6 +99,7 @@ private slots:
 private:
     void insertTrackerTestData();
     void cleanupTrackerTestData();
+    void add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
     void add_ask_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
 
 private:
@@ -1070,6 +1071,7 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
 
         QSparqlResult* r = conn->exec(q, queryOptions);
         const bool immediatelyFinished = r->isFinished();
+        QVERIFY(!r->hasError());
         // Re-parent the result to release it from the connection's ownership
         r->setParent(this);
         delete conn; conn = 0;
@@ -1096,14 +1098,8 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
     }
 }
 
-void tst_QSparqlAPI::update_query_destroy_connection_test_data()
+void tst_QSparqlAPI::add_update_query_destroy_connection_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
 {
-    QTest::addColumn<QString>("connectionDriver");
-    QTest::addColumn<QString>("query");
-    QTest::addColumn<int>("executionMethod");
-    QTest::addColumn<bool>("useAsyncObject");
-    QTest::addColumn<QString>("deleteQuery");
-
     QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
     insertQuery.append(contactInsertQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     insertQuery.append(" }");
@@ -1112,47 +1108,37 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     deleteQuery.append(contactDeleteQueryTemplate.arg(NUM_TRACKER_INSERTS+1));
     deleteQuery.append(" }");
 
-    QTest::newRow("DBus Async Query")
-        << "QTRACKER"
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query")))
+        << connectionDriver
         << insertQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << false
         << deleteQuery;
 
-    QTest::newRow("DBus Async Object Query")
-        << "QTRACKER"
-        << insertQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << true
-        << deleteQuery;
-
-    QTest::newRow("DBus Sync Query")
-        << "QTRACKER"
-        << insertQuery
-        << int(QSparqlQueryOptions::SyncExec)
-        << false
-        << deleteQuery;
-
-    QTest::newRow("Tracker Direct Async Query")
-        << "QTRACKER_DIRECT"
-        << insertQuery
-        << int(QSparqlQueryOptions::AsyncExec)
-        << false
-        << deleteQuery;
-
-    QTest::newRow("Tracker Direct Async Object Query")
-        << "QTRACKER_DIRECT"
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
+        << connectionDriver
         << insertQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << true
         << deleteQuery;
 
-    QTest::newRow("Tracker Direct Sync Query")
-        << "QTRACKER_DIRECT"
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
+        << connectionDriver
         << insertQuery
         << int(QSparqlQueryOptions::SyncExec)
         << false
         << deleteQuery;
+}
+
+void tst_QSparqlAPI::update_query_destroy_connection_test_data()
+{
+    QTest::addColumn<QString>("connectionDriver");
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<int>("executionMethod");
+    QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<QString>("deleteQuery");
+    add_update_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
+    add_update_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
 }
 
 void tst_QSparqlAPI::ask_query_test()
