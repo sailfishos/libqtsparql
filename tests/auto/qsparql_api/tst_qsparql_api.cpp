@@ -270,6 +270,7 @@ void validateCurrentBoolResult_impl(bool& result, QSparqlResult* r, const bool e
 {
     result = false;
 
+    QVERIFY(!r->hasError());
     QVERIFY(r->isValid());
     QVERIFY(r->isBool());
     QCOMPARE(r->boolValue(), expectedResult);
@@ -1172,6 +1173,8 @@ void tst_QSparqlAPI::ask_query_test()
     const bool immediatelyFinished = r->isFinished();
 
     if (immediatelyFinished) {
+        QVERIFY(!r->hasError());
+        // Boolean results are retrieved immediately without the need to call next() for conveniency
         QVERIFY(r->isBool());
         QCOMPARE(r->boolValue(), expectedResult);
         QCOMPARE(r->size(), 1);
@@ -1179,8 +1182,12 @@ void tst_QSparqlAPI::ask_query_test()
 
     int resultSize = 0;
     while (r->next()) {
-        ++resultSize;
-        QVERIFY(validateCurrentBoolResult(r, expectedResult));
+        if (++resultSize <= 1) {
+            QVERIFY(validateCurrentBoolResult(r, expectedResult));
+        }
+        else {
+            qDebug() << "Unexpected result row for an ask query:" << r->current();
+        }
     }
     QVERIFY(r->isFinished());
     QCOMPARE(resultSize, 1);
