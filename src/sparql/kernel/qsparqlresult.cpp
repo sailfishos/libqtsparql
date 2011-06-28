@@ -128,6 +128,12 @@ QString QSparqlResult::query() const
     return d->sparql;
 }
 
+/// Returns the statement type of this QSparqlResult object.
+QSparqlQuery::StatementType QSparqlResult::statementType() const
+{
+    return d->statementType;
+}
+
 /// Sets the information about the query whose results this QSparqlResult object
 /// represents.
 void QSparqlResult::setQuery(const QString &query)
