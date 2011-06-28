@@ -1162,9 +1162,9 @@ void tst_QSparqlAPI::queryModel_test()
 
     model.setQuery(QSparqlQuery(query), conn);
 
-    QSignalSpy spy(&model, SIGNAL(finished()));
-    while (spy.count() == 0)
-        QTest::qWait(100);
+    FinishedSignalReceiver signalReceiver;
+    connect(&model, SIGNAL(finished()), &signalReceiver, SLOT(onFinished()));
+    signalReceiver.waitForFinished(2000);
 
     QCOMPARE(model.rowCount(), expectedResultsSize);
     QCOMPARE(model.columnCount(), contactSelectColumnCount);
