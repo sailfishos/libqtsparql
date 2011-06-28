@@ -210,14 +210,17 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     QHash<QString, QString> contactNamesStringValue;
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+    QVERIFY(!r->isValid());
     int resultSize = 0;
     while (r->next()) {
+        QVERIFY(r->isValid());
         contactNamesValue[r->value(0).toString()] = r->value(1).toString();
         contactNamesBindings[r->binding(0).value().toString()] = r->binding(1).value().toString();
         contactNamesStringValue[r->stringValue(0)] = r->stringValue(1);
         ++resultSize;
     }
     QVERIFY(r->pos() == QSparql::AfterLastRow);
+    QVERIFY(!r->isValid());
     QCOMPARE(resultSize, expectedResultsSize);
 
     // Checks for if we expect some results
@@ -233,11 +236,13 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QVERIFY(!r->previous());
             QVERIFY(!r->next());
             QVERIFY(r->pos() == QSparql::AfterLastRow);
+            QVERIFY(!r->isValid());
         } else {
             // Iterate the result backwards
             int resultSize = 0;
             while (r->previous()) {
                 QVERIFY(r->pos() != QSparql::AfterLastRow);
+                QVERIFY(r->isValid());
                 QCOMPARE(contactNamesValue[r->value(0).toString()], r->value(1).toString());
                 QCOMPARE(contactNamesBindings[r->binding(0).value().toString()], r->binding(1).value().toString());
                 QCOMPARE(contactNamesStringValue[r->stringValue(0)], r->stringValue(1));
@@ -246,8 +251,10 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QCOMPARE(resultSize, expectedResultsSize);
             // Now move forward one...
             QVERIFY(r->pos() == QSparql::BeforeFirstRow);
+            QVERIFY(!r->isValid());
             QVERIFY(r->next());
             QVERIFY(r->pos() != QSparql::BeforeFirstRow);
+            QVERIFY(r->isValid());
             QCOMPARE(contactNamesValue["uri001"], r->value(1).toString());
             QCOMPARE(contactNamesBindings["uri001"], r->binding(1).value().toString());
             QCOMPARE(contactNamesStringValue["uri001"], r->stringValue(1));
@@ -255,9 +262,11 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     } else {
         //Make sure using the result doesn't crash
         QVERIFY(r->pos() < 0);
+        QVERIFY(!r->isValid());
         QVERIFY(!r->next());
         QVERIFY(!r->previous());
         QVERIFY(r->pos() < 0);
+        QVERIFY(!r->isValid());
     }
 }
 
@@ -312,9 +321,11 @@ void validateErrorResult(QSparqlResult *r, int expectedErrorType)
 
     // Check iteration behaviour
     QVERIFY(r->pos() < 0);
+    QVERIFY(!r->isValid());
     QVERIFY(!r->next());
     QVERIFY(!r->previous());
     QVERIFY(r->pos() < 0);
+    QVERIFY(!r->isValid());
 }
 
 } // end unnamed namespace
