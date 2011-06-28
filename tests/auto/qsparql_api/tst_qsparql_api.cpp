@@ -99,6 +99,7 @@ private slots:
 private:
     void insertTrackerTestData();
     void cleanupTrackerTestData();
+    void add_ask_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix);
 
 private:
     MessageRecorder *msgRecorder;
@@ -1198,6 +1199,51 @@ void tst_QSparqlAPI::ask_query_test()
     delete r;
 }
 
+void tst_QSparqlAPI::add_ask_query_test_data(const QString& connectionDriver, const QString& dataTagPrefix)
+{
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async True Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryTrue
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object True Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryTrue
+        << true
+        << true;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync True Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::SyncExec)
+        << askQueryTrue
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async False Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryFalse
+        << false
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object False Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryFalse
+        << false
+        << true;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync False Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::SyncExec)
+        << askQueryFalse
+        << false
+        << false;
+}
+
 void tst_QSparqlAPI::ask_query_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
@@ -1205,77 +1251,8 @@ void tst_QSparqlAPI::ask_query_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<bool>("expectedResult");
     QTest::addColumn<bool>("useAsyncObject");
-
-    QTest::newRow("Tracker Direct Async True Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryTrue
-        << true
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object True Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryTrue
-        << true
-        << true;
-
-    QTest::newRow("Tracker Direct Sync True Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::SyncExec)
-        << askQueryTrue
-        << true
-        << false;
-
-    QTest::newRow("Tracker Direct Async False Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryFalse
-        << false
-        << false;
-
-    QTest::newRow("Tracker Direct Async Object False Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryFalse
-        << false
-        << true;
-
-    QTest::newRow("Tracker Direct Sync False Query")
-        << "QTRACKER_DIRECT"
-        << int(QSparqlQueryOptions::SyncExec)
-        << askQueryFalse
-        << false
-        << false;
-
-    QTest::newRow("DBus Async True Ask Query")
-        << "QTRACKER"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryTrue
-        << true
-        << false;
-
-    QTest::newRow("DBus Async True Ask Async Object Query")
-        << "QTRACKER"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryTrue
-        << true
-        << true;
-
-    QTest::newRow("DBus Async False Ask Query")
-        << "QTRACKER"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryFalse
-        << false
-        << false;
-
-    QTest::newRow("DBus Async False Ask Async Object Query")
-        << "QTRACKER"
-        << int(QSparqlQueryOptions::AsyncExec)
-        << askQueryFalse
-        << false
-        << true;
-
+    add_ask_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
+    add_ask_query_test_data("QTRACKER", "Tracker DBus");
 }
 
 void tst_QSparqlAPI::isFinished_test()
