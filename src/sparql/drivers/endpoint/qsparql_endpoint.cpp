@@ -222,7 +222,11 @@ bool XmlResultsParser::endElement(const QString & namespaceURI,
     } else if (qName == QLatin1String("binding")) {
         resultRow.append(binding);
     } else if (qName == QLatin1String("boolean")) {
-        d->setBoolValue(currentText.toLower() == QLatin1String("true"));
+        bool boolValue = currentText.toLower() == QLatin1String("true");
+        d->setBoolValue(boolValue);
+        binding.setValue(QVariant(boolValue));
+        resultRow.append(binding);
+        d->results.append(resultRow);
     } else if (qName == QLatin1String("bnode")) {
         currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
         currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));

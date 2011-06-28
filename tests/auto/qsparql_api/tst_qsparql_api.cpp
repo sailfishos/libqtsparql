@@ -1223,6 +1223,8 @@ void tst_QSparqlAPI::ask_query_test_data()
     QTest::addColumn<bool>("useAsyncObject");
     add_ask_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_ask_query_test_data("QTRACKER", "Tracker DBus");
+    if (testEndpoint)
+        add_ask_query_test_data("QSPARQL_ENDPOINT", "Endpoint");
 }
 
 void tst_QSparqlAPI::isFinished_test()
