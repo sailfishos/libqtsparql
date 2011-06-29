@@ -1322,7 +1322,8 @@ void tst_QSparqlAPI::syncExec_waitForFinished_query_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
 
-    QSparqlConnection conn(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
     const QSparqlQuery q(query);
     QSparqlResult* r = conn.syncExec(q);
     QVERIFY(!r->hasError());
@@ -1348,6 +1349,13 @@ void tst_QSparqlAPI::syncExec_waitForFinished_query_test_data()
         << "QTRACKER"
         << contactSelectQuery.arg("")
         << NUM_INSERTS;
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Sync Select")
+            << "QSPARQL_ENDPOINT"
+            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << NUM_INSERTS;
+    }
 }
 
 void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
@@ -1360,10 +1368,11 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
     QFETCH(int, contactInserts);
     QFETCH(int, contactDeletes);
 
-    QSparqlConnection conn(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
     const int expectedResultsSize = initialSize + contactInserts;
 
-    QString insertQuery = "insert { <qsparql-api-tests> a nie:InformationElement .";
+    QString insertQuery = contactInsertHeader.arg( getTemplateArguments(connectionDriver, "INSERT") );
     for (int item = initialSize+1; item <= expectedResultsSize; item++) {
         insertQuery.append( insertTemplate.arg(item) );
     }
@@ -1383,7 +1392,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test()
     delete r;
 
     // Delete the insertion
-    QString deleteQuery = "delete { <qsparql-api-tests> a nie:InformationElement .";
+    QString deleteQuery = contactDeleteHeader.arg( getTemplateArguments(connectionDriver, "DELETE") );
     for (int item = initialSize+1; item <= expectedResultsSize; item++) {
         deleteQuery.append( deleteTemplate.arg(item) );
     }
@@ -1430,6 +1439,17 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
         << NUM_INSERTS
         << contactInsertAmount
         << contactDeleteAmount;
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Sync Update Query")
+            << "QSPARQL_ENDPOINT"
+            << contactInsertQueryTemplate
+            << contactDeleteQueryTemplate
+            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << NUM_INSERTS
+            << contactInsertAmount
+            << contactDeleteAmount;
+    }
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
