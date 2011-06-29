@@ -1031,7 +1031,9 @@ void tst_QSparqlAPI::update_query_destroy_connection_test()
     QFETCH(bool, useAsyncObject);
     QFETCH(QString, deleteQuery);
 
-    QSparqlConnection cleanupConn("QTRACKER");
+    QSparqlConnectionOptions cleanupOptions = getConnectionOptions(connectionDriver);
+    QSparqlConnection cleanupConn(connectionDriver, cleanupOptions);
+
     QSparqlQuery::StatementType queryType = QSparqlQuery::InsertStatement;
     for (int round = 1; round <= 2; ++round) {
         QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
@@ -1110,6 +1112,8 @@ void tst_QSparqlAPI::update_query_destroy_connection_test_data()
     QTest::addColumn<QString>("deleteQuery");
     add_update_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_update_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
+    if (testEndpoint)
+        add_update_query_destroy_connection_test_data("QSPARQL_ENDPOINT", "Endpoint");
 }
 
 void tst_QSparqlAPI::ask_query_test()

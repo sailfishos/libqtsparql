@@ -136,7 +136,7 @@ class EndpointResultPrivate  : public QObject {
 public:
     EndpointResultPrivate(EndpointResult *result, EndpointDriverPrivate *dpp)
     : reply(0), xml(0), parser(0), reader(0),
-        isFinished(false), loop(0), q(result), driverPrivate(dpp)
+        isFinished(false), loop(0), q(result), driverPrivate(dpp), noResults(false)
     {
     }
 
@@ -164,6 +164,7 @@ public:
     QXmlSimpleReader *reader;
     QVector<QSparqlResultRow> results;
     bool isFinished;
+    bool noResults;
     QEventLoop *loop;
     EndpointResult *q;
     EndpointDriverPrivate *driverPrivate;
@@ -213,42 +214,44 @@ bool XmlResultsParser::endElement(const QString & namespaceURI,
     Q_UNUSED(namespaceURI);
     Q_UNUSED(localName);
 
-    if (qName == QLatin1String("sparql")) {
-    } else if (qName == QLatin1String("head")) {
-    } else if (qName == QLatin1String("variable")) {
-    } else if (qName == QLatin1String("results")) {
-    } else if (qName == QLatin1String("result")) {
-        d->results.append(resultRow);
-    } else if (qName == QLatin1String("binding")) {
-        resultRow.append(binding);
-    } else if (qName == QLatin1String("boolean")) {
-        bool boolValue = currentText.toLower() == QLatin1String("true");
-        d->setBoolValue(boolValue);
-        binding.setValue(QVariant(boolValue));
-        resultRow.append(binding);
-        d->results.append(resultRow);
-    } else if (qName == QLatin1String("bnode")) {
-        currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
-        currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));
-        binding.setBlankNodeLabel(currentText);
-    } else if (qName == QLatin1String("uri")) {
-        QUrl url(currentText);
-        binding.setValue(QVariant(url));
-    } else if (qName == QLatin1String("literal")) {
-        if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
-            if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
-                // TODO: How should we treat xsi:types here?
-                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+    if (!d->noResults) {
+        if (qName == QLatin1String("sparql")) {
+        } else if (qName == QLatin1String("head")) {
+        } else if (qName == QLatin1String("variable")) {
+        } else if (qName == QLatin1String("results")) {
+        } else if (qName == QLatin1String("result")) {
+            d->results.append(resultRow);
+        } else if (qName == QLatin1String("binding")) {
+            resultRow.append(binding);
+        } else if (qName == QLatin1String("boolean")) {
+            bool boolValue = currentText.toLower() == QLatin1String("true");
+            d->setBoolValue(boolValue);
+            binding.setValue(QVariant(boolValue));
+            resultRow.append(binding);
+            d->results.append(resultRow);
+        } else if (qName == QLatin1String("bnode")) {
+            currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
+            currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));
+            binding.setBlankNodeLabel(currentText);
+        } else if (qName == QLatin1String("uri")) {
+            QUrl url(currentText);
+            binding.setValue(QVariant(url));
+        } else if (qName == QLatin1String("literal")) {
+            if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
+                if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
+                    // TODO: How should we treat xsi:types here?
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                } else {
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                }
+            } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
+                binding.setValue(QVariant(currentText));
+                binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
             } else {
-                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                binding.setValue(QVariant(currentText));
             }
-        } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
-            binding.setValue(QVariant(currentText));
-            binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
         } else {
-            binding.setValue(QVariant(currentText));
         }
-    } else {
     }
 
     return true;
@@ -453,6 +456,11 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
 
     if (!isGraph())
         d->xml = new XmlInputSource(d->reply);
+
+    // We don't want to add any results if it's an insert or delete, however, we still need to parse them
+    // because there may be warnings that need to be printed
+    if (statementType() == QSparqlQuery::InsertStatement || statementType() == QSparqlQuery::DeleteStatement)
+        d->noResults = true;
 
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
     QObject::connect(d->reply, SIGNAL(finished()), d, SLOT(parseResults()));
