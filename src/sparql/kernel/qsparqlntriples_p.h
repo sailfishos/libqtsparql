@@ -60,7 +60,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSparqlNTriples {
+QT_MODULE(Sparql)
+
+class Q_SPARQL_EXPORT QSparqlNTriples {
 public:
     QSparqlNTriples(QByteArray &b) : buffer(b), i(0), lineNumber(1) {}
     
