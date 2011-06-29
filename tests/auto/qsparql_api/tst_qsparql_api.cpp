@@ -1267,7 +1267,8 @@ void tst_QSparqlAPI::queryModel_test()
     QFETCH(QString, query);
     QFETCH(int, expectedResultsSize);
 
-    QSparqlConnection conn(connectionDriver);
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
     QSparqlQueryModel model;
 
     model.setQuery(QSparqlQuery(query), conn);
@@ -1297,6 +1298,8 @@ void tst_QSparqlAPI::queryModel_test()
         QCOMPARE(insertOrder.at(0), row.value(1).toString());
         insertOrder.pop_front();
     }
+
+    delete r;
 }
 
 void tst_QSparqlAPI::queryModel_test_data()
@@ -1314,6 +1317,13 @@ void tst_QSparqlAPI::queryModel_test_data()
         << "QTRACKER_DIRECT"
         << contactSelectQuery.arg("")
         << NUM_INSERTS;
+
+    if (testEndpoint) {
+        QTest::newRow("Endpoint Query Model")
+            << "QSPARQL_ENDPOINT"
+            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << NUM_INSERTS;
+    }
 }
 
 void tst_QSparqlAPI::syncExec_waitForFinished_query_test()
