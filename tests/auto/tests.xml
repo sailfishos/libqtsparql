@@ -106,22 +106,10 @@
         </get>
     </set>
     <set name="qsparql-tracker-direct-crashes" description="Regression tests">
-      <case name="test-waitforfinished-crashes" description="Regression test">
+      <case name="tst_qsparql_tracker_direct_crashes" description="Regression test">
         <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes waitForFinished_crashes_when_connection_opening_fails
-        </step>
-      </case>
-      <case name="test-syncexec-crashes" description="Regression test">
-        <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_crashes_when_connection_opening_fails
-        </step>
-      </case>
-      <case name="test-syncexec-update-crashes" description="Regression test">
-        <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_update_crashes_when_connection_opening_fails
+            <!-- Note: the env vars should ensure that the direct connection opening fails -->
+            su - user -c "XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes"
         </step>
       </case>
     </set>

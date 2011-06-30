@@ -141,7 +141,6 @@ void tst_QSparqlTrackerDirectCrashes::syncExec_update_crashes_when_connection_op
 
 void tst_QSparqlTrackerDirectCrashes::two_failing_connections()
 {
-    QSKIP("Waiting for a tracker bugfix", SkipAll);
     // This is a regression test. Run this in a setup where the
     // libtracker-sparql connection opening fails to reproduce the problem.
     {
