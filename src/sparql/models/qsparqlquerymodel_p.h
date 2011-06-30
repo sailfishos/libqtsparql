@@ -87,6 +87,10 @@ public:
     QVarLengthArray<int, 56> colOffsets; // used to calculate indexInQuery of columns
     bool newQuery;
     void beginQuery(int totalResults);
+    void findRoleNames();
+
+    QHash<int, QByteArray> roleNames;
+
 public Q_SLOTS:
     void addData(int totalResults);
     void queryFinished();
