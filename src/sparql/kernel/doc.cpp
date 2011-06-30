@@ -161,6 +161,28 @@
     It is also easy to implement custom query models by reimplementing QSparqlQueryModel::data(), see
     the querymodel example for an example of this.
 
+    \section querymodelsqml Query models in QML
+
+    When using the QTRACKER_DIRECT and QSPARQL_ENDPOINT drivers, it is possible to use the models in
+    QML applications. The property names will be selected from the query.
+
+    E.g.
+    \dontinclude qmlquerymodel/main.cpp
+    \skip query =
+    \until "nco:nameFamily
+
+    The results will be accessible using the property names "u", "firstName" and "secondName". After
+    creating a model, it can be set as a context property for a QML file.
+
+    E.g.
+    \dontinclude qmlquerymodel/main.cpp
+    \skip QSparqlQueryModel *model = new
+    \until ctxt->
+
+    The query model can then be used in the same way (by calling QSparqlQueryModel::setQuery()). The example
+    <i>qmlquerymodel</i> shows how to use the model with the QTRACKER_DIRECT driver so that it updates
+    when new data is available.
+
     \section connectionoptions Connection options supported by drivers
 
     QTRACKER_DIRECT driver supports the following connection options:
