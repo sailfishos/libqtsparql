@@ -128,75 +128,42 @@ void QSparqlQueryModelPrivate::initColOffsets(int size)
 
 void QSparqlQueryModelPrivate::findRoleNames()
 {
-    QString queryString = query.preparedQueryText();
+    QString queryString = query.preparedQueryText().simplified();
     roleNames.clear();
     QList<QString> uniqueNames;
     QStringList stringList = queryString.split(QLatin1Char(' '));
     bool doIgnore = false;
-    bool processFunction = false;
-    bool functionReady = false;
     int parenthesesCount = 0;
-    QString storeFunction;
     Q_FOREACH(QString word, stringList) {
-            // process string-joins correctly
-            // string-join ( (?role1, ?role2) , arg2 )
-            // so ?role1 will be the correct property name, ignore role2
-            if (processFunction || word.contains(QLatin1String("string-join"))) {
-                processFunction = true;
-                // get the entire function first
-                storeFunction += word;
-                if (word.contains(QLatin1Char('('))) {
-                    parenthesesCount += word.count(QLatin1Char('('));
-                }
-                if (word.contains(QLatin1Char(')'))) {
-                    parenthesesCount-= word.count(QLatin1Char(')'));
-                    if(parenthesesCount==0) {
-                        functionReady = true;
-                    }
-                }
-                if (functionReady) {
-                    // qDebug() << "Stored function = " << storeFunction;
-                    // we only want the first one
-                    QString::SectionFlag flag = QString::SectionIncludeLeadingSep;
-                    QRegExp match(QLatin1String("[?]|[$]"));
-                    word = storeFunction.section(match,1, 1, flag);
-                    processFunction = false;
-                    functionReady = false;
-                    // fall through and process normally
-                }
+        if (!doIgnore && (word.at(0) == QLatin1Char('?') || word.at(0) == QLatin1Char('$'))
+        && (!word.contains(QLatin1Char(';')) && !word.contains(QLatin1Char(':')))) {
+            //remove the ? or $
+            word.remove(0,1);
+            // select ?u{?u a ... is valid, need to make sure
+            // this is dealt with
+            if (word.contains(QLatin1Char('{'))) {
+               word = word.split(QLatin1Char('{')).at(0);
             }
-
-            if (!processFunction) {
-                if (!doIgnore && (word.at(0) == QLatin1Char('?') || word.at(0) == QLatin1Char('$'))
-                && (!word.contains(QLatin1Char(';')) && !word.contains(QLatin1Char(':')))) {
-                    //remove the ? or $
-                    word.remove(0,1);
-                    // select ?u{?u a ... is valid, need to make sure
-                    // this is dealt with
-                    if (word.contains(QLatin1Char('{'))) {
-                        word = word.split(QLatin1Char('{')).at(0);
-                    }
-                    QRegExp cleanUp(QLatin1String("[,]|[{]|[}]|[.]"));
-                    word.replace(cleanUp,QLatin1String(""));
-                    if (!uniqueNames.contains(word)) {
-                        uniqueNames.append(word);
-                    }
-                }
-                // look for parentheses to avoid incorrectly adding things like ?foo in
-                // 'nie:url( ?foo ) AS ?bar' as a role name
-                if (word.contains(QLatin1Char('(')) || word.contains(QLatin1Char('{'))) {
-                    doIgnore = true;
-                    parenthesesCount += word.count(QLatin1Char('('));
-                    parenthesesCount += word.count(QLatin1Char('{'));
-                }
-                if (word.contains(QLatin1Char(')')) || word.contains(QLatin1Char('}'))) {
-                    parenthesesCount -= word.count(QLatin1Char('('));
-                    parenthesesCount -= word.count(QLatin1Char('{'));
-                    if (parenthesesCount == 0) {
-                        doIgnore = false;
-                    }
-                }
+            QRegExp cleanUp(QLatin1String("[,]|[{]|[}]|[.]"));
+            word.replace(cleanUp,QLatin1String(""));
+            if (!uniqueNames.contains(word)) {
+               uniqueNames.append(word);
             }
+        }
+        // look for parentheses to avoid incorrectly adding things like ?foo in
+        // 'nie:url( ?foo ) AS ?bar' as a role name
+        if (word.contains(QLatin1Char('(')) || word.contains(QLatin1Char('{'))) {
+            doIgnore = true;
+            parenthesesCount += word.count(QLatin1Char('('));
+            parenthesesCount += word.count(QLatin1Char('{'));
+        }
+        if (word.contains(QLatin1Char(')')) || word.contains(QLatin1Char('}'))) {
+            parenthesesCount -= word.count(QLatin1Char(')'));
+            parenthesesCount -= word.count(QLatin1Char('}'));
+            if (parenthesesCount == 0) {
+                doIgnore = false;
+            }
+        }
     }
 
     int roleCounter = Qt::UserRole + 1;
