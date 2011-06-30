@@ -105,7 +105,6 @@ public Q_SLOTS:
     void concurrentTrackerQueries_thread();
     void concurrentTrackerDirectQueries_thread();
     void concurrentTrackerDirectInserts_thread();
-    void subThreadTrackerDirectQuery_thread();
 
     void queryFinished();
     void resultsReturned(int count);
@@ -118,7 +117,6 @@ private Q_SLOTS:
     void concurrentTrackerQueries();
     void concurrentTrackerDirectQueries();
     void concurrentTrackerDirectInserts();
-    void subThreadTrackerDirectQuery();
 };
 tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
@@ -532,33 +530,6 @@ void tst_QSparqlThreading::concurrentTrackerDirectInserts()
     if (!th.isNull()) {
         waitForSignal(th, SIGNAL(finished()));
     }
-}
-
-void tst_QSparqlThreading::subThreadTrackerDirectQuery_thread()
-{
-    sem1.acquire();
-    conn2 = new QSparqlConnection("QTRACKER_DIRECT");
-
-    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r2 = conn2->exec(q);
-    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
-    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
-    sem2.release();
-    r2->waitForFinished();
-}
-
-void tst_QSparqlThreading::subThreadTrackerDirectQuery()
-{
-    QPointer<Thread> th = new Thread;
-
-    sem1.release();
-    sem2.acquire();
-
-    if (!th.isNull()) {
-        waitForSignal(th, SIGNAL(finished()));
-    }
-
-    CHECK_QSPARQL_RESULT(r2);
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
