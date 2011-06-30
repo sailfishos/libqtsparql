@@ -77,11 +77,11 @@ ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
     // Create a new model and set the query
     model->setQuery(QSparqlQuery(query), *connection);
 
-    // Now we need to monitor dbus for any notifications from Tracker,
-    // we need to use the long form of the class name to watch.
+    // Now we need to monitor dbus for any notifications from Tracker.
     // More information about Tracker over Dbus can be found at :
     // http://live.gnome.org/Tracker/Documentation/SignalsOnChanges
-    QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
+    // Please note: a more complete implementation, TrackerChangeNotifier,
+    // is available in libqtsparql-tracker-extensions
     QString service("org.freedesktop.Tracker1");
     QString basePath("/org/freedesktop/Tracker1");
     QString resourcesInterface("org.freedesktop.Tracker1.Resources");
@@ -89,7 +89,8 @@ ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
     QString changedSignal("GraphUpdated");
     QString changedSignature("sa(iiii)a(iiii)");
     QString syncFunction("Sync");
-    // Connect any signal we get to the "changed" slot of the program
+    // We'll need to use the long form of the class name to watch.
+    QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
     QDBusConnection::sessionBus().connect(service, resourcesPath,
                                           resourcesInterface, changedSignal,
                                           QStringList() << className,
