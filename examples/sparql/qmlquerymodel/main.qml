@@ -128,7 +128,7 @@ Rectangle {
                                     }
                                 }
                             }
-                            onAccepted: { familyNameInput.closeSoftwareInputPanel() }
+                            onAccepted: { firstNameInput.closeSoftwareInputPanel() }
                         }
                     }
                     Rectangle {
