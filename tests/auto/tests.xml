@@ -27,6 +27,17 @@
         <hardware>true</hardware>
       </environments>
     </set>
+    <set name="qsparql-api" description="Tests for qsparql API">
+      <case name="tst_qsparql_api" description="Executing tst_qsparql_api">
+        <step>
+            su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_api"
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
     <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
       <case name="tst_qsparql_tracker" description="Executing tst_qsparql_tracker">
         <step expected_result="0">
