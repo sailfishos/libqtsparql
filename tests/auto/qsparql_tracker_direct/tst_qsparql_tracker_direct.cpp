@@ -117,6 +117,73 @@ private:
     QSharedPointer<QSignalSpy> dataReadySpy;
 };
 
+namespace {
+class FinishedSignalReceiver : public QObject
+{
+    Q_OBJECT
+    QList<QSparqlResult*> allResults;
+    QSet<QObject*> pendingResults;
+    QSignalMapper signalMapper;
+
+public:
+    ~FinishedSignalReceiver()
+    {
+        qDeleteAll(allResults);
+    }
+
+    const QList<QSparqlResult*>& results() const
+    {
+        return allResults;
+    }
+
+    void append(QSparqlResult* r)
+    {
+        allResults.append(r);
+        if (!r->isFinished()) {
+            pendingResults.insert(r);
+            connectFinishedSignal(r);
+        }
+    }
+
+    bool waitForAllFinished(int silenceTimeoutMs)
+    {
+        QTime timeoutTimer;
+        timeoutTimer.start();
+        bool timeout = false;
+        while (!pendingResults.empty() && !timeout) {
+            const int pendingResultsCountBefore = pendingResults.count();
+            QTest::qWait(silenceTimeoutMs / 10);
+            if (pendingResults.count() < pendingResultsCountBefore) {
+                timeoutTimer.restart();
+            }
+            else if (timeoutTimer.elapsed() > silenceTimeoutMs) {
+                timeout = true;
+            }
+        }
+        return !timeout;
+    }
+
+private:
+    void connectFinishedSignal(QSparqlResult* r)
+    {
+        // Use QSignalMapper to be able to figure out which result was
+        // finished in onFinished().
+        // Note that using sender() would not work as it returns null when
+        // signal is emitted from another thread.
+        signalMapper.setMapping(r, r);
+        connect(r, SIGNAL(finished()), &signalMapper, SLOT(map()));
+        connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
+    }
+
+private slots:
+    void onFinished(QObject* r)
+    {
+        pendingResults.remove(r);
+    }
+};
+
+}  // namespace
+
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
 {
 }
@@ -1284,7 +1351,7 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
     const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-validate_threadpool_results>");
     QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
-    QTest::qWait(1000);
+    QTest::qWait(2000);
     QVERIFY( testData->isOK() );
 
     for (int maxThreadCount = 1; maxThreadCount <= 100; maxThreadCount *= 10) {
@@ -1292,10 +1359,10 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
         opts.setDataReadyInterval(1);
         opts.setMaxThreadCount(maxThreadCount);
         QSparqlConnection conn("QTRACKER_DIRECT", opts);
+        // Wait for the connection to open
+        QTest::qWait(2000);
 
-        //now read this back, each result will then be validated to ensure its the correct one
-        QList<QSparqlResult*> resultList;
-        QList<QSignalSpy*> resultSpys;
+        FinishedSignalReceiver signalReceiver;
 
         const int numberOfResults = 50;
         const int resultRange = testDataAmount/numberOfResults;
@@ -1310,30 +1377,13 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
 
             QSparqlResult *r = conn.exec(select);
             CHECK_QSPARQL_RESULT(r);
-            QSignalSpy *resultSpy = new QSignalSpy(r, SIGNAL(finished()));
-            resultList.append(r);
-            resultSpys.append(resultSpy);
+            signalReceiver.append(r);
         }
 
-        //check the signals
-        QTime timer;
-
-        foreach(QSignalSpy *resultSpy, resultSpys) {
-            bool timeout = false;
-            timer.restart();
-            while(resultSpy->count() == 0 && !timeout)
-            {
-                QTest::qWait(1);
-                if (timer.elapsed() > 8000)
-                    timeout = true;
-            }
-            QVERIFY(!timeout);
-            QCOMPARE(resultSpy->count(), 1);
-        }
-        qDeleteAll(resultSpys);
+        QVERIFY(signalReceiver.waitForAllFinished(8000));
 
         int i=1;
-        foreach(QSparqlResult *result, resultList) {
+        foreach(QSparqlResult *result, signalReceiver.results()) {
             QCOMPARE(result->size(), resultRange);
             const int start = i*resultRange-(resultRange-1);
             while(result->next())
@@ -1346,7 +1396,6 @@ void tst_QSparqlTrackerDirect::validate_threadpool_results()
             }
             i++;
         }
-        qDeleteAll(resultList);
     }
 }
 
