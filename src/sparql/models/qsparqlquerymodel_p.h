@@ -58,6 +58,7 @@
 #include "QtCore/qvarlengtharray.h"
 #include "QtCore/qvector.h"
 #include "QtCore/qabstractitemmodel.h"
+#include "qsparqlquerymodel.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -88,8 +89,11 @@ public:
     bool newQuery;
     void beginQuery(int totalResults);
     void findRoleNames();
-
+    QSparqlConnectionOptionsWrapper *connectionOptions;
     QHash<int, QByteArray> roleNames;
+
+   // enum Status { Null, Ready, Loading, Error };
+    QSparqlQueryModel::Status status;
 
 public Q_SLOTS:
     void addData(int totalResults);

@@ -43,7 +43,7 @@
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
 
-#include <QtSparql/private/qsparqlresultslist_p.h>
+#include <QtSparql/qsparqlquerymodel.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,7 +53,7 @@ public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
-        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
+        qmlRegisterType<QSparqlQueryModel>(uri, 0, 1, "SparqlResultsList");
         qmlRegisterType<QSparqlConnectionOptionsWrapper>(uri, 0, 1, "SparqlConnectionOptions");
     }
 };
