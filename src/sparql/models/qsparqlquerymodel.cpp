@@ -131,47 +131,88 @@ void QSparqlQueryModelPrivate::findRoleNames()
     QString queryString = query.preparedQueryText().simplified();
     roleNames.clear();
     QList<QString> uniqueNames;
-    QStringList stringList = queryString.split(QLatin1Char(' '));
-    bool doIgnore = false;
-    int parenthesesCount = 0;
-    Q_FOREACH(QString word, stringList) {
-        if (!doIgnore && (word.at(0) == QLatin1Char('?') || word.at(0) == QLatin1Char('$'))
-        && (!word.contains(QLatin1Char(';')) && !word.contains(QLatin1Char(':')))) {
-            //remove the ? or $
-            word.remove(0,1);
-            // select ?u{?u a ... is valid, need to make sure
-            // this is dealt with
-            if (word.contains(QLatin1Char('{'))) {
-               word = word.split(QLatin1Char('{')).at(0);
-            }
-            QRegExp cleanUp(QLatin1String("[,]|[{]|[}]|[.]"));
-            word.replace(cleanUp,QLatin1String(""));
-            if (!uniqueNames.contains(word)) {
-               uniqueNames.append(word);
-            }
-        }
-        // look for parentheses to avoid incorrectly adding things like ?foo in
-        // 'nie:url( ?foo ) AS ?bar' as a role name
-        if (word.contains(QLatin1Char('(')) || word.contains(QLatin1Char('{'))) {
-            doIgnore = true;
-            parenthesesCount += word.count(QLatin1Char('('));
-            parenthesesCount += word.count(QLatin1Char('{'));
-        }
-        if (word.contains(QLatin1Char(')')) || word.contains(QLatin1Char('}'))) {
-            parenthesesCount -= word.count(QLatin1Char(')'));
-            parenthesesCount -= word.count(QLatin1Char('}'));
-            if (parenthesesCount == 0) {
-                doIgnore = false;
-            }
-        }
-    }
 
-    int roleCounter = Qt::UserRole + 1;
-    Q_FOREACH(QString word, uniqueNames) {
-        roleNames[roleCounter++] = word.toLatin1();
+    bool processLoop = true;
+    bool process = false;
+    int firstPosition = 0;
+    int deletePosition = 0;
+
+    QChar closeChar;
+    QChar openChar;
+    QList<QPair<QLatin1Char, QLatin1Char> > bracketMatch;
+
+    bracketMatch.append( qMakePair( QLatin1Char('('), QLatin1Char(')') ) );
+    bracketMatch.append( qMakePair( QLatin1Char('{'), QLatin1Char('}') ) );
+    bracketMatch.append( qMakePair( QLatin1Char('"'), QLatin1Char('"') ) );
+    bracketMatch.append( qMakePair( QLatin1Char('\''), QLatin1Char('\'') ) );
+
+    // check query is valid, will ensure we don't get stuck in the loop
+    if ( queryString.count(QLatin1Char('(')) == queryString.count(QLatin1Char(')'))
+        && queryString.count(QLatin1Char('{')) == queryString.count(QLatin1Char('}'))
+        && queryString.count(QLatin1Char('"')) % 2 == 0
+        && queryString.count(QLatin1Char('\'')) % 2 == 0 )
+    {
+        // first remove any, potentially nested, brackets
+        while (processLoop) {
+            if (!process) {
+                for (int i = 0; i < bracketMatch.size(); ++i) {
+                    firstPosition = queryString.indexOf( bracketMatch.at(i).first );
+                    if (firstPosition != -1) {
+                        openChar = bracketMatch.at(i).first;
+                        closeChar = bracketMatch.at(i).second;
+                        deletePosition = firstPosition;
+                        break;
+                    }
+                 }
+            }
+            if (firstPosition != -1) {
+                process = true;
+                int openCount = 0;
+                int closeCount = 0;
+                // go to the first close, count how many opens, repeat until they match
+                // then delete!
+                do {
+                    deletePosition = queryString.indexOf(closeChar, deletePosition+1);
+                    openCount = queryString.left(deletePosition).count(openChar);
+                    if(deletePosition != -1)
+                        closeCount++;
+                    } while (closeCount != openCount);
+                    queryString.remove(firstPosition, (deletePosition-firstPosition)+1);
+                    firstPosition = 0;
+                    closeCount = 0;
+                    process = false;
+            } else {
+                processLoop = false;
+            }
+        }
+
+        QStringList stringList = queryString.split(QLatin1Char(' '));
+        Q_FOREACH(QString word, stringList) {
+            if ((word.at(0) == QLatin1Char('?') || word.at(0) == QLatin1Char('$'))
+            && (!word.contains(QLatin1Char(';')) && !word.contains(QLatin1Char(':')))) {
+                //remove the ? or $
+                word.remove(0,1);
+                // select ?u{?u a ... is valid, need to make sure
+                // this is dealt with
+                if (word.contains(QLatin1Char('{'))) {
+                   word = word.split(QLatin1Char('{')).at(0);
+                }
+                QRegExp cleanUp(QLatin1String("[,]|[{]|[}]|[.]"));
+                word.replace(cleanUp,QLatin1String(""));
+                if (!uniqueNames.contains(word)) {
+                   uniqueNames.append(word);
+                }
+            }
+        }
+
+        int roleCounter = Qt::UserRole + 1;
+        Q_FOREACH(QString word, uniqueNames) {
+            roleNames[roleCounter++] = word.toLatin1();
+        }
+        q->setRoleNames(roleNames);
+    } else {
+        qWarning() << "QSparqlQueryModel: Invalid Query";
     }
-    q->setRoleNames(roleNames);
-    qDebug() << "unique = " << roleNames;
 }
 
 /*!
