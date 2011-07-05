@@ -208,12 +208,16 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     QHash<QString, QString> contactNamesValue;
     QHash<QString, QString> contactNamesBindings;
     QHash<QString, QString> contactNamesStringValue;
+    QList<QString> contactOrder;
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
     QVERIFY(!r->isValid());
     int resultSize = 0;
     while (r->next()) {
         QVERIFY(r->isValid());
+        // keep a list of the uri's to be used to track the insert order
+        contactOrder.append(r->value(0).toString());
+
         contactNamesValue[r->value(0).toString()] = r->value(1).toString();
         contactNamesBindings[r->binding(0).value().toString()] = r->binding(1).value().toString();
         contactNamesStringValue[r->stringValue(0)] = r->stringValue(1);
@@ -255,9 +259,9 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QVERIFY(r->next());
             QVERIFY(r->pos() != QSparql::BeforeFirstRow);
             QVERIFY(r->isValid());
-            QCOMPARE(contactNamesValue["uri001"], r->value(1).toString());
-            QCOMPARE(contactNamesBindings["uri001"], r->binding(1).value().toString());
-            QCOMPARE(contactNamesStringValue["uri001"], r->stringValue(1));
+            QCOMPARE(contactNamesValue[contactOrder.at(0)], r->value(1).toString());
+            QCOMPARE(contactNamesBindings[contactOrder.at(0)], r->binding(1).value().toString());
+            QCOMPARE(contactNamesStringValue[contactOrder.at(0)], r->stringValue(1));
         }
     } else {
         //Make sure using the result doesn't crash
