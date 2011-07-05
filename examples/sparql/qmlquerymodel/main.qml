@@ -84,7 +84,7 @@ Rectangle {
                 width: parent.width
                 height: parent.height
                 model: contactModel
-                delegate: Item {  height: 50; Text { font.pixelSize: 40; text: secondName+","+firstName }  }
+                delegate: Item {  height: 50; Text { font.pixelSize: 40; text: joinedName }  }
             }
         }
 

@@ -171,8 +171,11 @@
     \skip query =
     \until "nco:nameFamily
 
-    The results will be accessible using the property names "u", "firstName" and "secondName". After
-    creating a model, it can be set as a context property for a QML file.
+    The results will be accessible using the property names "u" and "joinedName". Please note that whenever
+    using functions (in this case string-join) it is important to define the property name you want to use in QML
+    using <i>AS</i>.
+
+    After creating a model, it can be set as a context property for a QML file.
 
     E.g.
     \dontinclude qmlquerymodel/main.cpp

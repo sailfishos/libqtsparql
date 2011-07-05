@@ -64,7 +64,7 @@ public slots:
 ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
 {
     // The property names in QML will be "u" "firstName" and "secondName"
-    query = "select ?u ?firstName ?secondName"
+    query = "select ?u fn:string-join((?firstName, ?secondName), ' ') AS ?joinedName"
             "{ ?u a nco:PersonContact;"
             "nie:isLogicalPartOf <qml-example>;"
             "nco:nameGiven ?firstName;"
