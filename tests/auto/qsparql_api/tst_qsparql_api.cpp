@@ -180,9 +180,14 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
     QHash<QString, QString> contactNamesValue;
     QHash<QString, QString> contactNamesBindings;
     QHash<QString, QString> contactNamesStringValue;
+    QList<QString> contactOrder;
 
     QVERIFY(r->pos() == QSparql::BeforeFirstRow);
     while (r->next()) {
+        QVERIFY(r->isValid());
+        // keep a list of the uri's to be used to track the insert order
+        contactOrder.append(r->value(0).toString());
+
         contactNamesValue[r->value(0).toString()] = r->value(1).toString();
         contactNamesBindings[r->binding(0).value().toString()] = r->binding(1).value().toString();
         contactNamesStringValue[r->stringValue(0)] = r->stringValue(1);
@@ -224,9 +229,10 @@ void validateResults(QSparqlResult *r, const int expectedResultsSize)
             QVERIFY(r->pos() == QSparql::BeforeFirstRow);
             QVERIFY(r->next());
             QVERIFY(r->pos() != QSparql::BeforeFirstRow);
-            QCOMPARE(contactNamesValue["uri001"], r->value(1).toString());
-            QCOMPARE(contactNamesBindings["uri001"], r->binding(1).value().toString());
-            QCOMPARE(contactNamesStringValue["uri001"], r->stringValue(1));
+            QVERIFY(r->isValid());
+            QCOMPARE(contactNamesValue[contactOrder.at(0)], r->value(1).toString());
+            QCOMPARE(contactNamesBindings[contactOrder.at(0)], r->binding(1).value().toString());
+            QCOMPARE(contactNamesStringValue[contactOrder.at(0)], r->stringValue(1));
         }
     } else {
         //Make sure using the result doesn't crash
@@ -1363,11 +1369,23 @@ void tst_QSparqlAPI::queryModel_test()
     QCOMPARE(model.rowCount(), expectedResultsSize);
     QCOMPARE(model.columnCount(), contactSelectColumnCount);
 
+    // Test the results against a query to get the insertion order
+    QList<QString> insertOrder;
+    QSparqlResult *r = conn.syncExec(QSparqlQuery(query));
+    while (r->next())
+    {
+        insertOrder.append(r->value(0).toString());
+        insertOrder.append(r->value(1).toString());
+    }
+
     // Verify the data in the model
     for (int i=0;i<model.rowCount();i++) {
         QSparqlResultRow row = model.resultRow(i);
-        QCOMPARE(QString("uri00%1").arg(i+1), row.value(0).toString());
-        QCOMPARE(QString("name00%1").arg(i+1), row.value(1).toString());
+        QCOMPARE(insertOrder.at(0), row.value(0).toString());
+        // inserted as uri, then name, so just pop the front
+        insertOrder.pop_front();
+        QCOMPARE(insertOrder.at(0), row.value(1).toString());
+        insertOrder.pop_front();
     }
 }
 
