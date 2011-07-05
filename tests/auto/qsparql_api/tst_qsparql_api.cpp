@@ -1173,11 +1173,23 @@ void tst_QSparqlAPI::queryModel_test()
     QCOMPARE(model.rowCount(), expectedResultsSize);
     QCOMPARE(model.columnCount(), contactSelectColumnCount);
 
+    // Test the results against a query to get the insertion order
+    QList<QString> insertOrder;
+    QSparqlResult *r = conn.syncExec(QSparqlQuery(query));
+    while (r->next())
+    {
+        insertOrder.append(r->value(0).toString());
+        insertOrder.append(r->value(1).toString());
+    }
+
     // Verify the data in the model
     for (int i=0;i<model.rowCount();i++) {
         QSparqlResultRow row = model.resultRow(i);
-        QCOMPARE(QString("uri00%1").arg(i+1), row.value(0).toString());
-        QCOMPARE(QString("name00%1").arg(i+1), row.value(1).toString());
+        QCOMPARE(insertOrder.at(0), row.value(0).toString());
+        // inserted as uri, then name, so just pop the front
+        insertOrder.pop_front();
+        QCOMPARE(insertOrder.at(0), row.value(1).toString());
+        insertOrder.pop_front();
     }
 }
 
