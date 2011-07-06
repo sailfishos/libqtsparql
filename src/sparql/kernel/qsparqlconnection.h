@@ -49,7 +49,7 @@
 #include <QtSparql/qsparql.h>
 #include <QtSparql/qsparqlconnectionoptions.h>
 #include <QtSparql/qsparqlbinding.h>
-
+#include <QDebug>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -61,6 +61,7 @@ class QSparqlQuery;
 class QSparqlResult;
 class QSparqlConnectionPrivate;
 class QSparqlQueryOptions;
+class SparqlConnection;
 
 class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
@@ -95,6 +96,10 @@ public:
 
 private:
     friend class QSparqlConnectionPrivate;
+    friend class SparqlConnection;
+
+    void qmlConstructor(const QString& type, const QSparqlConnectionOptions& options = QSparqlConnectionOptions());
+
     QSparqlConnectionPrivate *d; // replace with Q_DECLARE_PRIVATE when Qt publishes it
 };
 // TODO: make "validness" of a connection a QObject property

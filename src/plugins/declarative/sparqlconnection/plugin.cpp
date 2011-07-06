@@ -45,6 +45,7 @@
 
 #include <QtSparql/qsparqlquerymodel.h>
 #include <QtSparql/private/qsparqlsparqlconnection_p.h>
+#include <QtSparql/private/qsparqlsparqlconnectionoptions_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,6 +56,7 @@ public:
     {
         Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
         qmlRegisterType<SparqlConnection>(uri, 0, 1, "SparqlConnection");
+        qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
     }
 };
 

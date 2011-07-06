@@ -346,6 +346,14 @@ QSparqlConnection::QSparqlConnection(QObject* parent)
                                      QSparqlConnectionOptions());
 }
 
+void QSparqlConnection::qmlConstructor(const QString& type, const QSparqlConnectionOptions& options)
+{
+    delete d;
+    QSparqlDriver* driver = QSparqlConnectionPrivate::findDriver(type);
+    d = new QSparqlConnectionPrivate(driver, type, options);
+    d->driver->open(d->options);
+}
+
 /*!
 
     Constructs a QSparqlConnection of the given \a type with the given \a options.
