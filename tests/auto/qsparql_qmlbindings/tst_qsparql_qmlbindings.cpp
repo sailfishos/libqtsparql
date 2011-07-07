@@ -158,7 +158,7 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
 
     // get the return value from qml
     QVariant returnValue;
-    QMetaObject::invokeMethod(rootObject, "runQuery", Qt::DirectConnection, Q_RETURN_ARG(QVariant, returnValue));
+    QMetaObject::invokeMethod(rootObject, "runSelectQuery", Qt::DirectConnection, Q_RETURN_ARG(QVariant, returnValue));
     QList<QVariant> list = returnValue.toList();
     QCOMPARE(list.length(), NUM_INSERTS);
 
@@ -168,7 +168,7 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
     {
         QMap<QString, QVariant> resultMap = list[i].toMap();
         // the result map is binding->value, store the binding
-        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();       
+        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
     }
 
     //now validate against a QSparqlResult

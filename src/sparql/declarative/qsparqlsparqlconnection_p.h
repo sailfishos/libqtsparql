@@ -34,7 +34,7 @@ public:
     void classBegin() {};
     void componentComplete();
 
-    Q_INVOKABLE QVariantList exec(SparqlQuery *query);
+    Q_INVOKABLE QVariantList exec(QString query);
 
     void setOptions(SparqlConnectionOptions* options)
     {

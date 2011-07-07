@@ -1,8 +1,8 @@
 #include "qsparqlsparqlconnection_p.h"
 #include "qsparqlsparqlconnectionoptions_p.h"
-#include "qsparqlsparqlquery_p.h"
 #include <QSparqlResult>
 #include <QSparqlResultRow>
+
 void SparqlConnection::componentComplete()
 {
     // we will create the connection once the component has finished reading, that way
@@ -14,9 +14,18 @@ void SparqlConnection::componentComplete()
         qmlConstructor(driverName);
 }
 
-QVariantList SparqlConnection::exec(SparqlQuery *query)
+QVariantList SparqlConnection::exec(QString queryString)
 {
-    QSparqlResult *result = syncExec(*query);
+    QSparqlQuery query;
+    query.setQuery(queryString);
+    if ( queryString.contains(QLatin1String("insert"), Qt::CaseInsensitive) )
+        query.setType(QSparqlQuery::InsertStatement);
+    if ( queryString.contains(QLatin1String("delete"), Qt::CaseInsensitive) )
+        query.setType(QSparqlQuery::DeleteStatement);
+    if ( queryString.contains(QLatin1String("construct"), Qt::CaseInsensitive) )
+        query.setType(QSparqlQuery::ConstructStatement);
+
+    QSparqlResult *result = syncExec(query);
     QVariantList resultList;
     while(result->next()) {
         QSparqlResultRow row = result->current();

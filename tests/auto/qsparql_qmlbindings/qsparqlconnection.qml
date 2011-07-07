@@ -5,7 +5,7 @@ Rectangle {
     id: rootComp
     property string setDriver: "QTRACKER_DIRECT"
     property string queryString: sparqlQueryString
-    property SparqlQuery selectQuery : SparqlQuery { query: queryString }
+
     SparqlConnection {
         objectName: "connectionWithOptions"
         id: sparqlConnection
@@ -14,7 +14,7 @@ Rectangle {
     }
 
     function runSelectQuery() {
-        return sparqlConnection.exec(selectQuery);
+        return sparqlConnection.exec(queryString);
     }
 
 }

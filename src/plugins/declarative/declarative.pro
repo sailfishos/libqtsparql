@@ -1,7 +1,7 @@
 include(../../../shared.pri)
 
 TEMPLATE = subdirs
-SUBDIRS += sparqlresultslist sparqlconnection sparqlquery
+SUBDIRS += sparqlresultslist sparqlconnection
 
 qmldir.files = $$PWD/qmldir
 qmldir.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
