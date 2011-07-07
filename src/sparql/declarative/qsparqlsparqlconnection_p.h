@@ -38,7 +38,10 @@ public:
 
     void setOptions(SparqlConnectionOptions* options)
     {
-        this->options = options;
+        if (options)
+        {
+            this->options = options;
+        }
     }
 
     SparqlConnectionOptions* getOptions()

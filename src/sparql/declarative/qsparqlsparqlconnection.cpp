@@ -20,11 +20,12 @@ QVariantList SparqlConnection::exec(SparqlQuery *query)
     QVariantList resultList;
     while(result->next()) {
         QSparqlResultRow row = result->current();
+        QVariantMap resultHash;
         for (int i=0; i<row.count(); i++) {
-            QVariantMap resultHash;
             resultHash.insert(row.binding(i).name(), row.value(i));
-            resultList.append(resultHash);
         }
+        resultList.append(resultHash);
     }
+    delete result;
     return resultList;
 }

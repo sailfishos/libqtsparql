@@ -20,8 +20,6 @@ class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QSparqlCo
     Q_PROPERTY(QString hostName READ hostName WRITE setHostName)
     Q_PROPERTY(QString path READ path WRITE setPath)
     Q_PROPERTY(int port READ port WRITE setPort)
-
-
 };
 
 QT_END_NAMESPACE
