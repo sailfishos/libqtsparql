@@ -12,6 +12,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
+class SparqlQuery;
 class SparqlConnectionOptions;
 
 class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDeclarativeParserStatus
@@ -32,6 +33,8 @@ public:
 
     void classBegin() {};
     void componentComplete();
+
+    Q_INVOKABLE QVariantList exec(SparqlQuery *query);
 
     void setOptions(SparqlConnectionOptions* options)
     {
