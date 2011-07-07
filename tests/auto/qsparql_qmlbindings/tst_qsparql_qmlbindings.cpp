@@ -61,7 +61,7 @@ public slots:
 
 private slots:
     void sparql_connection_test();
-    void sparql_connection_query_test();
+    void sparql_connection_select_query_test();
 };
 
 namespace {
@@ -84,7 +84,6 @@ tst_QSparqlQMLBindings::~tst_QSparqlQMLBindings()
 
 void tst_QSparqlQMLBindings::initTestCase()
 {
-
     const QString insertQueryTemplate =
         "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
         "nie:isLogicalPartOf <qsparql-qml-tests> ;"
@@ -102,7 +101,6 @@ void tst_QSparqlQMLBindings::initTestCase()
     r->waitForFinished();
     QVERIFY(!r->hasError());
     delete r;
-
 }
 
 void tst_QSparqlQMLBindings::cleanupTestCase()
@@ -145,7 +143,7 @@ void tst_QSparqlQMLBindings::sparql_connection_test()
     QVERIFY(connPointer.isNull());
 }
 
-void tst_QSparqlQMLBindings::sparql_connection_query_test()
+void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile("qsparqlconnection.qml"));
