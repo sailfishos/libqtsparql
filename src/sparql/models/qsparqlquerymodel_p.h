@@ -89,11 +89,7 @@ public:
     bool newQuery;
     void beginQuery(int totalResults);
     void findRoleNames();
-    QSparqlConnectionOptionsWrapper *connectionOptions;
     QHash<int, QByteArray> roleNames;
-
-   // enum Status { Null, Ready, Loading, Error };
-    QSparqlQueryModel::Status status;
 
 public Q_SLOTS:
     void addData(int totalResults);

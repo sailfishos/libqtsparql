@@ -65,12 +65,6 @@ class Q_SPARQL_EXPORT QSparqlQueryModel: public QAbstractTableModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSparqlQueryModel)
-    Q_ENUMS(Status)
-    Q_PROPERTY(QSparqlConnectionOptionsWrapper * options READ options WRITE setOptions NOTIFY optionsChanged)
-    Q_PROPERTY(QString query READ queryString WRITE setQueryQml NOTIFY queryChanged)
-    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_CLASSINFO("DefaultProperty", "query")
 
 public:
     explicit QSparqlQueryModel(QObject *parent = 0);
@@ -96,22 +90,8 @@ public:
 
     QSparqlError lastError() const;
 
-    enum Status { Null, Ready, Loading, Error };
-    Status status() const;
-
-private:
-    // QML Binding Functions
-    QSparqlConnectionOptionsWrapper * options() const;
-    void setQueryQml(const QString &query);
-    void setOptions(QSparqlConnectionOptionsWrapper *options);
-    QString queryString() const;
-
 Q_SIGNALS:
     void finished();
-    void queryChanged();
-    void countChanged();
-    void optionsChanged();
-    void statusChanged();
 
 protected:
     virtual void queryChange();

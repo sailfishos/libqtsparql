@@ -232,28 +232,6 @@ void QSparqlQueryModelPrivate::findRoleNames()
 */
 
 /*!
-    \enum QSparqlQueryModel::Status
-
-    This enum type describes the status of the query model.
-
-    \var QSparqlQueryModel::Status QSparqlQueryModel::Null
-
-    No status has currently been set, the default after creating the model.
-
-    \var QSparqlQueryModel::Status QSparqlQueryModel::Ready
-
-    The query model results are ready.
-
-    \var QSparqlQueryModel::Status QSparqlQueryModel::Loading
-
-    The query model is currently waiting for the results to be loaded.
-
-    \var QSparqlQueryModel::Status QSparqlQueryModel::Error
-
-    There was an error with the query or the connection.
-*/
-
-/*!
     \fn void QSparqlQueryModel::finished()
 
     This signal is emitted when the QSparqlResult, used by the model, has
@@ -407,53 +385,6 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
     connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
 
-}
-
-// QML Functions, these are private so don't require documentation
-// (apart from Status())
-void QSparqlQueryModel::setQueryQml(const QString &query)
-{
-    d->status = QSparqlQueryModel::Error;
-    qDebug() << "Setting query..." << query;
-    d->query = QSparqlQuery(query);
-}
-
-QSparqlConnectionOptionsWrapper* QSparqlQueryModel::options() const
-{
-    return d->connectionOptions;
-}
-
-QString QSparqlQueryModel::queryString() const
-{
-    return d->query.preparedQueryText();
-}
-
-void QSparqlQueryModel::setOptions(QSparqlConnectionOptionsWrapper *options)
-{
-    d->connectionOptions = options;
-    if (d->connectionOptions == 0)
-        return;
-
-    if (d->result != 0) {
-        if (!d->result->isFinished())
-            return;
-        else
-            delete d->result;
-    }
-    delete d->connection;
-    QSparqlConnection *connection = new QSparqlConnection(d->connectionOptions->driverName(), d->connectionOptions->options());
-    d->connection = connection;
-    setQuery(d->query, *connection);
-    Q_EMIT optionsChanged();
-}
-
-/*!
-    Returns the status of the model
-*/
-
-QSparqlQueryModel::Status QSparqlQueryModel::status() const
-{
-    return d->status;
 }
 
 /*!
