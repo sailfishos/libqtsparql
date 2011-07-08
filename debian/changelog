@@ -1,3 +1,9 @@
+libqtsparql (0.0.31~unreleased) unstable; urgency=low
+
+  *
+
+ -- James Thomas <james.thomas@codethink.co.uk>  Tue, 5 Jul 2011 14:14:00 +0300
+
 libqtsparql (0.0.30) unstable; urgency=low
 
   * Fixes: NB#269688 - Endpoint driver related test cases are failing with undefined symbol error
