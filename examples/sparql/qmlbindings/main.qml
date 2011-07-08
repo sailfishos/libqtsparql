@@ -5,9 +5,6 @@ Rectangle {
     id: mainRectangle
     width: 800
     height: 400
-    // This signal will be emitted, and caught on the c++ side
-    // we someone enters a new contact
-    signal addContact(string firstName, string familyName)
 
     Rectangle {
         id: contactsRect
@@ -18,8 +15,22 @@ Rectangle {
             id: contactsView
             width: parent.width
             height: parent.height
-            // contactModel will be set from C++
-            model: contactModel
+
+            // We'll use a results list model here
+            // By setting the "objectName" property we can use these models and connections
+            // in C++, see main.cpp for an example
+            model: SparqlResultsList {
+                       objectName: "queryModel"
+                       // create a new SparqlConnection for the queryModel
+                       connection: SparqlConnection { id:sparqlConnection; objectName:"sparqlConnection"; driver:"QTRACKER_DIRECT" }
+                       // This is the query for the model
+                       query: "select ?u ?firstName ?secondName"+
+                              "{ ?u a nco:PersonContact;"+
+                              "nie:isLogicalPartOf <qml-example>;"+
+                              "nco:nameGiven ?firstName;"+
+                              "nco:nameFamily ?secondName .} order by ?secondName ?firstName"
+                   }
+
             delegate: Item {  height: 50; Text { font.pixelSize: 40; text: secondName+","+firstName }  }
         }
     }
@@ -37,12 +48,16 @@ Rectangle {
             // This is the button that deals with inserting
             // a contact
             Rectangle {
-                // When the button is clicked, emit the addContact signal with the input
-                // we can catch and process this on the C++ side
+                // When the button is clicked, insert the data using the "exec" function of
+                // of the sparql connection
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        addContact(firstNameInput.text ,familyNameInput.text)
+                        var queryString = "insert { "+
+                                         "_:u a nco:PersonContact; nie:isLogicalPartOf <qml-example>; "+
+                                         "nco:nameGiven '"+firstNameInput.text+ "';"+
+                                         "nco:nameFamily '"+familyNameInput.text+ "' . }";
+                        sparqlConnection.exec(queryString); 
                         firstNameInput.text = ""
                         familyNameInput.text = ""
                         nameInput.visible = false
@@ -67,6 +82,7 @@ Rectangle {
                     }
                 }
                 Text { anchors.centerIn: parent; font.pixelSize: 50; text: "+" }
+
             }
 
             Grid {
