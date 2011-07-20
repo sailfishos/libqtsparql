@@ -214,6 +214,9 @@ private slots:
     void default_QSparqlQueryOptions();
     void copies_of_QSparqlQueryOptions_are_equal_and_independent();
     void assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy();
+
+    void exercise_QSparqlConnectionOptions();
+    void try_set_illegal_value_in_QSparqlConnectionOptions();
 };
 
 tst_QSparql::tst_QSparql()
@@ -483,6 +486,59 @@ void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independen
 
     opt2.setPriority(QSparqlQueryOptions::NormalPriority);
     QVERIFY( opt2 == opt1 );
+}
+
+void tst_QSparql::exercise_QSparqlConnectionOptions()
+{
+    QString databaseName("qsparql_test_database");
+    QString databaseUser("qsparql_user");
+    QString databasePassword("secret_password");
+    QString databaseHostName("remote.server.qsparql.com");
+    QString path("/the/path/");
+    int port = 2226;
+
+    QSparqlConnectionOptions connOptions;
+    connOptions.setDatabaseName(databaseName);
+    connOptions.setUserName(databaseUser);
+    connOptions.setPassword(databasePassword);
+    connOptions.setHostName(databaseHostName);
+    connOptions.setPath(path);
+    connOptions.setPort(port);
+
+    QVERIFY( databaseName ==  connOptions.databaseName());
+    QVERIFY( databaseUser ==  connOptions.userName() );
+    QVERIFY( databasePassword ==  connOptions.password() );
+    QVERIFY( databaseHostName ==  connOptions.hostName() );
+    QVERIFY( path ==  connOptions.path() );
+    QVERIFY( port ==  connOptions.port() );
+
+    QSparqlConnectionOptions connOptions2;
+
+    connOptions2=connOptions;
+
+    QVERIFY( databaseName ==  connOptions2.databaseName());
+    QVERIFY( databaseUser ==  connOptions2.userName() );
+    QVERIFY( databasePassword ==  connOptions2.password() );
+    QVERIFY( databaseHostName ==  connOptions2.hostName() );
+    QVERIFY( path ==  connOptions2.path() );
+    QVERIFY( port ==  connOptions2.port() );
+
+    QVERIFY( connOptions ==  connOptions2 );
+
+    QVERIFY( connOptions.networkAccessManager() == 0 );
+}
+
+void tst_QSparql::try_set_illegal_value_in_QSparqlConnectionOptions()
+{
+    QSparqlConnectionOptions connOptions;
+    
+    int defaulDataReadyInterval = connOptions.dataReadyInterval();
+    connOptions.setDataReadyInterval(-5);
+    QVERIFY( defaulDataReadyInterval ==  connOptions.dataReadyInterval() );
+    
+    int defaultMaxThreadCount = connOptions.maxThreadCount();
+    connOptions.setMaxThreadCount(-4);
+    QVERIFY( defaultMaxThreadCount ==  connOptions.maxThreadCount() );
 }
 
 QTEST_MAIN(tst_QSparql)
