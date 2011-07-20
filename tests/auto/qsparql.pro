@@ -11,6 +11,7 @@ SUBDIRS = \
     qsparql_threading \
     qsparql_tracker \
     qsparql_tracker_direct \
+    qsparql_tracker_direct_concurrency \
     qsparql_tracker_direct_sync \
     qsparql_tracker_direct_crashes \
     qsparql_virtuoso \
