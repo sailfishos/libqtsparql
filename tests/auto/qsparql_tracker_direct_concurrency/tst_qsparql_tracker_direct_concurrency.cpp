@@ -61,7 +61,8 @@ private slots:
     void sameConnection_selectQueries();
     void sameConnection_selectQueries_data();
     //void sameConnection_updateQueries();
-    //void sameConnection_multipleThreads_selectQueries();
+    void sameConnection_multipleThreads_selectQueries();
+    void sameConnection_multipleThreads_selectQueries_data();
     //void sameConnection_multipleThreads_updateQueries();
 
     // multpleConnections tests will all be multi threaded
@@ -86,10 +87,8 @@ public:
            delete map;
         }
     }
-    
+
     QSet<QSparqlResult*> pendingResults;
-    //QSignalMapper dataReadyMapper;
-    //QSignalMapper finishedMapper;
     int position;
     QList<QSignalMapper* > signalMaps;
     QList<QPair<int, int> > resultRanges;
@@ -136,7 +135,6 @@ public:
     }
 
 public Q_SLOTS:
-
     void onDataReady(int listPos)
     {
         QSparqlResult *result = resultList.at(listPos);
@@ -168,6 +166,107 @@ public Q_SLOTS:
     }
 
 };
+
+class ThreadObject : public QObject
+{
+    Q_OBJECT
+public:
+    QSparqlConnection *connection;
+    SignalObject *signalObject;
+    QList<QSparqlResult*> resultList;
+    bool deleteConnection;
+    bool deleteSignalObject;
+
+    int numQueries;
+    int testDataSize;
+
+    ThreadObject()
+    : connection(0), signalObject(0), deleteConnection(false), deleteSignalObject(false)
+    {
+    }
+
+    ~ThreadObject()
+    {
+    }
+
+    void cleanup()
+    {
+        if (deleteConnection) {
+            delete connection;
+        } else {
+            // if we were passed a connection, delete the results
+            // here to avoid leaking them
+            foreach(QSparqlResult* result, resultList)
+                delete result;
+        }
+
+        if (deleteSignalObject)
+            delete signalObject;
+    }
+    void setParameters(int numQueries, int testDataSize)
+    {
+        this->numQueries = numQueries;
+        this->testDataSize = testDataSize;
+    }
+    void setConnection(QSparqlConnection* connection)
+    {
+        this->connection = connection;
+    }
+
+    void setSignalObject(SignalObject* signalObject)
+    {
+        this->signalObject = signalObject;
+
+    }
+
+    void waitForFinished()
+    {
+        signalObject->waitForAllFinished(8000);
+    }
+
+public Q_SLOTS:
+    void startQueries()
+    {
+        if (!connection) {
+            this->connection = new QSparqlConnection("QTRACKER_DIRECT");
+            deleteConnection = true;
+        }
+        if (!signalObject) {
+            this->signalObject = new SignalObject();
+            deleteSignalObject = true;
+        }
+
+        QTime time = QTime::currentTime();
+        qsrand((uint)time.msec());
+        // store the result ranges we are going to use
+        QList<QPair<int, int> > resultRanges;
+        // first result will read everything
+        resultRanges.append(qMakePair(1, testDataSize));
+        for (int i=1;i<numQueries;i++) {
+            // high + 1) - low) + low
+            int low = qrand() % ((testDataSize) - 1) + 1;
+            int high = qrand() % ((testDataSize+1) - low) + low;
+            resultRanges.append(qMakePair(low, high));
+        }
+
+        for (int i=0;i<numQueries;i++) {
+            QPair<int, int> resultRange = resultRanges.at(i);
+            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
+                                    "nmm:trackNumber ?t;"
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
+                                    "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
+            QSparqlResult *result = connection->exec(select);
+            resultList.append(result);
+            signalObject->append(result, resultRange);
+        }
+
+        waitForFinished();
+        cleanup();
+        this->thread()->quit();
+    }
+
+};
+
 } //end namespace
 
 tst_QSparqlTrackerDirectConcurrency::tst_QSparqlTrackerDirectConcurrency()
@@ -183,22 +282,14 @@ void tst_QSparqlTrackerDirectConcurrency::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-//    installMsgHandler();
-
-    // clean any remainings
-  //  QVERIFY(cleanData());
-
-  //  QVERIFY(setupData());
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanupTestCase()
 {
-    //QVERIFY(cleanData());
 }
 
 void tst_QSparqlTrackerDirectConcurrency::init()
 {
- //   setMsgLogLevel(QtDebugMsg);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanup()
@@ -263,6 +354,67 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
         3000 << 10 << 1;
     QTest::newRow("3000 items, 100 queries, 1 Thread") <<
         3000 << 100 << 1;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries()
+{
+    QFETCH(int, testDataAmount);
+    QFETCH(int, numQueries);
+    QFETCH(int, numThreads);
+
+    QSparqlConnection connection("QTRACKER_DIRECT");
+    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
+    QTest::qWait(2000);
+    QVERIFY( testData->isOK() );
+
+    QList<QThread*> createdThreads;
+    QList<ThreadObject*> threadObjects;
+    for (int i=0;i<numThreads;i++) {
+        QThread *newThread = new QThread();
+        createdThreads.append(newThread);
+
+        ThreadObject *threadObject = new ThreadObject();
+        threadObjects.append(threadObject);
+
+        threadObject->setConnection(&connection);
+        threadObject->setParameters(numQueries, testDataAmount);
+        threadObject->moveToThread(newThread);
+
+        // connec the threads started signal to the slot that does the work
+        QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
+    }
+    // start all the threads
+    foreach(QThread* thread, createdThreads) {
+        thread->start();
+    }
+    // wait for all the threads then delete
+    // TODO: add timer so we don't wait forever
+    foreach(QThread* thread, createdThreads) {
+        while (!thread->isFinished())
+            QTest::qWait(500);
+        delete thread;
+    }
+
+    //cleanup
+    foreach(ThreadObject *threadObject, threadObjects)
+        delete threadObject;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
+{
+    QTest::addColumn<int>("testDataAmount");
+    QTest::addColumn<int>("numQueries");
+    QTest::addColumn<int>("numThreads");
+
+    QTest::newRow("3000 items, 10 queries, 2 Threads") <<
+        3000 << 10 << 2;
+    QTest::newRow("3000 items, 100 queries, 2 Threads") <<
+        3000 << 100 << 2;
+    QTest::newRow("3000 items, 10 queries, 10 Threads") <<
+        3000 << 10 << 10;
+    QTest::newRow("3000 items, 100 queries, 10 Threads") <<
+        3000 << 100 << 10;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectConcurrency )
