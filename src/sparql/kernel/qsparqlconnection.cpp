@@ -113,6 +113,7 @@ public:
 
     static QSparqlConnectionPrivate* shared_null();
     QSparqlResult* checkErrors(const QString& queryText) const;
+    void addDifferentThreadResult(QSparqlResult* result);
 
     static QStringList allKeys;
     static QHash<QString, QSparqlDriverPlugin*> plugins;
@@ -121,6 +122,7 @@ public:
     QSparqlDriver* driver;
     QString drvName;
     QSparqlConnectionOptions options;
+    QList<QPair<QPointer<QSparqlResult>, QObject*> > differentThreadResults;
 };
 
 QSparqlConnectionPrivate *QSparqlConnectionPrivate::shared_null()
@@ -317,6 +319,23 @@ void QSparqlConnectionPrivate::registerConnectionCreator(const QString& name,
         QSparqlConnectionPrivate::driverDict().insert(name, creator);
 }
 
+void QSparqlConnectionPrivate::addDifferentThreadResult(QSparqlResult* result)
+{
+    for (QList<QPair<QPointer<QSparqlResult>, QObject*> >::iterator it = differentThreadResults.begin();
+            it != differentThreadResults.end(); ++it) {
+
+        QPair<QPointer<QSparqlResult>, QObject*> resultPair = *it;
+        if(resultPair.first.isNull())
+        {
+            QPointer<QSparqlResult> pointer = result;
+            *it = qMakePair(pointer, result->parent());
+            return;
+        }
+    }
+    QPointer<QSparqlResult> pointer = result;
+    differentThreadResults.append( qMakePair(pointer, result->parent()) );
+}
+
 /*!
 
   \class QSparqlConnection
@@ -381,6 +400,34 @@ QSparqlConnection::~QSparqlConnection()
     }
 
     qDeleteAll(children);
+
+    // Now check on the results created outside the connection thread
+    for (int i=0; i<d->differentThreadResults.size(); i++)
+    {
+        QPair<QPointer<QSparqlResult>, QObject*> resultPair = d->differentThreadResults.at(i);
+        QPointer<QSparqlResult> result = resultPair.first;
+        // check to make sure the result hasn't already been deleted
+        if (!result.isNull()) {
+            QObject* origParent = resultPair.second;
+            // if these are the same, then the result hasn't been
+            // reparented at some point, so we can delete it
+            if(result->parent() == origParent) {
+                delete result;
+            } else {
+                // warn the user
+                qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<
+                    result->query();
+                if (!result->isFinished()) {
+                    result->setLastError(QSparqlError(QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                            QSparqlError::ConnectionError,
+                            -1));
+                }
+            }
+        }
+    }
+
+    d->differentThreadResults.clear();
+
     d->driver->close();
     delete d;
 }
@@ -467,8 +514,11 @@ QSparqlResult* QSparqlConnection::exec(const QSparqlQuery& query)
 
     \sa QSparqlQuery, QSparqlResult, QSparqlResult::dataReady, QSparqlResult::finished, QSparqlResult::hasError, QSparqlQueryOptions
 */
+
 QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options)
 {
+    //make sure different threads don't attempt to execute at the same time
+    QMutexLocker locker(&d->pluginMutex);
     QString queryText = query.preparedQueryText();
     QSparqlResult* result = d->checkErrors(queryText);
     if (!result) {
@@ -499,7 +549,13 @@ QSparqlResult* QSparqlConnection::exec(const  QSparqlQuery& query, const QSparql
             }
         }
     }
-    result->setParent(this);
+    // only set the parent if the connection is in the same thread
+    if (result->thread() == this->thread()) {
+        result->setParent(this);
+    } else {
+        // keep track of the results differently
+        d->addDifferentThreadResult(result);
+    }
     return result;
 }
 
