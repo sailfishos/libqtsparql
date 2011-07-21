@@ -66,7 +66,8 @@ private slots:
     //void sameConnection_multipleThreads_updateQueries();
 
     // multpleConnections tests will all be multi threaded
-    //void multipleConnections_selectQueries();
+    void multipleConnections_selectQueries();
+    void multipleConnections_selectQueries_data();
     //void multipleConnections_updateQueries();
 
 private:
@@ -403,6 +404,65 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
 {
+    QTest::addColumn<int>("testDataAmount");
+    QTest::addColumn<int>("numQueries");
+    QTest::addColumn<int>("numThreads");
+
+    QTest::newRow("3000 items, 10 queries, 2 Threads") <<
+        3000 << 10 << 2;
+    QTest::newRow("3000 items, 100 queries, 2 Threads") <<
+        3000 << 100 << 2;
+    QTest::newRow("3000 items, 10 queries, 10 Threads") <<
+        3000 << 10 << 10;
+    QTest::newRow("3000 items, 100 queries, 10 Threads") <<
+        3000 << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
+{
+    QFETCH(int, testDataAmount);
+    QFETCH(int, numQueries);
+    QFETCH(int, numThreads);
+
+    QSparqlConnection connection("QTRACKER_DIRECT");
+    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
+    QTest::qWait(2000);
+    QVERIFY( testData->isOK() );
+
+    QList<QThread*> createdThreads;
+    QList<ThreadObject*> threadObjects;
+    for (int i=0;i<numThreads;i++) {
+        QThread *newThread = new QThread();
+        createdThreads.append(newThread);
+
+        ThreadObject *threadObject = new ThreadObject();
+        threadObjects.append(threadObject);
+        threadObject->setParameters(numQueries, testDataAmount);
+        threadObject->moveToThread(newThread);
+
+        // connec the threads started signal to the slot that does the work
+        QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
+    }
+    // start all the threads
+    foreach(QThread* thread, createdThreads) {
+        thread->start();
+    }
+    // wait for all the threads then delete
+    // TODO: add timer so we don't wait forever
+    foreach(QThread* thread, createdThreads) {
+        while (!thread->isFinished())
+            QTest::qWait(500);
+        delete thread;
+    }
+    //cleanup
+    foreach(ThreadObject *threadObject, threadObjects)
+        delete threadObject;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
+{
+    qDebug() << "This data function has been called....";
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numThreads");
