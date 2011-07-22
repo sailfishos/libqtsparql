@@ -43,6 +43,8 @@
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
 
+#define TEST_DATA_AMOUNT 3000
+
 class tst_QSparqlTrackerDirectConcurrency : public QObject
 {
     Q_OBJECT
@@ -51,6 +53,8 @@ public:
     virtual ~tst_QSparqlTrackerDirectConcurrency();
 
 private:
+    TestData *testData;
+    void createTrackerTestData();
 
 private slots:
     void initTestCase();
@@ -297,10 +301,25 @@ void tst_QSparqlTrackerDirectConcurrency::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+    testData = 0;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanupTestCase()
 {
+    if (testData) {
+        delete testData;
+        testData = 0;
+    }
+}
+
+void tst_QSparqlTrackerDirectConcurrency::createTrackerTestData()
+{
+    if (!testData) {
+        const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
+        testData = createTestData(TEST_DATA_AMOUNT, "<qsparql-tracker-direct-tests>", testTag);
+        QTest::qWait(2000);
+        QVERIFY( testData->isOK() );
+    }
 }
 
 void tst_QSparqlTrackerDirectConcurrency::init()
@@ -320,10 +339,6 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QSparqlConnectionOptions options;
     options.setDataReadyInterval(500);
     options.setMaxThreadCount(maxThreadCount);
-    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
-    QTest::qWait(2000);
-    QVERIFY( testData->isOK() );
 
     // seed the random number generator
     QTime time = QTime::currentTime();
@@ -357,18 +372,19 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
 {
+    createTrackerTestData();
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("maxThreadCount");
 
-    QTest::newRow("3000 items, 10 queries, 4 Threads") <<
-        3000 << 10 << 4;
-    QTest::newRow("3000 items, 100 queries, 4 Threads") <<
-        3000 << 100 << 4;
-    QTest::newRow("3000 items, 10 queries, 1 Thread") <<
-        3000 << 10 << 1;
-    QTest::newRow("3000 items, 100 queries, 1 Thread") <<
-        3000 << 100 << 1;
+    QTest::newRow("10 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 4;
+    QTest::newRow("100 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 4;
+    QTest::newRow("10 queries, 1 Thread") <<
+        TEST_DATA_AMOUNT << 10 << 1;
+    QTest::newRow("100 queries, 1 Thread") <<
+        TEST_DATA_AMOUNT << 100 << 1;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries()
@@ -378,10 +394,6 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
     QFETCH(int, numThreads);
 
     QSparqlConnection connection("QTRACKER_DIRECT");
-    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
-    QTest::qWait(2000);
-    QVERIFY( testData->isOK() );
 
     QList<QThread*> createdThreads;
     QList<ThreadObject*> threadObjects;
@@ -418,18 +430,19 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
 {
+    createTrackerTestData();
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numThreads");
 
-    QTest::newRow("3000 items, 10 queries, 2 Threads") <<
-        3000 << 10 << 2;
-    QTest::newRow("3000 items, 100 queries, 2 Threads") <<
-        3000 << 100 << 2;
-    QTest::newRow("3000 items, 10 queries, 10 Threads") <<
-        3000 << 10 << 10;
-    QTest::newRow("3000 items, 100 queries, 10 Threads") <<
-        3000 << 100 << 10;
+    QTest::newRow("10 queries, 2 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 2;
+    QTest::newRow("100 queries, 2 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 2;
+    QTest::newRow("10 queries, 10 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 10;
+    QTest::newRow("100 queries, 10 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 10;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
@@ -439,10 +452,6 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     QFETCH(int, numThreads);
 
     QSparqlConnection connection("QTRACKER_DIRECT");
-    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
-    QTest::qWait(2000);
-    QVERIFY( testData->isOK() );
 
     QList<QThread*> createdThreads;
     QList<ThreadObject*> threadObjects;
@@ -476,29 +485,25 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
 {
+    createTrackerTestData();
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numThreads");
 
-    QTest::newRow("3000 items, 10 queries, 2 Threads") <<
-        3000 << 10 << 2;
-    QTest::newRow("3000 items, 100 queries, 2 Threads") <<
-        3000 << 100 << 2;
-    QTest::newRow("3000 items, 10 queries, 10 Threads") <<
-        3000 << 10 << 10;
-    QTest::newRow("3000 items, 100 queries, 10 Threads") <<
-        3000 << 100 << 10;
+    QTest::newRow("10 queries, 2 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 2;
+    QTest::newRow("100 queries, 2 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 2;
+    QTest::newRow("10 queries, 10 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 10;
+    QTest::newRow("100 queries, 10 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 10;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads()
 {
     QFETCH(int, numberOfThreads);
     QFETCH(int, testDataAmount);
-
-    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
-    QTest::qWait(2000);
-    QVERIFY( testData->isOK() );
 
     QSparqlConnectionOptions options;
     options.setDataReadyInterval(1000);
@@ -552,15 +557,18 @@ void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads()
 
 void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads_data()
 {
+    createTrackerTestData();
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numberOfThreads");
 
-    QTest::newRow("3000 items, 1 Thread") <<
-        3000 << 1;
-    QTest::newRow("3000 items, 2 Threads") <<
-        3000 << 2;
-    QTest::newRow("3000 items, 4 Threads") <<
-        3000 << 4;
+    QTest::newRow("Single Result, 1 Thread") <<
+        TEST_DATA_AMOUNT << 1;
+    QTest::newRow("Single Result, 2 Threads") <<
+        TEST_DATA_AMOUNT << 2;
+    QTest::newRow("Single Result, 4 Threads") <<
+        TEST_DATA_AMOUNT << 4;
+    QTest::newRow("Single Result, 8 Threads") <<
+        TEST_DATA_AMOUNT << 8;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectConcurrency )
