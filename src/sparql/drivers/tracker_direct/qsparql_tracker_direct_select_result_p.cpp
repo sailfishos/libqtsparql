@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
                                            QSparqlQuery::StatementType type)
-  : cursor(0), resultMutex(QMutex::Recursive)
+  : cursor(0), resultMutex(QMutex::Recursive), iterateMutex(QMutex::Recursive)
 {
     setQuery(query);
     setStatementType(type);
@@ -258,21 +258,26 @@ QVariant QTrackerDirectSelectResult::value(int field) const
 
 bool QTrackerDirectSelectResult::next()
 {
-    // if we can't get the mutex, return false
+    // if we can't get the mutex, warn and return false
     bool returnValue = false;
-    if (resultMutex.tryLock()) {
+    if (iterateMutex.tryLock()) {
         returnValue = QSparqlResult::next();
-        resultMutex.unlock();
+        iterateMutex.unlock();
+    } else {
+        qWarning() << "QTrackerDirectSelectResult::next:Could not obtain iteration lock";
     }
     return returnValue;
 }
 
 bool QTrackerDirectSelectResult::previous()
 {
+    // if we can't get the mutex, warn and return false
     bool returnValue = false;
-    if (resultMutex.tryLock()) {
+    if (iterateMutex.tryLock()) {
         returnValue = QSparqlResult::previous();
-        resultMutex.unlock();
+        iterateMutex.unlock();
+    } else {
+        qWarning() << "QTrackerDirectSelectResult::previous:Could not obtain iteration lock";
     }
     return returnValue;
 }

@@ -154,7 +154,7 @@ public Q_SLOTS:
 
     void onFinished(int listPos)
     {
-        QPair<int, int> resultRange = resultRanges.at(0);
+        QPair<int, int> resultRange = resultRanges.at(listPos);
         QSparqlResult* result = resultList.at(listPos);
         int expectedResultSize = (resultRange.second - resultRange.first) + 1;
         QCOMPARE(expectedResultSize, result->size());
@@ -476,7 +476,6 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
 {
-    qDebug() << "This data function has been called....";
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numThreads");

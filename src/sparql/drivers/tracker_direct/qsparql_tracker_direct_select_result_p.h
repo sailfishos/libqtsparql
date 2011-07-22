@@ -92,6 +92,7 @@ private:
 
     TrackerSparqlCursor* cursor;
     mutable QMutex resultMutex;
+    QMutex iterateMutex;
     QVector<QString> columnNames;
     QList<QVector<QVariant> > results;
 };
