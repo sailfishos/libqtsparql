@@ -70,6 +70,9 @@ private slots:
     void multipleConnections_selectQueries_data();
     //void multipleConnections_updateQueries();
 
+    void singleResult_multipleThreads();
+    void singleResult_multipleThreads_data();
+
 private:
     QSharedPointer<QSignalSpy> dataReadySpy;
 };
@@ -80,7 +83,10 @@ class SignalObject : public QObject
 {
     Q_OBJECT
 public:
-    SignalObject() : position(0) {}
+    SignalObject() : singleResult(false), position(0) {}
+    SignalObject(bool singleResult) : singleResult(singleResult), position(0) {}
+
+    bool singleResult;
     ~SignalObject()
     {
         // delete the signal mappers that were created
@@ -148,12 +154,18 @@ public Q_SLOTS:
 
     void onFinished(int listPos)
     {
-        QPair<int, int> resultRange = resultRanges.at(listPos);
+        QPair<int, int> resultRange = resultRanges.at(0);
         QSparqlResult* result = resultList.at(listPos);
         int expectedResultSize = (resultRange.second - resultRange.first) + 1;
         QCOMPARE(expectedResultSize, result->size());
-        // the results should have been fully nexted in the data ready function
-        QCOMPARE(result->pos(), (int)QSparql::AfterLastRow);
+
+        //check the size of the result
+        QCOMPARE(result->size(), expectedResultSize);
+
+        if (!singleResult) {
+            // the results should have been fully nexted in the data ready function
+            QCOMPARE(result->pos(), (int)QSparql::AfterLastRow);
+        }
         // go back through the results and validate that they are in range
         int resultCount = 0;
         while (result->previous()) {
@@ -162,7 +174,9 @@ public Q_SLOTS:
             resultCount++;
         }
         // now make sure the results counted match the size
-        QCOMPARE(resultCount, expectedResultSize);
+        if (!singleResult)
+            QCOMPARE(resultCount, expectedResultSize);
+
         pendingResults.remove(result);
     }
 
@@ -475,6 +489,79 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
         3000 << 10 << 10;
     QTest::newRow("3000 items, 100 queries, 10 Threads") <<
         3000 << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads()
+{
+    QFETCH(int, numberOfThreads);
+    QFETCH(int, testDataAmount);
+
+    const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
+    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
+    QTest::qWait(2000);
+    QVERIFY( testData->isOK() );
+
+    QSparqlConnectionOptions options;
+    options.setDataReadyInterval(1000);
+    QSparqlConnection conn("QTRACKER_DIRECT", options);
+    QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
+                                    "nmm:trackNumber ?t;"
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> }"));
+    // read everything
+    QPair<int, int> resultRange = qMakePair(1, testDataAmount);
+
+    QList<QThread*> threads;
+    QList<SignalObject*> signalObjects;
+
+    for (int i=0;i<numberOfThreads;i++)
+    {
+        QThread *newThread = new QThread();
+        // we don't want to check the position of the results in
+        // is finished for this test, since multiple threads will
+        // access the result nexting/previous, so mark this as a
+        // "single result" test
+        // TODO: write a test that checks that behaviour
+        SignalObject *signalObject = new SignalObject(true);
+        threads.append(newThread);
+        signalObjects.append(signalObject);
+
+        signalObject->moveToThread(newThread);
+        newThread->start();
+    }
+
+    QSparqlResult *result = conn.exec(select);
+
+    Q_FOREACH(SignalObject *signalObject, signalObjects)
+        signalObject->append(result, resultRange);
+
+    QTest::qWait(5000);
+
+    //now wait for the first signal object to finish
+    //and delete them
+    Q_FOREACH(SignalObject *signalObject, signalObjects) {
+        signalObject->waitForAllFinished(3000);
+        delete signalObject;
+    }
+
+    //quit the threads
+    Q_FOREACH(QThread *thread, threads) {
+        thread->quit();
+        thread->wait();
+        delete thread;
+    }
+}
+
+void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads_data()
+{
+    QTest::addColumn<int>("testDataAmount");
+    QTest::addColumn<int>("numberOfThreads");
+
+    QTest::newRow("3000 items, 1 Thread") <<
+        3000 << 1;
+    QTest::newRow("3000 items, 2 Threads") <<
+        3000 << 2;
+    QTest::newRow("3000 items, 4 Threads") <<
+        3000 << 4;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectConcurrency )
