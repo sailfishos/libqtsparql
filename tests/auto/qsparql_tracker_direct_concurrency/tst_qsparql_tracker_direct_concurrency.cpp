@@ -68,7 +68,8 @@ private slots:
     void sameConnection_updateQueries_data();
     void sameConnection_multipleThreads_selectQueries();
     void sameConnection_multipleThreads_selectQueries_data();
-    //void sameConnection_multipleThreads_updateQueries();
+    void sameConnection_multipleThreads_updateQueries();
+    void sameConnection_multipleThreads_updateQueries_data();
 
     // multpleConnections tests will all be multi threaded
     void multipleConnections_selectQueries();
@@ -299,9 +300,11 @@ public:
     int numInserts;
     int numDeletes;
     int id;
+    bool inThread;
 
-    UpdateObject(int numInserts, int numDeletes, int id)
-        : connection(0), deleteConnection(false), numInserts(numInserts), numDeletes(numDeletes), id(id)
+    UpdateObject(int numInserts, int numDeletes, int id, bool inThread = false)
+        : connection(0), deleteConnection(false), numInserts(numInserts), numDeletes(numDeletes), id(id),
+        inThread(inThread)
     {
     }
 
@@ -353,12 +356,12 @@ public Q_SLOTS:
             connection = new QSparqlConnection("QTRACKER_DIRECT");
         }
 
-        const QString insertTemplate = "insert { <addeduri00%1> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
+        const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
                                         "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
         const QString selectTemplate = "select ?u ?ng ?nf { ?u a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%1>;"
                                         "nco:nameGiven ?ng; nco:nameFamily ?nf . }";
-        const QString deleteTemplate = "delete { <addeduri00%1> a nco:PersonContact }"
-                                       " WHERE { <addeduri00%1> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2> . }";
+        const QString deleteTemplate = "delete { <addeduri00%1-%2> a nco:PersonContact }"
+                                       " WHERE { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2> . }";
 
         for (int i=0;i<numInserts;i++) {
             QSparqlQuery insertQuery(insertTemplate.arg(i).arg(id), QSparqlQuery::InsertStatement);
@@ -380,7 +383,7 @@ public Q_SLOTS:
         delete result;
         QVERIFY(contactNameValues.size() == numInserts);
         for(int i=0; i<numInserts; i++) {
-            QCOMPARE(contactNameValues[QString("addeduri00%1").arg(i)], QString("addedname00%1").arg(i));
+            QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
         }
         contactNameValues.clear();
 
@@ -405,11 +408,13 @@ public Q_SLOTS:
         int startFrom = numInserts - numDeletes;
         if (startFrom != 0) {
             for (int i=startFrom;i<numInserts;i++) {
-                QCOMPARE(contactNameValues[QString("addeduri00%1").arg(i)], QString("addedname00%1").arg(i));
+                QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
             }
         }
 
         cleanup();
+        if (inThread)
+            this->thread()->quit();
     }
 
     void onFinished(QObject* result)
@@ -599,6 +604,64 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
         TEST_DATA_AMOUNT << 10 << 10;
     QTest::newRow("100 queries, 10 Threads") <<
         TEST_DATA_AMOUNT << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries()
+{
+    QFETCH(int, numThreads);
+    QFETCH(int, numInserts);
+    QFETCH(int, numDeletes);
+
+    QSparqlConnection connection("QTRACKER_DIRECT");
+
+    QList<QThread*> createdThreads;
+    QList<UpdateObject*> updateObjects;
+    for (int i=0;i<numThreads;i++) {
+        QThread *newThread = new QThread();
+        createdThreads.append(newThread);
+
+        UpdateObject *updateObject = new UpdateObject(numInserts, numDeletes, i, true);
+        updateObjects.append(updateObject);
+
+        updateObject->setConnection(&connection);
+        updateObject->moveToThread(newThread);
+
+        // connec the threads started signal to the slot that does the work
+        QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate()));
+    }
+    // start all the threads
+    foreach(QThread* thread, createdThreads) {
+        thread->start();
+    }
+    // wait for all the threads then delete
+    // TODO: add timer so we don't wait forever
+    foreach(QThread* thread, createdThreads) {
+        while (!thread->isFinished())
+            QTest::qWait(500);
+        delete thread;
+    }
+
+    //cleanup
+    foreach(UpdateObject *updateObject, updateObjects)
+        delete updateObject;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries_data()
+{
+    QTest::addColumn<int>("numThreads");
+    QTest::addColumn<int>("numInserts");
+    QTest::addColumn<int>("numDeletes");
+
+    QTest::newRow("1 Thread, 10 inserts, 10 deletes") <<
+        1 << 10 << 10;
+    QTest::newRow("2 Threads, 100 inserts, 100 deletes") <<
+        2 << 100 << 100;
+    QTest::newRow("2 Threads, 1000 inserts, 1000 deletes") <<
+        2 << 1000 << 1000;
+    QTest::newRow("4 Threads, 100 inserts, 100 deletes") <<
+        4 << 100 << 100;
+    QTest::newRow("4 Threads, 1000 inserts, 1000 deletes") <<
+        4 << 1000 << 1000;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
