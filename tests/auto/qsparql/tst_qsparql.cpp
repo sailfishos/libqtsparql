@@ -215,6 +215,7 @@ private slots:
     void copies_of_QSparqlQueryOptions_are_equal_and_independent();
     void assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy();
 
+    void default_QSparqlConnectionOptions();
     void exercise_QSparqlConnectionOptions();
     void try_set_illegal_value_in_QSparqlConnectionOptions();
 };
@@ -486,6 +487,34 @@ void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independen
 
     opt2.setPriority(QSparqlQueryOptions::NormalPriority);
     QVERIFY( opt2 == opt1 );
+}
+
+void tst_QSparql::default_QSparqlConnectionOptions()
+{
+    QSparqlConnectionOptions connOptions;
+
+    QCOMPARE( connOptions.databaseName(), QString() );
+    QCOMPARE( connOptions.userName(), QString() );
+    QCOMPARE( connOptions.password(), QString() );
+    QCOMPARE( connOptions.hostName(), QString() );
+    QCOMPARE( connOptions.path(), QString() );
+    QCOMPARE( connOptions.port(), -1 );
+    QCOMPARE( connOptions.dataReadyInterval(), 1 );
+    QCOMPARE( connOptions.maxThreadCount(), -1 );
+    QCOMPARE( connOptions.threadExpiryTime(), -1 );
+#ifndef QT_NO_NETWORKPROXY
+    QCOMPARE( connOptions.proxy(), QNetworkProxy() );
+#endif
+    QVERIFY( !connOptions.networkAccessManager() );
+
+    const QStringList keys = QStringList()
+            << "database" << "user" << "password" << "host" << "path"
+            << "port" << "dataReadyInterval" << "maxThread" << "threadExpiry";
+    Q_FOREACH(QString key, keys) {
+        QCOMPARE( connOptions.option(key), QVariant() );
+    }
+
+    QVERIFY( connOptions == QSparqlConnectionOptions() );
 }
 
 void tst_QSparql::exercise_QSparqlConnectionOptions()
