@@ -216,7 +216,7 @@ private slots:
     void assignment_of_QSparqlQueryOptions_creates_equal_and_independent_copy();
 
     void default_QSparqlConnectionOptions();
-    void exercise_QSparqlConnectionOptions();
+    void set_QSparqlConnectionOptions();
     void try_set_illegal_value_in_QSparqlConnectionOptions();
 };
 
@@ -517,44 +517,171 @@ void tst_QSparql::default_QSparqlConnectionOptions()
     QVERIFY( connOptions == QSparqlConnectionOptions() );
 }
 
-void tst_QSparql::exercise_QSparqlConnectionOptions()
+template<class OptionParamType, class OptionDataType>
+void testSetOption(QSparqlConnectionOptions& connOptions,
+                   void (QSparqlConnectionOptions::*setterFunc)(OptionParamType),
+                   OptionDataType (QSparqlConnectionOptions::*getterFunc)() const,
+                   const OptionDataType& value)
 {
-    QString databaseName("qsparql_test_database");
-    QString databaseUser("qsparql_user");
-    QString databasePassword("secret_password");
-    QString databaseHostName("remote.server.qsparql.com");
-    QString path("/the/path/");
-    int port = 2226;
+    // Check that the current option value is different from the test value to
+    // ensure the setter is actually tested
+    QVERIFY( (connOptions.*getterFunc)() != value );
+
+    // Set the option value with setter function and check it has been set
+    (connOptions.*setterFunc)(value);
+    QCOMPARE( (connOptions.*getterFunc)(), value );
+}
+
+template<class OptionParamType, class OptionDataType>
+void testSetOption(QSparqlConnectionOptions& connOptions,
+                   void (QSparqlConnectionOptions::*setterFunc)(OptionParamType),
+                   OptionDataType (QSparqlConnectionOptions::*getterFunc)() const,
+                   const char* optionKey,
+                   const OptionDataType& value,
+                   const OptionDataType& defaultValue)
+{
+    // Delegate to other helper function to test basic setter and getter
+    testSetOption(connOptions, setterFunc, getterFunc, value);
+
+    // Reset the setting with setOption to defaut and check it gets reset
+    connOptions.setOption(optionKey, QVariant());
+    QCOMPARE( connOptions.option(optionKey), QVariant() );
+    QCOMPARE( (connOptions.*getterFunc)(), defaultValue );
+
+    // Re-set the option to the test value with setOption and check it has been set
+    connOptions.setOption(optionKey, QVariant(value));
+    QCOMPARE( (connOptions.*getterFunc)(), value );
+    QCOMPARE( connOptions.option(optionKey), QVariant(value) );
+}
+
+void tst_QSparql::set_QSparqlConnectionOptions()
+{
+    const char* databaseKey = "database";
+    const QString databaseName("qsparql_test_database");
+    const QString defaultDatabaseName;
+
+    const char* userNameKey = "user";
+    const QString userName("qsparql_user");
+    const QString defaultUserName;
+
+    const char* passwordKey = "password";
+    const QString password("secret_password");
+    const QString defaultPassword;
+
+    const char* hostNameKey = "host";
+    const QString hostName("remote.server.qsparql.com");
+    const QString defaultHostName;
+
+    const char* pathKey = "path";
+    const QString path("/the/path/");
+    const QString defaultPath;
+
+    const char* portKey = "port";
+    const int port = 2226;
+    const int defaultPort = -1;
+
+    const char* dataReadyIntervalKey = "dataReadyInterval";
+    const int dataReadyInterval = 42;
+    const int defaultDataReadyInterval = 1;
+
+    const char* maxThreadCountKey = "maxThread";
+    const int maxThreadCount = 10;
+    const int defaultMaxThreadCount = -1;
+
+    const char* threadExpiryTimeKey = "threadExpiry";
+    const int threadExpiryTime = 500;
+    const int defaultThreadExpiryTime = -1;
+
+#ifndef QT_NO_NETWORKPROXY
+    QNetworkProxy networkProxy;
+    networkProxy.setHostName(hostName);
+    const QNetworkProxy defaultNetworkProxy;
+#endif
+
+    QNetworkAccessManager networkAccessManager;
 
     QSparqlConnectionOptions connOptions;
-    connOptions.setDatabaseName(databaseName);
-    connOptions.setUserName(databaseUser);
-    connOptions.setPassword(databasePassword);
-    connOptions.setHostName(databaseHostName);
-    connOptions.setPath(path);
-    connOptions.setPort(port);
 
-    QVERIFY( databaseName ==  connOptions.databaseName());
-    QVERIFY( databaseUser ==  connOptions.userName() );
-    QVERIFY( databasePassword ==  connOptions.password() );
-    QVERIFY( databaseHostName ==  connOptions.hostName() );
-    QVERIFY( path ==  connOptions.path() );
-    QVERIFY( port ==  connOptions.port() );
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setDatabaseName, &QSparqlConnectionOptions::databaseName, databaseKey,
+                  databaseName, defaultDatabaseName);
 
-    QSparqlConnectionOptions connOptions2;
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setUserName, &QSparqlConnectionOptions::userName, userNameKey,
+                  userName, defaultUserName);
 
-    connOptions2=connOptions;
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setPassword, &QSparqlConnectionOptions::password, passwordKey,
+                  password, defaultPassword);
 
-    QVERIFY( databaseName ==  connOptions2.databaseName());
-    QVERIFY( databaseUser ==  connOptions2.userName() );
-    QVERIFY( databasePassword ==  connOptions2.password() );
-    QVERIFY( databaseHostName ==  connOptions2.hostName() );
-    QVERIFY( path ==  connOptions2.path() );
-    QVERIFY( port ==  connOptions2.port() );
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setHostName, &QSparqlConnectionOptions::hostName, hostNameKey,
+                  hostName, defaultHostName);
 
-    QVERIFY( connOptions ==  connOptions2 );
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setPath, &QSparqlConnectionOptions::path, pathKey,
+                  path, defaultPath);
 
-    QVERIFY( connOptions.networkAccessManager() == 0 );
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setPort, &QSparqlConnectionOptions::port, portKey,
+                  port, defaultPort);
+
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setDataReadyInterval, &QSparqlConnectionOptions::dataReadyInterval, dataReadyIntervalKey,
+                  dataReadyInterval, defaultDataReadyInterval);
+
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setMaxThreadCount, &QSparqlConnectionOptions::maxThreadCount, maxThreadCountKey,
+                  maxThreadCount, defaultMaxThreadCount);
+
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setThreadExpiryTime, &QSparqlConnectionOptions::threadExpiryTime, threadExpiryTimeKey,
+                  threadExpiryTime, defaultThreadExpiryTime);
+
+#ifndef QT_NO_NETWORKPROXY
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setProxy, &QSparqlConnectionOptions::proxy,
+                  networkProxy);
+#endif
+
+    testSetOption(connOptions,
+                  &QSparqlConnectionOptions::setNetworkAccessManager, &QSparqlConnectionOptions::networkAccessManager,
+                  &networkAccessManager);
+
+    // Verify that all options are still set
+    QCOMPARE( connOptions.databaseName(), databaseName );
+    QCOMPARE( connOptions.option(databaseKey), QVariant(databaseName) );
+
+    QCOMPARE( connOptions.userName(), userName );
+    QCOMPARE( connOptions.option(userNameKey), QVariant(userName) );
+
+    QCOMPARE( connOptions.password(), password );
+    QCOMPARE( connOptions.option(passwordKey), QVariant(password) );
+
+    QCOMPARE( connOptions.password(), password );
+    QCOMPARE( connOptions.option(passwordKey), QVariant(password) );
+
+    QCOMPARE( connOptions.hostName(), hostName );
+    QCOMPARE( connOptions.option(hostNameKey), QVariant(hostName) );
+
+    QCOMPARE( connOptions.path(), path );
+    QCOMPARE( connOptions.option(pathKey), QVariant(path) );
+
+    QCOMPARE( connOptions.port(), port );
+    QCOMPARE( connOptions.option(portKey), QVariant(port) );
+
+    QCOMPARE( connOptions.dataReadyInterval(), dataReadyInterval );
+    QCOMPARE( connOptions.option(dataReadyIntervalKey), QVariant(dataReadyInterval) );
+
+    QCOMPARE( connOptions.maxThreadCount(), maxThreadCount );
+    QCOMPARE( connOptions.option(maxThreadCountKey), QVariant(maxThreadCount) );
+
+    QCOMPARE( connOptions.threadExpiryTime(), threadExpiryTime );
+    QCOMPARE( connOptions.option(threadExpiryTimeKey), QVariant(threadExpiryTime) );
+
+    QCOMPARE( connOptions.proxy(), networkProxy );
+
+    QCOMPARE( connOptions.networkAccessManager(), &networkAccessManager );
 }
 
 void tst_QSparql::try_set_illegal_value_in_QSparqlConnectionOptions()
