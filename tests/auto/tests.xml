@@ -3,22 +3,22 @@
   <suite name="libqtsparql-tests">
     <set name="qsparlq-unit" description="Unit tests of libqtsparql">
       <case name="qsparqlquery" description="qsparqlquery unit tests">
-        <step expected_result="0">
+        <step>
 	  /usr/lib/libqtsparql-tests/tst_qsparqlquery
         </step>
       </case>
       <case name="qsparqlbinding" description="qsparqlbinding unit tests">
-        <step expected_result="0">
+        <step>
       /usr/lib/libqtsparql-tests/tst_qsparqlbinding
         </step>
       </case>
       <case name="qsparqlresultrow" description="qsparqlresultrow unit tests">
-        <step expected_result="0">
+        <step>
       /usr/lib/libqtsparql-tests/tst_qsparqlresultrow
         </step>
       </case>
       <case name="qsparql" description="qsparql unit tests">
-        <step expected_result="0">
+        <step>
 	  /usr/lib/libqtsparql-tests/tst_qsparql
         </step>
       </case>
@@ -40,7 +40,7 @@
     </set>
     <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
       <case name="tst_qsparql_tracker" description="Executing tst_qsparql_tracker">
-        <step expected_result="0">
+        <step>
             su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker"
         </step>
       </case>
@@ -54,7 +54,7 @@
     </set>
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
       <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct" timeout="900">
-        <step expected_result="0">
+        <step>
             su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct"
         </step>
       </case>
@@ -68,27 +68,21 @@
     </set>
     <set name="qsparql-threading" description="Multithreading tests">
         <case name="test-tracker-queries" description="Tracker queries">
-            <step expected_result="0">
+            <step>
                 su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries"
             </step>
         </case>
         <case name="test-tracker-direct-queries" description="Tracker direct queries">
-            <step expected_result="0">
+            <step>
                 su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries"
             </step>
         </case>
         <case name="test-tracker-direct-inserts" description="Tracker direct inserts" insignificant="true">
             <!-- this is marked as insigficant since it fails sporadically; this needs debugging! -->
-            <step expected_result="0">
-                su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts ||
-                ( i=$? &amp;&amp; tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq &amp;&amp; exit $i )"
+            <step>
+                su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts"
             </step>
         </case>
-        <post_steps>
-            <step expected_result="0">
-                su - user -c "tracker-sparql -u -f /usr/share/libqtsparql-tests/clean_data_threading.rq"
-            </step>
-        </post_steps>
         <environments>
             <scratchbox>true</scratchbox>
             <hardware>true</hardware>
@@ -99,7 +93,7 @@
     </set>
     <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
         <case name="tst_qsparql_tracker_direct_sync" description="Executing tst_qsparql_tracker_direct_sync">
-            <step expected_result="0">
+            <step>
                 su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_sync"
             </step>
         </case>
@@ -112,22 +106,10 @@
         </get>
     </set>
     <set name="qsparql-tracker-direct-crashes" description="Regression tests">
-      <case name="test-waitforfinished-crashes" description="Regression test">
-        <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes waitForFinished_crashes_when_connection_opening_fails
-        </step>
-      </case>
-      <case name="test-syncexec-crashes" description="Regression test">
-        <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_crashes_when_connection_opening_fails
-        </step>
-      </case>
-      <case name="test-syncexec-update-crashes" description="Regression test">
-        <step expected_result="0">
-            <!-- Note: the env vars (and running this as root) should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes syncExec_update_crashes_when_connection_opening_fails
+      <case name="tst_qsparql_tracker_direct_crashes" description="Regression test">
+        <step>
+            <!-- Note: the env vars should ensure that the direct connection opening fails -->
+            su - user -c "XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_crashes"
         </step>
       </case>
     </set>

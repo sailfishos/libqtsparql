@@ -19,22 +19,20 @@ SUBDIRS = \
 
 contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 
+QSPARQL_TESTS = qsparql qsparqlquery qsparqlbinding qsparql_api qsparql_tracker \
+                qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples \
+                qsparql_tracker_direct_crashes qsparql_threading \
+                qsparqlresultrow
+
 check.CONFIG = recursive
-check.recurse = qsparql_api qsparql qsparqlquery qsparqlbinding qsparql_tracker \
-                qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples
+check.recurse = $$QSPARQL_TESTS
 
 memcheck.CONFIG = recursive
-memcheck.recurse = qsparql_api qsparql_tracker qsparql_tracker_direct qsparql_direct_sync \
-                   qsparql_direct_crashes
+memcheck.recurse = $$QSPARQL_TESTS
 
 QMAKE_EXTRA_TARGETS += check memcheck
 
-
-testdata.target = qsparql_threading/clean_data_threading.rq
-
-testdata.files = $$testdata.target
-testdata.path = $$PREFIX/share/$$PACKAGENAME-tests/
 testxml.target = tests.xml
 install_testxml.files = $$testxml.target
 install_testxml.path = $$PREFIX/share/$$PACKAGENAME-tests/
-INSTALLS += target install_testxml testdata
+INSTALLS += target install_testxml
