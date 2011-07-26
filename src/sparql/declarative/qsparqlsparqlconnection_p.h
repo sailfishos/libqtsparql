@@ -18,6 +18,8 @@ class SparqlConnectionOptions;
 class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDeclarativeParserStatus
 {
     Q_OBJECT
+    Q_ENUMS(Status)
+    Q_PROPERTY(Status connectionStatus READ status NOTIFY statusChanged)
     Q_PROPERTY(QString driver WRITE setDriver READ getdriverName)
     Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
@@ -25,16 +27,18 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDecla
 
 public:
     QString driverName;
+    QString lastErrorMessage;
     SparqlConnectionOptions *options;
-    SparqlConnection() { options = 0; }
+    SparqlConnection();
     ~SparqlConnection() {}
 
     QString getdriverName() { return driverName; }
 
-    void classBegin() {};
+    void classBegin();
     void componentComplete();
 
-    Q_INVOKABLE QVariantList exec(QString query);
+    Q_INVOKABLE QVariant exec(QString query);
+    Q_INVOKABLE QString errorString() const;
 
     void setOptions(SparqlConnectionOptions* options)
     {
@@ -50,6 +54,13 @@ public:
     }
 
     void setDriver(QString driverName) { this->driverName = driverName; }
+
+    enum Status { Null, Ready, Loading, Error };
+    Status connectionStatus;
+    Status status();
+
+Q_SIGNALS:
+    void statusChanged(SparqlConnection::Status);
 };
 
 QT_END_NAMESPACE
