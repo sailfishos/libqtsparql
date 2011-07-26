@@ -219,6 +219,7 @@ private slots:
     void set_QSparqlConnectionOptions();
     void try_set_illegal_value_in_QSparqlConnectionOptions();
     void copies_of_QSparqlConnectionOptions_are_equal_and_independent();
+    void assignment_of_QSparqlConnectionOptions_creates_equal_and_independent_copy();
 };
 
 tst_QSparql::tst_QSparql()
@@ -743,6 +744,27 @@ void tst_QSparql::copies_of_QSparqlConnectionOptions_are_equal_and_independent()
     connOptionsCopy.setDatabaseName(databaseName);
     QVERIFY( connOptions == connOptionsCopy );
 }
+
+void tst_QSparql::assignment_of_QSparqlConnectionOptions_creates_equal_and_independent_copy()
+{
+    QSparqlConnectionOptions connOptions;
+    setTestConnectionOptions(connOptions);
+    QVERIFY( connOptions == connOptions );
+    QSparqlConnectionOptions connOptions2;
+    QVERIFY( !(connOptions == connOptions2) );
+
+    connOptions2 = connOptions;
+    QVERIFY( connOptions == connOptions2 );
+
+    const QString databaseName = connOptions.databaseName();
+    connOptions2.setDatabaseName( databaseName + "_COPY");
+    QVERIFY( !(connOptions == connOptions2) );
+    QCOMPARE( connOptions.databaseName(), databaseName );
+
+    connOptions2.setDatabaseName(databaseName);
+    QVERIFY( connOptions == connOptions2 );
+}
+
 
 QTEST_MAIN(tst_QSparql)
 #include "tst_qsparql.moc"
