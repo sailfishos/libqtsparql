@@ -218,6 +218,7 @@ private slots:
     void default_QSparqlConnectionOptions();
     void set_QSparqlConnectionOptions();
     void try_set_illegal_value_in_QSparqlConnectionOptions();
+    void copies_of_QSparqlConnectionOptions_are_equal_and_independent();
 };
 
 tst_QSparql::tst_QSparql()
@@ -489,7 +490,7 @@ void tst_QSparql::assignment_of_QSparqlQueryOptions_creates_equal_and_independen
     QVERIFY( opt2 == opt1 );
 }
 
-// Constants for QSparqlConnectionOptions tests
+// Constants and functions for QSparqlConnectionOptions tests
 namespace {
     const char* databaseKey = "database";
     const QString databaseName("qsparql_test_database");
@@ -541,6 +542,23 @@ namespace {
     QNetworkAccessManager networkAccessManagerInstance;
     QNetworkAccessManager* const networkAccessManager = &networkAccessManagerInstance;
     QNetworkAccessManager* const defaultNetworkAccessManager = 0;
+
+    void setTestConnectionOptions(QSparqlConnectionOptions& connOptions)
+    {
+        connOptions.setDatabaseName(databaseName);
+        connOptions.setUserName(userName);
+        connOptions.setPassword(password);
+        connOptions.setHostName(hostName);
+        connOptions.setPath(path);
+        connOptions.setPort(port);
+        connOptions.setDataReadyInterval(dataReadyInterval);
+        connOptions.setMaxThreadCount(maxThreadCount);
+        connOptions.setThreadExpiryTime(threadExpiryTime);
+        #ifndef QT_NO_NETWORKPROXY
+        connOptions.setProxy(networkProxy);
+        #endif
+        connOptions.setNetworkAccessManager(networkAccessManager);
+    }
 }
 
 void tst_QSparql::default_QSparqlConnectionOptions()
@@ -705,6 +723,25 @@ void tst_QSparql::try_set_illegal_value_in_QSparqlConnectionOptions()
     int defaultMaxThreadCount = connOptions.maxThreadCount();
     connOptions.setMaxThreadCount(-4);
     QVERIFY( defaultMaxThreadCount ==  connOptions.maxThreadCount() );
+}
+
+void tst_QSparql::copies_of_QSparqlConnectionOptions_are_equal_and_independent()
+{
+    QSparqlConnectionOptions connOptions;
+    setTestConnectionOptions(connOptions);
+    QVERIFY( connOptions == connOptions );
+    QVERIFY( !(connOptions == QSparqlConnectionOptions()) );
+
+    QSparqlConnectionOptions connOptionsCopy(connOptions);
+    QVERIFY( connOptions == connOptionsCopy );
+
+    const QString databaseName = connOptions.databaseName();
+    connOptionsCopy.setDatabaseName( databaseName + "_COPY");
+    QVERIFY( !(connOptions == connOptionsCopy) );
+    QCOMPARE( connOptions.databaseName(), databaseName );
+
+    connOptionsCopy.setDatabaseName(databaseName);
+    QVERIFY( connOptions == connOptionsCopy );
 }
 
 QTEST_MAIN(tst_QSparql)
