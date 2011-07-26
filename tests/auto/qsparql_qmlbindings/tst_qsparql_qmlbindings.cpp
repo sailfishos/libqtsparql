@@ -42,6 +42,7 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative>
 #include <QtSparql/private/qsparqlsparqlconnection_p.h>
+#include <QtSparql>
 
 #define NUM_INSERTS 10
 
@@ -62,6 +63,7 @@ public slots:
 private slots:
     void sparql_connection_test();
     void sparql_connection_select_query_test();
+    void sparql_connection_options_test();
 };
 
 namespace {
@@ -101,6 +103,9 @@ void tst_QSparqlQMLBindings::initTestCase()
     r->waitForFinished();
     QVERIFY(!r->hasError());
     delete r;
+
+    QCoreApplication::addLibraryPath("../../../plugins");
+    QCoreApplication::addLibraryPath("../../../imports");
 }
 
 void tst_QSparqlQMLBindings::cleanupTestCase()
@@ -184,7 +189,38 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
 
     delete r;
     delete rootObject;
-
 }
+
+void tst_QSparqlQMLBindings::sparql_connection_options_test()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile("qsparqlconnection.qml"));
+    int portNumber = 1234;
+    QString hostName = "localHost";
+
+    engine.rootContext()->setContextProperty("sparqlQueryString", contactSelectQuery);
+    engine.rootContext()->setContextProperty("setPortNumber", portNumber);
+    engine.rootContext()->setContextProperty("setHost", hostName);
+
+    QObject* rootObject = component.create();
+    QVERIFY(!component.isError());
+
+    QVariant returnValue;
+    QMetaObject::invokeMethod(rootObject, "returnConnectionOptions", Qt::DirectConnection, Q_RETURN_ARG(QVariant, returnValue));
+
+    // compare the values we set from what was returned
+    QMap<QString, QVariant> map = returnValue.toMap();
+    QMap<QString, QVariant>::const_iterator i = map.constBegin();
+    while (i != map.constEnd()) {
+        if (i.key() == "port")
+            QCOMPARE(i.value().toInt(), portNumber);
+        else if (i.key() == "hostName")
+            QCOMPARE(i.value().toString(), hostName);
+        else
+            QCOMPARE(i.value().toString(), QString(""));
+        ++i;
+    }
+}
+
 QTEST_MAIN(tst_QSparqlQMLBindings)
 #include "tst_qsparql_qmlbindings.moc"

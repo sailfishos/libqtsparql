@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QSparqlConnectionOptions
+class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QDeclarativeParserStatus, public QSparqlConnectionOptions
 {
     Q_OBJECT
     Q_PROPERTY(QString databaseName READ databaseName WRITE setDatabaseName)
@@ -20,6 +20,11 @@ class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QSparqlCo
     Q_PROPERTY(QString hostName READ hostName WRITE setHostName)
     Q_PROPERTY(QString path READ path WRITE setPath)
     Q_PROPERTY(int port READ port WRITE setPort)
+    Q_INTERFACES(QDeclarativeParserStatus)
+public:
+    SparqlConnectionOptions() {}
+    void classBegin() {}
+    void componentComplete() {}
 };
 
 QT_END_NAMESPACE
