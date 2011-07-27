@@ -79,18 +79,6 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QString, databaseKey, (QString::fromLatin1("data
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, maxThreadKey, (QString::fromLatin1("maxThread")));
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, threadExpiryKey, (QString::fromLatin1("threadExpiry")));
 
-template<> void QSharedDataPointer<QSparqlConnectionOptionsPrivate>::detach()
-{
-    if (d && d->ref == 1)
-        return;
-    QSparqlConnectionOptionsPrivate *x = (d ? new QSparqlConnectionOptionsPrivate(*d)
-                               : new QSparqlConnectionOptionsPrivate);
-    x->ref.ref();
-    if (d && !d->ref.deref())
-        delete d;
-    d = x;
-}
-
 /*!
     \class QSparqlConnectionOptions
 
@@ -109,7 +97,7 @@ template<> void QSharedDataPointer<QSparqlConnectionOptionsPrivate>::detach()
 */
 
 QSparqlConnectionOptions::QSparqlConnectionOptions()
-    : d(0)
+    : d(new QSparqlConnectionOptionsPrivate)
 {
 }
 
@@ -122,7 +110,7 @@ QSparqlConnectionOptions::~QSparqlConnectionOptions()
 /// equal if they describe the same set of key-value pairs.
 bool QSparqlConnectionOptions::operator==(const QSparqlConnectionOptions &other) const
 {
-    return d == other.d || (d && other.d && *d == *other.d);
+    return d == other.d || *d == *other.d;
 }
 
 /// Creates a QSparqlConnectionOptions object based on \a other, copying all
@@ -275,6 +263,24 @@ void QSparqlConnectionOptions::setNetworkAccessManager(QNetworkAccessManager* na
     d->nam = nam;
 }
 
+// Returns value in variant v if it can be converted to type T or default value d,
+// if the conversion is unsuccessful.
+template<typename T>
+T valueOrDefault(QVariant v, const T& d)
+{
+    const QVariant::Type t = QVariant::fromValue<T>(d).type();
+    if (v.convert(t))
+        return v.value<T>();
+    else
+        return d;
+}
+
+template<typename OptionDataType> inline
+OptionDataType QSparqlConnectionOptions::optionWithDefault(const QString& name, const OptionDataType& defaultValue) const
+{
+    return valueOrDefault(d->map.value(name), defaultValue);
+}
+
 /*!
     Convenience function for getting the database name.
 
@@ -282,7 +288,7 @@ void QSparqlConnectionOptions::setNetworkAccessManager(QNetworkAccessManager* na
 */
 QString QSparqlConnectionOptions::databaseName() const
 {
-    return d ? option(*databaseKey()).toString() : QString();
+    return optionWithDefault(*databaseKey(), QString());
 }
 
 /*!
@@ -292,7 +298,7 @@ QString QSparqlConnectionOptions::databaseName() const
 */
 QString QSparqlConnectionOptions::path() const
 {
-    return d ? option(*pathKey()).toString() : QString();
+    return optionWithDefault(*pathKey(), QString());
 }
 
 /*!
@@ -303,7 +309,7 @@ QString QSparqlConnectionOptions::path() const
 */
 QString QSparqlConnectionOptions::userName() const
 {
-    return d ? option(*userKey()).toString() : QString();
+    return optionWithDefault(*userKey(), QString());
 }
 
 /*!
@@ -314,7 +320,7 @@ QString QSparqlConnectionOptions::userName() const
 */
 QString QSparqlConnectionOptions::password() const
 {
-    return d ? option(*passwordKey()).toString() : QString();
+    return optionWithDefault(*passwordKey(), QString());
 }
 
 /*!
@@ -324,7 +330,7 @@ QString QSparqlConnectionOptions::password() const
 */
 QString QSparqlConnectionOptions::hostName() const
 {
-    return d ? option(*hostKey()).toString() : QString();
+    return optionWithDefault(*hostKey(), QString());
 }
 
 /*!
@@ -334,8 +340,7 @@ QString QSparqlConnectionOptions::hostName() const
 */
 int QSparqlConnectionOptions::port() const
 {
-    QVariant v = option(*portKey());
-    return v.canConvert(QVariant::Int) ? v.toInt() : -1;
+    return optionWithDefault(*portKey(), int(-1));
 }
 
 /*!
@@ -348,8 +353,7 @@ int QSparqlConnectionOptions::port() const
 */
 int QSparqlConnectionOptions::dataReadyInterval() const
 {
-    QVariant v = option(*dataReadyIntervalKey());
-    return v.canConvert(QVariant::Int) ? v.toInt() : 1;
+    return optionWithDefault(*dataReadyIntervalKey(), int(1));
 }
 
 /*!
@@ -360,8 +364,7 @@ int QSparqlConnectionOptions::dataReadyInterval() const
 */
 int QSparqlConnectionOptions::maxThreadCount() const
 {
-    QVariant v = option(*maxThreadKey());
-    return v.canConvert(QVariant::Int) ? v.toInt() : -1;
+    return optionWithDefault(*maxThreadKey(), int(-1));
 }
 
 /*!
@@ -371,8 +374,7 @@ int QSparqlConnectionOptions::maxThreadCount() const
 */
 int QSparqlConnectionOptions::threadExpiryTime() const
 {
-    QVariant v = option(*threadExpiryKey());
-    return v.canConvert(QVariant::Int) ? v.toInt() : -1;
+    return optionWithDefault(*threadExpiryKey(), int(-1));
 }
 
 /*!
@@ -383,7 +385,7 @@ int QSparqlConnectionOptions::threadExpiryTime() const
 */
 QNetworkAccessManager* QSparqlConnectionOptions::networkAccessManager() const
 {
-    return d ? d->nam : 0;
+    return d->nam;
 }
 
 #ifndef QT_NO_NETWORKPROXY
@@ -395,7 +397,7 @@ QNetworkAccessManager* QSparqlConnectionOptions::networkAccessManager() const
 */
 QNetworkProxy QSparqlConnectionOptions::proxy() const
 {
-    return d ? d->proxy : QNetworkProxy();
+    return d->proxy;
 }
 #endif
 
@@ -407,12 +409,7 @@ QNetworkProxy QSparqlConnectionOptions::proxy() const
 */
 QVariant QSparqlConnectionOptions::option(const QString& name) const
 {
-    if (d == 0)
-        return QVariant();
-    if (d->map.contains(name))
-        return d->map[name];
-    else
-        return QVariant();
+    return d->map.value(name, QVariant());
 }
 
 QT_END_NAMESPACE

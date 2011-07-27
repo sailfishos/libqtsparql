@@ -106,6 +106,8 @@ public:
     QNetworkAccessManager* networkAccessManager() const;
 
 private:
+    template<typename OptionDataType>
+    OptionDataType optionWithDefault(const QString& name, const OptionDataType& defaultValue) const;
     QSharedDataPointer<QSparqlConnectionOptionsPrivate> d;
 };
 

@@ -218,6 +218,7 @@ private slots:
     void default_QSparqlConnectionOptions();
     void set_QSparqlConnectionOptions();
     void try_set_illegal_value_in_QSparqlConnectionOptions();
+    void try_set_illegal_type_in_QSparqlConnectionOptions();
     void copies_of_QSparqlConnectionOptions_are_equal_and_independent();
     void assignment_of_QSparqlConnectionOptions_creates_equal_and_independent_copy();
 };
@@ -717,13 +718,34 @@ void tst_QSparql::try_set_illegal_value_in_QSparqlConnectionOptions()
 {
     QSparqlConnectionOptions connOptions;
     
-    int defaulDataReadyInterval = connOptions.dataReadyInterval();
     connOptions.setDataReadyInterval(-5);
-    QVERIFY( defaulDataReadyInterval ==  connOptions.dataReadyInterval() );
+    QCOMPARE( connOptions.dataReadyInterval(), defaultDataReadyInterval );
     
-    int defaultMaxThreadCount = connOptions.maxThreadCount();
     connOptions.setMaxThreadCount(-4);
-    QVERIFY( defaultMaxThreadCount ==  connOptions.maxThreadCount() );
+    QCOMPARE( connOptions.maxThreadCount(), defaultMaxThreadCount );
+
+}
+
+void tst_QSparql::try_set_illegal_type_in_QSparqlConnectionOptions()
+{
+    QSparqlConnectionOptions connOptions;
+    const QVariant illegalIntVariant(QString("illegal"));
+
+    connOptions.setOption(portKey, illegalIntVariant);
+    QCOMPARE(connOptions.option(portKey), illegalIntVariant);
+    QCOMPARE(connOptions.port(), defaultPort);
+
+    connOptions.setOption(dataReadyIntervalKey, illegalIntVariant);
+    QCOMPARE(connOptions.option(dataReadyIntervalKey), illegalIntVariant);
+    QCOMPARE(connOptions.dataReadyInterval(), defaultDataReadyInterval);
+
+    connOptions.setOption(maxThreadCountKey, illegalIntVariant);
+    QCOMPARE(connOptions.option(maxThreadCountKey), illegalIntVariant);
+    QCOMPARE(connOptions.maxThreadCount(), defaultMaxThreadCount);
+
+    connOptions.setOption(threadExpiryTimeKey, illegalIntVariant);
+    QCOMPARE(connOptions.option(threadExpiryTimeKey), illegalIntVariant);
+    QCOMPARE(connOptions.threadExpiryTime(), defaultThreadExpiryTime);
 }
 
 void tst_QSparql::copies_of_QSparqlConnectionOptions_are_equal_and_independent()
