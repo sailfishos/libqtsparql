@@ -21,35 +21,34 @@ class Q_SPARQL_EXPORT SparqlResultList : public QSparqlQueryModel, public QDecla
     Q_ENUMS(Status)
     Q_PROPERTY(QString query READ readQuery WRITE writeQuery)
     Q_PROPERTY(SparqlConnection* connection READ getConnection WRITE setConnection)
-//    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-//    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-//    Q_CLASSINFO("DefaultProperty", "query")
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_CLASSINFO("DefaultProperty", "query")
     Q_INTERFACES(QDeclarativeParserStatus)
 
-public:  
+public:
     SparqlConnection *connection;
     QString queryString;
+    QString lastErrorMessage;
 
-    SparqlResultList() { connection=0; }
-    void classBegin() {};
+    SparqlResultList();
+    void classBegin();
     void componentComplete();
 
-    QString readQuery() const { return queryString; };
+    Q_INVOKABLE QString errorString() const;
+    void setConnection(SparqlConnection* connection);
+    SparqlConnection* getConnection();
+    void writeQuery(QString query);
+    QString readQuery() const;
 
-    void setConnection(SparqlConnection* connection)
-    {
-        if (connection)
-        {
-            this->connection = connection;
-        }
-    }
-
-    SparqlConnection* getConnection()
-    {
-        return connection;
-    }
-
-    void writeQuery(QString query) { queryString = query; }
+    enum Status { Null, Ready, Loading, Error };
+    Status modelStatus;
+    Status status();
+public Q_SLOTS:
+    void onFinished();
+Q_SIGNALS:
+    void countChanged();
+    void statusChanged(SparqlResultList::Status);
 };
 
 QT_END_NAMESPACE

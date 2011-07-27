@@ -64,6 +64,7 @@ private slots:
     void sparql_connection_test();
     void sparql_connection_select_query_test();
     void sparql_connection_options_test();
+    void sparql_query_model_test();
 };
 
 namespace {
@@ -135,11 +136,14 @@ void tst_QSparqlQMLBindings::sparql_connection_test()
     QDeclarativeEngine engine;// = new QDeclarativeEngine();
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile("qsparqlconnection.qml"));
     engine.rootContext()->setContextProperty("sparqlQueryString", contactSelectQuery);
+    engine.rootContext()->setContextProperty("setPortNumber", 1234);
+    engine.rootContext()->setContextProperty("setHost", "null");
 
     QObject* rootObject = component.create();
     QVERIFY(!component.isError());
 
-    QSparqlConnection *connection = qobject_cast<QSparqlConnection *>(rootObject->findChild<QObject*>("connectionWithOptions"));
+    QSparqlConnection *connection =
+        qobject_cast<QSparqlConnection *>(rootObject->findChild<QObject*>("connectionWithOptions"));
     QPointer<QSparqlConnection> connPointer = connection;
 
     QCOMPARE(connection->driverName(), QString("QTRACKER_DIRECT"));
@@ -155,15 +159,23 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
     QDeclarativeContext *context = engine.rootContext();
 
     context->setContextProperty("sparqlQueryString", contactSelectQuery);
+    engine.rootContext()->setContextProperty("setPortNumber", 1234);
+    engine.rootContext()->setContextProperty("setHost", "null");
+
     QObject* rootObject = component.create();
 
     QVERIFY(!component.isError());
 
-    QSparqlConnection *connection = qobject_cast<QSparqlConnection *>(rootObject->findChild<QObject*>("connectionWithOptions"));
+    QSparqlConnection *connection =
+        qobject_cast<QSparqlConnection *>(rootObject->findChild<QObject*>("connectionWithOptions"));
 
     // get the return value from qml
     QVariant returnValue;
-    QMetaObject::invokeMethod(rootObject, "runSelectQuery", Qt::DirectConnection, Q_RETURN_ARG(QVariant, returnValue));
+    QMetaObject::invokeMethod(rootObject,
+                              "runSelectQuery",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, returnValue));
+
     QList<QVariant> list = returnValue.toList();
     QCOMPARE(list.length(), NUM_INSERTS);
 
@@ -206,7 +218,10 @@ void tst_QSparqlQMLBindings::sparql_connection_options_test()
     QVERIFY(!component.isError());
 
     QVariant returnValue;
-    QMetaObject::invokeMethod(rootObject, "returnConnectionOptions", Qt::DirectConnection, Q_RETURN_ARG(QVariant, returnValue));
+    QMetaObject::invokeMethod(rootObject,
+                              "returnConnectionOptions",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, returnValue));
 
     // compare the values we set from what was returned
     QMap<QString, QVariant> map = returnValue.toMap();
@@ -220,7 +235,71 @@ void tst_QSparqlQMLBindings::sparql_connection_options_test()
             QCOMPARE(i.value().toString(), QString(""));
         ++i;
     }
+
+    delete rootObject;
 }
 
+void tst_QSparqlQMLBindings::sparql_query_model_test()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile("qsparqlresultlist.qml"));
+    QDeclarativeContext *context = engine.rootContext();
+
+    context->setContextProperty("sparqlQueryString", contactSelectQuery);
+
+    QObject* rootObject = component.create();
+    QVERIFY(!component.isError());
+    QSignalSpy countSpy(rootObject, SIGNAL(modelCountChanged()));
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+
+    QSparqlConnection *connection =
+        qobject_cast<QSparqlConnection *>(rootObject->findChild<QObject*>("sparqlConnection"));
+    QPointer<QSparqlQueryModel> model =
+        qobject_cast<QSparqlQueryModel *>(rootObject->findChild<QObject*>("queryModel"));
+
+    QVERIFY(connection->isValid());
+    timer.start();
+    while (countSpy.count() != NUM_INSERTS && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    // signal spy should have received NUM_INSERTS count changes
+    QVERIFY(!timeout);
+    QCOMPARE(countSpy.count(), NUM_INSERTS);
+
+    // get the number of rows from the list model in qml
+    QVariant returnValue;
+    QMetaObject::invokeMethod(rootObject,
+                              "getCount",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, returnValue));
+    QCOMPARE(NUM_INSERTS, returnValue.toInt());
+    QCOMPARE(returnValue.toInt(), model->rowCount());
+    QString selectOneContact = "select <uri001> as ?u ?ng {"
+                               "<uri001> a nco:PersonContact; nco:nameGiven ?ng; "
+                               "nie:isLogicalPartOf <qsparql-qml-tests> }";
+
+    // call set query and change the query model object, this should also update
+    // the qml model
+    model->setQuery(QSparqlQuery(selectOneContact), *connection);
+    // Signal spy should now emit twice more, one for the clearing of the model
+    // and another for the one contact the query adds
+    timer.restart();
+    while (countSpy.count() != NUM_INSERTS+2 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    // now check the count again
+    QMetaObject::invokeMethod(rootObject,
+                              "getCount",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, returnValue));
+
+    QCOMPARE(model->rowCount(), 1);
+    QCOMPARE(returnValue.toInt(), 1);
+
+    // verify the model is deleted when the QML object is destroyed
+    delete rootObject;
+    QVERIFY(model.isNull());
+}
 QTEST_MAIN(tst_QSparqlQMLBindings)
 #include "tst_qsparql_qmlbindings.moc"
