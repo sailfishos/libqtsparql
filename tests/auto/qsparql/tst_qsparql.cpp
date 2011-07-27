@@ -678,6 +678,13 @@ void tst_QSparql::set_QSparqlConnectionOptions()
                   &QSparqlConnectionOptions::setNetworkAccessManager, &QSparqlConnectionOptions::networkAccessManager,
                   networkAccessManager);
 
+    // Test driver-specific option
+    const QString driverSpecificOptionName = "test_driverspecificoption";
+    QCOMPARE( connOptions.option(driverSpecificOptionName), QVariant() );
+    const QVariant driverSpecificOptionValue = QVariant(QString("test_driverspecificvalue"));
+    connOptions.setOption(driverSpecificOptionName, driverSpecificOptionValue);
+    QCOMPARE( connOptions.option(driverSpecificOptionName), driverSpecificOptionValue );
+
     // Verify that all options are still set
     QCOMPARE( connOptions.databaseName(), databaseName );
     QCOMPARE( connOptions.option(databaseKey), QVariant(databaseName) );
@@ -720,10 +727,19 @@ void tst_QSparql::try_set_illegal_value_in_QSparqlConnectionOptions()
     
     connOptions.setDataReadyInterval(-5);
     QCOMPARE( connOptions.dataReadyInterval(), defaultDataReadyInterval );
-    
+    QCOMPARE( connOptions.option(dataReadyIntervalKey), QVariant() );
+
+    connOptions.setOption(dataReadyIntervalKey, -10);
+    QCOMPARE( connOptions.dataReadyInterval(), defaultDataReadyInterval );
+    QCOMPARE( connOptions.option(dataReadyIntervalKey), QVariant() );
+
     connOptions.setMaxThreadCount(-4);
     QCOMPARE( connOptions.maxThreadCount(), defaultMaxThreadCount );
+    QCOMPARE( connOptions.option(maxThreadCountKey), QVariant() );
 
+    connOptions.setOption(maxThreadCountKey, -8);
+    QCOMPARE( connOptions.maxThreadCount(), defaultMaxThreadCount );
+    QCOMPARE( connOptions.option(maxThreadCountKey), QVariant() );
 }
 
 void tst_QSparql::try_set_illegal_type_in_QSparqlConnectionOptions()
@@ -732,19 +748,19 @@ void tst_QSparql::try_set_illegal_type_in_QSparqlConnectionOptions()
     const QVariant illegalIntVariant(QString("illegal"));
 
     connOptions.setOption(portKey, illegalIntVariant);
-    QCOMPARE(connOptions.option(portKey), illegalIntVariant);
+    QCOMPARE(connOptions.option(portKey), QVariant());
     QCOMPARE(connOptions.port(), defaultPort);
 
     connOptions.setOption(dataReadyIntervalKey, illegalIntVariant);
-    QCOMPARE(connOptions.option(dataReadyIntervalKey), illegalIntVariant);
+    QCOMPARE(connOptions.option(dataReadyIntervalKey), QVariant());
     QCOMPARE(connOptions.dataReadyInterval(), defaultDataReadyInterval);
 
     connOptions.setOption(maxThreadCountKey, illegalIntVariant);
-    QCOMPARE(connOptions.option(maxThreadCountKey), illegalIntVariant);
+    QCOMPARE(connOptions.option(maxThreadCountKey), QVariant());
     QCOMPARE(connOptions.maxThreadCount(), defaultMaxThreadCount);
 
     connOptions.setOption(threadExpiryTimeKey, illegalIntVariant);
-    QCOMPARE(connOptions.option(threadExpiryTimeKey), illegalIntVariant);
+    QCOMPARE(connOptions.option(threadExpiryTimeKey), QVariant());
     QCOMPARE(connOptions.threadExpiryTime(), defaultThreadExpiryTime);
 }
 

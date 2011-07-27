@@ -67,7 +67,12 @@ public:
 #endif
                 nam == other.nam;
     }
-};
+
+    static bool validateOptionValue(const QString& name, const QVariant& value, QVariant& convertedValue);
+
+    class OptionInfo;
+    class OptionRegistry;
+    };
 
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, hostKey,  (QString::fromLatin1("host")));
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, pathKey, (QString::fromLatin1("path")));
@@ -78,6 +83,82 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QString, passwordKey, (QString::fromLatin1("pass
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, databaseKey, (QString::fromLatin1("database")));
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, maxThreadKey, (QString::fromLatin1("maxThread")));
 Q_GLOBAL_STATIC_WITH_ARGS(const QString, threadExpiryKey, (QString::fromLatin1("threadExpiry")));
+
+class QSparqlConnectionOptionsPrivate::OptionInfo {
+public:
+    typedef bool (*ValidationFunc)(const QVariant& value);
+    OptionInfo(QVariant::Type vt, ValidationFunc vf=0)
+        : valueType(vt), validationFunc(vf)
+    {
+    }
+
+    bool validateValue(const QVariant& value, QVariant& convertedValue) const {
+        QVariant newValue(value);
+        if (!newValue.convert(valueType))
+            return false;
+        if (validationFunc && !(*validationFunc)(newValue))
+            return false;
+        convertedValue = newValue;
+        return true;
+    }
+
+private:
+    QVariant::Type valueType;
+    ValidationFunc validationFunc;
+};
+
+class QSparqlConnectionOptionsPrivate::OptionRegistry {
+public:
+    OptionRegistry()
+    {
+        registry.insert(*hostKey(),              new OptionInfo(QVariant::String));
+        registry.insert(*pathKey(),              new OptionInfo(QVariant::String));
+        registry.insert(*userKey(),              new OptionInfo(QVariant::String));
+        registry.insert(*passwordKey(),          new OptionInfo(QVariant::String));
+        registry.insert(*databaseKey(),          new OptionInfo(QVariant::String));
+        registry.insert(*portKey(),              new OptionInfo(QVariant::Int));
+        registry.insert(*dataReadyIntervalKey(), new OptionInfo(QVariant::Int, &greaterThanZero));
+        registry.insert(*maxThreadKey(),         new OptionInfo(QVariant::Int, &greaterThanZero));
+        registry.insert(*threadExpiryKey(),      new OptionInfo(QVariant::Int));
+    }
+
+    ~OptionRegistry()
+    {
+        qDeleteAll(registry);
+    }
+
+    const OptionInfo* lookup(const QString& optionName) const
+    {
+        return registry.value(optionName);
+    }
+
+private:
+    static bool greaterThanZero(const QVariant& value)
+    {
+        return (value.toInt() > 0);
+    }
+
+private:
+    QMap<QString, const OptionInfo*> registry;
+};
+
+Q_GLOBAL_STATIC(QSparqlConnectionOptionsPrivate::OptionRegistry, connectionOptionRegistry);
+
+bool QSparqlConnectionOptionsPrivate::validateOptionValue(const QString& name, const QVariant& value, QVariant& convertedValue)
+{
+    const OptionInfo* optionInfo = connectionOptionRegistry()->lookup(name);
+    if (!optionInfo) {
+        // Use driver-specific option values as-is
+        convertedValue = value;
+        return true;
+    }
+
+    if (!optionInfo->validateValue(value, convertedValue)) {
+        qWarning() << "QSparqlConnectionOptions: invalid value for option" << name << ":" << value;
+        return false;
+    }
+    return true;
+}
 
 /*!
     \class QSparqlConnectionOptions
@@ -134,7 +215,14 @@ QSparqlConnectionOptions& QSparqlConnectionOptions::operator=(const QSparqlConne
 */
 void QSparqlConnectionOptions::setOption(const QString& name, const QVariant& value)
 {
-    d->map[name] = value;
+    if (value.isValid()) {
+        QVariant convertedValue;
+        if (d->validateOptionValue(name, value, convertedValue))
+            d->map.insert(name, convertedValue);
+    }
+    else {
+        d->map.remove(name);
+    }
 }
 
 /*!
@@ -207,10 +295,7 @@ void QSparqlConnectionOptions::setPort(int p)
 */
 void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 {
-    if (interval > 0)
-        setOption(*dataReadyIntervalKey(), interval);
-    else
-        qWarning() << "QSparqlConnectionOptions: invalid dataReady interval:" << interval;
+    setOption(*dataReadyIntervalKey(), interval);
 }
 
 /*!
@@ -221,10 +306,7 @@ void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 */
 void QSparqlConnectionOptions::setMaxThreadCount(int p)
 {
-    if (p > 0)
-        setOption(*maxThreadKey(), p);
-    else
-        qWarning() << "QSparqlConnectionOptions: invalid maxThread amount:" << p;
+    setOption(*maxThreadKey(), p);
 }
 
 /*!
