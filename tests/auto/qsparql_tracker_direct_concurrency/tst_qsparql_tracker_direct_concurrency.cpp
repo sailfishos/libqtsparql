@@ -96,9 +96,7 @@ public:
     ~SignalObject()
     {
         // delete the signal mappers that were created
-        foreach(QSignalMapper* map, signalMaps) {
-           delete map;
-        }
+        qDeleteAll(signalMaps);
     }
 
     QSet<QSparqlResult*> pendingResults;
@@ -217,8 +215,7 @@ public:
         } else {
             // if we were passed a connection, delete the results
             // here to avoid leaking them
-            foreach(QSparqlResult* result, resultList)
-                delete result;
+            qDeleteAll(resultList);
         }
 
         if (deleteSignalObject)
@@ -585,8 +582,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
     }
 
     //cleanup
-    foreach(ThreadObject *threadObject, threadObjects)
-        delete threadObject;
+    qDeleteAll(threadObjects);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
@@ -642,8 +638,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQ
     }
 
     //cleanup
-    foreach(UpdateObject *updateObject, updateObjects)
-        delete updateObject;
+    qDeleteAll(updateObjects);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries_data()
@@ -698,8 +693,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
         delete thread;
     }
     //cleanup
-    foreach(ThreadObject *threadObject, threadObjects)
-        delete threadObject;
+    qDeleteAll(threadObjects);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
