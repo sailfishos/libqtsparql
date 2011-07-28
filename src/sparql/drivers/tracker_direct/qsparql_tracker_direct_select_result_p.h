@@ -44,7 +44,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmutex.h>
-#include <QDebug>
+
 #include <tracker-sparql.h>
 
 QT_BEGIN_HEADER
@@ -68,8 +68,6 @@ public:
 
     // Implementation of the QSparqlResult interface
     virtual void waitForFinished();
-    virtual bool next();
-    virtual bool previous();
 
     virtual QSparqlResultRow current() const;
     virtual QSparqlBinding binding(int i) const;

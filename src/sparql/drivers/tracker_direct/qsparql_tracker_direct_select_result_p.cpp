@@ -238,11 +238,6 @@ QSparqlBinding QTrackerDirectSelectResult::binding(int field) const
 QVariant QTrackerDirectSelectResult::value(int field) const
 {
     QMutexLocker resultLocker(&resultMutex);
-    int position = pos();
-
-    if (position < 0) {
-        return QVariant();
-    }
 
     if (!isValid()) {
         return QVariant();
@@ -253,35 +248,8 @@ QVariant QTrackerDirectSelectResult::value(int field) const
         return QVariant();
     }
 
-    return results[position].value(field);
+    return results[pos()].value(field);
 }
-
-bool QTrackerDirectSelectResult::next()
-{
-    // if we can't get the mutex, warn and return false
-    bool returnValue = false;
-    if (iterateMutex.tryLock()) {
-        returnValue = QSparqlResult::next();
-        iterateMutex.unlock();
-    } else {
-        qWarning() << "QTrackerDirectSelectResult::next:Could not obtain iteration lock";
-    }
-    return returnValue;
-}
-
-bool QTrackerDirectSelectResult::previous()
-{
-    // if we can't get the mutex, warn and return false
-    bool returnValue = false;
-    if (iterateMutex.tryLock()) {
-        returnValue = QSparqlResult::previous();
-        iterateMutex.unlock();
-    } else {
-        qWarning() << "QTrackerDirectSelectResult::previous:Could not obtain iteration lock";
-    }
-    return returnValue;
-}
-
 
 void QTrackerDirectSelectResult::waitForFinished()
 {
