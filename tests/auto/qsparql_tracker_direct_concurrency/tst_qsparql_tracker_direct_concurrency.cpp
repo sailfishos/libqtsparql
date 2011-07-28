@@ -474,7 +474,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QFETCH(int, maxThreadCount);
 
     QSparqlConnectionOptions options;
-    options.setDataReadyInterval(500);
+    options.setDataReadyInterval(qMax(testDataAmount/100, 10));
     options.setMaxThreadCount(maxThreadCount);
 
     // seed the random number generator
@@ -721,11 +721,11 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
 
 void tst_QSparqlTrackerDirectConcurrency::singleResult_multipleThreads()
 {
-    QFETCH(int, numberOfThreads);
     QFETCH(int, testDataAmount);
+    QFETCH(int, numberOfThreads);
 
     QSparqlConnectionOptions options;
-    options.setDataReadyInterval(1000);
+    options.setDataReadyInterval(qMax(testDataAmount/100, 10));
     QSparqlConnection conn("QTRACKER_DIRECT", options);
     QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
                                     "nmm:trackNumber ?t;"
