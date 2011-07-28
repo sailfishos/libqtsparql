@@ -216,8 +216,7 @@
     give the option name as a string, followed by the value.
 
     Other options can be set using QSparqlConnectionOptions::setOption(), however
-    it is preferable to use the convinence functions in QSparqlConnectionOptions,
-    as these provide additional error checking.
+    it is preferable to use the type-safe convinence functions in QSparqlConnectionOptions.
 
     \section connectionfeatures Connection features
 
