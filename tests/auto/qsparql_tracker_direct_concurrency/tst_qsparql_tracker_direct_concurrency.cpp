@@ -483,7 +483,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     // store the result ranges we are going to use
     QList<QPair<int, int> > resultRanges;
     // first result will read everything
-    resultRanges.append(qMakePair(1, 3000));
+    resultRanges.append(qMakePair(1, testDataAmount));
     for (int i=1;i<numQueries;i++) {
         // high + 1) - low) + low
         int low = qrand() % ((testDataAmount) - 1) + 1;
@@ -526,11 +526,11 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
 {
+    QFETCH(int, numInserts);
+    QFETCH(int, numDeletes);
     QSparqlConnection connection("QTRACKER_DIRECT");
-    int numberOfInserts = 1000;
-    int numberOfDeletes = 1000;
 
-    UpdateObject updateObject(numberOfInserts, numberOfDeletes, 1);
+    UpdateObject updateObject(numInserts, numDeletes, 1);
     updateObject.setConnection(&connection);
     updateObject.runUpdate();
 }
