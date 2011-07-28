@@ -56,7 +56,7 @@ private:
     TestData *testData;
     void createTrackerTestData();
 
-private slots:
+private Q_SLOTS:
     void initTestCase();
     void cleanupTestCase();
     void init();
@@ -570,12 +570,12 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
         QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
     }
     // start all the threads
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
     // wait for all the threads then delete
     // TODO: add timer so we don't wait forever
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         while (!thread->isFinished())
             QTest::qWait(500);
         delete thread;
@@ -626,12 +626,12 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQ
         QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate()));
     }
     // start all the threads
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
     // wait for all the threads then delete
     // TODO: add timer so we don't wait forever
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         while (!thread->isFinished())
             QTest::qWait(500);
         delete thread;
@@ -682,12 +682,12 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
         QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
     }
     // start all the threads
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
     // wait for all the threads then delete
     // TODO: add timer so we don't wait forever
-    foreach(QThread* thread, createdThreads) {
+    Q_FOREACH(QThread* thread, createdThreads) {
         while (!thread->isFinished())
             QTest::qWait(500);
         delete thread;
