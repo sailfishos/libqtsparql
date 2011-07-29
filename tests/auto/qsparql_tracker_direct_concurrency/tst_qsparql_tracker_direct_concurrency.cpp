@@ -83,16 +83,22 @@ class SignalObject : public QObject
 {
     Q_OBJECT
 public:
+    QSignalMapper dataReadyMapper;
+    QSignalMapper finishedMapper;
+    QList<QSparqlResult*> allResults;
+    QHash<QSparqlResult*, QPair<int,int> > pendingResults;
+
     SignalObject()
     {
         connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
         connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
 
-    QList<QSparqlResult*> resultList;
-    QSignalMapper dataReadyMapper;
-    QSignalMapper finishedMapper;
-    QHash<QSparqlResult*, QPair<int,int> > pendingResults;
+    ~SignalObject()
+    {
+        pendingResults.clear();
+        qDeleteAll(allResults);
+    }
 
     void append(QSparqlResult *r, const QPair<int, int>& range)
     {
@@ -100,7 +106,7 @@ public:
         connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
         finishedMapper.setMapping(r, r);
         connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
-        resultList.append(r);
+        allResults.append(r);
         pendingResults.insert(r, range);
     }
 
@@ -161,7 +167,6 @@ class ThreadObject : public QObject
 public:
     QSparqlConnection *connection;
     SignalObject *signalObject;
-    QList<QSparqlResult*> resultList;
     bool deleteConnection;
     bool deleteSignalObject;
 
@@ -179,16 +184,10 @@ public:
 
     void cleanup()
     {
-        if (deleteConnection) {
-            delete connection;
-        } else {
-            // if we were passed a connection, delete the results
-            // here to avoid leaking them
-            qDeleteAll(resultList);
-        }
-
         if (deleteSignalObject)
             delete signalObject;
+        if (deleteConnection)
+            delete connection;
     }
     void setParameters(int numQueries, int testDataSize)
     {
@@ -243,7 +242,6 @@ public Q_SLOTS:
                                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
                                     "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
             QSparqlResult *result = connection->exec(select);
-            resultList.append(result);
             signalObject->append(result, resultRange);
         }
 
