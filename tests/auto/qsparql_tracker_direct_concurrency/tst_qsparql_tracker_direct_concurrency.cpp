@@ -83,7 +83,7 @@ class SignalObject : public QObject
 {
     Q_OBJECT
 public:
-    SignalObject() : position(0)
+    SignalObject()
     {
         connect(&dataReadyMapper, SIGNAL(mapped(int)), this, SLOT(onDataReady(int)));
         connect(&finishedMapper, SIGNAL(mapped(int)), this, SLOT(onFinished(int)));
@@ -91,18 +91,17 @@ public:
 
     QList<QSparqlResult*> resultList;
     QSet<QSparqlResult*> pendingResults;
-    int position;
     QSignalMapper dataReadyMapper;
     QSignalMapper finishedMapper;
     QList<QPair<int, int> > resultRanges;
 
     void append(QSparqlResult *r, QPair<int, int> range)
     {
+        const int position = resultList.count();
         dataReadyMapper.setMapping(r, position);
         connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
         finishedMapper.setMapping(r, position);
         connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
-        position++;
 
         resultList.append(r);
         resultRanges.append(range);
