@@ -79,6 +79,19 @@ private Q_SLOTS:
 
 namespace {
 
+void seedRandomRangeGenerator()
+{
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+}
+
+QPair<int,int> randomRangeIn(int max)
+{
+    const int low = qrand() % (max-1) + 1;
+    const int high = qrand() % ((max+1) - low) + low;
+    return qMakePair(low, high);
+}
+
 class ResultChecker : public QObject
 {
     Q_OBJECT
@@ -403,6 +416,7 @@ void tst_QSparqlTrackerDirectConcurrency::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     testData = 0;
+    seedRandomRangeGenerator();
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanupTestCase()
@@ -440,30 +454,25 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QSparqlConnectionOptions options;
     options.setDataReadyInterval(qMax(testDataAmount/100, 10));
     options.setMaxThreadCount(maxThreadCount);
-
-    // seed the random number generator
-    QTime time = QTime::currentTime();
-    qsrand((uint)time.msec());
-    // store the result ranges we are going to use
-    QList<QPair<int, int> > resultRanges;
-    // first result will read everything
-    resultRanges.append(qMakePair(1, testDataAmount));
-    for (int i=1;i<numQueries;i++) {
-        // high + 1) - low) + low
-        int low = qrand() % ((testDataAmount) - 1) + 1;
-        int high = qrand() % ((testDataAmount+1) - low) + low;
-        resultRanges.append(qMakePair(low, high));
-    }
-
     QSparqlConnection conn("QTRACKER_DIRECT", options);
     ResultChecker resultChecker;
 
     for (int i=0;i<numQueries;i++) {
-        QPair<int, int> resultRange = resultRanges.at(i);
-        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
-                                    "nmm:trackNumber ?t;"
-                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
-                                    "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
+        QPair<int, int> resultRange;
+        QString filter;
+        if (i % 10 == 0) {
+            // Override every 10th result to read all
+            resultRange = qMakePair(1, testDataAmount);
+            filter = ". }";
+        }
+        else {
+            resultRange  = randomRangeIn(testDataAmount);
+            filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
+        }
+        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
+                                    "nmm:trackNumber ?t; "
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
+                                    + filter));
         QSparqlResult *result = conn.exec(select);
         resultChecker.append(result, resultRange);
     }
