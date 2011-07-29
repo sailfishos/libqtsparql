@@ -139,24 +139,24 @@ public Q_SLOTS:
 
     void onFinished(int listPos)
     {
-        QPair<int, int> resultRange = resultRanges.at(listPos);
+        const QPair<int, int> resultRange = resultRanges.at(listPos);
         QSparqlResult* result = resultList.at(listPos);
-        int expectedResultSize = (resultRange.second - resultRange.first) + 1;
-        QCOMPARE(expectedResultSize, result->size());
+        const int expectedResultSize = (resultRange.second - resultRange.first) + 1;
+        QCOMPARE(result->size(), expectedResultSize);
         // the results should have been fully nexted in the data ready function
-        QCOMPARE(result->pos(), (int)QSparql::AfterLastRow);
+        QCOMPARE(result->pos(), int(QSparql::AfterLastRow));
         // go back through the results and validate that they are in range
         int resultCount = 0;
         while (result->previous()) {
             //we don't know the order, so just ensure the result is within range
-            QVERIFY(result->value(1).toInt() <= resultRange.second && result->value(1).toInt() >= resultRange.first);
+            QVERIFY(result->value(1).toInt() >= resultRange.first);
+            QVERIFY(result->value(1).toInt() <= resultRange.second);
             resultCount++;
         }
         // now make sure the results counted match the size
         QCOMPARE(resultCount, expectedResultSize);
         pendingResults.remove(result);
     }
-
 };
 
 class ThreadObject : public QObject
