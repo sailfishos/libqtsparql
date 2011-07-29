@@ -85,27 +85,23 @@ class SignalObject : public QObject
 public:
     SignalObject()
     {
-        connect(&dataReadyMapper, SIGNAL(mapped(int)), this, SLOT(onDataReady(int)));
-        connect(&finishedMapper, SIGNAL(mapped(int)), this, SLOT(onFinished(int)));
+        connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
+        connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
 
     QList<QSparqlResult*> resultList;
-    QSet<QSparqlResult*> pendingResults;
     QSignalMapper dataReadyMapper;
     QSignalMapper finishedMapper;
-    QList<QPair<int, int> > resultRanges;
+    QHash<QSparqlResult*, QPair<int,int> > pendingResults;
 
-    void append(QSparqlResult *r, QPair<int, int> range)
+    void append(QSparqlResult *r, const QPair<int, int>& range)
     {
-        const int position = resultList.count();
-        dataReadyMapper.setMapping(r, position);
+        dataReadyMapper.setMapping(r, r);
         connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
-        finishedMapper.setMapping(r, position);
+        finishedMapper.setMapping(r, r);
         connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
-
         resultList.append(r);
-        resultRanges.append(range);
-        pendingResults.insert(r);
+        pendingResults.insert(r, range);
     }
 
     bool waitForAllFinished(int silenceTimeoutMs)
@@ -127,9 +123,9 @@ public:
     }
 
 public Q_SLOTS:
-    void onDataReady(int listPos)
+    void onDataReady(QObject* mappedResult)
     {
-        QSparqlResult *result = resultList.at(listPos);
+        QSparqlResult *result = qobject_cast<QSparqlResult*>(mappedResult);
         while (result->next()) {
             // just do something pointless with the result
             result->value(1).toInt();
@@ -137,10 +133,10 @@ public Q_SLOTS:
         }
     }
 
-    void onFinished(int listPos)
+    void onFinished(QObject* mappedResult)
     {
-        const QPair<int, int> resultRange = resultRanges.at(listPos);
-        QSparqlResult* result = resultList.at(listPos);
+        QSparqlResult *result = qobject_cast<QSparqlResult*>(mappedResult);
+        const QPair<int, int> resultRange = pendingResults.value(result);
         const int expectedResultSize = (resultRange.second - resultRange.first) + 1;
         QCOMPARE(result->size(), expectedResultSize);
         // the results should have been fully nexted in the data ready function
