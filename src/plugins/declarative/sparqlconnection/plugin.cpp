@@ -54,9 +54,9 @@ class SparqlConnectionPlugin : public QDeclarativeExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
-        qmlRegisterType<SparqlConnection>(uri, 0, 1, "SparqlConnection");
-        qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
+        Q_ASSERT(uri == QLatin1String("QSparql"));
+        qmlRegisterType<SparqlConnection>(uri, 1, 0, "SparqlConnection");
+        qmlRegisterType<SparqlConnectionOptions>(uri, 1, 0, "SparqlConnectionOptions");
     }
 };
 

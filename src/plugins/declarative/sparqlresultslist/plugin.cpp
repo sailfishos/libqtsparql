@@ -53,8 +53,8 @@ class SparqlResultsListPlugin : public QDeclarativeExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
-        qmlRegisterType<SparqlResultList>(uri, 0, 1, "SparqlResultsList");
+        Q_ASSERT(uri == QLatin1String("QSparql"));
+        qmlRegisterType<SparqlResultList>(uri, 1, 0, "SparqlResultsList");
     }
 };
 

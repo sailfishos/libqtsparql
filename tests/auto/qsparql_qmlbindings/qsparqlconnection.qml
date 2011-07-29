@@ -1,5 +1,5 @@
 import Qt 4.7
-import QtSparql 0.1
+import QtSparql 1.0
 
 Rectangle {
     id: rootComp

@@ -19,7 +19,7 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDecla
 {
     Q_OBJECT
     Q_ENUMS(Status)
-    Q_PROPERTY(Status connectionStatus READ status NOTIFY statusChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString driver WRITE setDriver READ getdriverName)
     Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
