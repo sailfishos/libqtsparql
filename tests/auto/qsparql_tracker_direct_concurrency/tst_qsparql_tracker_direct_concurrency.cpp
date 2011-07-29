@@ -83,40 +83,31 @@ class SignalObject : public QObject
 {
     Q_OBJECT
 public:
-    SignalObject() : position(0) {}
-    ~SignalObject()
+    SignalObject() : position(0)
     {
-        // delete the signal mappers that were created
-        qDeleteAll(signalMaps);
+        connect(&dataReadyMapper, SIGNAL(mapped(int)), this, SLOT(onDataReady(int)));
+        connect(&finishedMapper, SIGNAL(mapped(int)), this, SLOT(onFinished(int)));
     }
 
+    QList<QSparqlResult*> resultList;
     QSet<QSparqlResult*> pendingResults;
     int position;
-    QList<QSignalMapper* > signalMaps;
+    QSignalMapper dataReadyMapper;
+    QSignalMapper finishedMapper;
     QList<QPair<int, int> > resultRanges;
 
     void append(QSparqlResult *r, QPair<int, int> range)
     {
-        QSignalMapper *dataReadyMapper = new QSignalMapper();
-        QSignalMapper *finishedMapper = new QSignalMapper();
-        dataReadyMapper->setMapping(r, position);
-        finishedMapper->setMapping(r, position);
+        dataReadyMapper.setMapping(r, position);
+        connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
+        finishedMapper.setMapping(r, position);
+        connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
         position++;
-
-        connect(r, SIGNAL(dataReady(int)), dataReadyMapper, SLOT(map()));
-        connect(dataReadyMapper, SIGNAL(mapped(int)), this, SLOT(onDataReady(int)));
-        connect(r, SIGNAL(finished()), finishedMapper, SLOT(map()));
-        connect(finishedMapper, SIGNAL(mapped(int)), this, SLOT(onFinished(int)));
 
         resultList.append(r);
         resultRanges.append(range);
         pendingResults.insert(r);
-
-        // keep track of the signal mappers to delete later
-        signalMaps.append(dataReadyMapper);
-        signalMaps.append(finishedMapper);
     }
-    QList<QSparqlResult*> resultList;
 
     bool waitForAllFinished(int silenceTimeoutMs)
     {
