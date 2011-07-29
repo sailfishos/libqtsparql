@@ -236,7 +236,10 @@ public Q_SLOTS:
     void startQueries()
     {
         if (!connection) {
-            ownConnection = new QSparqlConnection("QTRACKER_DIRECT");
+            const int dataReadyInterval = qMax(testDataSize/100, 10);
+            QSparqlConnectionOptions options;
+            options.setDataReadyInterval(dataReadyInterval);
+            ownConnection = new QSparqlConnection("QTRACKER_DIRECT", options);
             connection = ownConnection;
         }
         if (!resultChecker) {
@@ -461,9 +464,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, maxThreadCount);
+    const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
     QSparqlConnectionOptions options;
-    options.setDataReadyInterval(qMax(testDataAmount/100, 10));
+    options.setDataReadyInterval(dataReadyInterval);
     options.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", options);
     ResultChecker resultChecker;
@@ -518,8 +522,11 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, numThreads);
+    const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
-    QSparqlConnection connection("QTRACKER_DIRECT");
+    QSparqlConnectionOptions options;
+    options.setDataReadyInterval(dataReadyInterval);
+    QSparqlConnection connection("QTRACKER_DIRECT", options);
 
     QList<QThread*> createdThreads;
     QList<ThreadObject*> threadObjects;
