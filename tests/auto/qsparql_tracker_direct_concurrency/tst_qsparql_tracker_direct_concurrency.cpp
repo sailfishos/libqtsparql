@@ -174,6 +174,8 @@ public Q_SLOTS:
     }
 };
 
+void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount);
+
 class ThreadObject : public QObject
 {
     Q_OBJECT
@@ -242,29 +244,7 @@ public Q_SLOTS:
             resultChecker = ownResultChecker;
         }
 
-        QTime time = QTime::currentTime();
-        qsrand((uint)time.msec());
-        // store the result ranges we are going to use
-        QList<QPair<int, int> > resultRanges;
-        // first result will read everything
-        resultRanges.append(qMakePair(1, testDataSize));
-        for (int i=1;i<numQueries;i++) {
-            // high + 1) - low) + low
-            int low = qrand() % ((testDataSize) - 1) + 1;
-            int high = qrand() % ((testDataSize+1) - low) + low;
-            resultRanges.append(qMakePair(low, high));
-        }
-
-        for (int i=0;i<numQueries;i++) {
-            QPair<int, int> resultRange = resultRanges.at(i);
-            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece;"
-                                    "nmm:trackNumber ?t;"
-                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
-                                    "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
-            QSparqlResult *result = connection->exec(select);
-            resultChecker->append(result, resultRange);
-        }
-
+        startConcurrentQueries(*connection, *resultChecker, numQueries, testDataSize);
         waitForFinished();
         cleanup();
         this->thread()->quit();
@@ -407,6 +387,30 @@ public Q_SLOTS:
     }
 };
 
+void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount)
+{
+    for (int i=0;i<numQueries;i++) {
+        QPair<int, int> resultRange;
+        QString filter;
+        if (i % 10 == 0) {
+            // Override every 10th result to read all
+            resultRange = qMakePair(1, testDataAmount);
+            filter = ". }";
+        }
+        else {
+            resultRange  = randomRangeIn(testDataAmount);
+            filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
+        }
+        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
+                                    "nmm:trackNumber ?t; "
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
+                                    + filter));
+        QSparqlResult *result = conn.exec(select);
+        resultChecker.append(result, resultRange);
+    }
+}
+
+
 } //end namespace
 
 tst_QSparqlTrackerDirectConcurrency::tst_QSparqlTrackerDirectConcurrency()
@@ -464,26 +468,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QSparqlConnection conn("QTRACKER_DIRECT", options);
     ResultChecker resultChecker;
 
-    for (int i=0;i<numQueries;i++) {
-        QPair<int, int> resultRange;
-        QString filter;
-        if (i % 10 == 0) {
-            // Override every 10th result to read all
-            resultRange = qMakePair(1, testDataAmount);
-            filter = ". }";
-        }
-        else {
-            resultRange  = randomRangeIn(testDataAmount);
-            filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
-        }
-        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
-                                    "nmm:trackNumber ?t; "
-                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
-                                    + filter));
-        QSparqlResult *result = conn.exec(select);
-        resultChecker.append(result, resultRange);
-    }
-
+    startConcurrentQueries(conn, resultChecker, numQueries, testDataAmount);
     QVERIFY(resultChecker.waitForAllFinished(8000));
 }
 
