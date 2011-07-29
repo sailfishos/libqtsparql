@@ -177,45 +177,52 @@ public Q_SLOTS:
 class ThreadObject : public QObject
 {
     Q_OBJECT
-public:
+
     QSparqlConnection *connection;
+    QSparqlConnection *ownConnection;
     ResultChecker *resultChecker;
-    bool deleteConnection;
-    bool deleteResultChecker;
+    ResultChecker *ownResultChecker;
 
     int numQueries;
     int testDataSize;
 
+public:
     ThreadObject()
-    : connection(0), resultChecker(0), deleteConnection(false), deleteResultChecker(false)
+        : connection(0), ownConnection(0), resultChecker(0), ownResultChecker(0)
     {
     }
 
     ~ThreadObject()
     {
+        cleanup();
     }
 
     void cleanup()
     {
-        if (deleteResultChecker)
-            delete resultChecker;
-        if (deleteConnection)
-            delete connection;
+        delete ownResultChecker;
+        ownResultChecker = 0;
+        delete ownConnection;
+        ownConnection = 0;
     }
+
     void setParameters(int numQueries, int testDataSize)
     {
         this->numQueries = numQueries;
         this->testDataSize = testDataSize;
     }
+
     void setConnection(QSparqlConnection* connection)
     {
         this->connection = connection;
+        delete ownConnection;
+        ownConnection = 0;
     }
 
     void setResultChecker(ResultChecker* resultChecker)
     {
         this->resultChecker = resultChecker;
-
+        delete ownResultChecker;
+        ownResultChecker = 0;
     }
 
     void waitForFinished()
@@ -227,12 +234,12 @@ public Q_SLOTS:
     void startQueries()
     {
         if (!connection) {
-            this->connection = new QSparqlConnection("QTRACKER_DIRECT");
-            deleteConnection = true;
+            ownConnection = new QSparqlConnection("QTRACKER_DIRECT");
+            connection = ownConnection;
         }
         if (!resultChecker) {
-            this->resultChecker = new ResultChecker();
-            deleteResultChecker = true;
+            ownResultChecker = new ResultChecker;
+            resultChecker = ownResultChecker;
         }
 
         QTime time = QTime::currentTime();
