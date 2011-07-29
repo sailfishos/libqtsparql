@@ -8,6 +8,7 @@ SparqlResultList::SparqlResultList() : connection(0)
     connect(this, SIGNAL(rowsRemoved(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(finished()), this, SLOT(onFinished()));
+    connect(this, SIGNAL(started()), this, SLOT(onStarted()));
     lastErrorMessage = QLatin1String("");
 }
 
@@ -61,6 +62,12 @@ SparqlResultList::Status SparqlResultList::status()
 QString SparqlResultList::errorString() const
 {
     return lastErrorMessage;
+}
+
+void SparqlResultList::onStarted()
+{
+    modelStatus = Loading;
+    Q_EMIT statusChanged(modelStatus);
 }
 
 void SparqlResultList::onFinished()

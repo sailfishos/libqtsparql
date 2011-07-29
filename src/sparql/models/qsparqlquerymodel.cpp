@@ -239,6 +239,13 @@ void QSparqlQueryModelPrivate::findRoleNames()
 */
 
 /*!
+    \fn void QSparqlQueryModel::started()
+
+    This signal is emitted when the QSparqlResult, used by the model, has
+    started to execute.
+*/
+
+/*!
     Creates an empty QSparqlQueryModel with the given \a parent.
  */
 QSparqlQueryModel::QSparqlQueryModel(QObject *parent)
@@ -384,6 +391,7 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
     d->newQuery = true;
     connect(d->result, SIGNAL(finished()), d, SLOT(queryFinished()));
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
+    Q_EMIT started();
 
 }
 

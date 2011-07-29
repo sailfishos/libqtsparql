@@ -5,6 +5,7 @@ Rectangle {
     id: rootComp
     property string setDriver: "QTRACKER_DIRECT"
     property string queryString: sparqlQueryString
+    property int modelStatus: 0
 
     signal modelCountChanged()
 
@@ -20,6 +21,7 @@ Rectangle {
             // load existing query model
             connection: sparqlConnection
             query: sparqlQueryString
+            onStatusChanged: modelStatus = sparqlResultList.status;
 
         }
        delegate: Item {  height: 50;  }
@@ -35,6 +37,14 @@ Rectangle {
     {
         var resultListCount = sparqlResultList.count;
         return resultListCount
+    }
+
+    function getStatus()
+    {
+        // return the property value here
+        // that way we can also check to make sure
+        // the notify for Status is working
+        return modelStatus
     }
 
 }

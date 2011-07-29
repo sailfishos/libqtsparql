@@ -92,6 +92,7 @@ public:
 
 Q_SIGNALS:
     void finished();
+    void started();
 
 protected:
     virtual void queryChange();

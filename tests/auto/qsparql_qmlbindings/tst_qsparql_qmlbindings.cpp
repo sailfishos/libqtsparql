@@ -73,6 +73,8 @@ private slots:
 namespace {
 
 // QML stuff
+enum Status { Null, Ready, Loading, Error };
+
 QDeclarativeEngine *engine;
 QDeclarativeComponent *component;
 QDeclarativeContext *context;
@@ -194,6 +196,10 @@ void tst_QSparqlQMLBindings::sparql_connection_test()
     QPointer<QSparqlConnection> connPointer =
         getObject<QSparqlConnection*>("connectionWithOptions");
 
+    QVERIFY(connPointer->isValid());
+    // now make sure the connection is "Ready"
+    Status status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
     QCOMPARE(connPointer->driverName(), QString("QTRACKER_DIRECT"));
     // now make sure deleting the root object (i.e closing the qml viewer) deletes the connection object
     qmlCleanup();
@@ -218,6 +224,9 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
     QSparqlConnection *connection =
         getObject<QSparqlConnection*>("connectionWithOptions");
 
+    QVERIFY(connection->isValid());
+    Status status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
     // get the return value from qml
     QVariant returnValue = callMethod("runSelectQuery");
 
@@ -297,6 +306,10 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QPointer<QSparqlQueryModel> model =
         getObject<QSparqlQueryModel *>("queryModel");
     QVERIFY(connection->isValid());
+    // status of the model should be "loading" before the model finished();
+    QVERIFY(model->rowCount() != NUM_INSERTS);
+    Status status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Loading);
 
     timer.start();
     while (countSpy.count() != NUM_INSERTS && !(timeout = (timer.elapsed() > timeoutMs)))
@@ -304,6 +317,9 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     // signal spy should have received NUM_INSERTS count changes
     QVERIFY(!timeout);
     QCOMPARE(countSpy.count(), NUM_INSERTS);
+    // status of the model should now be ready
+    status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
 
     // get the number of rows from the list model in qml
     QVariant returnValue = callMethod("getCount");
@@ -315,14 +331,18 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
                                "nie:isLogicalPartOf <qsparql-qml-tests> }";
 
     // call set query and change the query model object, this should also update
-    // the qml model
+    // the qml model, which should now go back to loading state
     model->setQuery(QSparqlQuery(selectOneContact), *connection);
+    status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Loading);
     // Signal spy should now emit twice more, one for the clearing of the model
     // and another for the one contact the query adds
     timer.restart();
     while (countSpy.count() != NUM_INSERTS+2 && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     QVERIFY(!timeout);
+    status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
     // now check the count again
     returnValue = callMethod("getCount");
 
