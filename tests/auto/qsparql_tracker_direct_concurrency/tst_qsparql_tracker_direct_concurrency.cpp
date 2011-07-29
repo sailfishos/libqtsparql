@@ -79,7 +79,7 @@ private Q_SLOTS:
 
 namespace {
 
-class SignalObject : public QObject
+class ResultChecker : public QObject
 {
     Q_OBJECT
 public:
@@ -88,13 +88,13 @@ public:
     QList<QSparqlResult*> allResults;
     QHash<QSparqlResult*, QPair<int,int> > pendingResults;
 
-    SignalObject()
+    ResultChecker()
     {
         connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
         connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
 
-    ~SignalObject()
+    ~ResultChecker()
     {
         pendingResults.clear();
         qDeleteAll(allResults);
@@ -166,15 +166,15 @@ class ThreadObject : public QObject
     Q_OBJECT
 public:
     QSparqlConnection *connection;
-    SignalObject *signalObject;
+    ResultChecker *resultChecker;
     bool deleteConnection;
-    bool deleteSignalObject;
+    bool deleteResultChecker;
 
     int numQueries;
     int testDataSize;
 
     ThreadObject()
-    : connection(0), signalObject(0), deleteConnection(false), deleteSignalObject(false)
+    : connection(0), resultChecker(0), deleteConnection(false), deleteResultChecker(false)
     {
     }
 
@@ -184,8 +184,8 @@ public:
 
     void cleanup()
     {
-        if (deleteSignalObject)
-            delete signalObject;
+        if (deleteResultChecker)
+            delete resultChecker;
         if (deleteConnection)
             delete connection;
     }
@@ -199,15 +199,15 @@ public:
         this->connection = connection;
     }
 
-    void setSignalObject(SignalObject* signalObject)
+    void setResultChecker(ResultChecker* resultChecker)
     {
-        this->signalObject = signalObject;
+        this->resultChecker = resultChecker;
 
     }
 
     void waitForFinished()
     {
-        signalObject->waitForAllFinished(8000);
+        resultChecker->waitForAllFinished(8000);
     }
 
 public Q_SLOTS:
@@ -217,9 +217,9 @@ public Q_SLOTS:
             this->connection = new QSparqlConnection("QTRACKER_DIRECT");
             deleteConnection = true;
         }
-        if (!signalObject) {
-            this->signalObject = new SignalObject();
-            deleteSignalObject = true;
+        if (!resultChecker) {
+            this->resultChecker = new ResultChecker();
+            deleteResultChecker = true;
         }
 
         QTime time = QTime::currentTime();
@@ -242,7 +242,7 @@ public Q_SLOTS:
                                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
                                     "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
             QSparqlResult *result = connection->exec(select);
-            signalObject->append(result, resultRange);
+            resultChecker->append(result, resultRange);
         }
 
         waitForFinished();
@@ -456,7 +456,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     }
 
     QSparqlConnection conn("QTRACKER_DIRECT", options);
-    SignalObject signalObject;
+    ResultChecker resultChecker;
 
     for (int i=0;i<numQueries;i++) {
         QPair<int, int> resultRange = resultRanges.at(i);
@@ -465,10 +465,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
                                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>"
                                     "FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second));
         QSparqlResult *result = conn.exec(select);
-        signalObject.append(result, resultRange);
+        resultChecker.append(result, resultRange);
     }
 
-    QVERIFY(signalObject.waitForAllFinished(8000));
+    QVERIFY(resultChecker.waitForAllFinished(8000));
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
