@@ -75,9 +75,6 @@ private Q_SLOTS:
     void multipleConnections_selectQueries();
     void multipleConnections_selectQueries_data();
     //void multipleConnections_updateQueries();
-
-private:
-    QSharedPointer<QSignalSpy> dataReadySpy;
 };
 
 namespace {
