@@ -355,12 +355,12 @@ public Q_SLOTS:
         // we are not testing select queries so use exec/waitForFinished
         QSparqlResult *result = connection->exec(QSparqlQuery(selectTemplate.arg(id)));
         result->waitForFinished();
-        QVERIFY(result->size() == numInserts);
+        QCOMPARE(result->size(), numInserts);
         while (result->next()) {
             contactNameValues[result->value(0).toString()] = result->value(1).toString();
         }
         delete result;
-        QVERIFY(contactNameValues.size() == numInserts);
+        QCOMPARE(contactNameValues.size(), numInserts);
         for(int i=0; i<numInserts; i++) {
             QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
         }
@@ -377,11 +377,11 @@ public Q_SLOTS:
         // verify the results now
         result = connection->exec(QSparqlQuery(selectTemplate.arg(id)));
         result->waitForFinished();
-        QVERIFY(result->size() == numInserts-numDeletes);
+        QCOMPARE(result->size(), numInserts-numDeletes);
         while (result->next()) {
             contactNameValues[result->value(0).toString()] = result->value(1).toString();
         }
-        QVERIFY(result->size() == numInserts-numDeletes);
+        QCOMPARE(result->size(), numInserts-numDeletes);
         delete result;
         // number of deletes might be less than the number of inserts, we delete from 0 -> numDeletes-1, so
         int startFrom = numInserts - numDeletes;
