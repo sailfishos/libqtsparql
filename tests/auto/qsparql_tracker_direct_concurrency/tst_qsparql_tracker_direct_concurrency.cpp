@@ -92,6 +92,22 @@ QPair<int,int> randomRangeIn(int max)
     return qMakePair(low, high);
 }
 
+void waitForAllToComplete(const QList<QThread*>& threads, int timeoutMs)
+{
+    QTime timeoutTimer;
+    timeoutTimer.start();
+    Q_FOREACH(QThread* thread, threads) {
+        while (!thread->isFinished()) {
+            // For some unknown reason QThread::wait does not work here.
+            // Calling it seems to block the event loop of the thread it is
+            // called for(!)
+            QTest::qWait(500);
+            QVERIFY(timeoutTimer.elapsed() < timeoutMs);
+        }
+        timeoutTimer.restart();
+    }
+}
+
 class ResultChecker : public QObject
 {
     Q_OBJECT
@@ -141,6 +157,9 @@ public:
         return !timeout;
     }
 
+Q_SIGNALS:
+    void allFinished();
+
 public Q_SLOTS:
     void onDataReady(QObject* mappedResult)
     {
@@ -171,6 +190,8 @@ public Q_SLOTS:
         // now make sure the results counted match the size
         QCOMPARE(resultCount, expectedResultSize);
         pendingResults.remove(result);
+        if (pendingResults.empty())
+            Q_EMIT allFinished();
     }
 };
 
@@ -227,11 +248,6 @@ public:
         ownResultChecker = 0;
     }
 
-    void waitForFinished()
-    {
-        resultChecker->waitForAllFinished(8000);
-    }
-
 public Q_SLOTS:
     void startQueries()
     {
@@ -247,8 +263,13 @@ public Q_SLOTS:
             resultChecker = ownResultChecker;
         }
 
+        connect(resultChecker, SIGNAL(allFinished()), this, SLOT(quit()));
         startConcurrentQueries(*connection, *resultChecker, numQueries, testDataSize);
-        waitForFinished();
+    }
+
+private Q_SLOTS:
+    void quit()
+    {
         cleanup();
         this->thread()->quit();
     }
@@ -531,33 +552,27 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
     QList<QThread*> createdThreads;
     QList<ThreadObject*> threadObjects;
     for (int i=0;i<numThreads;i++) {
-        QThread *newThread = new QThread();
+        QThread* newThread = new QThread;
         createdThreads.append(newThread);
 
-        ThreadObject *threadObject = new ThreadObject();
+        ThreadObject* threadObject = new ThreadObject;
         threadObjects.append(threadObject);
 
         threadObject->setConnection(&connection);
         threadObject->setParameters(numQueries, testDataAmount);
         threadObject->moveToThread(newThread);
 
-        // connec the threads started signal to the slot that does the work
+        // connect the threads started signal to the slot that does the work
         QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
-    // wait for all the threads then delete
-    // TODO: add timer so we don't wait forever
-    Q_FOREACH(QThread* thread, createdThreads) {
-        while (!thread->isFinished())
-            QTest::qWait(500);
-        delete thread;
-    }
 
-    //cleanup
+    waitForAllToComplete(createdThreads, 8000*numThreads);
     qDeleteAll(threadObjects);
+    qDeleteAll(createdThreads);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
