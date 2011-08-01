@@ -640,35 +640,28 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     QFETCH(int, numQueries);
     QFETCH(int, numThreads);
 
-    QSparqlConnection connection("QTRACKER_DIRECT");
-
     QList<QThread*> createdThreads;
     QList<ThreadObject*> threadObjects;
     for (int i=0;i<numThreads;i++) {
-        QThread *newThread = new QThread();
+        QThread *newThread = new QThread;
         createdThreads.append(newThread);
 
-        ThreadObject *threadObject = new ThreadObject();
+        ThreadObject *threadObject = new ThreadObject;
         threadObjects.append(threadObject);
         threadObject->setParameters(numQueries, testDataAmount);
         threadObject->moveToThread(newThread);
 
-        // connec the threads started signal to the slot that does the work
+        // Connect the threads started signal to the slot that does the work
         QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
-    // wait for all the threads then delete
-    // TODO: add timer so we don't wait forever
-    Q_FOREACH(QThread* thread, createdThreads) {
-        while (!thread->isFinished())
-            QTest::qWait(500);
-        delete thread;
-    }
-    //cleanup
+
+    waitForAllToComplete(createdThreads, 8000*numThreads);
     qDeleteAll(threadObjects);
+    qDeleteAll(createdThreads);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
