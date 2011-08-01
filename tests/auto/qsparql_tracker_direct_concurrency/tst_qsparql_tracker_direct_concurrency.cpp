@@ -284,14 +284,13 @@ public:
     QList<QSparqlResult*> resultList;
     QSet<QObject*> pendingResults;
     QSignalMapper signalMapper;
-    bool deleteConnection;
     int numInserts;
     int numDeletes;
     int id;
     bool inThread;
 
     UpdateObject(int numInserts, int numDeletes, int id, bool inThread = false)
-        : connection(0), deleteConnection(false), numInserts(numInserts), numDeletes(numDeletes), id(id),
+        : connection(0), numInserts(numInserts), numDeletes(numDeletes), id(id),
         inThread(inThread)
     {
     }
@@ -306,9 +305,6 @@ public:
             QSparqlResult* result = connection->syncExec(deleteQuery);
             delete result;
         }
-
-        if (deleteConnection)
-            delete connection;
     }
 
     void setConnection(QSparqlConnection *connection)
@@ -339,10 +335,6 @@ public Q_SLOTS:
     {
         // we're not testing for errors here
         QVERIFY(numDeletes <= numInserts);
-
-        if (!connection) {
-            connection = new QSparqlConnection("QTRACKER_DIRECT");
-        }
 
         const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
                                         "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
