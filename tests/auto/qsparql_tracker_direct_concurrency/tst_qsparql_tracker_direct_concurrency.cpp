@@ -293,6 +293,7 @@ public:
         : connection(0), numInserts(numInserts), numDeletes(numDeletes), id(id),
         inThread(inThread)
     {
+        connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
 
     void cleanup()
@@ -317,9 +318,7 @@ public:
         resultList.append(result);
         pendingResults.insert(result);
         signalMapper.setMapping(result,result);
-
         connect(result, SIGNAL(finished()), &signalMapper, SLOT(map()));
-        connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
 
     void waitForFinished()
