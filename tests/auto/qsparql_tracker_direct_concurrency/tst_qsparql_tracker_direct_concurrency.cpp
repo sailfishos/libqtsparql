@@ -594,7 +594,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQ
     QList<QThread*> createdThreads;
     QList<UpdateObject*> updateObjects;
     for (int i=0;i<numThreads;i++) {
-        QThread *newThread = new QThread();
+        QThread *newThread = new QThread;
         createdThreads.append(newThread);
 
         UpdateObject *updateObject = new UpdateObject(numInserts, numDeletes, i, true);
@@ -603,23 +603,17 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQ
         updateObject->setConnection(&connection);
         updateObject->moveToThread(newThread);
 
-        // connec the threads started signal to the slot that does the work
+        // Connect the threads started signal to the slot that does the work
         QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate()));
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
         thread->start();
     }
-    // wait for all the threads then delete
-    // TODO: add timer so we don't wait forever
-    Q_FOREACH(QThread* thread, createdThreads) {
-        while (!thread->isFinished())
-            QTest::qWait(500);
-        delete thread;
-    }
 
-    //cleanup
+    waitForAllToComplete(createdThreads, 8000*numThreads);
     qDeleteAll(updateObjects);
+    qDeleteAll(createdThreads);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries_data()
