@@ -75,7 +75,9 @@ ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
     connection = new QSparqlConnection("QTRACKER_DIRECT");
 
     // Create a new model and set the query
-    model->setQuery(QSparqlQuery(query), *connection);
+    // We use setQueryQML here so the properties are extracted from
+    // the query
+    model->setQueryQML(QSparqlQuery(query), *connection);
 
     // Now we need to monitor dbus for any notifications from Tracker.
     // More information about Tracker over Dbus can be found at :
@@ -111,7 +113,7 @@ void ModelLiveChange::changed(QString className)
     // we are watching, so call setQuery on the model again
     // this will make the model requery, and any new results
     // will be displayed
-    model->setQuery(QSparqlQuery(query), *connection);
+    model->setQueryQML(QSparqlQuery(query), *connection);
 }
 
 void ModelLiveChange::gotClick(QString firstName, QString familyName)

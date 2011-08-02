@@ -68,6 +68,8 @@ private slots:
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
     void sparql_query_model_test_data();
+
+    void sparql_query_model_test_role_names();
 };
 
 namespace {
@@ -306,6 +308,7 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QPointer<QSparqlQueryModel> model =
         getObject<QSparqlQueryModel *>("queryModel");
     QVERIFY(connection->isValid());
+
     // status of the model should be "loading" before the model finished();
     QVERIFY(model->rowCount() != NUM_INSERTS);
     Status status = (Status)callMethod("getStatus").toInt();
@@ -332,7 +335,7 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 
     // call set query and change the query model object, this should also update
     // the qml model, which should now go back to loading state
-    model->setQuery(QSparqlQuery(selectOneContact), *connection);
+    model->setQueryQML(QSparqlQuery(selectOneContact), *connection);
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Loading);
     // Signal spy should now emit twice more, one for the clearing of the model
@@ -359,6 +362,37 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_data()
     QList<QPair<QString, QVariant> > contextProperties;
     contextProperties.append(qMakePair(QString("sparqlQueryString"),QVariant(contactSelectQuery)));
     QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+}
+
+void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
+{
+    QString select1 = "select ?u ?ng ?nf"
+                      "{ ?u a nco:PersonContact; nco:nameGiven ?ng; nco:nameFamily ?nf }";
+    QString select2 = "select ?u fn:string-join( (?ng, ?nf), ' ') AS ?joinName "
+                      "{ ?u a nco:PersonContact; nco:nameGiven ?ng; nco:nameFamily ?nf }";
+    QList<QPair<QString, QVariant> > contextProperties;
+    contextProperties.append(qMakePair(QString("sparqlQueryString"), QVariant(select1)));
+    QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+
+    QSparqlQueryModel *model =
+        getObject<QSparqlQueryModel *>("queryModel");
+    QSparqlConnection *connection =
+        getObject<QSparqlConnection *>("sparqlConnection");
+
+    QHash<int, QByteArray> roleNames = model->roleNames();
+
+    // wait for result
+    QTest::qWait(500);
+    // role names start from Qt::UserRole + 1,
+    QCOMPARE(roleNames[Qt::UserRole+1], QByteArray("u"));
+    QCOMPARE(roleNames[Qt::UserRole+2], QByteArray("ng"));
+    QCOMPARE(roleNames[Qt::UserRole+3], QByteArray("nf"));
+
+    model->setQueryQML(QSparqlQuery(select2), *connection);
+    roleNames = model->roleNames();
+    QTest::qWait(500);
+    QCOMPARE(roleNames[Qt::UserRole+1], QByteArray("u"));
+    QCOMPARE(roleNames[Qt::UserRole+2], QByteArray("joinName"));
 }
 
 QTEST_MAIN(tst_QSparqlQMLBindings)

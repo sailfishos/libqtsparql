@@ -23,7 +23,7 @@ void SparqlResultList::componentComplete()
     // we will create the connection once the component has finished reading, that way
     // we know if any connection options have been set
     if (connection && connection->isValid()) {
-        setQuery(QSparqlQuery(queryString), *connection);
+        setQueryQML(QSparqlQuery(queryString), *connection);
     } else {
         lastErrorMessage = QLatin1String("Error opening connection");
         modelStatus = Error;

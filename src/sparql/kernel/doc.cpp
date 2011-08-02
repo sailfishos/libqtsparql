@@ -197,9 +197,10 @@
     \skip QSparqlQueryModel *model = new
     \until ctxt->
 
-    The query model can then be used in the same way (by calling QSparqlQueryModel::setQuery()). The example
-    <i>qmlquerymodel</i> shows how to use the model with the QTRACKER_DIRECT driver so that it updates
-    when new data is available.
+    The query model can then be used in the same way, with one important difference, QSparqlQueryModel::setQueryQML()
+    must be called instead of QSparqlQueryModel::setQuery(). This is so the role names are extracted from the query, so
+    as to make the model usable in QML. The example <i>qmlquerymodel</i> shows how to use the model with the
+    QTRACKER_DIRECT driver so that it updates when new data is available.
 
     \section connectionoptions Connection options supported by drivers
 
