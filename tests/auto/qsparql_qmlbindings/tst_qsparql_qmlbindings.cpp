@@ -64,11 +64,11 @@ private slots:
     void sparql_connection_test();
     void sparql_connection_test_data();
     void sparql_connection_select_query_test();
+    void sparql_connection_select_query_async_test();
     void sparql_connection_options_test();
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
     void sparql_query_model_test_data();
-
     void sparql_query_model_test_role_names();
 };
 
@@ -237,8 +237,7 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
 
     QHash<QString, QString> contactNamesValue;
 
-    for (int i=0; i<list.length();i++)
-    {
+    for (int i=0; i<list.length();i++) {
         QMap<QString, QVariant> resultMap = list[i].toMap();
         // the result map is binding->value, store the binding
         contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
@@ -250,11 +249,59 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
     r->waitForFinished();
     QCOMPARE(r->size(), NUM_INSERTS);
 
-    while (r->next())
-    {
+    while (r->next()) {
         QCOMPARE(contactNamesValue[r->value(0).toString()], r->value(1).toString());
     }
     delete r;
+}
+
+void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
+{
+    sparql_connection_test_data();
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+
+    QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
+
+    QSparqlConnection connection("QTRACKER_DIRECT");
+    QSparqlResult *result = connection.exec(QSparqlQuery(contactSelectQuery));
+    result->waitForFinished(); // we want to use size() later
+
+    callMethod("runSelectQueryAsync");
+    timer.start();
+    // we should get two result ready signals, one from the property change
+    // notification (that a new SparqlConnection.result is ready), and one
+    // emitted from the javascript function that handels the resultReady() signal
+    // from within javascript
+    while (resultSpy.count() != 2 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(resultSpy.count(), 2);
+
+    // the SparqlConnection.result property should be the same as the
+    // result passed to the resultReady() signal slot
+    QVariant returnValue = callMethod("returnResults");
+    QVariant returnValueFromSlot = callMethod("returnResultsFromSlot");
+    QCOMPARE(returnValue, returnValueFromSlot);
+
+    // now compare the qml result with what was returned from the connection
+    QList<QVariant> list = returnValue.toList();
+    QCOMPARE(list.length(), NUM_INSERTS);
+    QHash<QString, QString> contactNamesValue;
+
+    for (int i=0; i<list.length();i++) {
+        QMap<QString, QVariant> resultMap = list[i].toMap();
+        // the result map is binding->value, store the binding
+        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
+    }
+
+    QCOMPARE(result->size(), NUM_INSERTS);
+    while (result->next()) {
+        QCOMPARE(contactNamesValue[result->value(0).toString()], result->value(1).toString());
+    }
+
+    delete result;
 }
 
 void tst_QSparqlQMLBindings::sparql_connection_options_test()
@@ -316,11 +363,13 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QCOMPARE(status, Loading);
 
     timer.start();
-    while (countSpy.count() != NUM_INSERTS && readySpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
+
+    while ((countSpy.count() != NUM_INSERTS || readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     // signal spy should have received NUM_INSERTS count changes
     QVERIFY(!timeout);
     QCOMPARE(countSpy.count(), NUM_INSERTS);
+    QCOMPARE(readySpy.count(), 1);
     // status of the model should now be ready
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);
@@ -342,9 +391,11 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     // Signal spy should now emit twice more, one for the clearing of the model
     // and another for the one contact the query adds
     timer.restart();
-    while (countSpy.count() != NUM_INSERTS+2 && readySpy.count() != 2 && !(timeout = (timer.elapsed() > timeoutMs)))
+    while ((countSpy.count() != NUM_INSERTS+2 ||readySpy.count() != 2) && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     QVERIFY(!timeout);
+    QCOMPARE(countSpy.count(), NUM_INSERTS+2);
+    QCOMPARE(readySpy.count(), 2);
 
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);

@@ -8,6 +8,10 @@ Rectangle {
     property int portNumber: setPortNumber
     property string host: setHost
     property int connectionStatus: 0
+    property int resultReadyCalled: 0
+    property variant resultFromSlot: 0
+
+    signal resultReadySignal();
 
     SparqlConnection {
         objectName: "connectionWithOptions"
@@ -15,10 +19,35 @@ Rectangle {
         driver: setDriver
         options: SparqlConnectionOptions { id:connectionOptions; hostName: host; port: portNumber }
         onStatusChanged: connectionStatus = sparqlConnection.status
+        onResultReady: resultReadySignal()
     }
 
-    function runSelectQuery() {
-        return sparqlConnection.exec(queryString);
+    function runSelectQuery()
+    {
+       return sparqlConnection.select(queryString);
+    }
+
+    function runSelectQueryAsync()
+    {
+        sparqlConnection.resultReady.connect(asyncResultReady);
+        sparqlConnection.select(queryString, true);
+    }
+
+    function asyncResultReady(result)
+    {
+        resultFromSlot = result;
+        resultReadySignal();
+    }
+
+    // returns from the result property
+    function returnResults()
+    {
+        return sparqlConnection.result;
+    }
+
+    function returnResultsFromSlot()
+    {
+        return resultFromSlot;
     }
 
     function returnConnectionOptions() {

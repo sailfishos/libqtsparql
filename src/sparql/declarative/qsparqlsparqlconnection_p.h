@@ -21,6 +21,7 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDecla
     Q_ENUMS(Status)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString driver WRITE setDriver READ getdriverName)
+    Q_PROPERTY(QVariant result READ getResult NOTIFY resultReady)
     Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
     Q_INTERFACES(QDeclarativeParserStatus)
@@ -28,6 +29,10 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDecla
 public:
     QString driverName;
     QString lastErrorMessage;
+    // for async queries
+    QSparqlResult *asyncResult;
+    QVariant lastResult;
+
     SparqlConnectionOptions *options;
     SparqlConnection();
     ~SparqlConnection() {}
@@ -37,8 +42,14 @@ public:
     void classBegin();
     void componentComplete();
 
-    Q_INVOKABLE QVariant exec(QString query);
+    Q_INVOKABLE QVariant select(QString query, bool async = false);
+    Q_INVOKABLE QVariant update(QString query, bool async = false);
     Q_INVOKABLE QString errorString() const;
+
+    QVariant resultToVariant(QSparqlResult *result);
+    QVariant runQuerySync(QSparqlQuery query);
+    QVariant runQueryAsync(QSparqlQuery query);
+    QVariant getResult();
 
     void setOptions(SparqlConnectionOptions* options)
     {
@@ -58,9 +69,11 @@ public:
     enum Status { Null, Ready, Loading, Error };
     Status connectionStatus;
     Status status();
-
+public Q_SLOTS:
+    void onResultFinished();
 Q_SIGNALS:
     void statusChanged(SparqlConnection::Status);
+    void resultReady(QVariant);
 };
 
 QT_END_NAMESPACE

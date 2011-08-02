@@ -8,6 +8,8 @@ SparqlConnection::SparqlConnection()
 {
     connectionStatus = Null;
     options = 0;
+    lastResult = 0;
+    asyncResult = 0;
     lastErrorMessage = QLatin1String("");
 }
 
@@ -44,30 +46,65 @@ QString SparqlConnection::errorString() const
     return lastErrorMessage;
 }
 
-QVariant SparqlConnection::exec(QString queryString)
+QVariant SparqlConnection::select(QString queryString, bool async)
 {
-    // don't bother doing anything if the connection isn't valid
+    QSparqlQuery query(queryString);
+    if (async)
+        return runQueryAsync(query);
+    else
+        return runQuerySync(query);
+}
+
+QVariant SparqlConnection::update(QString queryString, bool async)
+{
+    // inserts and deletes are both update queries, and run in the same
+    // way, so it doesn't matter if this is an insert or delete statement
+    QSparqlQuery query(queryString, QSparqlQuery::InsertStatement);
+    if (async)
+        return runQueryAsync(query);
+    else
+        return runQuerySync(query);
+}
+
+QVariant SparqlConnection::getResult()
+{
+    return lastResult;
+}
+
+QVariant SparqlConnection::runQuerySync(QSparqlQuery query)
+{
     if (!isValid()) {
         return -1;
     }
-
-    // the last query may have resulted in an error, set set the status to
-    // ready
     connectionStatus = Ready;
     Q_EMIT statusChanged(connectionStatus);
 
-    QSparqlQuery query;
-    query.setQuery(queryString);
-    if ( queryString.contains(QLatin1String("insert"), Qt::CaseInsensitive) )
-        query.setType(QSparqlQuery::InsertStatement);
-    if ( queryString.contains(QLatin1String("delete"), Qt::CaseInsensitive) )
-        query.setType(QSparqlQuery::DeleteStatement);
-    if ( queryString.contains(QLatin1String("construct"), Qt::CaseInsensitive) )
-        query.setType(QSparqlQuery::ConstructStatement);
-
     QSparqlResult *result = syncExec(query);
-    QVariantList resultList;
+    return resultToVariant(result);
+}
 
+QVariant SparqlConnection::runQueryAsync(QSparqlQuery query)
+{
+    if (!isValid()) {
+        return -1;
+    }
+    connectionStatus = Ready;
+    Q_EMIT statusChanged(connectionStatus);
+
+    asyncResult = exec(query);
+    connect(asyncResult, SIGNAL(finished()), this, SLOT(onResultFinished()));
+    lastResult = 0;
+    return 0;
+}
+
+void SparqlConnection::onResultFinished()
+{
+    resultToVariant(asyncResult);
+}
+
+QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
+{
+    QVariantList resultList;
     // check for a result error
     if (result->hasError()) {
         connectionStatus = Error;
@@ -77,16 +114,23 @@ QVariant SparqlConnection::exec(QString queryString)
         return -1;
     }
 
-    while(result->next()) {
-        QSparqlResultRow row = result->current();
-        QVariantMap resultHash;
-        for (int i=0; i<row.count(); i++) {
-            resultHash.insert(row.binding(i).name(), row.value(i));
+    if (result->isBool()) {
+        resultList.append(result->boolValue());
+    } else {
+        while(result->next()) {
+            QSparqlResultRow row = result->current();
+            QVariantMap resultHash;
+            for (int i=0; i<row.count(); i++) {
+                resultHash.insert(row.binding(i).name(), row.value(i));
+            }
+            resultList.append(resultHash);
         }
-        resultList.append(resultHash);
     }
     delete result;
-    return resultList;
+    lastResult.clear();
+    lastResult = resultList;
+    Q_EMIT resultReady(lastResult);
+    return lastResult;
 }
 
 SparqlConnection::Status SparqlConnection::status()
