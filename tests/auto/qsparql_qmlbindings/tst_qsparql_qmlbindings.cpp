@@ -299,6 +299,7 @@ void tst_QSparqlQMLBindings::sparql_connection_options_test_data()
 void tst_QSparqlQMLBindings::sparql_query_model_test()
 {
     QSignalSpy countSpy(qmlObject, SIGNAL(modelCountChanged()));
+    QSignalSpy readySpy(qmlObject, SIGNAL(modelStatusReady()));
     QTime timer;
     int timeoutMs = 2000;
     bool timeout = false;
@@ -315,7 +316,7 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QCOMPARE(status, Loading);
 
     timer.start();
-    while (countSpy.count() != NUM_INSERTS && !(timeout = (timer.elapsed() > timeoutMs)))
+    while (countSpy.count() != NUM_INSERTS && readySpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     // signal spy should have received NUM_INSERTS count changes
     QVERIFY(!timeout);
@@ -341,9 +342,10 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     // Signal spy should now emit twice more, one for the clearing of the model
     // and another for the one contact the query adds
     timer.restart();
-    while (countSpy.count() != NUM_INSERTS+2 && !(timeout = (timer.elapsed() > timeoutMs)))
+    while (countSpy.count() != NUM_INSERTS+2 && readySpy.count() != 2 && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     QVERIFY(!timeout);
+
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);
     // now check the count again

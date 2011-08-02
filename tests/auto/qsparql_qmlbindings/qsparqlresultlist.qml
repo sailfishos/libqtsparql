@@ -8,6 +8,7 @@ Rectangle {
     property int modelStatus: 0
 
     signal modelCountChanged()
+    signal modelStatusReady()
 
     ListView {
         id: contactsView
@@ -21,7 +22,7 @@ Rectangle {
             // load existing query model
             connection: sparqlConnection
             query: sparqlQueryString
-            onStatusChanged: modelStatus = sparqlResultList.status;
+            onStatusChanged: { modelStatusChanged() }
 
         }
        delegate: Item {  height: 50;  }
@@ -31,6 +32,14 @@ Rectangle {
         objectName: "sparqlConnection"
         id: sparqlConnection
         driver: setDriver
+    }
+
+    function modelStatusChanged()
+    {
+        modelStatus = sparqlResultList.status;
+        if (modelStatus == SparqlResultsList.Ready) {
+            modelStatusReady();
+        }
     }
 
     function getCount()
