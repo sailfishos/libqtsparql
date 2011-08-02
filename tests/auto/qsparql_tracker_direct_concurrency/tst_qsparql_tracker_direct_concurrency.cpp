@@ -90,17 +90,8 @@ QPair<int,int> randomRangeIn(int max)
 
 void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
 {
-    QTime timeoutTimer;
-    timeoutTimer.start();
     Q_FOREACH(QThread* thread, threads) {
-        while (!thread->isFinished()) {
-            // For some unknown reason QThread::wait does not work here.
-            // Calling it seems to block the event loop of the thread it is
-            // called for(!)
-            QTest::qWait(500);
-            QVERIFY(timeoutTimer.elapsed() < timeoutMs);
-        }
-        timeoutTimer.restart();
+        QVERIFY( thread->wait(timeoutMs) );
     }
 }
 
