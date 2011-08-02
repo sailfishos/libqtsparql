@@ -92,7 +92,7 @@ QPair<int,int> randomRangeIn(int max)
     return qMakePair(low, high);
 }
 
-void waitForAllToComplete(const QList<QThread*>& threads, int timeoutMs)
+void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
 {
     QTime timeoutTimer;
     timeoutTimer.start();
@@ -561,7 +561,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQ
         thread->start();
     }
 
-    waitForAllToComplete(createdThreads, 8000*numThreads);
+    waitForAllFinished(createdThreads, 15000*numThreads);
     qDeleteAll(threadObjects);
     qDeleteAll(createdThreads);
 }
@@ -611,7 +611,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQ
         thread->start();
     }
 
-    waitForAllToComplete(createdThreads, 8000*numThreads);
+    waitForAllFinished(createdThreads, 15000*numThreads);
     qDeleteAll(updateObjects);
     qDeleteAll(createdThreads);
 }
@@ -659,7 +659,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
         thread->start();
     }
 
-    waitForAllToComplete(createdThreads, 8000*numThreads);
+    waitForAllFinished(createdThreads, 15000*numThreads);
     qDeleteAll(threadObjects);
     qDeleteAll(createdThreads);
 }
