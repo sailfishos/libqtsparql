@@ -66,10 +66,6 @@ private Q_SLOTS:
     void sameConnection_selectQueries_data();
     void sameConnection_updateQueries();
     void sameConnection_updateQueries_data();
-    void sameConnection_multipleThreads_selectQueries();
-    void sameConnection_multipleThreads_selectQueries_data();
-    void sameConnection_multipleThreads_updateQueries();
-    void sameConnection_multipleThreads_updateQueries_data();
 
     // multpleConnections tests will all be multi threaded
     void multipleConnections_selectQueries();
@@ -527,111 +523,6 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries_data()
         100 << 100;
     QTest::newRow("1000 inserts, 1000 deletes") <<
         1000 << 1000;
-}
-
-void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries()
-{
-    QFETCH(int, testDataAmount);
-    QFETCH(int, numQueries);
-    QFETCH(int, numThreads);
-    const int dataReadyInterval = qMax(testDataAmount/100, 10);
-
-    QSparqlConnectionOptions options;
-    options.setDataReadyInterval(dataReadyInterval);
-    QSparqlConnection connection("QTRACKER_DIRECT", options);
-
-    QList<QThread*> createdThreads;
-    QList<ThreadObject*> threadObjects;
-    for (int i=0;i<numThreads;i++) {
-        QThread* newThread = new QThread;
-        createdThreads.append(newThread);
-
-        ThreadObject* threadObject = new ThreadObject;
-        threadObjects.append(threadObject);
-
-        threadObject->setConnection(&connection);
-        threadObject->setParameters(numQueries, testDataAmount);
-        threadObject->moveToThread(newThread);
-
-        // connect the threads started signal to the slot that does the work
-        QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
-    }
-    // start all the threads
-    Q_FOREACH(QThread* thread, createdThreads) {
-        thread->start();
-    }
-
-    waitForAllFinished(createdThreads, 15000*numThreads);
-    qDeleteAll(threadObjects);
-    qDeleteAll(createdThreads);
-}
-
-void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_selectQueries_data()
-{
-    createTrackerTestData();
-    QTest::addColumn<int>("testDataAmount");
-    QTest::addColumn<int>("numQueries");
-    QTest::addColumn<int>("numThreads");
-
-    QTest::newRow("10 queries, 2 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 2;
-    QTest::newRow("100 queries, 2 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 2;
-    QTest::newRow("10 queries, 10 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 10;
-    QTest::newRow("100 queries, 10 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 10;
-}
-
-void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries()
-{
-    QFETCH(int, numThreads);
-    QFETCH(int, numInserts);
-    QFETCH(int, numDeletes);
-
-    QSparqlConnection connection("QTRACKER_DIRECT");
-
-    QList<QThread*> createdThreads;
-    QList<UpdateObject*> updateObjects;
-    for (int i=0;i<numThreads;i++) {
-        QThread *newThread = new QThread;
-        createdThreads.append(newThread);
-
-        UpdateObject *updateObject = new UpdateObject(numInserts, numDeletes, i, true);
-        updateObjects.append(updateObject);
-
-        updateObject->setConnection(&connection);
-        updateObject->moveToThread(newThread);
-
-        // Connect the threads started signal to the slot that does the work
-        QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate()));
-    }
-    // start all the threads
-    Q_FOREACH(QThread* thread, createdThreads) {
-        thread->start();
-    }
-
-    waitForAllFinished(createdThreads, 15000*numThreads);
-    qDeleteAll(updateObjects);
-    qDeleteAll(createdThreads);
-}
-
-void tst_QSparqlTrackerDirectConcurrency::sameConnection_multipleThreads_updateQueries_data()
-{
-    QTest::addColumn<int>("numThreads");
-    QTest::addColumn<int>("numInserts");
-    QTest::addColumn<int>("numDeletes");
-
-    QTest::newRow("1 Thread, 10 inserts, 10 deletes") <<
-        1 << 10 << 10;
-    QTest::newRow("2 Threads, 100 inserts, 100 deletes") <<
-        2 << 100 << 100;
-    QTest::newRow("2 Threads, 1000 inserts, 1000 deletes") <<
-        2 << 1000 << 1000;
-    QTest::newRow("4 Threads, 100 inserts, 100 deletes") <<
-        4 << 100 << 100;
-    QTest::newRow("4 Threads, 1000 inserts, 1000 deletes") <<
-        4 << 1000 << 1000;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
