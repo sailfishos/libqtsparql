@@ -58,6 +58,34 @@ Rectangle {
         return hash;
     }
 
+    function insertContact() {
+        var insertQuery = "insert { <qmlInsert> a nco:PersonContact; "+
+                          "nie:isLogicalPartOf <qsparql-qml-tests>; "+
+                          "nco:nameGiven 'QML INSERT' }";
+        sparqlConnection.update(insertQuery);
+    }
+
+    function insertContactAsync() {
+        var insertQuery = "insert { <qmlInsert> a nco:PersonContact; "+
+                          "nie:isLogicalPartOf <qsparql-qml-tests>; "+
+                          "nco:nameGiven 'QML INSERT' }";
+        sparqlConnection.update(insertQuery, true);
+    }
+
+    function deleteContact() {
+        var deleteQuery = "delete { <qmlInsert> a nco:PersonContact } "+
+                          "where { <qmlInsert> a nco:PersonContact } ";
+
+        sparqlConnection.update(deleteQuery);
+    }
+
+    function deleteContactAsync() {
+        var deleteQuery = "delete { <qmlInsert> a nco:PersonContact } "+
+                          "where { <qmlInsert> a nco:PersonContact } ";
+
+        sparqlConnection.update(deleteQuery, true);
+    }
+
     function getStatus()
     {
         // return the property value here

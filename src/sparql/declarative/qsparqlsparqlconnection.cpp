@@ -126,7 +126,7 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
             resultList.append(resultHash);
         }
     }
-    delete result;
+    result->deleteLater();
     lastResult.clear();
     lastResult = resultList;
     Q_EMIT resultReady(lastResult);

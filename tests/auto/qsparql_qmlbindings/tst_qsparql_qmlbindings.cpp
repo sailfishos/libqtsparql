@@ -53,7 +53,6 @@ class tst_QSparqlQMLBindings : public QObject
 public:
     tst_QSparqlQMLBindings();
     virtual ~tst_QSparqlQMLBindings();
-
 public slots:
     void initTestCase();
     void cleanupTestCase();
@@ -65,6 +64,8 @@ private slots:
     void sparql_connection_test_data();
     void sparql_connection_select_query_test();
     void sparql_connection_select_query_async_test();
+    void sparql_connection_update_query_test(); //insert and delete
+    void sparql_connection_update_query_async_test();
     void sparql_connection_options_test();
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
@@ -134,6 +135,31 @@ bool loadQmlFile(QString fileName, QList<QPair<QString, QVariant> > contextPrope
         return false;
     }
     return true;
+}
+
+void compareResults(QVariant qmlResults, int resultSize, QString query)
+{
+    QSparqlConnection *connection = new QSparqlConnection("QTRACKER_DIRECT");
+    QSparqlResult *result = connection->exec(QSparqlQuery(query));
+    result->waitForFinished(); // for size();
+
+    QList<QVariant> list = qmlResults.toList();
+    QCOMPARE(list.length(), resultSize);
+    QHash<QString, QString> contactNamesValue;
+
+    for (int i=0; i<list.length();i++) {
+        QMap<QString, QVariant> resultMap = list[i].toMap();
+        // the result map is binding->value, store the binding
+        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
+    }
+
+    QCOMPARE(result->size(), resultSize);
+
+    while (result->next()) {
+        QCOMPARE(contactNamesValue[result->value(0).toString()], result->value(1).toString());
+    }
+    delete result;
+    delete connection;
 }
 
 }
@@ -231,28 +257,7 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
     QCOMPARE(status, Ready);
     // get the return value from qml
     QVariant returnValue = callMethod("runSelectQuery");
-
-    QList<QVariant> list = returnValue.toList();
-    QCOMPARE(list.length(), NUM_INSERTS);
-
-    QHash<QString, QString> contactNamesValue;
-
-    for (int i=0; i<list.length();i++) {
-        QMap<QString, QVariant> resultMap = list[i].toMap();
-        // the result map is binding->value, store the binding
-        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
-    }
-
-    //now validate against a QSparqlResult
-    QSparqlResult *r = connection->exec(QSparqlQuery(contactSelectQuery));
-    QVERIFY(!r->hasError());
-    r->waitForFinished();
-    QCOMPARE(r->size(), NUM_INSERTS);
-
-    while (r->next()) {
-        QCOMPARE(contactNamesValue[r->value(0).toString()], r->value(1).toString());
-    }
-    delete r;
+    compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
 }
 
 void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
@@ -263,10 +268,6 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
     bool timeout = false;
 
     QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
-
-    QSparqlConnection connection("QTRACKER_DIRECT");
-    QSparqlResult *result = connection.exec(QSparqlQuery(contactSelectQuery));
-    result->waitForFinished(); // we want to use size() later
 
     callMethod("runSelectQueryAsync");
     timer.start();
@@ -284,25 +285,53 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
     QVariant returnValue = callMethod("returnResults");
     QVariant returnValueFromSlot = callMethod("returnResultsFromSlot");
     QCOMPARE(returnValue, returnValueFromSlot);
-
-    // now compare the qml result with what was returned from the connection
-    QList<QVariant> list = returnValue.toList();
-    QCOMPARE(list.length(), NUM_INSERTS);
-    QHash<QString, QString> contactNamesValue;
-
-    for (int i=0; i<list.length();i++) {
-        QMap<QString, QVariant> resultMap = list[i].toMap();
-        // the result map is binding->value, store the binding
-        contactNamesValue[resultMap["u"].toString()] = resultMap["ng"].toString();
-    }
-
-    QCOMPARE(result->size(), NUM_INSERTS);
-    while (result->next()) {
-        QCOMPARE(contactNamesValue[result->value(0).toString()], result->value(1).toString());
-    }
-
-    delete result;
+    compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
+    compareResults(returnValueFromSlot, NUM_INSERTS, contactSelectQuery);
 }
+
+void tst_QSparqlQMLBindings::sparql_connection_update_query_test()
+{
+    sparql_connection_test_data();
+
+    callMethod("insertContact"); // inserts one new contact
+    QVariant returnValue = callMethod("runSelectQuery");
+    compareResults(returnValue, NUM_INSERTS+1, contactSelectQuery);
+
+    // now delete the result
+    callMethod("deleteContact");
+    returnValue = callMethod("runSelectQuery");
+    compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
+}
+
+void tst_QSparqlQMLBindings::sparql_connection_update_query_async_test()
+{
+    sparql_connection_test_data();
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+
+    QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
+    callMethod("insertContactAsync");
+    timer.start();
+    while (resultSpy.count() !=1 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(resultSpy.count(), 1);
+    QVariant returnValue = callMethod("runSelectQuery");
+    compareResults(returnValue, NUM_INSERTS+1, contactSelectQuery);
+
+    callMethod("deleteContactAsync");
+    timer.restart();
+    // we got a signal from "runSelectQuery" once the results are done, so need to
+    // wait for the signal from the delete query, hence 3
+    while (resultSpy.count() !=3 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(resultSpy.count(), 3);
+    returnValue = callMethod("runSelectQuery");
+    compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
+}
+
 
 void tst_QSparqlQMLBindings::sparql_connection_options_test()
 {
