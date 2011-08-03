@@ -106,6 +106,8 @@ public:
     QHash<QSparqlResult*, QPair<int,int> > pendingResults;
 
     ResultChecker()
+        // Need to set parent on signalMappers to ensure they are moved to test thread with this object
+        : dataReadyMapper(this), finishedMapper(this)
     {
         connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
         connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
