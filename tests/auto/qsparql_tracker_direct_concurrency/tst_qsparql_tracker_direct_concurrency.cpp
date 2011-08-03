@@ -70,7 +70,8 @@ private Q_SLOTS:
     // multpleConnections tests will all be multi threaded
     void multipleConnections_selectQueries();
     void multipleConnections_selectQueries_data();
-    //void multipleConnections_updateQueries();
+    void multipleConnections_updateQueries();
+    void multipleConnections_updateQueries_data();
 };
 
 namespace {
@@ -268,6 +269,7 @@ class UpdateObject : public QObject
     Q_OBJECT
 public:
     QSparqlConnection *connection;
+    QSparqlConnection *ownConnection;
     QList<QSparqlResult*> resultList;
     QSet<QObject*> pendingResults;
     QSignalMapper signalMapper;
@@ -277,8 +279,9 @@ public:
     bool inThread;
 
     UpdateObject(int numInserts, int numDeletes, int id, bool inThread = false)
-        : connection(0), numInserts(numInserts), numDeletes(numDeletes), id(id),
-        inThread(inThread)
+        : connection(0), ownConnection(0)
+        , signalMapper(this)  // Need to set parent on signalMapper to ensure it is moved to test thread with this object
+        , numInserts(numInserts), numDeletes(numDeletes), id(id), inThread(inThread)
     {
         connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
     }
@@ -293,11 +296,18 @@ public:
             QSparqlResult* result = connection->syncExec(deleteQuery);
             delete result;
         }
+
+        if (ownConnection) {
+            delete ownConnection;
+            ownConnection = connection = 0;
+        }
     }
 
     void setConnection(QSparqlConnection *connection)
     {
         this->connection = connection;
+        delete ownConnection;
+        ownConnection = 0;
     }
 
     void append(QSparqlResult* result)
@@ -321,6 +331,11 @@ public Q_SLOTS:
     {
         // we're not testing for errors here
         QVERIFY(numDeletes <= numInserts);
+
+        if (!connection) {
+            ownConnection = new QSparqlConnection("QTRACKER_DIRECT");
+            connection = ownConnection;
+        }
 
         const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
                                         "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
@@ -561,6 +576,53 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
         TEST_DATA_AMOUNT << 10 << 10;
     QTest::newRow("100 queries, 10 Threads") <<
         TEST_DATA_AMOUNT << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
+{
+    QFETCH(int, numThreads);
+    QFETCH(int, numInserts);
+    QFETCH(int, numDeletes);
+
+    QList<QThread*> createdThreads;
+    QList<UpdateObject*> updateObjects;
+    for (int i=0;i<numThreads;i++) {
+        QThread* newThread = new QThread;
+        createdThreads.append(newThread);
+
+        UpdateObject* updateObject = new UpdateObject(numInserts, numDeletes, i, true);
+        updateObjects.append(updateObject);
+        updateObject->moveToThread(newThread);
+
+        // Connect the threads started signal to the slot that does the work
+        QVERIFY( QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate())) );
+    }
+    // start all the threads
+    Q_FOREACH(QThread* thread, createdThreads) {
+        thread->start();
+    }
+
+    waitForAllFinished(createdThreads, 15000*numThreads);
+    qDeleteAll(updateObjects);
+    qDeleteAll(createdThreads);
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries_data()
+{
+    QTest::addColumn<int>("numThreads");
+    QTest::addColumn<int>("numInserts");
+    QTest::addColumn<int>("numDeletes");
+
+    QTest::newRow("1 Thread, 10 inserts, 10 deletes") <<
+        1 << 10 << 10;
+    QTest::newRow("2 Threads, 100 inserts, 100 deletes") <<
+        2 << 100 << 100;
+    QTest::newRow("2 Threads, 1000 inserts, 1000 deletes") <<
+        2 << 1000 << 1000;
+    QTest::newRow("4 Threads, 100 inserts, 100 deletes") <<
+        4 << 100 << 100;
+    QTest::newRow("4 Threads, 1000 inserts, 1000 deletes") <<
+        4 << 1000 << 1000;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectConcurrency )
