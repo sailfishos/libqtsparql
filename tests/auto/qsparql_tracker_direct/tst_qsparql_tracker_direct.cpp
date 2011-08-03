@@ -1105,11 +1105,14 @@ namespace {
 class DeleteResultOnFinished : public QObject
 {
     Q_OBJECT
+    public:
+        DeleteResultOnFinished(QSparqlResult *result) : r(result) {}
+        QSparqlResult *r;
     public Q_SLOTS:
-    void onFinished()
-    {
-        sender()->deleteLater();
-    }
+        void onFinished()
+        {
+            r->deleteLater();
+        }
 };
 
 }
@@ -1125,11 +1128,10 @@ void tst_QSparqlTrackerDirect::delete_later_with_select_result()
     QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
 
     // When we get the finished() signal of the result, do deleteLater.
-    DeleteResultOnFinished resultDeleter;
+    DeleteResultOnFinished resultDeleter(r);
     connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
 
     QSignalSpy finishedSpy(r, SIGNAL(finished()));
-
     // Spin the event loop so that the finished() signal arrives
     QTime timer;
     timer.start();
@@ -1159,7 +1161,7 @@ void tst_QSparqlTrackerDirect::delete_later_with_update_result()
     QSignalSpy destroyedSpy(r, SIGNAL(destroyed()));
 
     // When we get the finished() signal of the result, do deleteLater.
-    DeleteResultOnFinished resultDeleter;
+    DeleteResultOnFinished resultDeleter(r);
     connect(r, SIGNAL(finished()), &resultDeleter, SLOT(onFinished()));
 
     QSignalSpy finishedSpy(r, SIGNAL(finished()));

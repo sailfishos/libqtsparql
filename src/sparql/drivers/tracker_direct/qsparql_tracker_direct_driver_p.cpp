@@ -39,22 +39,21 @@
 
 #include "qsparql_tracker_direct.h"
 #include "qsparql_tracker_direct_driver_p.h"
-#include "qsparql_tracker_direct_result_p.h"
+#include "qsparql_tracker_direct_select_result_p.h"
 #include "qsparql_tracker_direct_sync_result_p.h"
 #include "qsparql_tracker_direct_update_result_p.h"
 
 #include <qsparqlconnection.h>
 
 #include <QtCore/qdatetime.h>
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qeventloop.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qsemaphore.h>
 
 QT_BEGIN_NAMESPACE
 
-// Helper functions used both by QTrackerDirectResult and
+// Helper functions used both by QTrackerDirectSelectResult and
 // QTrackerDirectSyncResult
 
 namespace {
@@ -165,36 +164,108 @@ gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////
-
-static void
-async_open_callback(GObject         * /*source_object*/,
-                    GAsyncResult    *result,
-                    gpointer         user_data)
+struct QTrackerDirectDriverConnectionData
 {
-    QTrackerDirectDriverPrivate *d = static_cast<QTrackerDirectDriverPrivate*>(user_data);
-    d->asyncOpenComplete(result);
-}
+    QTrackerDirectDriverConnectionData() : error(0), connection(0) { }
+
+    QTrackerDirectDriverConnectionData take()
+    {
+        QTrackerDirectDriverConnectionData result(*this);
+        this->error = 0;
+        this->connection = 0;
+        return result;
+    }
+
+    GError *error;
+    TrackerSparqlConnection *connection;
+};
+
+////////////////////////////////////////////////////////////////////////////
+class QTrackerDirectDriverConnectionOpen : public QObject, public QRunnable
+{
+    Q_OBJECT
+public:
+    QTrackerDirectDriverConnectionOpen()
+        : runSemaphore(1), runFinished(0)
+    {
+        setAutoDelete(false);
+    }
+
+    QTrackerDirectDriverConnectionData takeConnection()
+    {
+        return cd.take();
+    }
+
+    void runOrWait()
+    {
+        if (acquireRunSemaphore())
+        {
+            if (!runFinished)
+                run();
+            else
+                runSemaphore.release(1);
+        }
+        else
+            wait();
+    }
+
+    void queue(QThreadPool& threadPool)
+    {
+        if (acquireRunSemaphore())
+            threadPool.start(this);
+    }
+
+Q_SIGNALS:
+    void connectionOpened();
+
+private:
+    QTrackerDirectDriverConnectionData cd;
+    QSemaphore runSemaphore;
+    bool runFinished;
+
+    void run()
+    {
+        if (!runFinished) {
+            cd.connection = tracker_sparql_connection_get(0, &cd.error);
+            Q_EMIT connectionOpened();
+            runFinished = true;
+        }
+        runSemaphore.release(1);
+    }
+
+    void wait()
+    {
+        runSemaphore.acquire(1);
+        runSemaphore.release(1);
+    }
+
+    bool acquireRunSemaphore()
+    {
+        return runSemaphore.tryAcquire(1);
+    }
+};
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
     : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
-      asyncOpenCalled(false)
+      asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen)
 {
+    QObject::connect(connectionOpener, SIGNAL(connectionOpened()), this, SLOT(asyncOpenComplete()));
 }
 
 QTrackerDirectDriverPrivate::~QTrackerDirectDriverPrivate()
 {
+    delete connectionOpener;
 }
 
-void QTrackerDirectDriverPrivate::asyncOpenComplete(GAsyncResult *result)
+void QTrackerDirectDriverPrivate::asyncOpenComplete()
 {
-    if (!connection) {
-        GError * error = 0;
-        connection = tracker_sparql_connection_get_finish(result, &error);
-        checkConnectionError(connection, error);
+    if (connection == 0) {
+        QTrackerDirectDriverConnectionData cd = connectionOpener->takeConnection();
+        connection = cd.connection;
+        checkConnectionError(connection, cd.error);
+        asyncOpenCalled = true;
+        Q_EMIT driver->opened();
     }
-    asyncOpenCalled = true;
-    Q_EMIT driver->opened();
 }
 
 void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *conn, GError* gerr)
@@ -224,27 +295,13 @@ void QTrackerDirectDriverPrivate::onConnectionOpen(QObject* object, const char* 
 
 void QTrackerDirectDriverPrivate::waitForConnectionOpen()
 {
-    if (!asyncOpenCalled) {
-        if (QCoreApplication::instance()) {
-            QEventLoop loop;
-            QObject::connect(driver, SIGNAL(opened()), &loop, SLOT(quit()));
-            if (loop.exec() < 0)
-                qWarning() << "QTRACKER_DIRECT: Cannot wait for asynchronous connection opening, check the lifetime of your thread";
-        }
-        else {
-            qWarning() << "QTRACKER_DIRECT: QCoreApplication instance not found: cannot wait for asynchronous connection open";
-        }
-    }
+    connectionOpener->runOrWait();
+    asyncOpenComplete();
 }
 
-void QTrackerDirectDriverPrivate::openConnectionSync()
+void QTrackerDirectDriverPrivate::openConnection()
 {
-
-    if (!asyncOpenCalled && !connection) {
-        GError* error = 0;
-        this->connection = tracker_sparql_connection_get(0, &error);
-        checkConnectionError(this->connection, error);
-    }
+    connectionOpener->queue(threadPool);
 }
 
 QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
@@ -288,7 +345,6 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
     if (isOpen())
         close();
 
-    tracker_sparql_connection_get_async(0, async_open_callback, static_cast<gpointer>(d));
     setOpen(true);
     setOpenError(false);
 
@@ -308,6 +364,9 @@ bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
         d->threadPool.setMaxThreadCount(maxThreads);
     }
 
+    //Now start a thread to open the connection
+    d->openConnection();
+
     return true;
 }
 
@@ -315,11 +374,16 @@ void QTrackerDirectDriver::close()
 {
     Q_EMIT closing();
 
+    // We no longer want to emit any signals, since the driver is
+    // closing, so block all signals to prevent any exec methods being
+    // called
+    blockSignals(true);
+
     QMutexLocker connectionLocker(&(d->connectionMutex));
 
-    // Need to wait for the connection to open because there is no good way
-    // to cancel it synchronously
+    // We just check to see if we can get a semaphore here
     d->waitForConnectionOpen();
+
     if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
@@ -334,7 +398,6 @@ void QTrackerDirectDriver::close()
 QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QSparqlResult* result = 0;
-
     switch (options.executionMethod()) {
     case QSparqlQueryOptions::AsyncExec:
         result = asyncExec(query, type, options);
@@ -349,30 +412,27 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
 
 QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
+    QTrackerDirectResult *result = 0;
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        QTrackerDirectResult *result = new QTrackerDirectResult(d, query, type);
-        d->onConnectionOpen(result, "exec", SLOT(exec()));
-        return result;
+        result = new QTrackerDirectSelectResult(d, query, type);
     } else {
-        QTrackerDirectUpdateResult *result = new QTrackerDirectUpdateResult(d, query, type, options);
-        d->onConnectionOpen(result, "exec", SLOT(exec()));
-        return result;
+        result = new QTrackerDirectUpdateResult(d, query, type, options);
     }
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    d->onConnectionOpen(result, "exec", SLOT(exec()));
+    return result;
 }
 
 QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
-    QTrackerDirectSyncResult* result = new QTrackerDirectSyncResult(d, query, type, options);
-    if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        d->openConnectionSync();
-        result->exec();
-    } else if (type == QSparqlQuery::InsertStatement || type == QSparqlQuery::DeleteStatement) {
-        d->openConnectionSync();
-        result->update();
-    }
-
+    QTrackerDirectResult* result = new QTrackerDirectSyncResult(d, query, type, options);
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    d->waitForConnectionOpen();
+    result->exec();
     return result;
 }
 
 QT_END_NAMESPACE
+
+#include "qsparql_tracker_direct_driver_p.moc"

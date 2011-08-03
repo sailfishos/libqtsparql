@@ -41,55 +41,62 @@
 #define QSPARQL_TRACKER_DIRECT_RESULT_P_H
 
 #include <QtSparql/qsparqlresult.h>
-#include <QtSparql/qsparqlquery.h>
 
-#ifdef QT_PLUGIN
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT
-#else
-#define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT Q_SPARQL_EXPORT
-#endif
+#include <QtCore/qrunnable.h>
+#include <QtCore/qthreadpool.h>
+#include <QtCore/qsemaphore.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectResultPrivate;
+class QTrackerDirectQueryRunner;
 
-class Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT QTrackerDirectResult : public QSparqlResult
+class QTrackerDirectResult : public QSparqlResult
 {
     Q_OBJECT
-    friend class QTrackerDirectResultPrivate; // for emitting signals
+    friend class QTrackerDirectQueryRunner;
 public:
-    explicit QTrackerDirectResult(QTrackerDirectDriverPrivate* p,
-                                  const QString& query,
-                                  QSparqlQuery::StatementType type);
+    QTrackerDirectResult();
     ~QTrackerDirectResult();
 
-    // Implementation of the QSparqlResult interface
-    virtual void waitForFinished();
     virtual bool isFinished() const;
 
-    virtual QSparqlResultRow current() const;
-    virtual QSparqlBinding binding(int i) const;
-    virtual QVariant value(int i) const;
-    virtual int size() const;
-    virtual bool hasFeature(QSparqlResult::Feature feature) const;
+private:
+    // Will be called by the query runner to execute the query, results that don't
+    // need a thread to run in (sync) do not need to implement this
+    virtual void run() {}
+    virtual void stopAndWait() = 0;
 
-private Q_SLOTS:
-    void exec();
-    void startFetcher();
+protected:
+    QTrackerDirectDriverPrivate *driverPrivate;
+    QAtomicInt resultFinished;
+    QTrackerDirectQueryRunner *queryRunner;
+
+public Q_SLOTS:
+    virtual void exec() = 0;
     void driverClosing();
 
-private:
-    bool runQuery();
-    void terminate();
-    void stopAndWait();
-    bool fetchNextResult();
-    bool fetchBoolResult();
+};
 
-    QTrackerDirectResultPrivate* d;
-    friend class QTrackerDirectFetcherPrivate;
+class QTrackerDirectQueryRunner : public QRunnable
+{
+public:
+    QTrackerDirectResult *result;
+    QAtomicInt runFinished;
+    QSemaphore runSemaphore;
+    bool started;
+
+    QTrackerDirectQueryRunner(QTrackerDirectResult *result);
+    void runOrWait();
+    void queue(QThreadPool& threadPool);
+    void wait();
+
+private:
+    void run();
+    bool acquireRunSemaphore();
+
 };
 
 QT_END_NAMESPACE

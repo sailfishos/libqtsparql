@@ -37,29 +37,32 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_DIRECT_UPDATE_RESULT_P_H
-#define QSPARQL_TRACKER_DIRECT_UPDATE_RESULT_P_H
+#ifndef QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
+#define QSPARQL_TRACKER_DIRECT_SELECT_RESULT_P_H
 
 #include "qsparql_tracker_direct_result_p.h"
-#include <QtSparql/qsparqlqueryoptions.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qmutex.h>
+
+#include <tracker-sparql.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPrivate;
-class QTrackerDirectUpdateResultPrivate;
 
-class QTrackerDirectUpdateResult : public QTrackerDirectResult
+class QTrackerDirectSelectResult : public QTrackerDirectResult
 {
     Q_OBJECT
-    friend class QTrackerDirectUpdateResultPrivate;
 public:
-    explicit QTrackerDirectUpdateResult(QTrackerDirectDriverPrivate* p,
+    explicit QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
-                                  QSparqlQuery::StatementType type,
-                                  const QSparqlQueryOptions& options);
-    ~QTrackerDirectUpdateResult();
+                                  QSparqlQuery::StatementType type);
+    ~QTrackerDirectSelectResult();
+
+    Q_INVOKABLE void startFetcher();
 
     bool runQuery();
 
@@ -70,21 +73,29 @@ public:
     virtual QSparqlBinding binding(int i) const;
     virtual QVariant value(int i) const;
     virtual int size() const;
+    virtual bool hasFeature(QSparqlResult::Feature feature) const;
 
 public Q_SLOTS:
     virtual void exec();
 
 private:
-    Q_INVOKABLE void terminate();
-    QSparqlQueryOptions options;
+    void terminate();
+    bool fetchNextResult();
+    bool fetchBoolResult();
+    void emitDataReady(int totalCount);
 
-    // QTrackerDirectResult implementation
+    //QTrackerDirectResult implementation
     virtual void stopAndWait();
     virtual void run();
+
+    TrackerSparqlCursor* cursor;
+    mutable QMutex resultMutex;
+    QVector<QString> columnNames;
+    QList<QVector<QVariant> > results;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSPARQL_TRACKER_DIRECT_UPDATE_RESULT_P_H
+#endif // QSPARQL_TRACKER_DIRECT_RESULT_P_H
