@@ -162,10 +162,17 @@ class FinishedSignalReceiver : public QObject
 {
     Q_OBJECT
     bool finished;
+    QObject* expectedSender;
 
 public:
-    FinishedSignalReceiver() : finished(false)
+    FinishedSignalReceiver()
+        : finished(false), expectedSender(0)
     { }
+
+    void setExpectedSender(QObject* sender)
+    {
+        expectedSender = sender;
+    }
 
     void waitForFinished(int timeoutMs)
     {
@@ -179,7 +186,12 @@ public:
     }
 
 public slots:
-    void onFinished() { finished = true; }
+    void onFinished()
+    {
+        QVERIFY( !finished );
+        finished = true;
+        QCOMPARE( sender(), expectedSender );
+    }
 };
 
 void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool useAsyncObject)
@@ -192,6 +204,7 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
             if (!r->hasError()) {
                 FinishedSignalReceiver signalObject;
                 QObject::connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
+                signalObject.setExpectedSender(r);
                 signalObject.waitForFinished(2000);
             }
         } else {
@@ -1168,6 +1181,7 @@ void tst_QSparqlAPI::queryModel_test()
 
     FinishedSignalReceiver signalReceiver;
     connect(&model, SIGNAL(finished()), &signalReceiver, SLOT(onFinished()));
+    signalReceiver.setExpectedSender(&model);
     signalReceiver.waitForFinished(2000);
 
     QCOMPARE(model.rowCount(), expectedResultsSize);
