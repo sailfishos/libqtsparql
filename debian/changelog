@@ -1,3 +1,9 @@
+libqtsparql (0.1.1~unreleased) unstable; urgency=low
+
+  * 
+
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Thu, 4 Aug 2011 15:00:00 +0300
+
 libqtsparql (0.1.0) unstable; urgency=low
 
   * Fixes: NB#268310 - [TASK] Implement QtSparql asynchronous API in tracker direct driver with synchronous tracker-sparql API
