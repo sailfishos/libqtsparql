@@ -67,11 +67,13 @@ private Q_SLOTS:
     void sameConnection_updateQueries();
     void sameConnection_updateQueries_data();
 
-    // multpleConnections tests will all be multi threaded
     void multipleConnections_selectQueries();
     void multipleConnections_selectQueries_data();
-    void multipleConnections_updateQueries();
-    void multipleConnections_updateQueries_data();
+
+    void multipleConnections_multipleThreads_selectQueries();
+    void multipleConnections_multipleThreads_selectQueries_data();
+    void multipleConnections_multipleThreads_updateQueries();
+    void multipleConnections_multipleThreads_updateQueries_data();
 };
 
 namespace {
@@ -537,6 +539,53 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
 {
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
+    QFETCH(int, numConnections);
+    const int dataReadyInterval = qMax(testDataAmount/100, 10);
+
+    QList<QSparqlConnection*> connections;
+    QList<ResultChecker*> resultCheckers;
+
+    // Create the connections and start the queries
+    for (int i = 0; i < numConnections; ++i) {
+        QSparqlConnectionOptions options;
+        options.setDataReadyInterval(dataReadyInterval);
+        QSparqlConnection* conn = new QSparqlConnection("QTRACKER_DIRECT", options);
+        connections << conn;
+        ResultChecker* checker = new ResultChecker;
+        resultCheckers << checker;
+        startConcurrentQueries(*conn, *checker, numQueries, testDataAmount);
+    }
+
+    // Wait for all the queries to finish
+    Q_FOREACH(ResultChecker* checker, resultCheckers) {
+        QVERIFY(checker->waitForAllFinished(15000));
+    }
+
+    qDeleteAll(resultCheckers);
+    qDeleteAll(connections);
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
+{
+    createTrackerTestData();
+    QTest::addColumn<int>("testDataAmount");
+    QTest::addColumn<int>("numQueries");
+    QTest::addColumn<int>("numConnections");
+
+    QTest::newRow("10 queries, 2 connections") <<
+        TEST_DATA_AMOUNT << 10 << 2;
+    QTest::newRow("100 queries, 2 connections") <<
+        TEST_DATA_AMOUNT << 100 << 2;
+    QTest::newRow("10 queries, 10 connections") <<
+        TEST_DATA_AMOUNT << 10 << 10;
+    QTest::newRow("100 queries, 10 connections") <<
+        TEST_DATA_AMOUNT << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_selectQueries()
+{
+    QFETCH(int, testDataAmount);
+    QFETCH(int, numQueries);
     QFETCH(int, numThreads);
 
     QList<QThread*> createdThreads;
@@ -563,7 +612,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     qDeleteAll(createdThreads);
 }
 
-void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_selectQueries_data()
 {
     createTrackerTestData();
     QTest::addColumn<int>("testDataAmount");
@@ -580,7 +629,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
         TEST_DATA_AMOUNT << 100 << 10;
 }
 
-void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_updateQueries()
 {
     QFETCH(int, numThreads);
     QFETCH(int, numInserts);
@@ -609,7 +658,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
     qDeleteAll(createdThreads);
 }
 
-void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries_data()
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_updateQueries_data()
 {
     QTest::addColumn<int>("numThreads");
     QTest::addColumn<int>("numInserts");
