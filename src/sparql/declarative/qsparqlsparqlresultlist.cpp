@@ -22,13 +22,6 @@ void SparqlResultList::componentComplete()
     Q_EMIT statusChanged(modelStatus);
     // we will create the connection once the component has finished reading, that way
     // we know if any connection options have been set
-    if (connection && connection->isValid()) {
-        setQueryQML(QSparqlQuery(queryString), *connection);
-    } else {
-        lastErrorMessage = QLatin1String("Error opening connection");
-        modelStatus = Error;
-        Q_EMIT statusChanged(modelStatus);
-    }
 }
 
 void SparqlResultList::writeQuery(QString query)
@@ -46,6 +39,18 @@ void SparqlResultList::setConnection(SparqlConnection* connection)
     if (connection)
     {
         this->connection = connection;
+        connect(connection, SIGNAL(onCompleted()), this, SLOT(onConnectionComplete()));
+    }
+}
+
+void SparqlResultList::onConnectionComplete()
+{
+    if (connection && connection->isValid()) {
+        setQueryQML(QSparqlQuery(queryString), *connection);
+    } else {
+        lastErrorMessage = QLatin1String("Error opening connection");
+        modelStatus = Error;
+        Q_EMIT statusChanged(modelStatus);
     }
 }
 

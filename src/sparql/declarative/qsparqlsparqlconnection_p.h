@@ -74,6 +74,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void statusChanged(SparqlConnection::Status);
     void resultReady(QVariant);
+    void onCompleted();
 };
 
 QT_END_NAMESPACE

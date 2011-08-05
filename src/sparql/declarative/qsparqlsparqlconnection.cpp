@@ -37,6 +37,7 @@ void SparqlConnection::componentComplete()
         connectionStatus = Error;
     }
     Q_EMIT statusChanged(connectionStatus);
+    Q_EMIT onCompleted();
 }
 
 QString SparqlConnection::errorString() const

@@ -47,6 +47,7 @@ public:
 public Q_SLOTS:
     void onFinished();
     void onStarted();
+    void onConnectionComplete();
 Q_SIGNALS:
     void countChanged();
     void statusChanged(SparqlResultList::Status);
