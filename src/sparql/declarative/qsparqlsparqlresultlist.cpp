@@ -34,6 +34,21 @@ QString SparqlResultList::readQuery() const
     return queryString;
 }
 
+QVariant SparqlResultList::get(int rowNumber)
+{
+    QVariantMap map;
+    QSparqlResultRow row = resultRow(rowNumber);
+    for (int i=0; i<row.count(); i++) {
+        map.insert(row.binding(i).name(), row.value(i));
+    }
+    return map;
+}
+
+void SparqlResultList::reload()
+{
+    setQueryQML(QSparqlQuery(queryString), *connection);
+}
+
 void SparqlResultList::setConnection(SparqlConnection* connection)
 {
     if (connection)

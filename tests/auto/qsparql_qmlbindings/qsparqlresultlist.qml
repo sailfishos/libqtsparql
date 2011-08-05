@@ -56,5 +56,20 @@ Rectangle {
         return modelStatus
     }
 
+    function reloadModel()
+    {
+        sparqlResultList.reload();
+    }
+
+    function setQuery(query)
+    {
+        sparqlResultList.query = query;
+    }
+
+    function getRow(row)
+    {
+        return sparqlResultList.get(row);
+    }
+
 }
 

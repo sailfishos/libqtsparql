@@ -36,6 +36,8 @@ public:
     void componentComplete();
 
     Q_INVOKABLE QString errorString() const;
+    Q_INVOKABLE QVariant get(int rowNumber);
+    Q_INVOKABLE void reload();
     void setConnection(SparqlConnection* connection);
     SparqlConnection* getConnection();
     void writeQuery(QString query);

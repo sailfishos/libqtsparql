@@ -70,6 +70,7 @@ private slots:
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
     void sparql_query_model_test_data();
+    void sparql_query_model_get_test();
     void sparql_query_model_test_role_names();
 };
 
@@ -97,13 +98,23 @@ T getObject(QString objectName)
     return object;
 }
 
-QVariant callMethod(QString methodName)
+QVariant callMethod(QString methodName, QVariant parameter = QVariant())
 {
     QVariant returnValue;
-    QMetaObject::invokeMethod(qmlObject,
-                              methodName.toAscii(),
-                              Qt::DirectConnection,
-                              Q_RETURN_ARG(QVariant, returnValue));
+    if (parameter.isNull()) {
+        QMetaObject::invokeMethod(qmlObject,
+                                methodName.toAscii(),
+                                Qt::DirectConnection,
+                                Q_RETURN_ARG(QVariant, returnValue));
+    } else {
+        QMetaObject::invokeMethod(qmlObject,
+                                methodName.toAscii(),
+                                Qt::DirectConnection,
+                                Q_RETURN_ARG(QVariant, returnValue),
+                                Q_ARG(QVariant, parameter));
+    }
+
+
     return returnValue;
 }
 
@@ -390,7 +401,6 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QVERIFY(model->rowCount() != NUM_INSERTS);
     Status status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Loading);
-
     timer.start();
 
     while ((countSpy.count() != NUM_INSERTS || readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
@@ -420,11 +430,13 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     // Signal spy should now emit twice more, one for the clearing of the model
     // and another for the one contact the query adds
     timer.restart();
-    while ((countSpy.count() != NUM_INSERTS+2 ||readySpy.count() != 2) && !(timeout = (timer.elapsed() > timeoutMs)))
+    countSpy.clear();
+    readySpy.clear();
+    while ((countSpy.count() != 1 ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
         QTest::qWait(100);
     QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), NUM_INSERTS+2);
-    QCOMPARE(readySpy.count(), 2);
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(readySpy.count(), 1);
 
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);
@@ -433,6 +445,29 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 
     QCOMPARE(model->rowCount(), 1);
     QCOMPARE(returnValue.toInt(), 1);
+
+    // now test reload(), the query should be the original one, since the "query" property was not updated
+    callMethod("reloadModel");
+    timer.restart();
+    countSpy.clear();
+    readySpy.clear();
+    while ((countSpy.count() != NUM_INSERTS ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(countSpy.count(), NUM_INSERTS);
+    QCOMPARE(readySpy.count(), 1);
+
+    // now test reload() after setting the query to select one contact
+    callMethod("setQuery", selectOneContact);
+    callMethod("reloadModel");
+    timer.restart();
+    countSpy.clear();
+    readySpy.clear();
+    while ((countSpy.count() != 1 ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    //QVERIFY(!timeout);
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(readySpy.count(), 1);
 
     // verify the model is deleted when the QML object is destroyed
     qmlCleanup();
@@ -444,6 +479,39 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_data()
     QList<QPair<QString, QVariant> > contextProperties;
     contextProperties.append(qMakePair(QString("sparqlQueryString"),QVariant(contactSelectQuery)));
     QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+}
+
+void tst_QSparqlQMLBindings::sparql_query_model_get_test()
+{
+    sparql_query_model_test_data();
+    QSignalSpy countSpy(qmlObject, SIGNAL(modelCountChanged()));
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+
+    QSparqlQueryModel *model =
+        getObject<QSparqlQueryModel *>("queryModel");
+
+    // wait for the model to finish
+    timer.start();
+    while (countSpy.count() != NUM_INSERTS && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(countSpy.count(), NUM_INSERTS);
+    // now check that the result from get(i) is the same
+    // as the result from model.getRow()
+    for (int i=0;i<model->rowCount();i++) {
+        QSparqlResultRow modelRow = model->resultRow(i);
+        QVariantMap row = callMethod("getRow", i).toMap();
+
+        QString binding0 = modelRow.binding(0).name();
+        QString binding1 = modelRow.binding(1).name();
+        QVariant value0 = modelRow.value(0);
+        QVariant value1 = modelRow.value(1);
+
+        QCOMPARE(row[binding0], value0);
+        QCOMPARE(row[binding1], value1);
+    }
 }
 
 void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
