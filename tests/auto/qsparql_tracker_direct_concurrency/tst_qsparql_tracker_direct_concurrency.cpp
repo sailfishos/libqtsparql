@@ -123,6 +123,8 @@ public:
 
     void append(QSparqlResult *r, const QPair<int, int>& range)
     {
+        QVERIFY( r );
+        QVERIFY( !r->hasError() );
         dataReadyMapper.setMapping(r, r);
         connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
         finishedMapper.setMapping(r, r);
@@ -166,9 +168,14 @@ public Q_SLOTS:
     void onFinished(QObject* mappedResult)
     {
         QSparqlResult *result = qobject_cast<QSparqlResult*>(mappedResult);
+        QVERIFY( result );
+        QVERIFY( !result->hasError() );
+        QVERIFY( pendingResults.contains(result) );
+
         const QPair<int, int> resultRange = pendingResults.value(result);
         const int expectedResultSize = (resultRange.second - resultRange.first) + 1;
         QCOMPARE(result->size(), expectedResultSize);
+
         // the results should have been fully nexted in the data ready function
         QCOMPARE(result->pos(), int(QSparql::AfterLastRow));
         // go back through the results and validate that they are in range
@@ -181,6 +188,7 @@ public Q_SLOTS:
         }
         // now make sure the results counted match the size
         QCOMPARE(resultCount, expectedResultSize);
+
         pendingResults.remove(result);
         if (pendingResults.empty())
             Q_EMIT allFinished();
