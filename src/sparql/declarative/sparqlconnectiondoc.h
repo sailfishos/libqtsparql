@@ -1,7 +1,7 @@
 /*!
     \page qmlSparqlConnection SparqlConnection
     \brief Provides a QML binding for QSparqlConnection. The connection can be used to issue SPARQL queries
-    directly from javascript, or as a connection for the ListView model SparqlResultList.
+    directly from javascript, or as a connection for the ListView model \ref qmlSparqlResultList
 
     \code
     import QtSparql 1.0
@@ -34,7 +34,7 @@
     \anchor qmlPropertyStatus
     <table><tr><th>status : enumeration \a read-only</th></tr></table>
     Specifies the connection status, which can be one of the following:
-        \li Null - Connection has not been estabilished
+        \li Null - Connection has not been established
         \li Ready - Connection is ready
         \li Loading - Connection opening is established and waiting for completion
         \li Error - There was an error in the connection opening, or an error with a query
@@ -73,7 +73,7 @@
     \anchor qmlPropertyResult
     <table><tr><th>result : variant \a read-only </th></tr></table>
 
-    Stores the current result after executing a query with \ref qmlMethodSelect "select()". This is a convinence
+    Stores the current result after executing a query with \ref qmlMethodSelect "select()". This is a convenience
     property to allow for a common function to be used for both synchronous and asynchronous queries. When a new result
     is ready, a resultReady() signal will be emitted. E.g :
     \code
@@ -165,7 +165,7 @@
 
     \subsection asyncQueries Asynchronous Queries
 
-    Queries may aslo be executed asynchronously, and processed once they have been completed.
+    Queries may also be executed asynchronously, and processed once they have been completed.
     This is convenient if you intend to issue large queries with the connection, as any call to
     \ref qmlMethodSelect "select()" or \ref qmlMethodUpdate "update()" will not block. This is done by setting the
     async paramater to true for both \ref qmlMethodSelect "select()" and \ref qmlMethodUpdate "update()".
