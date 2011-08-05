@@ -397,6 +397,8 @@ private Q_SLOTS:
         for (int i=0;i<numInserts;i++) {
             QSparqlQuery insertQuery(insertTemplate.arg(i).arg(id), QSparqlQuery::InsertStatement);
             QSparqlResult *result = connection->exec(insertQuery);
+            QVERIFY( result );
+            QVERIFY( !result->hasError() );
             appendPendingResult(result, &updateFinishedMapper);
         }
     }
@@ -405,6 +407,8 @@ private Q_SLOTS:
     {
         QSparqlResult* result = connection->exec(QSparqlQuery(selectTemplate().arg(id)));
         connect(result, SIGNAL(finished()), this, SLOT(validateUpdateResult()));
+        QVERIFY( result );
+        QVERIFY( !result->hasError() );
         resultList.append(result);
     }
 
@@ -421,6 +425,8 @@ private Q_SLOTS:
         for (int i=0;i<numDeletes;i++) {
             QSparqlQuery deleteQuery(deleteTemplate.arg(i).arg(id), QSparqlQuery::DeleteStatement);
             QSparqlResult* result = connection->exec(deleteQuery);
+            QVERIFY( result );
+            QVERIFY( !result->hasError() );
             appendPendingResult(result, &deleteFinishedMapper);
         }
     }
@@ -428,6 +434,8 @@ private Q_SLOTS:
     void startValidateDeletion()
     {
         QSparqlResult* result = connection->exec(QSparqlQuery(selectTemplate().arg(id)));
+        QVERIFY( result );
+        QVERIFY( !result->hasError() );
         connect(result, SIGNAL(finished()), this, SLOT(validateDeleteResult()));
         resultList.append(result);
     }
@@ -440,12 +448,14 @@ private Q_SLOTS:
 
     void onUpdateFinished(QObject* mappedResult)
     {
+        checkIsPendingResult(mappedResult);
         if (removePendingResultWasLast(mappedResult))
             Q_EMIT updatesComplete();
     }
 
     void onDeleteFinished(QObject* mappedResult)
     {
+        checkIsPendingResult(mappedResult);
         if (removePendingResultWasLast(mappedResult))
             Q_EMIT deletionsComplete();
     }
@@ -465,10 +475,18 @@ private:
 
     void appendPendingResult(QSparqlResult* result, QSignalMapper* signalMapper)
     {
+        QVERIFY( !pendingResults.contains(result) );
         resultList.append(result);
         pendingResults.insert(result);
         signalMapper->setMapping(result,result);
         connect(result, SIGNAL(finished()), signalMapper, SLOT(map()));
+    }
+
+    void checkIsPendingResult(QObject* mappedResult) const
+    {
+        QSparqlResult* result = qobject_cast<QSparqlResult*>(mappedResult);
+        QVERIFY( result );
+        QVERIFY( pendingResults.contains(result) );
     }
 
     bool removePendingResultWasLast(QObject* mappedResult)
@@ -481,6 +499,7 @@ private:
     void doValidateUpdateResult()
     {
         QSparqlResult* result = resultList.back();
+        QVERIFY( !result->hasError() );
         QHash<QString, QString> contactNameValues;
         QCOMPARE(result->size(), numInserts);
         while (result->next()) {
@@ -495,6 +514,7 @@ private:
     void doValidateDeleteResult()
     {
         QSparqlResult* result = resultList.back();
+        QVERIFY( !result->hasError() );
         QCOMPARE(result->size(), numInserts-numDeletes);
         QHash<QString, QString> contactNameValues;
         while (result->next()) {
