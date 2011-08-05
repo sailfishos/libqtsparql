@@ -136,9 +136,10 @@ void QTrackerDirectUpdateResult::waitForFinished()
 
 void QTrackerDirectUpdateResult::terminate()
 {
-    resultFinished = 1;
-    Q_EMIT finished();
-    this->disconnect(SIGNAL(finished()));
+    if (!resultFinished) {
+        resultFinished = 1;
+        Q_EMIT finished();
+    }
 }
 
 int QTrackerDirectUpdateResult::size() const
