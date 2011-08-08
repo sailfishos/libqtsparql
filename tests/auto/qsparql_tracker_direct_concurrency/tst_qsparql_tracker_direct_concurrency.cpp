@@ -197,7 +197,7 @@ public Q_SLOTS:
 
 void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount);
 
-class ThreadObject : public QObject
+class ThreadQueryRunner : public QObject
 {
     Q_OBJECT
 
@@ -210,12 +210,12 @@ class ThreadObject : public QObject
     int testDataSize;
 
 public:
-    ThreadObject()
+    ThreadQueryRunner()
         : connection(0), ownConnection(0), resultChecker(0), ownResultChecker(0)
     {
     }
 
-    ~ThreadObject()
+    ~ThreadQueryRunner()
     {
         cleanup();
     }
@@ -713,18 +713,18 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     QFETCH(int, numThreads);
 
     QList<QThread*> createdThreads;
-    QList<ThreadObject*> threadObjects;
+    QList<ThreadQueryRunner*> threadQueryRunners;
     for (int i=0;i<numThreads;i++) {
         QThread *newThread = new QThread;
         createdThreads.append(newThread);
 
-        ThreadObject *threadObject = new ThreadObject;
-        threadObjects.append(threadObject);
-        threadObject->setParameters(numQueries, testDataAmount);
-        threadObject->moveToThread(newThread);
+        ThreadQueryRunner *threadQueryRunner = new ThreadQueryRunner;
+        threadQueryRunners.append(threadQueryRunner);
+        threadQueryRunner->setParameters(numQueries, testDataAmount);
+        threadQueryRunner->moveToThread(newThread);
 
         // Connect the threads started signal to the slot that does the work
-        QObject::connect(newThread, SIGNAL(started()), threadObject, SLOT(startQueries()));
+        QObject::connect(newThread, SIGNAL(started()), threadQueryRunner, SLOT(startQueries()));
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
@@ -732,7 +732,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     }
 
     waitForAllFinished(createdThreads, 15000*numThreads);
-    qDeleteAll(threadObjects);
+    qDeleteAll(threadQueryRunners);
     qDeleteAll(createdThreads);
 }
 
