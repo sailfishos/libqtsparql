@@ -46,7 +46,7 @@ UpdateTester::UpdateTester(int id)
       // Need to set parents on signalMappers to ensure ther are moved to test thread with this object
     , updateFinishedMapper(this)
     , deleteFinishedMapper(this)
-    , id(id), waiting(false)
+    , id(id), isFinished(false)
 {
     connect(&updateFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onUpdateFinished(QObject*)));
     connect(&deleteFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDeleteFinished(QObject*)));
@@ -68,8 +68,7 @@ void UpdateTester::setConnection(QSparqlConnection *connection)
 
 void UpdateTester::waitForFinished()
 {
-    waiting = true;
-    while (waiting)
+    while (!isFinished)
     {
         QTest::qWait(100);
     }
@@ -203,7 +202,7 @@ void UpdateTester::onDeleteFinished(QObject* mappedResult)
 
 void UpdateTester::finish()
 {
-    waiting = false;  // see waitForFinished()
+    isFinished = true;
     Q_EMIT finished();
 }
 

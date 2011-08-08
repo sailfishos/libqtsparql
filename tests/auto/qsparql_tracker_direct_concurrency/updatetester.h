@@ -59,7 +59,7 @@ class UpdateTester : public QObject
     int numInserts;
     int numDeletes;
     int id;
-    bool waiting;
+    bool isFinished;
 
 public:
     UpdateTester(int id);
