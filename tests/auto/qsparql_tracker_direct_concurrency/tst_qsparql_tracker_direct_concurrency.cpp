@@ -276,7 +276,7 @@ private Q_SLOTS:
 
 };
 
-class UpdateObject : public QObject
+class UpdateTester : public QObject
 {
     Q_OBJECT
     QSparqlConnection *connection;
@@ -291,7 +291,7 @@ class UpdateObject : public QObject
     bool waiting;
 
 public:
-    UpdateObject(int id)
+    UpdateTester(int id)
         : connection(0), ownConnection(0)
           // Need to set parents on signalMappers to ensure ther are moved to test thread with this object
         , updateFinishedMapper(this)
@@ -640,10 +640,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
     QFETCH(int, numDeletes);
     QSparqlConnection connection("QTRACKER_DIRECT");
 
-    UpdateObject updateObject(1);
-    updateObject.setParameters(numInserts, numDeletes);
-    updateObject.setConnection(&connection);
-    updateObject.run();
+    UpdateTester updateTester(1);
+    updateTester.setParameters(numInserts, numDeletes);
+    updateTester.setConnection(&connection);
+    updateTester.run();
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries_data()
@@ -760,15 +760,15 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_up
     QFETCH(int, numDeletes);
 
     QList<QThread*> createdThreads;
-    QList<UpdateObject*> updateObjects;
+    QList<UpdateTester*> updateTesters;
     for (int i=0;i<numThreads;i++) {
         QThread* newThread = new QThread;
         createdThreads.append(newThread);
 
-        UpdateObject* updateObject = new UpdateObject(i);
-        updateObject->setParameters(numInserts, numDeletes);
-        updateObjects.append(updateObject);
-        updateObject->startInThread(newThread);
+        UpdateTester* updateTester = new UpdateTester(i);
+        updateTester->setParameters(numInserts, numDeletes);
+        updateTesters.append(updateTester);
+        updateTester->startInThread(newThread);
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
@@ -776,7 +776,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_up
     }
 
     waitForAllFinished(createdThreads, 15000*numThreads);
-    qDeleteAll(updateObjects);
+    qDeleteAll(updateTesters);
     qDeleteAll(createdThreads);
 }
 
