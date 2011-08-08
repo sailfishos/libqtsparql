@@ -279,40 +279,34 @@ private Q_SLOTS:
 class UpdateObject : public QObject
 {
     Q_OBJECT
-public:
     QSparqlConnection *connection;
     QSparqlConnection *ownConnection;
     QList<QSparqlResult*> resultList;
-    QSet<QObject*> pendingResults;
-    QSignalMapper signalMapper;
+    QSet<QSparqlResult*> pendingResults;
+    QSignalMapper updateFinishedMapper;
+    QSignalMapper deleteFinishedMapper;
     int numInserts;
     int numDeletes;
     int id;
-    bool inThread;
+    bool waiting;
 
-    UpdateObject(int numInserts, int numDeletes, int id, bool inThread = false)
+public:
+    UpdateObject(int id)
         : connection(0), ownConnection(0)
-        , signalMapper(this)  // Need to set parent on signalMapper to ensure it is moved to test thread with this object
-        , numInserts(numInserts), numDeletes(numDeletes), id(id), inThread(inThread)
+          // Need to set parents on signalMappers to ensure ther are moved to test thread with this object
+        , updateFinishedMapper(this)
+        , deleteFinishedMapper(this)
+        , id(id), waiting(false)
     {
-        connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
+        connect(&updateFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onUpdateFinished(QObject*)));
+        connect(&deleteFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDeleteFinished(QObject*)));
     }
 
-    void cleanup()
+    void setParameters(int numInserts, int numDeletes)
     {
-        if (numInserts-numDeletes != 0) {
-
-            QString deleteString = "DELETE { ?u a nco:PersonContact }"
-                                  " WHERE { ?u a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%1> . }";
-            QSparqlQuery deleteQuery(deleteString.arg(id), QSparqlQuery::DeleteStatement);
-            QSparqlResult* result = connection->syncExec(deleteQuery);
-            delete result;
-        }
-
-        if (ownConnection) {
-            delete ownConnection;
-            ownConnection = connection = 0;
-        }
+        QVERIFY(numDeletes <= numInserts);
+        this->numInserts = numInserts;
+        this->numDeletes = numDeletes;
     }
 
     void setConnection(QSparqlConnection *connection)
@@ -322,81 +316,191 @@ public:
         ownConnection = 0;
     }
 
-    void append(QSparqlResult* result)
-    {
-        resultList.append(result);
-        pendingResults.insert(result);
-        signalMapper.setMapping(result,result);
-        connect(result, SIGNAL(finished()), &signalMapper, SLOT(map()));
-    }
-
     void waitForFinished()
     {
-        while (!pendingResults.empty())
+        waiting = true;
+        while (waiting)
         {
             QTest::qWait(100);
         }
     }
 
-public Q_SLOTS:
-    void runUpdate()
+    void startInThread(QThread* thread)
     {
-        // we're not testing for errors here
-        QVERIFY(numDeletes <= numInserts);
+        this->moveToThread(thread);
+        connect(thread, SIGNAL(started()), this, SLOT(runInThread()));
+    }
 
+Q_SIGNALS:
+    void updatesComplete();
+    void validateUpdateComplete();
+    void deletionsComplete();
+    void validateDeletionComplete();
+    void finished();
+
+public Q_SLOTS:
+    void start()
+    {
+        connect(this, SIGNAL(updatesComplete()), this, SLOT(startValidateUpdate()));
+        connect(this, SIGNAL(validateUpdateComplete()), this, SLOT(startDeletions()));
+        connect(this, SIGNAL(deletionsComplete()), this, SLOT(startValidateDeletion()));
+        connect(this, SIGNAL(validateDeletionComplete()), this, SLOT(finish()));
+        initConnection();
+        startUpdates();
+    }
+
+    void run()
+    {
+        start();
+        waitForFinished();
+        cleanup();
+    }
+
+    void runInThread()
+    {
+        run();
+        this->thread()->quit();
+    }
+
+    void cleanup()
+    {
+        if (connection && numInserts-numDeletes > 0) {
+            QString deleteTemplate = "DELETE { ?u a nco:PersonContact }"
+                                  " WHERE { ?u a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%1> . }";
+            QSparqlQuery deleteQuery(deleteTemplate.arg(id), QSparqlQuery::DeleteStatement);
+            QSparqlResult* result = connection->syncExec(deleteQuery);
+            delete result;
+        }
+
+        qDeleteAll(resultList);
+        resultList.clear();
+
+        if (ownConnection) {
+            delete ownConnection;
+            ownConnection = connection = 0;
+        }
+    }
+
+private Q_SLOTS:
+    void initConnection()
+    {
         if (!connection) {
             ownConnection = new QSparqlConnection("QTRACKER_DIRECT");
             connection = ownConnection;
         }
+    }
 
+    void startUpdates()
+    {
         const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
                                         "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
-        const QString selectTemplate = "select ?u ?ng ?nf { ?u a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%1>;"
-                                        "nco:nameGiven ?ng; nco:nameFamily ?nf . }";
-        const QString deleteTemplate = "delete { <addeduri00%1-%2> a nco:PersonContact }"
-                                       " WHERE { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2> . }";
-
         for (int i=0;i<numInserts;i++) {
             QSparqlQuery insertQuery(insertTemplate.arg(i).arg(id), QSparqlQuery::InsertStatement);
             QSparqlResult *result = connection->exec(insertQuery);
-            append(result);
+            appendPendingResult(result, &updateFinishedMapper);
         }
+    }
 
-        waitForFinished();
+    void startValidateUpdate()
+    {
+        QSparqlResult* result = connection->exec(QSparqlQuery(selectTemplate().arg(id)));
+        connect(result, SIGNAL(finished()), this, SLOT(validateUpdateResult()));
+        resultList.append(result);
+    }
 
+    void validateUpdateResult()
+    {
+        doValidateUpdateResult();
+        Q_EMIT validateUpdateComplete();
+    }
+
+    void startDeletions()
+    {
+        const QString deleteTemplate = "delete { <addeduri00%1-%2> a nco:PersonContact }"
+                                       " WHERE { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2> . }";
+        for (int i=0;i<numDeletes;i++) {
+            QSparqlQuery deleteQuery(deleteTemplate.arg(i).arg(id), QSparqlQuery::DeleteStatement);
+            QSparqlResult* result = connection->exec(deleteQuery);
+            appendPendingResult(result, &deleteFinishedMapper);
+        }
+    }
+
+    void startValidateDeletion()
+    {
+        QSparqlResult* result = connection->exec(QSparqlQuery(selectTemplate().arg(id)));
+        connect(result, SIGNAL(finished()), this, SLOT(validateDeleteResult()));
+        resultList.append(result);
+    }
+
+    void validateDeleteResult()
+    {
+        doValidateDeleteResult();
+        Q_EMIT validateDeletionComplete();
+    }
+
+    void onUpdateFinished(QObject* mappedResult)
+    {
+        if (removePendingResultWasLast(mappedResult))
+            Q_EMIT updatesComplete();
+    }
+
+    void onDeleteFinished(QObject* mappedResult)
+    {
+        if (removePendingResultWasLast(mappedResult))
+            Q_EMIT deletionsComplete();
+    }
+
+    void finish()
+    {
+        waiting = false;  // see waitForFinished()
+        Q_EMIT finished();
+    }
+
+private:
+    static QString selectTemplate()
+    {
+        return QString("select ?u ?ng ?nf { ?u a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%1>;"
+                            "nco:nameGiven ?ng; nco:nameFamily ?nf . }");
+    }
+
+    void appendPendingResult(QSparqlResult* result, QSignalMapper* signalMapper)
+    {
+        resultList.append(result);
+        pendingResults.insert(result);
+        signalMapper->setMapping(result,result);
+        connect(result, SIGNAL(finished()), signalMapper, SLOT(map()));
+    }
+
+    bool removePendingResultWasLast(QObject* mappedResult)
+    {
+        QSparqlResult* result = qobject_cast<QSparqlResult*>(mappedResult);
+        pendingResults.remove(result);
+        return pendingResults.isEmpty();
+    }
+
+    void doValidateUpdateResult()
+    {
+        QSparqlResult* result = resultList.back();
         QHash<QString, QString> contactNameValues;
-        // validate the results
-        // we are not testing select queries so use exec/waitForFinished
-        QSparqlResult *result = connection->exec(QSparqlQuery(selectTemplate.arg(id)));
-        result->waitForFinished();
         QCOMPARE(result->size(), numInserts);
         while (result->next()) {
             contactNameValues[result->value(0).toString()] = result->value(1).toString();
         }
-        delete result;
         QCOMPARE(contactNameValues.size(), numInserts);
         for(int i=0; i<numInserts; i++) {
             QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
         }
-        contactNameValues.clear();
+    }
 
-        // now delete the results
-        for (int i=0;i<numDeletes;i++) {
-            QSparqlQuery deleteQuery(deleteTemplate.arg(i).arg(id), QSparqlQuery::DeleteStatement);
-            QSparqlResult *result = connection->exec(deleteQuery);
-            append(result);
-        }
-        waitForFinished();
-
-        // verify the results now
-        result = connection->exec(QSparqlQuery(selectTemplate.arg(id)));
-        result->waitForFinished();
+    void doValidateDeleteResult()
+    {
+        QSparqlResult* result = resultList.back();
         QCOMPARE(result->size(), numInserts-numDeletes);
+        QHash<QString, QString> contactNameValues;
         while (result->next()) {
             contactNameValues[result->value(0).toString()] = result->value(1).toString();
         }
-        QCOMPARE(result->size(), numInserts-numDeletes);
-        delete result;
+        QCOMPARE(contactNameValues.size(), numInserts-numDeletes);
         // number of deletes might be less than the number of inserts, we delete from 0 -> numDeletes-1, so
         int startFrom = numInserts - numDeletes;
         if (startFrom != 0) {
@@ -404,15 +508,6 @@ public Q_SLOTS:
                 QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
             }
         }
-
-        cleanup();
-        if (inThread)
-            this->thread()->quit();
-    }
-
-    void onFinished(QObject* result)
-    {
-        pendingResults.remove(result);
     }
 };
 
@@ -525,9 +620,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
     QFETCH(int, numDeletes);
     QSparqlConnection connection("QTRACKER_DIRECT");
 
-    UpdateObject updateObject(numInserts, numDeletes, 1);
+    UpdateObject updateObject(1);
+    updateObject.setParameters(numInserts, numDeletes);
     updateObject.setConnection(&connection);
-    updateObject.runUpdate();
+    updateObject.run();
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries_data()
@@ -649,12 +745,10 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_up
         QThread* newThread = new QThread;
         createdThreads.append(newThread);
 
-        UpdateObject* updateObject = new UpdateObject(numInserts, numDeletes, i, true);
+        UpdateObject* updateObject = new UpdateObject(i);
+        updateObject->setParameters(numInserts, numDeletes);
         updateObjects.append(updateObject);
-        updateObject->moveToThread(newThread);
-
-        // Connect the threads started signal to the slot that does the work
-        QVERIFY( QObject::connect(newThread, SIGNAL(started()), updateObject, SLOT(runUpdate())) );
+        updateObject->startInThread(newThread);
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
