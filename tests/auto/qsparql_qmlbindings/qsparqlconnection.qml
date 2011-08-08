@@ -27,6 +27,13 @@ Rectangle {
        return sparqlConnection.select(queryString);
     }
 
+    function runConstructQuery()
+    {
+        // will result in error, since construct queries are not
+        // supported by tracker
+        return sparqlConnection.construct(queryString);
+    }
+
     function runSelectQueryAsync()
     {
         sparqlConnection.resultReady.connect(asyncResultReady);
@@ -92,6 +99,11 @@ Rectangle {
         // that way we can also check to make sure
         // the notify for Status is working
         return connectionStatus
+    }
+
+    function getLastError()
+    {
+        return sparqlConnection.errorString();
     }
 }
 

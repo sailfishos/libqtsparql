@@ -50,10 +50,7 @@ QString SparqlConnection::errorString() const
 QVariant SparqlConnection::select(QString queryString, bool async)
 {
     QSparqlQuery query(queryString);
-    if (async)
-        return runQueryAsync(query);
-    else
-        return runQuerySync(query);
+    return runQuery(query, async);
 }
 
 QVariant SparqlConnection::update(QString queryString, bool async)
@@ -61,41 +58,37 @@ QVariant SparqlConnection::update(QString queryString, bool async)
     // inserts and deletes are both update queries, and run in the same
     // way, so it doesn't matter if this is an insert or delete statement
     QSparqlQuery query(queryString, QSparqlQuery::InsertStatement);
-    if (async)
-        return runQueryAsync(query);
-    else
-        return runQuerySync(query);
+    return runQuery(query, async);
+}
+
+QVariant SparqlConnection::construct(QString queryString, bool async)
+{
+    QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
+    return runQuery(query, async);
+}
+
+QVariant SparqlConnection::runQuery(QSparqlQuery query, bool async)
+{
+    if (!isValid()) {
+        return -1;
+    }
+    connectionStatus = Ready;
+    Q_EMIT statusChanged(connectionStatus);
+
+    if (async) {
+        asyncResult = exec(query);
+        connect(asyncResult, SIGNAL(finished()), this, SLOT(onResultFinished()));
+        lastResult = 0;
+    } else {
+        QSparqlResult *result = syncExec(query);
+        return resultToVariant(result);
+    }
+    return 0;
 }
 
 QVariant SparqlConnection::getResult()
 {
     return lastResult;
-}
-
-QVariant SparqlConnection::runQuerySync(QSparqlQuery query)
-{
-    if (!isValid()) {
-        return -1;
-    }
-    connectionStatus = Ready;
-    Q_EMIT statusChanged(connectionStatus);
-
-    QSparqlResult *result = syncExec(query);
-    return resultToVariant(result);
-}
-
-QVariant SparqlConnection::runQueryAsync(QSparqlQuery query)
-{
-    if (!isValid()) {
-        return -1;
-    }
-    connectionStatus = Ready;
-    Q_EMIT statusChanged(connectionStatus);
-
-    asyncResult = exec(query);
-    connect(asyncResult, SIGNAL(finished()), this, SLOT(onResultFinished()));
-    lastResult = 0;
-    return 0;
 }
 
 void SparqlConnection::onResultFinished()

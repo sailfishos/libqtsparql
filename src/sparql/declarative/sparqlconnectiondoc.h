@@ -16,6 +16,7 @@
     \section qmlmethods Methods
     \li \ref qmlMethodSelect "variant select"
     \li \ref qmlMethodUpdate "variant update"
+    \li \ref qmlMethodConstruct "variant construct"
     \li \ref qmlMethodErrorString "string errorString"
 
     \section qmlPropertyDoc Property Documentation
@@ -95,19 +96,24 @@
 
     \anchor qmlMethodSelect
     <table><tr><th>variant select (string query, bool async = false)</th></tr></table>
-    Runs a QSparqlQuery::SelectStatement, synchronous by default, returning a list of results :
-    \code
-    var results = sparqlConnection.select("select ?u { ?u a nco:PersonContact }");
-    \endcode
+    Runs a QSparqlQuery::SelectStatement or QSparqlQuery::AskStatment, synchronous by default.
 
-    See the section \ref usingResults "Using Results" for result usage
+    If the query is a SelectStatement the function will return a list of results, or a boolean value
+    for AskStatements.
+
+    See the section \ref usingResults "Using Results" for result usage.
 
     If the async parameter is set to true, the query will be executed asynchronously, and the function
     will return 0. For asynchronous usage, see the section \ref asyncQueries "Asynchronous Queries".
 
     \anchor qmlMethodUpdate
     <table><tr><th>variant update (string query, bool async = false)</th></tr></table>
-    Runs a QSparqlQuery::InsertStatement or QSparqlQuery::DeleteStatement.
+    Runs a QSparqlQuery::InsertStatement or QSparqlQuery::DeleteStatement. If there was an error with the
+    update query, -1 will be returned, otherwise an empty list will be returned.
+
+    \anchor qmlMethodConstruct
+    <table><tr><th>variant construct (string query, bool async = false)</th></tr></table>
+    Runs a QSparqlQuery::ConstructQuery returning the results, or -1 if there was an error.
 
     \anchor qmlMethodErrorString
     <table><tr><th>string errorString ()</th></tr></table>

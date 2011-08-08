@@ -44,11 +44,11 @@ public:
 
     Q_INVOKABLE QVariant select(QString query, bool async = false);
     Q_INVOKABLE QVariant update(QString query, bool async = false);
+    Q_INVOKABLE QVariant construct(QString query, bool async = false);
     Q_INVOKABLE QString errorString() const;
 
     QVariant resultToVariant(QSparqlResult *result);
-    QVariant runQuerySync(QSparqlQuery query);
-    QVariant runQueryAsync(QSparqlQuery query);
+    QVariant runQuery(QSparqlQuery query, bool async);
     QVariant getResult();
 
     void setOptions(SparqlConnectionOptions* options)

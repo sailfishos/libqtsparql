@@ -66,6 +66,7 @@ private slots:
     void sparql_connection_select_query_async_test();
     void sparql_connection_update_query_test(); //insert and delete
     void sparql_connection_update_query_async_test();
+    void sparql_connection_construct_query_test();
     void sparql_connection_options_test();
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
@@ -343,6 +344,18 @@ void tst_QSparqlQMLBindings::sparql_connection_update_query_async_test()
     compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
 }
 
+void tst_QSparqlQMLBindings::sparql_connection_construct_query_test()
+{
+    // tracker doesn't support construct queries, so this should
+    // be in error. TODO: Test with endpoint driver
+    sparql_connection_test_data();
+    QVariant returnValue = callMethod("runConstructQuery");
+    QCOMPARE(returnValue.toInt(), -1);
+    Status status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Error);
+    returnValue = callMethod("getLastError");
+    QCOMPARE(returnValue.toString(), QString("Unsupported statement type"));
+}
 
 void tst_QSparqlQMLBindings::sparql_connection_options_test()
 {
