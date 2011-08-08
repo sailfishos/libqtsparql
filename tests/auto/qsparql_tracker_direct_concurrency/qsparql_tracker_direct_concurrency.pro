@@ -1,8 +1,9 @@
 include(../sparqltest.pri)
 CONFIG += qt warn_on console depend_includepath
 QT += testlib
-HEADERS += ../tracker_direct_common.h updatetester.h
-SOURCES  += tst_qsparql_tracker_direct_concurrency.cpp updatetester.cpp \
+HEADERS += ../tracker_direct_common.h updatetester.h resultchecker.h
+SOURCES  += tst_qsparql_tracker_direct_concurrency.cpp \
+            updatetester.cpp resultchecker.cpp \
         ../tracker_direct_common.cpp
 
 check.depends = $$TARGET

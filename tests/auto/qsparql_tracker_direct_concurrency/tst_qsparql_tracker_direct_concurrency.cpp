@@ -39,6 +39,7 @@
 
 #include "../testhelpers.h"
 #include "updatetester.h"
+#include "resultchecker.h"
 #include "../tracker_direct_common.h"
 
 #include <QtTest/QtTest>
@@ -98,103 +99,6 @@ void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
         QVERIFY( thread->wait(timeoutMs) );
     }
 }
-
-class ResultChecker : public QObject
-{
-    Q_OBJECT
-public:
-    QSignalMapper dataReadyMapper;
-    QSignalMapper finishedMapper;
-    QList<QSparqlResult*> allResults;
-    QHash<QSparqlResult*, QPair<int,int> > pendingResults;
-
-    ResultChecker()
-        // Need to set parent on signalMappers to ensure they are moved to test thread with this object
-        : dataReadyMapper(this), finishedMapper(this)
-    {
-        connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
-        connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
-    }
-
-    ~ResultChecker()
-    {
-        pendingResults.clear();
-        qDeleteAll(allResults);
-    }
-
-    void append(QSparqlResult *r, const QPair<int, int>& range)
-    {
-        QVERIFY( r );
-        QVERIFY( !r->hasError() );
-        dataReadyMapper.setMapping(r, r);
-        connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
-        finishedMapper.setMapping(r, r);
-        connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
-        allResults.append(r);
-        pendingResults.insert(r, range);
-    }
-
-    bool waitForAllFinished(int silenceTimeoutMs)
-    {
-        QTime timeoutTimer;
-        timeoutTimer.start();
-        bool timeout = false;
-        while (!pendingResults.empty() && !timeout) {
-            const int pendingResultsCountBefore = pendingResults.count();
-            QTest::qWait(silenceTimeoutMs / 10);
-            if (pendingResults.count() < pendingResultsCountBefore) {
-                timeoutTimer.restart();
-            }
-            else if (timeoutTimer.elapsed() > silenceTimeoutMs) {
-                timeout = true;
-            }
-        }
-        return !timeout;
-    }
-
-Q_SIGNALS:
-    void allFinished();
-
-public Q_SLOTS:
-    void onDataReady(QObject* mappedResult)
-    {
-        QSparqlResult *result = qobject_cast<QSparqlResult*>(mappedResult);
-        while (result->next()) {
-            // just do something pointless with the result
-            result->value(1).toInt();
-            result->value(0).toString();
-        }
-    }
-
-    void onFinished(QObject* mappedResult)
-    {
-        QSparqlResult *result = qobject_cast<QSparqlResult*>(mappedResult);
-        QVERIFY( result );
-        QVERIFY( !result->hasError() );
-        QVERIFY( pendingResults.contains(result) );
-
-        const QPair<int, int> resultRange = pendingResults.value(result);
-        const int expectedResultSize = (resultRange.second - resultRange.first) + 1;
-        QCOMPARE(result->size(), expectedResultSize);
-
-        // the results should have been fully nexted in the data ready function
-        QCOMPARE(result->pos(), int(QSparql::AfterLastRow));
-        // go back through the results and validate that they are in range
-        int resultCount = 0;
-        while (result->previous()) {
-            //we don't know the order, so just ensure the result is within range
-            QVERIFY(result->value(1).toInt() >= resultRange.first);
-            QVERIFY(result->value(1).toInt() <= resultRange.second);
-            resultCount++;
-        }
-        // now make sure the results counted match the size
-        QCOMPARE(resultCount, expectedResultSize);
-
-        pendingResults.remove(result);
-        if (pendingResults.empty())
-            Q_EMIT allFinished();
-    }
-};
 
 void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount);
 
