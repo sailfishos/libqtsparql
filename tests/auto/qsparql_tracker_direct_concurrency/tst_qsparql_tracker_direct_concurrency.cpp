@@ -71,6 +71,8 @@ private Q_SLOTS:
 
     void multipleConnections_selectQueries();
     void multipleConnections_selectQueries_data();
+    void multipleConnections_updateQueries();
+    void multipleConnections_updateQueries_data();
 
     void multipleConnections_multipleThreads_selectQueries();
     void multipleConnections_multipleThreads_selectQueries_data();
@@ -354,6 +356,55 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
         TEST_DATA_AMOUNT << 10 << 10;
     QTest::newRow("100 queries, 10 connections") <<
         TEST_DATA_AMOUNT << 100 << 10;
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
+{
+    QFETCH(int, numInserts);
+    QFETCH(int, numDeletes);
+    QFETCH(int, numConnections);
+
+    QList<QSparqlConnection*> connections;
+    QList<UpdateTester*> updateTesters;
+
+    for (int i = 0; i < numConnections; ++i) {
+        QSparqlConnection* conn = new QSparqlConnection("QTRACKER_DIRECT");
+        connections << conn;
+
+        UpdateTester* updateTester = new UpdateTester(i);
+        updateTester->setConnection(conn);
+        updateTester->setParameters(numInserts, numDeletes);
+        updateTesters << updateTester;
+        updateTester->start();
+    }
+    Q_FOREACH(UpdateTester* updateTester, updateTesters) {
+        updateTester->waitForFinished();
+        updateTester->cleanup();
+    }
+
+    qDeleteAll(updateTesters);
+    qDeleteAll(connections);
+}
+
+void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries_data()
+{
+    QTest::addColumn<int>("numInserts");
+    QTest::addColumn<int>("numDeletes");
+    QTest::addColumn<int>("numConnections");
+
+    QTest::newRow("10 inserts, 10 deletes, 2 connections") <<
+        10 << 10 << 2;
+    QTest::newRow("100 inserts, 100 deletes, 2 connections") <<
+        100 << 100 << 2;
+    QTest::newRow("1000 inserts, 1000 deletes, 2 connections") <<
+        1000 << 1000 << 2;
+    QTest::newRow("10 inserts, 10 deletes, 4 connections") <<
+        10 << 10 << 4;
+    QTest::newRow("100 inserts, 100 deletes, 4 connections") <<
+        100 << 100 << 4;
+    QTest::newRow("1000 inserts, 1000 deletes, 4 connections") <<
+        1000 << 1000 << 4;
+
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_selectQueries()
