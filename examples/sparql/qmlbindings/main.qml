@@ -48,7 +48,7 @@ Rectangle {
             // This is the button that deals with inserting
             // a contact
             Rectangle {
-                // When the button is clicked, insert the data using the "exec" function of
+                // When the button is clicked, insert the data using the "update" function of
                 // of the sparql connection
                 MouseArea {
                     anchors.fill: parent
@@ -57,7 +57,7 @@ Rectangle {
                                          "_:u a nco:PersonContact; nie:isLogicalPartOf <qml-example>; "+
                                          "nco:nameGiven '"+firstNameInput.text+ "';"+
                                          "nco:nameFamily '"+familyNameInput.text+ "' . }";
-                        sparqlConnection.exec(queryString); 
+                        sparqlConnection.update(queryString);
                         firstNameInput.text = ""
                         familyNameInput.text = ""
                         nameInput.visible = false
