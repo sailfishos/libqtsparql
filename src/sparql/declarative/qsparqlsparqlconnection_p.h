@@ -43,6 +43,7 @@ public:
     void componentComplete();
 
     Q_INVOKABLE QVariant select(QString query, bool async = false);
+    Q_INVOKABLE QVariant ask(QString query, bool async = false);
     Q_INVOKABLE QVariant update(QString query, bool async = false);
     Q_INVOKABLE QVariant construct(QString query, bool async = false);
     Q_INVOKABLE QString errorString() const;

@@ -64,6 +64,8 @@ private slots:
     void sparql_connection_test_data();
     void sparql_connection_select_query_test();
     void sparql_connection_select_query_async_test();
+    void sparql_connection_ask_query_test();
+    void sparql_connection_ask_query_async_test();
     void sparql_connection_update_query_test(); //insert and delete
     void sparql_connection_update_query_async_test();
     void sparql_connection_construct_query_test();
@@ -187,7 +189,7 @@ tst_QSparqlQMLBindings::~tst_QSparqlQMLBindings()
 void tst_QSparqlQMLBindings::initTestCase()
 {
     const QString insertQueryTemplate =
-        "<uri00%1> a nco:PersonContact, nie:InformationElement ;"
+        "<qml-uri00%1> a nco:PersonContact, nie:InformationElement ;"
         "nie:isLogicalPartOf <qsparql-qml-tests> ;"
         "nco:nameGiven \"name00%1\" .";
     QString insertQuery = "insert { <qsparql-qml-tests> a nie:InformationElement .";
@@ -212,8 +214,8 @@ void tst_QSparqlQMLBindings::cleanupTestCase()
 {
     QSparqlConnection conn("QTRACKER");
     const QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
-                         "  WHERE { ?u nie:isLogicalPartOf <qsparql-api-tests> . }"
-                         "DELETE { <qsparql-api-tests> a rdfs:Resource . }",
+                         "  WHERE { ?u nie:isLogicalPartOf <qsparql-qml-tests> . }"
+                         "DELETE { <qsparql-qml=tests> a rdfs:Resource . }",
                     QSparqlQuery::DeleteStatement);
     QSparqlResult* r = conn.exec(q);
     QVERIFY(!r->hasError());
@@ -299,6 +301,52 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
     QCOMPARE(returnValue, returnValueFromSlot);
     compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
     compareResults(returnValueFromSlot, NUM_INSERTS, contactSelectQuery);
+}
+
+void tst_QSparqlQMLBindings::sparql_connection_ask_query_test()
+{
+    sparql_connection_test_data();
+    QString askQuery = "ASK { <qml-uri001> a nco:PersonContact }";
+    QVariant result = callMethod("runAskQuery", askQuery);
+    QVERIFY(result.canConvert(QVariant::Bool));
+    QVERIFY(result.toBool());
+    askQuery = "ASK { <falseask> a nco:PersonContact }";
+    result = callMethod("runAskQuery", askQuery);
+    QVERIFY(result.canConvert(QVariant::Bool));
+    QVERIFY(!result.toBool());
+}
+
+void tst_QSparqlQMLBindings::sparql_connection_ask_query_async_test()
+{
+    sparql_connection_test_data();
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+    QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
+    QString askQuery = "ASK { <qml-uri001> a nco:PersonContact }";
+    callMethod("runAskQueryAsync", askQuery);
+    timer.start();
+    while (resultSpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(resultSpy.count(), 1);
+
+    QVariant returnValue = callMethod("returnResults");
+    QVERIFY(returnValue.canConvert(QVariant::Bool));
+    QVERIFY(returnValue.toBool());
+
+    askQuery = "ASK { <falseask> a nco:PersonContact }";
+    resultSpy.clear();
+    callMethod("runAskQueryAsync", askQuery);
+    timer.start();
+    while (resultSpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+    QVERIFY(!timeout);
+    QCOMPARE(resultSpy.count(), 1);
+
+    returnValue = callMethod("returnResults");
+    QVERIFY(returnValue.canConvert(QVariant::Bool));
+    QVERIFY(!returnValue.toBool());
 }
 
 void tst_QSparqlQMLBindings::sparql_connection_update_query_test()
@@ -431,8 +479,8 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 
     QCOMPARE(NUM_INSERTS, returnValue.toInt());
     QCOMPARE(returnValue.toInt(), model->rowCount());
-    QString selectOneContact = "select <uri001> as ?u ?ng {"
-                               "<uri001> a nco:PersonContact; nco:nameGiven ?ng; "
+    QString selectOneContact = "select <qml-uri001> as ?u ?ng {"
+                               "<qml-uri001> a nco:PersonContact; nco:nameGiven ?ng; "
                                "nie:isLogicalPartOf <qsparql-qml-tests> }";
 
     // call set query and change the query model object, this should also update
@@ -455,7 +503,6 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QCOMPARE(status, Ready);
     // now check the count again
     returnValue = callMethod("getCount");
-
     QCOMPARE(model->rowCount(), 1);
     QCOMPARE(returnValue.toInt(), 1);
 

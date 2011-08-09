@@ -53,6 +53,12 @@ QVariant SparqlConnection::select(QString queryString, bool async)
     return runQuery(query, async);
 }
 
+QVariant SparqlConnection::ask(QString queryString, bool async)
+{
+    QSparqlQuery query(queryString, QSparqlQuery::AskStatement);
+    return runQuery(query, async);
+}
+
 QVariant SparqlConnection::update(QString queryString, bool async)
 {
     // inserts and deletes are both update queries, and run in the same
@@ -98,7 +104,8 @@ void SparqlConnection::onResultFinished()
 
 QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
 {
-    QVariantList resultList;
+    // clear the last result
+    lastResult.clear();
     // check for a result error
     if (result->hasError()) {
         connectionStatus = Error;
@@ -107,10 +114,15 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
         delete result;
         return -1;
     }
-
+    // check for ask query first, just return a bool
+    // if it is
     if (result->isBool()) {
-        resultList.append(result->boolValue());
+        // next past the result to avoid warning
+        result->next();
+        result->next();
+        lastResult = result->boolValue();
     } else {
+        QVariantList resultList;
         while(result->next()) {
             QSparqlResultRow row = result->current();
             QVariantMap resultHash;
@@ -119,10 +131,9 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
             }
             resultList.append(resultHash);
         }
+        lastResult = resultList;
     }
     result->deleteLater();
-    lastResult.clear();
-    lastResult = resultList;
     Q_EMIT resultReady(lastResult);
     return lastResult;
 }

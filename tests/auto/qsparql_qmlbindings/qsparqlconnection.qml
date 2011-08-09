@@ -27,6 +27,16 @@ Rectangle {
        return sparqlConnection.select(queryString);
     }
 
+    function runAskQuery(query)
+    {
+        return sparqlConnection.ask(query);
+    }
+
+    function runAskQueryAsync(query)
+    {
+        sparqlConnection.ask(query, true);
+    }
+
     function runConstructQuery()
     {
         // will result in error, since construct queries are not
