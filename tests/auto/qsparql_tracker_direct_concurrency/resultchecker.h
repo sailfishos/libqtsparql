@@ -44,15 +44,15 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qpair.h>
-#include <QtCore/qsignalmapper.h>
 
+class QSignalMapper;
 class QSparqlResult;
 
 class ResultChecker : public QObject
 {
     Q_OBJECT
-    QSignalMapper dataReadyMapper;
-    QSignalMapper finishedMapper;
+    QSignalMapper* dataReadyMapper;
+    QSignalMapper* finishedMapper;
     QList<QSparqlResult*> allResults;
     QHash<QSparqlResult*, QPair<int,int> > pendingResults;
 
@@ -68,6 +68,9 @@ Q_SIGNALS:
 private Q_SLOTS:
     void onDataReady(QObject* mappedResult);
     void onFinished(QObject* mappedResult);
+
+private:
+    void initResources();
 };
 
 

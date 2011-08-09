@@ -43,13 +43,10 @@
 
 UpdateTester::UpdateTester(int id)
     : connection(0), ownConnection(0)
-      // Need to set parents on signalMappers to ensure ther are moved to test thread with this object
-    , updateFinishedMapper(this)
-    , deleteFinishedMapper(this)
+    , updateFinishedMapper(0)
+    , deleteFinishedMapper(0)
     , id(id), isFinished(false)
 {
-    connect(&updateFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onUpdateFinished(QObject*)));
-    connect(&deleteFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDeleteFinished(QObject*)));
 }
 
 void UpdateTester::setParameters(int numInserts, int numDeletes)
@@ -86,7 +83,7 @@ void UpdateTester::start()
     connect(this, SIGNAL(validateUpdateComplete()), this, SLOT(startDeletions()));
     connect(this, SIGNAL(deletionsComplete()), this, SLOT(startValidateDeletion()));
     connect(this, SIGNAL(validateDeletionComplete()), this, SLOT(finish()));
-    initConnection();
+    initResources();
     startUpdates();
 }
 
@@ -122,11 +119,19 @@ void UpdateTester::cleanup()
     }
 }
 
-void UpdateTester::initConnection()
+void UpdateTester::initResources()
 {
     if (!connection) {
         ownConnection = new QSparqlConnection("QTRACKER_DIRECT");
         connection = ownConnection;
+    }
+    if (!updateFinishedMapper) {
+        updateFinishedMapper = new QSignalMapper(this);
+        connect(updateFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onUpdateFinished(QObject*)));
+    }
+    if (!deleteFinishedMapper) {
+        deleteFinishedMapper = new QSignalMapper(this);
+        connect(deleteFinishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDeleteFinished(QObject*)));
     }
 }
 
@@ -139,7 +144,7 @@ void UpdateTester::startUpdates()
         QSparqlResult *result = connection->exec(insertQuery);
         QVERIFY( result );
         QVERIFY( !result->hasError() );
-        appendPendingResult(result, &updateFinishedMapper);
+        appendPendingResult(result, updateFinishedMapper);
     }
 }
 
@@ -167,7 +172,7 @@ void UpdateTester::startDeletions()
         QSparqlResult* result = connection->exec(deleteQuery);
         QVERIFY( result );
         QVERIFY( !result->hasError() );
-        appendPendingResult(result, &deleteFinishedMapper);
+        appendPendingResult(result, deleteFinishedMapper);
     }
 }
 

@@ -42,8 +42,8 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qset.h>
-#include <QtCore/qsignalmapper.h>
 
+class QSignalMapper;
 class QSparqlConnection;
 class QSparqlResult;
 
@@ -54,8 +54,8 @@ class UpdateTester : public QObject
     QSparqlConnection *ownConnection;
     QList<QSparqlResult*> resultList;
     QSet<QSparqlResult*> pendingResults;
-    QSignalMapper updateFinishedMapper;
-    QSignalMapper deleteFinishedMapper;
+    QSignalMapper* updateFinishedMapper;
+    QSignalMapper* deleteFinishedMapper;
     int numInserts;
     int numDeletes;
     int id;
@@ -82,7 +82,7 @@ public Q_SLOTS:
     void cleanup();
 
 private Q_SLOTS:
-    void initConnection();
+    void initResources();
     void startUpdates();
     void startValidateUpdate();
     void validateUpdateResult();

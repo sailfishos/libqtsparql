@@ -42,11 +42,8 @@
 #include <QtSparql/QtSparql>
 
 ResultChecker::ResultChecker()
-    // Need to set parent on signalMappers to ensure they are moved to test thread with this object
-    : dataReadyMapper(this), finishedMapper(this)
+    : dataReadyMapper(0), finishedMapper(0)
 {
-    connect(&dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
-    connect(&finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
 }
 
 ResultChecker::~ResultChecker()
@@ -59,10 +56,11 @@ void ResultChecker::append(QSparqlResult *r, const QPair<int, int>& range)
 {
     QVERIFY( r );
     QVERIFY( !r->hasError() );
-    dataReadyMapper.setMapping(r, r);
-    connect(r, SIGNAL(dataReady(int)), &dataReadyMapper, SLOT(map()));
-    finishedMapper.setMapping(r, r);
-    connect(r, SIGNAL(finished()), &finishedMapper, SLOT(map()));
+    initResources();
+    dataReadyMapper->setMapping(r, r);
+    connect(r, SIGNAL(dataReady(int)), dataReadyMapper, SLOT(map()));
+    finishedMapper->setMapping(r, r);
+    connect(r, SIGNAL(finished()), finishedMapper, SLOT(map()));
     allResults.append(r);
     pendingResults.insert(r, range);
 }
@@ -122,4 +120,16 @@ void ResultChecker::onFinished(QObject* mappedResult)
     pendingResults.remove(result);
     if (pendingResults.empty())
         Q_EMIT allFinished();
+}
+
+void ResultChecker::initResources()
+{
+    if (!dataReadyMapper) {
+        dataReadyMapper = new QSignalMapper(this);
+        connect(dataReadyMapper, SIGNAL(mapped(QObject*)), this, SLOT(onDataReady(QObject*)));
+    }
+    if (!finishedMapper) {
+        finishedMapper = new QSignalMapper(this);
+        connect(finishedMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
+    }
 }
