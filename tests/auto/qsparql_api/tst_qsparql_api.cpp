@@ -117,7 +117,7 @@ namespace {
 
 bool testEndpoint = false;
 
-const QString contactSelectQuery =
+const QString contactSelectQueryTemplate =
     "select ?u ?ng %1 {"
     "    ?u a nco:PersonContact; "
     "    nie:isLogicalPartOf <qsparql-api-tests> ;"
@@ -477,7 +477,7 @@ void tst_QSparqlAPI::cleanup()
 void tst_QSparqlAPI::query_test()
 {
     QFETCH(QString, connectionDriver);
-    QFETCH(QString, query);
+    QFETCH(QString, queryTemplate);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
@@ -488,7 +488,7 @@ void tst_QSparqlAPI::query_test()
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
-    const QString queryString = query.arg( getTemplateArguments(connectionDriver, "SELECT") );
+    const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
     const QSparqlQuery q(queryString);
 
     QSparqlResult* r = conn.exec(q, queryOptions);
@@ -502,7 +502,7 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
         << false;
@@ -516,7 +516,7 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::SyncExec)
         << false;
@@ -530,7 +530,7 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
         << true;
@@ -546,7 +546,7 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
 void tst_QSparqlAPI::query_test_data()
 {
     QTest::addColumn<QString>("connectionDriver");
-    QTest::addColumn<QString>("query");
+    QTest::addColumn<QString>("queryTemplate");
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
@@ -560,7 +560,7 @@ void tst_QSparqlAPI::query_test_data()
 void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
 {
     QFETCH(QString, connectionDriver);
-    QFETCH(QString, query);
+    QFETCH(QString, queryTemplate);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
@@ -571,7 +571,7 @@ void tst_QSparqlAPI::query_destroy_connection_after_finished_test()
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
-    const QString queryString = query.arg( getTemplateArguments(connectionDriver, "SELECT") );
+    const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
     const QSparqlQuery q(queryString);
 
     QSparqlResult* r = conn->exec(q, queryOptions);
@@ -763,21 +763,21 @@ void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& conne
 {
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
         << connectionDriver
-        << contactSelectQuery
+        << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::SyncExec)
         << false;
@@ -840,7 +840,7 @@ void tst_QSparqlAPI::update_query_test()
     delete r;
 
     // Verify the insertion
-    QString validateQuery = contactSelectQuery.arg(getTemplateArguments(connectionDriver, "SELECT"));
+    QString validateQuery = contactSelectQueryTemplate.arg(getTemplateArguments(connectionDriver, "SELECT"));
     r = conn.exec(QSparqlQuery(validateQuery), queryOptions);
     checkExecutionMethod(r, executionMethod, useAsyncObject);
     validateResults(r, expectedResultsSize);
@@ -1222,7 +1222,7 @@ void tst_QSparqlAPI::ask_query_test_data()
 void tst_QSparqlAPI::isFinished_test()
 {
     QFETCH(QString, connectionDriver);
-    QFETCH(QString, query);
+    QFETCH(QString, queryTemplate);
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
@@ -1233,7 +1233,7 @@ void tst_QSparqlAPI::isFinished_test()
     QSparqlQueryOptions queryOptions;
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
-    const QString queryString = query.arg( getTemplateArguments(connectionDriver, "SELECT") );
+    const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
     const QSparqlQuery q(queryString);
 
     QSparqlResult* r = conn.exec(q, queryOptions);
@@ -1310,18 +1310,18 @@ void tst_QSparqlAPI::queryModel_test_data()
 
     QTest::newRow("DBus Query Model")
         << "QTRACKER"
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS;
 
     QTest::newRow("Tracker Direct Query Model")
         << "QTRACKER_DIRECT"
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS;
 
     if (testEndpoint) {
         QTest::newRow("Endpoint Query Model")
             << "QSPARQL_ENDPOINT"
-            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << contactSelectQueryTemplate.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
             << NUM_INSERTS;
     }
 }
@@ -1352,18 +1352,18 @@ void tst_QSparqlAPI::syncExec_waitForFinished_query_test_data()
 
     QTest::newRow("Tracker Direct Sync Select")
         << "QTRACKER_DIRECT"
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS;
 
     QTest::newRow("DBus Sync Select")
         << "QTRACKER"
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS;
 
     if (testEndpoint) {
         QTest::newRow("Endpoint Sync Select")
             << "QSPARQL_ENDPOINT"
-            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << contactSelectQueryTemplate.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
             << NUM_INSERTS;
     }
 }
@@ -1436,7 +1436,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
         << "QTRACKER_DIRECT"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS
         << contactInsertAmount
         << contactDeleteAmount;
@@ -1445,7 +1445,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
         << "QTRACKER"
         << contactInsertQueryTemplate
         << contactDeleteQueryTemplate
-        << contactSelectQuery.arg("")
+        << contactSelectQueryTemplate.arg("")
         << NUM_INSERTS
         << contactInsertAmount
         << contactDeleteAmount;
@@ -1455,7 +1455,7 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
             << "QSPARQL_ENDPOINT"
             << contactInsertQueryTemplate
             << contactDeleteQueryTemplate
-            << contactSelectQuery.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
+            << contactSelectQueryTemplate.arg( getTemplateArguments("QSPARQL_ENDPOINT", "SELECT") )
             << NUM_INSERTS
             << contactInsertAmount
             << contactDeleteAmount;
