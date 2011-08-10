@@ -142,11 +142,6 @@ public:
 
     ~EndpointResultPrivate()
     {
-        // the reply belongs to the network manager
-        // which may have been deleted before the result
-        // if the connection was deleted
-        if (reply)
-            delete reply;
         delete xml;
         delete parser;
         delete reader;
@@ -373,8 +368,11 @@ QVariant EndpointResult::handle() const
 
 void EndpointResult::cleanup()
 {
+    // if we still have a network manager,
+    // delete the previous result here
+    if (d->driverPrivate)
+        delete d->reply;
     d->reply = 0;
-    setPos(QSparql::BeforeFirstRow);
 }
 
 QSparqlBinding EndpointResult::binding(int field) const
@@ -419,8 +417,6 @@ EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::Stateme
 
 bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes)
 {
-    cleanup();
-
     QUrl queryUrl(d->driverPrivate->url);
     queryUrl.addQueryItem(QLatin1String("query"), prefixes + query);
     setQuery(query);
@@ -611,8 +607,7 @@ void EndpointResult::driverClosing()
     }
     d->terminate();
 
-    if (!d->driverPrivate->managerOwned)
-        d->driverPrivate->managerOwned = 0;
+    d->driverPrivate = 0;
 
     qWarning() << "QEndpointResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
