@@ -63,6 +63,7 @@ private slots:
     void unbind_and_replace();
     void different_datatypes_data();
     void different_datatypes();
+    void copyQuery();
 };
 
 tst_QSparqlQuery::tst_QSparqlQuery()
@@ -244,6 +245,31 @@ void tst_QSparqlQuery::different_datatypes()
 
     QCOMPARE(q.query(), rawString);
     QCOMPARE(q.preparedQueryText(), replacedString);
+}
+
+void tst_QSparqlQuery::copyQuery()
+{
+    QString query1("insert { _:c a nco:Contact ; "
+                   "nco:fullname \"NAME\" ; "
+                   "nco:hasPhoneNumber _:pn . "
+                   "_:pn a nco:PhoneNumber ; "
+                   "nco:phoneNumber \"PHONE\" . }");
+    QString query2("select ?r { ?r a nie:InformationElement ; "
+                   "nie:isLogicalPartOf <qsparql-query-tests> .}");
+    
+    QSparqlQuery::StatementType type1(QSparqlQuery::InsertStatement);
+    QSparqlQuery::StatementType type2(QSparqlQuery::SelectStatement);
+    QSparqlQuery q1(query1, type1);
+    QSparqlQuery q2(query2, type2);
+    
+    q1=q2;
+    QCOMPARE(q1.query(), q2.query());
+    QCOMPARE(q1.type(), q2.type());
+    q2.setType(type2);
+    q2.setQuery(query2);
+    QCOMPARE(type2, q2.type());
+    QCOMPARE(q2.query(), query2);
+    
 }
 
 QTEST_MAIN( tst_QSparqlQuery )
