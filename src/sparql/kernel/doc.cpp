@@ -5,7 +5,12 @@
 
     <b>Description</b>
 
-    QtSparql is a client-side library for accessing RDF stores.
+    QtSparql is a client-side library for accessing RDF stores. To use, add QtSparql to
+    your project file:
+
+    \code
+    CONFIG+=qtsparql
+    \endcode
 
     The query language for RDF stores is <a
     href="http://www.w3.org/TR/rdf-sparql-query/">SPARQL</a>.
@@ -39,52 +44,60 @@
     <td><b>QSparqlConnection</b></td>
     <td>Interface for accessing an RDF store.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlConnectionOptions</b></td>
     <td>Encapsulates options given to QSparqlConnection. Some options are used only by
     some drivers.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlError</b></td>
     <td>SPARQL error information.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlBinding</b></td>
     <td>Handles a binding between a SPARQL query variable name and the value of the RDF
     node.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlQuery</b></td>
     <td>Means of executing and manipulating SPARQL statements.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlQueryOptions</b></td>
     <td>Encapsulates query execution options given to QSparqlConnection::exec(const  QSparqlQuery&,
     const QSparqlQueryOptions&) Some options are used only by some drivers.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlQueryModel</b></td>
     <td>Read-only data model for SPARQL result sets.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlResultRow</b></td>
     <td>Encapsulates a row in the results of a query.</td>
     </tr>
-
     <tr>
     <td><b>QSparqlResult</b></td>
     <td>Abstract interface for accessing the results of an executed QSparqlQuery.</td>
     </tr>
-
     </table>
     </p>
+
+    The QtSparql API also provides two QML Bindings:
+
+    <table>
+    <tr>
+    <th>Binding</th>
+    <th>Description</th>
+    </tr>
+    <tr>
+    <td><b>\ref qmlSparqlConnection "SparqlConnection"</b></td>
+    <td>Binding for QSparqlConnection. Allows queries to be run in QML</td>
+    </tr>
+    <tr>
+    <td><b>\ref qmlSparqlResultList "SparqlResultList"</b></td>
+    <td>Binding for QSparqlQueryModel. Allows for ListView models to be easily defined</td>
+    </tr>
+    </table>
 
     \attention The QtSparql library is not yet stable; we make no
     promises about API / ABI compatibility!
