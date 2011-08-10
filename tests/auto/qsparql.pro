@@ -22,7 +22,8 @@ contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 
 check.CONFIG = recursive
 check.recurse = qsparql_api qsparql qsparqlquery qsparqlbinding qsparql_tracker \
-                qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples
+                qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples \
+                qsparql_tracker_direct_concurrency
 
 memcheck.CONFIG = recursive
 memcheck.recurse = qsparql_api qsparql_tracker qsparql_tracker_direct qsparql_direct_sync \
