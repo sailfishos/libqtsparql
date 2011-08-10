@@ -261,7 +261,8 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
 
     QSparqlConnectionOptions options;
     options.setDataReadyInterval(dataReadyInterval);
-    options.setMaxThreadCount(maxThreadCount);
+    if (maxThreadCount > 0)
+        options.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", options);
     ResultChecker resultChecker;
 
@@ -276,14 +277,22 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("maxThreadCount");
 
-    QTest::newRow("10 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 4;
-    QTest::newRow("100 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 4;
     QTest::newRow("10 queries, 1 Thread") <<
         TEST_DATA_AMOUNT << 10 << 1;
     QTest::newRow("100 queries, 1 Thread") <<
         TEST_DATA_AMOUNT << 100 << 1;
+    QTest::newRow("10 queries, default number of threads") <<
+        TEST_DATA_AMOUNT << 10 << 0;
+    QTest::newRow("100 queries, default number of threads") <<
+        TEST_DATA_AMOUNT << 100 << 0;
+    QTest::newRow("10 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 4;
+    QTest::newRow("100 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 4;
+    QTest::newRow("10 queries, 8 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 8;
+    QTest::newRow("100 queries, 8 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 8;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
