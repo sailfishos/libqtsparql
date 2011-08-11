@@ -54,7 +54,7 @@ QTrackerDirectUpdateResult::QTrackerDirectUpdateResult(QTrackerDirectDriverPriva
                                            const QString& query,
                                            QSparqlQuery::StatementType type,
                                            const QSparqlQueryOptions& options)
-  : options(options)
+  : QTrackerDirectResult(options)
 {
     setQuery(query);
     setStatementType(type);

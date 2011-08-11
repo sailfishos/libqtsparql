@@ -90,8 +90,8 @@ bool QTrackerDirectQueryRunner::acquireRunSemaphore()
 
 ////////////////////////////////////////////////////////////////////////////
 
-QTrackerDirectResult::QTrackerDirectResult()
-  : queryRunner(0), resultFinished(0)
+QTrackerDirectResult::QTrackerDirectResult(const QSparqlQueryOptions& options)
+  : options(options), queryRunner(0), resultFinished(0)
 {
 }
 

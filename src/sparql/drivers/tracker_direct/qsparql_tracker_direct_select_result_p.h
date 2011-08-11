@@ -59,7 +59,8 @@ class QTrackerDirectSelectResult : public QTrackerDirectResult
 public:
     explicit QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                   const QString& query,
-                                  QSparqlQuery::StatementType type);
+                                  QSparqlQuery::StatementType type,
+                                  const QSparqlQueryOptions& options);
     ~QTrackerDirectSelectResult();
 
     Q_INVOKABLE void startFetcher();
