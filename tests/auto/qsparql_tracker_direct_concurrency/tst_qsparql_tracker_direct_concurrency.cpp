@@ -148,7 +148,13 @@ public:
     }
 
 public Q_SLOTS:
-    void startQueries()
+    void startInThread(QThread* thread)
+    {
+        this->moveToThread(thread);
+        connect(thread, SIGNAL(started()), this, SLOT(runInThread()));
+    }
+
+    void runInThread()
     {
         initResources();
         connect(resultChecker, SIGNAL(allFinished()), this, SLOT(quit()));
@@ -429,10 +435,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
         ThreadQueryRunner *threadQueryRunner = new ThreadQueryRunner;
         threadQueryRunners.append(threadQueryRunner);
         threadQueryRunner->setParameters(numQueries, testDataAmount);
-        threadQueryRunner->moveToThread(newThread);
-
-        // Connect the threads started signal to the slot that does the work
-        QObject::connect(newThread, SIGNAL(started()), threadQueryRunner, SLOT(startQueries()));
+        threadQueryRunner->startInThread(newThread);
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
