@@ -102,8 +102,6 @@ void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
     }
 }
 
-void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount);
-
 class ThreadQueryRunner : public QObject
 {
     Q_OBJECT
@@ -147,7 +145,36 @@ public:
         ownConnection = 0;
     }
 
+    bool waitForAllFinished(int silenceTimeoutMs)
+    {
+        return resultChecker->waitForAllFinished(silenceTimeoutMs);
+    }
+
 public Q_SLOTS:
+    void startQueries()
+    {
+        initResources();
+        for (int i=0;i<numQueries;i++) {
+            QPair<int, int> resultRange;
+            QString filter;
+            if (i % 10 == 0) {
+                // Override every 10th result to read all
+                resultRange = qMakePair(1, testDataSize);
+                filter = ". }";
+            }
+            else {
+                resultRange  = randomRangeIn(testDataSize);
+                filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
+            }
+            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
+                                        "nmm:trackNumber ?t; "
+                                        "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
+                                        + filter));
+            QSparqlResult *result = connection->exec(select);
+            resultChecker->append(result, resultRange);
+        }
+    }
+
     void startInThread(QThread* thread)
     {
         this->moveToThread(thread);
@@ -158,7 +185,7 @@ public Q_SLOTS:
     {
         initResources();
         connect(resultChecker, SIGNAL(allFinished()), this, SLOT(quit()));
-        startConcurrentQueries(*connection, *resultChecker, numQueries, testDataSize);
+        startQueries();
     }
 
 private Q_SLOTS:
@@ -183,30 +210,6 @@ private:
         }
     }
 };
-
-void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount)
-{
-    for (int i=0;i<numQueries;i++) {
-        QPair<int, int> resultRange;
-        QString filter;
-        if (i % 10 == 0) {
-            // Override every 10th result to read all
-            resultRange = qMakePair(1, testDataAmount);
-            filter = ". }";
-        }
-        else {
-            resultRange  = randomRangeIn(testDataAmount);
-            filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
-        }
-        QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
-                                    "nmm:trackNumber ?t; "
-                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
-                                    + filter));
-        QSparqlResult *result = conn.exec(select);
-        resultChecker.append(result, resultRange);
-    }
-}
-
 
 } //end namespace
 
@@ -265,10 +268,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     if (maxThreadCount > 0)
         options.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", options);
-    ResultChecker resultChecker;
-
-    startConcurrentQueries(conn, resultChecker, numQueries, testDataAmount);
-    QVERIFY(resultChecker.waitForAllFinished(8000));
+    ThreadQueryRunner queryRunner;
+    queryRunner.setParameters(numQueries, testDataAmount);
+    queryRunner.startQueries();
+    QVERIFY(queryRunner.waitForAllFinished(8000));
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
@@ -329,7 +332,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
     QList<QSparqlConnection*> connections;
-    QList<ResultChecker*> resultCheckers;
+    QList<ThreadQueryRunner*> queryRunners;
 
     // Create the connections and start the queries
     for (int i = 0; i < numConnections; ++i) {
@@ -337,17 +340,18 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
         options.setDataReadyInterval(dataReadyInterval);
         QSparqlConnection* conn = new QSparqlConnection("QTRACKER_DIRECT", options);
         connections << conn;
-        ResultChecker* checker = new ResultChecker;
-        resultCheckers << checker;
-        startConcurrentQueries(*conn, *checker, numQueries, testDataAmount);
+        ThreadQueryRunner* queryRunner = new ThreadQueryRunner;
+        queryRunner->setParameters(numQueries, testDataAmount);
+        queryRunners << queryRunner;
+        queryRunner->startQueries();
     }
 
     // Wait for all the queries to finish
-    Q_FOREACH(ResultChecker* checker, resultCheckers) {
-        QVERIFY(checker->waitForAllFinished(15000));
+    Q_FOREACH(ThreadQueryRunner* queryRunner, queryRunners) {
+        QVERIFY(queryRunner->waitForAllFinished(15000));
     }
 
-    qDeleteAll(resultCheckers);
+    qDeleteAll(queryRunners);
     qDeleteAll(connections);
 }
 
