@@ -136,13 +136,12 @@ class EndpointResultPrivate  : public QObject {
 public:
     EndpointResultPrivate(EndpointResult *result, EndpointDriverPrivate *dpp)
     : reply(0), xml(0), parser(0), reader(0),
-        isFinished(false), loop(0), q(result), driverPrivate(dpp)
+        isFinished(false), loop(0), q(result), driverPrivate(dpp), noResults(false)
     {
     }
 
     ~EndpointResultPrivate()
     {
-        delete reply;
         delete xml;
         delete parser;
         delete reader;
@@ -160,6 +159,7 @@ public:
     QXmlSimpleReader *reader;
     QVector<QSparqlResultRow> results;
     bool isFinished;
+    bool noResults;
     QEventLoop *loop;
     EndpointResult *q;
     EndpointDriverPrivate *driverPrivate;
@@ -209,38 +209,44 @@ bool XmlResultsParser::endElement(const QString & namespaceURI,
     Q_UNUSED(namespaceURI);
     Q_UNUSED(localName);
 
-    if (qName == QLatin1String("sparql")) {
-    } else if (qName == QLatin1String("head")) {
-    } else if (qName == QLatin1String("variable")) {
-    } else if (qName == QLatin1String("results")) {
-    } else if (qName == QLatin1String("result")) {
-        d->results.append(resultRow);
-    } else if (qName == QLatin1String("binding")) {
-        resultRow.append(binding);
-    } else if (qName == QLatin1String("boolean")) {
-        d->setBoolValue(currentText.toLower() == QLatin1String("true"));
-    } else if (qName == QLatin1String("bnode")) {
-        currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
-        currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));
-        binding.setBlankNodeLabel(currentText);
-    } else if (qName == QLatin1String("uri")) {
-        QUrl url(currentText);
-        binding.setValue(QVariant(url));
-    } else if (qName == QLatin1String("literal")) {
-        if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
-            if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
-                // TODO: How should we treat xsi:types here?
-                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+    if (!d->noResults) {
+        if (qName == QLatin1String("sparql")) {
+        } else if (qName == QLatin1String("head")) {
+        } else if (qName == QLatin1String("variable")) {
+        } else if (qName == QLatin1String("results")) {
+        } else if (qName == QLatin1String("result")) {
+            d->results.append(resultRow);
+        } else if (qName == QLatin1String("binding")) {
+            resultRow.append(binding);
+        } else if (qName == QLatin1String("boolean")) {
+            bool boolValue = currentText.toLower() == QLatin1String("true");
+            d->setBoolValue(boolValue);
+            binding.setValue(QVariant(boolValue));
+            resultRow.append(binding);
+            d->results.append(resultRow);
+        } else if (qName == QLatin1String("bnode")) {
+            currentText.replace(QRegExp(QString::fromLatin1("^nodeID://")), QString::fromLatin1(""));
+            currentText.replace(QRegExp(QString::fromLatin1("^_:")), QString::fromLatin1(""));
+            binding.setBlankNodeLabel(currentText);
+        } else if (qName == QLatin1String("uri")) {
+            QUrl url(currentText);
+            binding.setValue(QVariant(url));
+        } else if (qName == QLatin1String("literal")) {
+            if (lattrs.index(QString::fromLatin1("datatype")) != -1) {
+                if (lattrs.index(QString::fromLatin1("xsi:type")) != -1) {
+                    // TODO: How should we treat xsi:types here?
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                } else {
+                    binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                }
+            } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
+                binding.setValue(QVariant(currentText));
+                binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
             } else {
-                binding.setValue(currentText, QUrl(lattrs.value(QString::fromLatin1("datatype"))));
+                binding.setValue(QVariant(currentText));
             }
-        } else if (lattrs.index(QString::fromLatin1("xml:lang")) != -1) {
-            binding.setValue(QVariant(currentText));
-            binding.setLanguageTag(lattrs.value(QString::fromLatin1("xml:lang")));
         } else {
-            binding.setValue(QVariant(currentText));
         }
-    } else {
     }
 
     return true;
@@ -272,11 +278,11 @@ void EndpointResultPrivate::authenticate(QNetworkReply * reply, QAuthenticator *
 
 void EndpointResultPrivate::handleError(QNetworkReply::NetworkError code)
 {
-    if (code == QNetworkReply::UnknownContentError)
-        q->setLastError(QSparqlError(QString::fromLatin1(buffer), QSparqlError::StatementError, code));
-    else
+    if (code != QNetworkReply::UnknownContentError) {
         q->setLastError(QSparqlError(reply->errorString(), QSparqlError::ConnectionError, code));
-
+        terminate();
+        qWarning() << "QEndpoint:" << q->lastError() << q->query();
+    }
     terminate();
 }
 
@@ -313,6 +319,7 @@ void EndpointResultPrivate::readData()
         if (!reader->parse(xml, true)) {
             q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
+            qWarning() << "QEndpoint:" << q->lastError() << q->query();
             return;
         }
     }
@@ -321,6 +328,7 @@ void EndpointResultPrivate::readData()
         if (!reader->parseContinue()) {
             q->setLastError(QSparqlError(xml->data(), QSparqlError::StatementError));
             terminate();
+            qWarning() << "QEndpoint:" << q->lastError() << q->query();
             return;
         }
     }
@@ -360,7 +368,11 @@ QVariant EndpointResult::handle() const
 
 void EndpointResult::cleanup()
 {
-    setPos(QSparql::BeforeFirstRow);
+    // if we still have a network manager,
+    // delete the previous result here
+    if (d->driverPrivate)
+        delete d->reply;
+    d->reply = 0;
 }
 
 QSparqlBinding EndpointResult::binding(int field) const
@@ -405,8 +417,6 @@ EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::Stateme
 
 bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes)
 {
-    cleanup();
-
     QUrl queryUrl(d->driverPrivate->url);
     queryUrl.addQueryItem(QLatin1String("query"), prefixes + query);
     setQuery(query);
@@ -423,7 +433,7 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
         queryUrl.addQueryItem(QLatin1String("maxrows"), maxrows.toString());
     }
 
-    qDebug() << "Real url to run.... " << queryUrl.toString();
+    // qDebug() << "Real url to run.... " << queryUrl.toString();
 
     d->buffer.clear();
     QNetworkRequest request(queryUrl);
@@ -442,6 +452,11 @@ bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type
 
     if (!isGraph())
         d->xml = new XmlInputSource(d->reply);
+
+    // We don't want to add any results if it's an insert or delete, however, we still need to parse them
+    // because there may be warnings that need to be printed
+    if (statementType() == QSparqlQuery::InsertStatement || statementType() == QSparqlQuery::DeleteStatement)
+        d->noResults = true;
 
     QObject::connect(d->reply, SIGNAL(readyRead()), d, SLOT(readData()));
     QObject::connect(d->reply, SIGNAL(finished()), d, SLOT(parseResults()));
@@ -497,8 +512,10 @@ EndpointDriver::EndpointDriver(QObject * parent)
 
 EndpointDriver::~EndpointDriver()
 {
-    if (d->managerOwned)
+    if (d->managerOwned) {
         delete d->manager;
+        d->managerOwned = false;
+    }
     delete d;
 }
 
@@ -564,6 +581,7 @@ bool EndpointDriver::open(const QSparqlConnectionOptions& options)
 
 void EndpointDriver::close()
 {
+    Q_EMIT closing();
     if (isOpen()) {
         setOpen(false);
         setOpenError(false);
@@ -575,7 +593,23 @@ void EndpointDriver::close()
 
 EndpointResult* EndpointDriver::createResult() const
 {
-    return new EndpointResult(d);
+    EndpointResult *result = new EndpointResult(d);
+    QObject::connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    return result;
+}
+
+void EndpointResult::driverClosing()
+{
+    if (!isFinished()) {
+        setLastError(QSparqlError(
+                QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
+                QSparqlError::ConnectionError));
+    }
+    d->terminate();
+
+    d->driverPrivate = 0;
+
+    qWarning() << "QEndpointResult: QSparqlConnection closed before QSparqlResult with query:" << query();
 }
 
 QT_END_NAMESPACE
