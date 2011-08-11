@@ -102,7 +102,7 @@ void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
     }
 }
 
-class ThreadQueryRunner : public QObject
+class QueryTester : public QObject
 {
     Q_OBJECT
 
@@ -114,12 +114,12 @@ class ThreadQueryRunner : public QObject
     int testDataSize;
 
 public:
-    ThreadQueryRunner()
+    QueryTester()
         : connection(0), ownConnection(0), resultChecker(0)
     {
     }
 
-    ~ThreadQueryRunner()
+    ~QueryTester()
     {
         cleanup();
     }
@@ -268,10 +268,10 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     if (maxThreadCount > 0)
         options.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", options);
-    ThreadQueryRunner queryRunner;
-    queryRunner.setParameters(numQueries, testDataAmount);
-    queryRunner.startQueries();
-    QVERIFY(queryRunner.waitForAllFinished(8000));
+    QueryTester queryTester;
+    queryTester.setParameters(numQueries, testDataAmount);
+    queryTester.startQueries();
+    QVERIFY(queryTester.waitForAllFinished(8000));
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
@@ -332,7 +332,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
     QList<QSparqlConnection*> connections;
-    QList<ThreadQueryRunner*> queryRunners;
+    QList<QueryTester*> queryTesters;
 
     // Create the connections and start the queries
     for (int i = 0; i < numConnections; ++i) {
@@ -340,18 +340,18 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
         options.setDataReadyInterval(dataReadyInterval);
         QSparqlConnection* conn = new QSparqlConnection("QTRACKER_DIRECT", options);
         connections << conn;
-        ThreadQueryRunner* queryRunner = new ThreadQueryRunner;
-        queryRunner->setParameters(numQueries, testDataAmount);
-        queryRunners << queryRunner;
-        queryRunner->startQueries();
+        QueryTester* queryTester = new QueryTester;
+        queryTester->setParameters(numQueries, testDataAmount);
+        queryTesters << queryTester;
+        queryTester->startQueries();
     }
 
     // Wait for all the queries to finish
-    Q_FOREACH(ThreadQueryRunner* queryRunner, queryRunners) {
-        QVERIFY(queryRunner->waitForAllFinished(15000));
+    Q_FOREACH(QueryTester* queryTester, queryTesters) {
+        QVERIFY(queryTester->waitForAllFinished(15000));
     }
 
-    qDeleteAll(queryRunners);
+    qDeleteAll(queryTesters);
     qDeleteAll(connections);
 }
 
@@ -431,15 +431,15 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     QFETCH(int, numThreads);
 
     QList<QThread*> createdThreads;
-    QList<ThreadQueryRunner*> threadQueryRunners;
+    QList<QueryTester*> queryTesters;
     for (int i=0;i<numThreads;i++) {
         QThread *newThread = new QThread;
         createdThreads.append(newThread);
 
-        ThreadQueryRunner *threadQueryRunner = new ThreadQueryRunner;
-        threadQueryRunners.append(threadQueryRunner);
-        threadQueryRunner->setParameters(numQueries, testDataAmount);
-        threadQueryRunner->startInThread(newThread);
+        QueryTester *queryTester = new QueryTester;
+        queryTester->setParameters(numQueries, testDataAmount);
+        queryTesters.append(queryTester);
+        queryTester->startInThread(newThread);
     }
     // start all the threads
     Q_FOREACH(QThread* thread, createdThreads) {
@@ -447,7 +447,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     }
 
     waitForAllFinished(createdThreads, 15000*numThreads);
-    qDeleteAll(threadQueryRunners);
+    qDeleteAll(queryTesters);
     qDeleteAll(createdThreads);
 }
 
