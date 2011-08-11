@@ -108,9 +108,86 @@ private slots:
 
     void waitForFinished_after_dataReady();
 
+    void test_threadpool_priority_select_results();
+
 private:
     QSharedPointer<QSignalSpy> dataReadySpy;
 };
+
+namespace {
+class FinishedSignalReceiver : public QObject
+{
+    Q_OBJECT
+    QList<QSparqlResult*> allResults;
+    QSet<QObject*> pendingResults;
+    QSignalMapper signalMapper;
+
+public:
+
+    QList<QSparqlResult*> resultOrder;
+
+    FinishedSignalReceiver()
+    {
+        connect(&signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(onFinished(QObject*)));
+    }
+
+    ~FinishedSignalReceiver()
+    {
+        qDeleteAll(allResults);
+    }
+
+    const QList<QSparqlResult*>& results() const
+    {
+        return allResults;
+    }
+
+    void append(QSparqlResult* r)
+    {
+        allResults.append(r);
+        if (!r->isFinished()) {
+            pendingResults.insert(r);
+            connectFinishedSignal(r);
+        }
+    }
+
+    bool waitForAllFinished(int silenceTimeoutMs)
+    {
+        QTime timeoutTimer;
+        timeoutTimer.start();
+        bool timeout = false;
+        while (!pendingResults.empty() && !timeout) {
+            const int pendingResultsCountBefore = pendingResults.count();
+            QTest::qWait(silenceTimeoutMs / 10);
+            if (pendingResults.count() < pendingResultsCountBefore) {
+                timeoutTimer.restart();
+            }
+            else if (timeoutTimer.elapsed() > silenceTimeoutMs) {
+                timeout = true;
+            }
+        }
+        return !timeout;
+    }
+
+private:
+    void connectFinishedSignal(QSparqlResult* r)
+    {
+        // Use QSignalMapper to be able to figure out which result was
+        // finished in onFinished().
+        // Note that using sender() would not work as it returns null when
+        // signal is emitted from another thread.
+        signalMapper.setMapping(r, r);
+        connect(r, SIGNAL(finished()), &signalMapper, SLOT(map()));
+    }
+
+private slots:
+    void onFinished(QObject* r)
+    {
+        pendingResults.remove(r);
+        resultOrder.append((QSparqlResult*)r);
+    }
+};
+
+}  // namespace
 
 tst_QSparqlTrackerDirect::tst_QSparqlTrackerDirect()
 {
@@ -1161,6 +1238,98 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     QVERIFY(succesfulRounds >= 5);
 }
 
+void tst_QSparqlTrackerDirect::test_threadpool_priority_select_results()
+{
+    const int testDataAmount = 3000;
+    const QString testTag("<qsparql-tracker-direct-tests-test_threadpool_priority_select_results>");
+    QScopedPointer<TestData> testData(TestData::createTrackerTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
+    QTest::qWait(2000);
+    QVERIFY( testData->isOK() );
+
+    // Use only one thread
+    QSparqlConnectionOptions options;
+    options.setMaxThreadCount(1);
+    QSparqlConnection conn("QTRACKER_DIRECT", options);
+    bool forwardOnly = false;
+    QSparqlQuery select(QString("select ?u {?u a nmm:MusicPiece;"
+                                "nie:isLogicalPartOf <qsparql-tracker-direct-tests-test_threadpool_priority_select_results> }"));
+
+    // Do this twice, one with normal results, once with forwardOnly results
+    for (int i=0;i<2;i++) {
+        if (i==1) {
+            forwardOnly = true;
+        }
+        FinishedSignalReceiver signalReceiver;
+
+        QSparqlQueryOptions result1_options;
+        QSparqlQueryOptions result2_options;
+        QSparqlQueryOptions result3_options;
+        // execute result 4 with normal priority by not setting anything
+        QSparqlQueryOptions result5_options;
+
+        result1_options.setPriority(QSparqlQueryOptions::NormalPriority);
+        result1_options.setForwardOnly(forwardOnly);
+        result2_options.setPriority(QSparqlQueryOptions::LowPriority);
+        result2_options.setForwardOnly(forwardOnly);
+        result3_options.setPriority(QSparqlQueryOptions::NormalPriority);
+        result3_options.setForwardOnly(forwardOnly);
+        result5_options.setPriority(QSparqlQueryOptions::HighPriority);
+        result5_options.setForwardOnly(forwardOnly);
+
+        // first result, default priority
+        QSparqlResult *result1 =
+            conn.exec(select, result1_options);
+        signalReceiver.append(result1);
+        // this result should be processed last
+        QSparqlResult *result2 =
+            conn.exec(select,result2_options);
+        signalReceiver.append(result2);
+        // this result should be processed after the first one
+        // unless some high priority result comes along
+        QSparqlResult *result3 =
+            conn.exec(select, result3_options);
+        signalReceiver.append(result3);
+        // default is normal priority, so this should be processed after
+        // result 3
+        QSparqlResult *result4 =
+            conn.exec(select);
+        signalReceiver.append(result4);
+        // insert a high priority result, should be bumped to the front
+        // of the queue to be processed before 3, 4 and 2
+        QSparqlResult *result5 =
+            conn.exec(select, result5_options);
+        signalReceiver.append(result5);
+
+        // wait for them all to finish
+        QVERIFY(signalReceiver.waitForAllFinished(8000));
+
+        // order should be result1, result5, result3, result4, result2
+        // however if result1 hasn't started before result5 it will
+        // be result5, result1, result3, result4, result2 so check this
+        // as a special case
+        bool firstOrder = false;
+        QList<QSparqlResult*> resultOrder = signalReceiver.resultOrder;
+        if (resultOrder.at(0) == result1 || resultOrder.at(0) == result5) {
+            firstOrder = true;
+        }
+        QVERIFY(firstOrder);
+        QVERIFY(resultOrder.at(2) == result3);
+        QVERIFY(resultOrder.at(3) == result4);
+        QVERIFY(resultOrder.at(4) == result2);
+
+        // finally just validate they all got the correct number of results
+        foreach(QSparqlResult *result, resultOrder) {
+            int resultSize = 0;
+            if (forwardOnly) {
+                while (result->next())
+                    resultSize++;
+            } else {
+                resultSize = result->size();
+            }
+            QCOMPARE(resultSize, 3000);
+        }
+    }
+}
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
 #include "tst_qsparql_tracker_direct.moc"
