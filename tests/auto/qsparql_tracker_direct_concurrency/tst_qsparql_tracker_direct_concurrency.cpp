@@ -111,14 +111,13 @@ class ThreadQueryRunner : public QObject
     QSparqlConnection *connection;
     QSparqlConnection *ownConnection;
     ResultChecker *resultChecker;
-    ResultChecker *ownResultChecker;
 
     int numQueries;
     int testDataSize;
 
 public:
     ThreadQueryRunner()
-        : connection(0), ownConnection(0), resultChecker(0), ownResultChecker(0)
+        : connection(0), ownConnection(0), resultChecker(0)
     {
     }
 
@@ -129,8 +128,8 @@ public:
 
     void cleanup()
     {
-        delete ownResultChecker;
-        ownResultChecker = 0;
+        delete resultChecker;
+        resultChecker = 0;
         delete ownConnection;
         ownConnection = 0;
     }
@@ -148,28 +147,10 @@ public:
         ownConnection = 0;
     }
 
-    void setResultChecker(ResultChecker* resultChecker)
-    {
-        this->resultChecker = resultChecker;
-        delete ownResultChecker;
-        ownResultChecker = 0;
-    }
-
 public Q_SLOTS:
     void startQueries()
     {
-        if (!connection) {
-            const int dataReadyInterval = qMax(testDataSize/100, 10);
-            QSparqlConnectionOptions options;
-            options.setDataReadyInterval(dataReadyInterval);
-            ownConnection = new QSparqlConnection("QTRACKER_DIRECT", options);
-            connection = ownConnection;
-        }
-        if (!resultChecker) {
-            ownResultChecker = new ResultChecker;
-            resultChecker = ownResultChecker;
-        }
-
+        initResources();
         connect(resultChecker, SIGNAL(allFinished()), this, SLOT(quit()));
         startConcurrentQueries(*connection, *resultChecker, numQueries, testDataSize);
     }
@@ -181,6 +162,20 @@ private Q_SLOTS:
         this->thread()->quit();
     }
 
+private:
+    void initResources()
+    {
+        if (!connection) {
+            const int dataReadyInterval = qMax(testDataSize/100, 10);
+            QSparqlConnectionOptions options;
+            options.setDataReadyInterval(dataReadyInterval);
+            ownConnection = new QSparqlConnection("QTRACKER_DIRECT", options);
+            connection = ownConnection;
+        }
+        if (!resultChecker) {
+            resultChecker = new ResultChecker;
+        }
+    }
 };
 
 void startConcurrentQueries(QSparqlConnection& conn, ResultChecker& resultChecker, int numQueries, int testDataAmount)
