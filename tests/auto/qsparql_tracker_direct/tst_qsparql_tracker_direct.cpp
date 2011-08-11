@@ -109,6 +109,7 @@ private slots:
     void waitForFinished_after_dataReady();
 
     void test_threadpool_priority_select_results();
+    void test_threadpool_priority_update_results();
 
 private:
     QSharedPointer<QSignalSpy> dataReadySpy;
@@ -1329,6 +1330,73 @@ void tst_QSparqlTrackerDirect::test_threadpool_priority_select_results()
             QCOMPARE(resultSize, 3000);
         }
     }
+}
+
+void tst_QSparqlTrackerDirect::test_threadpool_priority_update_results()
+{
+    QSparqlConnectionOptions options;
+    options.setMaxThreadCount(1);
+    QSparqlConnection conn("QTRACKER_DIRECT", options);
+    FinishedSignalReceiver signalReceiver;
+
+    QString insertString = "insert { <newInsert-%1> a nco:PersonContact; nco:nameGiven 'name-%1' .}";
+    QString selectString = "select <newInsert-%1> ?ng { <newInsert-%1> a nco:PersonContact; nco:nameGiven ?ng }";
+    QString deleteString = "delete { <newInsert-%1> a nco:PersonContact }";
+    QSparqlQueryOptions result1_options;
+    QSparqlQueryOptions result2_options;
+    QSparqlQueryOptions result3_options;
+    QSparqlQueryOptions result4_options;
+    QSparqlQueryOptions result5_options;
+    QSparqlQueryOptions result6_options;
+
+    result1_options.setPriority(QSparqlQueryOptions::NormalPriority);
+    result2_options.setPriority(QSparqlQueryOptions::LowPriority);
+    result3_options.setPriority(QSparqlQueryOptions::LowPriority);
+    result4_options.setPriority(QSparqlQueryOptions::NormalPriority);
+    result5_options.setPriority(QSparqlQueryOptions::NormalPriority);
+    result6_options.setPriority(QSparqlQueryOptions::HighPriority);
+
+    //result1, insert contact 1 - normal priority
+    //result2, delete contact 2 - low priority
+    //result3, delete contact 1 - low priority
+    //result4, select contact 1 - normal priority
+    //result5, select contact 2 - normal priority
+    //result6, insert contact 2 - high priority
+    QSparqlResult *result1 =
+        conn.exec(QSparqlQuery(insertString.arg(1),QSparqlQuery::InsertStatement),result1_options);
+    signalReceiver.append(result1);
+    QSparqlResult *result2 =
+        conn.exec(QSparqlQuery(deleteString.arg(1),QSparqlQuery::DeleteStatement),result2_options);
+    signalReceiver.append(result2);
+    QSparqlResult *result3 =
+        conn.exec(QSparqlQuery(deleteString.arg(2),QSparqlQuery::DeleteStatement),result3_options);
+    signalReceiver.append(result3);
+    QSparqlResult *result4 =
+        conn.exec(QSparqlQuery(selectString.arg(1)),result4_options);
+    signalReceiver.append(result4);
+    QSparqlResult *result5 =
+        conn.exec(QSparqlQuery(selectString.arg(2)),result5_options);
+    signalReceiver.append(result5);
+    QSparqlResult *result6 =
+        conn.exec(QSparqlQuery(insertString.arg(2),QSparqlQuery::InsertStatement),result6_options);
+    signalReceiver.append(result6);
+
+    signalReceiver.waitForAllFinished(8000);
+    // contact 1 was selected with result 4, contact 2 with result 5, check these are correct
+    result4->next();
+    QCOMPARE(result4->value(0).toString(), QString("newInsert-1"));
+    QCOMPARE(result4->value(1).toString(), QString("name-1"));
+    result5->next();
+    QCOMPARE(result5->value(0).toString(), QString("newInsert-2"));
+    QCOMPARE(result5->value(1).toString(), QString("name-2"));
+
+    // Check the inserts got deleted
+    QSparqlResult *validateResult1 = conn.exec(QSparqlQuery(selectString.arg(1)));
+    validateResult1->waitForFinished();
+    QSparqlResult *validateResult2 = conn.exec(QSparqlQuery(selectString.arg(2)));
+    validateResult2->waitForFinished();
+    QCOMPARE(validateResult1->size(), 0);
+    QCOMPARE(validateResult2->size(), 0);
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirect )
