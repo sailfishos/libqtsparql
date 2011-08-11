@@ -111,11 +111,10 @@ private:
 
 private:
     MessageRecorder *msgRecorder;
+    bool testEndpoint;
 };
 
 namespace {
-
-bool testEndpoint = false;
 
 const QString contactSelectQueryTemplate =
     "select ?u ?ng %1 {"
@@ -377,6 +376,7 @@ void tst_QSparqlAPI::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
 
+    testEndpoint = false;
     cleanupTestCase();
     insertTrackerTestData();
     insertEndpointTestData();
