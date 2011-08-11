@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "../testhelpers.h"
+#include "querytester.h"
 #include "updatetester.h"
 #include "resultchecker.h"
 #include "../utils/testdata.h"
@@ -82,134 +83,12 @@ private Q_SLOTS:
 
 namespace {
 
-void seedRandomRangeGenerator()
-{
-    QTime time = QTime::currentTime();
-    qsrand((uint)time.msec());
-}
-
-QPair<int,int> randomRangeIn(int max)
-{
-    const int low = qrand() % (max-1) + 1;
-    const int high = qrand() % ((max+1) - low) + low;
-    return qMakePair(low, high);
-}
-
 void waitForAllFinished(const QList<QThread*>& threads, int timeoutMs)
 {
     Q_FOREACH(QThread* thread, threads) {
         QVERIFY( thread->wait(timeoutMs) );
     }
 }
-
-class QueryTester : public QObject
-{
-    Q_OBJECT
-
-    QSparqlConnection *connection;
-    QSparqlConnection *ownConnection;
-    ResultChecker *resultChecker;
-
-    int numQueries;
-    int testDataSize;
-
-public:
-    QueryTester()
-        : connection(0), ownConnection(0), resultChecker(0)
-    {
-    }
-
-    ~QueryTester()
-    {
-        cleanup();
-    }
-
-    void cleanup()
-    {
-        delete resultChecker;
-        resultChecker = 0;
-        delete ownConnection;
-        ownConnection = 0;
-    }
-
-    void setParameters(int numQueries, int testDataSize)
-    {
-        this->numQueries = numQueries;
-        this->testDataSize = testDataSize;
-    }
-
-    void setConnection(QSparqlConnection* connection)
-    {
-        this->connection = connection;
-        delete ownConnection;
-        ownConnection = 0;
-    }
-
-    bool waitForAllFinished(int silenceTimeoutMs)
-    {
-        return resultChecker->waitForAllFinished(silenceTimeoutMs);
-    }
-
-public Q_SLOTS:
-    void startQueries()
-    {
-        initResources();
-        for (int i=0;i<numQueries;i++) {
-            QPair<int, int> resultRange;
-            QString filter;
-            if (i % 10 == 0) {
-                // Override every 10th result to read all
-                resultRange = qMakePair(1, testDataSize);
-                filter = ". }";
-            }
-            else {
-                resultRange  = randomRangeIn(testDataSize);
-                filter = QString("FILTER ( ?t >=%1 && ?t <=%2 ) }").arg(resultRange.first).arg(resultRange.second);
-            }
-            QSparqlQuery select(QString("select ?u ?t {?u a nmm:MusicPiece; "
-                                        "nmm:trackNumber ?t; "
-                                        "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
-                                        + filter));
-            QSparqlResult *result = connection->exec(select);
-            resultChecker->append(result, resultRange);
-        }
-    }
-
-    void startInThread(QThread* thread)
-    {
-        this->moveToThread(thread);
-        connect(thread, SIGNAL(started()), this, SLOT(runInThread()));
-    }
-
-    void runInThread()
-    {
-        initResources();
-        connect(resultChecker, SIGNAL(allFinished()), this, SLOT(quit()));
-        startQueries();
-    }
-
-private Q_SLOTS:
-    void quit()
-    {
-        cleanup();
-        this->thread()->quit();
-    }
-
-private:
-    void initResources()
-    {
-        if (!connection) {
-            const int dataReadyInterval = qMax(testDataSize/100, 10);
-            QSparqlConnectionOptions options;
-            options.setDataReadyInterval(dataReadyInterval);
-            ownConnection = new QSparqlConnection("QTRACKER_DIRECT", options);
-            connection = ownConnection;
-        }
-        if (!resultChecker) {
-            resultChecker = new ResultChecker;
-        }
-    }
-};
 
 } //end namespace
 
@@ -227,7 +106,6 @@ void tst_QSparqlTrackerDirectConcurrency::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     testData = 0;
-    seedRandomRangeGenerator();
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanupTestCase()
