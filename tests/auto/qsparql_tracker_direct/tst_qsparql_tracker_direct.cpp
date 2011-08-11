@@ -39,6 +39,7 @@
 
 #include "../testhelpers.h"
 #include "../tracker_direct_common.h"
+#include "../utils/testdata.h"
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
@@ -419,7 +420,7 @@ void tst_QSparqlTrackerDirect::delete_partially_iterated_result()
     const int testDataAmount = 3000;
     const QString testCaseTag("<qsparql-tracker-direct-tests-delete_partially_iterated_result>");
     QScopedPointer<TestData> testData(
-            createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
+            TestData::createTrackerTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
@@ -1247,7 +1248,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
     const int testDataAmount = 3000;
     const QString testCaseTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
     QScopedPointer<TestData> testData(
-            createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
+            TestData::createTrackerTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;
@@ -1282,7 +1283,7 @@ void tst_QSparqlTrackerDirect::waitForFinished_after_dataReady()
     setMsgLogLevel(QtCriticalMsg);
     const int testDataAmount = 3000;
     const QString testTag("<qsparql-tracker-direct-tests-waitForFinished_after_dataReady>");
-    QScopedPointer<TestData> testData(createTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
+    QScopedPointer<TestData> testData(TestData::createTrackerTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testTag));
     QTest::qWait(1000);
     QVERIFY( testData->isOK() );
     QSparqlConnectionOptions opts;

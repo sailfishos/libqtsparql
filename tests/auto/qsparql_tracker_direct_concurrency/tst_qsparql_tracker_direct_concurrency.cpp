@@ -40,7 +40,7 @@
 #include "../testhelpers.h"
 #include "updatetester.h"
 #include "resultchecker.h"
-#include "../tracker_direct_common.h"
+#include "../utils/testdata.h"
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
@@ -238,7 +238,7 @@ void tst_QSparqlTrackerDirectConcurrency::createTrackerTestData()
 {
     if (!testData) {
         const QString testTag("<qsparql-tracker-direct-tests-concurrency-stress>");
-        testData = createTestData(TEST_DATA_AMOUNT, "<qsparql-tracker-direct-tests>", testTag);
+        testData = TestData::createTrackerTestData(TEST_DATA_AMOUNT, "<qsparql-tracker-direct-tests>", testTag);
         QTest::qWait(2000);
         QVERIFY( testData->isOK() );
     }
