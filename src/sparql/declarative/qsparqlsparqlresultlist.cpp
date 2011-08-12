@@ -63,12 +63,12 @@ void SparqlResultList::componentComplete()
     // we know if any connection options have been set
 }
 
-void SparqlResultList::writeQuery(QString query)
+void SparqlResultList::setQuery(QString query)
 {
     queryString = query;
 }
 
-QString SparqlResultList::readQuery() const
+QString SparqlResultList::getQuery() const
 {
     return queryString;
 }
