@@ -869,11 +869,13 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection *conn = new QSparqlConnection(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
     const QString queryString = query.arg( getTemplateArguments(connectionDriver, "SELECT") );
@@ -919,13 +921,30 @@ void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& conne
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << false
         << false;
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << true
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
@@ -933,6 +952,7 @@ void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& conne
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::SyncExec)
+        << false
         << false;
 }
 
@@ -943,6 +963,7 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<bool>("forwardOnly");
     add_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
     if (testEndpoint)

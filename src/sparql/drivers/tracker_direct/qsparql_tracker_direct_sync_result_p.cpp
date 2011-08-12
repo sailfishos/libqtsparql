@@ -282,8 +282,7 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
 
 void QTrackerDirectSyncResult::stopAndWait()
 {
-    if (queryRunner)
-    {
+    if (queryRunner) {
         resultFinished = 1;
         queryRunner->wait();
         delete queryRunner; queryRunner = 0;
@@ -295,9 +294,13 @@ void QTrackerDirectSyncResult::stopAndWait()
 
 bool QTrackerDirectSyncResult::isFinished() const
 {
-    if (isAsync) {
+    // check for a query runner here, if it has been deleted
+    // then return the sync isFinnished, if it's still there
+    // the result still may have reverted to sync mode, so also
+    // check isAsync
+    if (queryRunner && isAsync) {
         // return false until the async execution as finnished
-        return false;
+        return resultFinished == 1;
     } else {
         return !cursor;
     }
@@ -318,7 +321,7 @@ bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
 
 void QTrackerDirectSyncResult::waitForFinished()
 {
-    if (isAsync) {
+    if (queryRunner && isAsync) {
         driverPrivate->waitForConnectionOpen();
         if (!driverPrivate->driver->isOpen()) {
             setLastError(QSparqlError(driverPrivate->error,
