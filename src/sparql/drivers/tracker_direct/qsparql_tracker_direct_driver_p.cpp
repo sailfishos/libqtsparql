@@ -416,7 +416,10 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
 {
     QTrackerDirectResult *result = 0;
     if (type == QSparqlQuery::AskStatement || type == QSparqlQuery::SelectStatement) {
-        result = new QTrackerDirectSelectResult(d, query, type);
+        if (options.isForwardOnly())
+            result = new QTrackerDirectSyncResult(d, query, type, options);
+        else
+            result = new QTrackerDirectSelectResult(d, query, type);
     } else {
         result = new QTrackerDirectUpdateResult(d, query, type, options);
     }

@@ -58,11 +58,15 @@ QTrackerDirectSyncResult::QTrackerDirectSyncResult(QTrackerDirectDriverPrivate* 
                                                    const QString& query,
                                                    QSparqlQuery::StatementType type,
                                                    const QSparqlQueryOptions& options)
-    : cursor(0), n_columns(-1), options(&options)
+    : cursor(0), n_columns(-1), options(&options), isAsync(false)
 {
     setQuery(query);
     setStatementType(type);
     driverPrivate = p;
+    if (options.executionMethod() == QSparqlQueryOptions::AsyncExec && options.isForwardOnly()) {
+        isAsync = true;
+        queryRunner = new QTrackerDirectQueryRunner(this);
+    }
 }
 
 QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
@@ -70,7 +74,41 @@ QTrackerDirectSyncResult::~QTrackerDirectSyncResult()
     stopAndWait();
 }
 
+void QTrackerDirectSyncResult::run()
+{
+    runQuery();
+    terminate();
+}
+
+void QTrackerDirectSyncResult::terminate()
+{
+    resultFinished = 1;
+    // can revert back to async mode for the result now
+    isAsync = false;
+    Q_EMIT finished();
+}
+
+void QTrackerDirectSyncResult::startFetcher()
+{
+    if (queryRunner && !queryRunner->started && !isFinished()) {
+        queryRunner->started = true;
+        //first attempt to acquire the semaphore, if we can, then add the
+        //fetcher to the threadPool queue, if we can't then waitForFinished
+        //has it, so we don't need to refetch the results using this thread
+        queryRunner->queue(driverPrivate->threadPool);
+    }
+}
+
 void QTrackerDirectSyncResult::exec()
+{
+    if (isAsync && !queryRunner->started) {
+        QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
+    } else {
+        runQuery();
+    }
+}
+
+void QTrackerDirectSyncResult::runQuery()
 {
     if (statementType() == QSparqlQuery::AskStatement || statementType() == QSparqlQuery::SelectStatement) {
         selectQuery();
@@ -244,6 +282,12 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
 
 void QTrackerDirectSyncResult::stopAndWait()
 {
+    if (queryRunner)
+    {
+        resultFinished = 1;
+        queryRunner->wait();
+        delete queryRunner; queryRunner = 0;
+    }
     if (cursor)
         g_object_unref(cursor);
     cursor = 0;
@@ -251,7 +295,12 @@ void QTrackerDirectSyncResult::stopAndWait()
 
 bool QTrackerDirectSyncResult::isFinished() const
 {
-    return !cursor;
+    if (isAsync) {
+        // return false until the async execution as finnished
+        return false;
+    } else {
+        return !cursor;
+    }
 }
 
 bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
@@ -265,6 +314,24 @@ bool QTrackerDirectSyncResult::hasFeature(QSparqlResult::Feature feature) const
     default:
         return false;
     }
+}
+
+void QTrackerDirectSyncResult::waitForFinished()
+{
+    if (isAsync) {
+        driverPrivate->waitForConnectionOpen();
+        if (!driverPrivate->driver->isOpen()) {
+            setLastError(QSparqlError(driverPrivate->error,
+                                      QSparqlError::ConnectionError));
+            terminate();
+            return;
+        }
+        //if we can acquire the semaphore then run fetcher directly
+        //if we can't then fetcher is in the threadpool, so we wait
+        //for it to complete
+        queryRunner->runOrWait();
+    }
+
 }
 
 QT_END_NAMESPACE

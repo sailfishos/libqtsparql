@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qsparqlqueryoptions.h"
-
+#include <QDebug>
 QT_BEGIN_NAMESPACE
 
 class QSparqlQueryOptionsPrivate: public QSharedData
@@ -51,12 +51,14 @@ public:
 
     QSparqlQueryOptions::ExecutionMethod executionMethod;
     QSparqlQueryOptions::Priority priority;
+    bool forwardOnly;
 };
 
 QSparqlQueryOptionsPrivate::QSparqlQueryOptionsPrivate()
     // Set the options to their default values
     : executionMethod(QSparqlQueryOptions::AsyncExec)
     , priority(QSparqlQueryOptions::NormalPriority)
+    , forwardOnly(false)
 {
 }
 
@@ -128,11 +130,29 @@ void QSparqlQueryOptions::setExecutionMethod(ExecutionMethod em)
     d->executionMethod = em;
 }
 
-/// Returns the exeuction method of the query.
+/// Returns the execution method of the query.
 /// \sa setExecutionMethod
 QSparqlQueryOptions::ExecutionMethod QSparqlQueryOptions::executionMethod() const
 {
     return d->executionMethod;
+}
+
+/*!
+    Sets whether or not to execute asynchronous queries in a ForwardOnly manner.
+    Support for this option is currently limited to the QTRACKER_DIRECT driver.
+    \sa \ref trackerdirectspecific "QTRACKER_DIRECT specific usage"
+*/
+void QSparqlQueryOptions::setForwardOnly(bool forward)
+{
+    d->forwardOnly = forward;
+}
+
+/*!
+    Returns whether or not an asynchronous query will be executed in a forward only manner.
+*/
+bool QSparqlQueryOptions::isForwardOnly() const
+{
+    return d->forwardOnly;
 }
 
 /*!
