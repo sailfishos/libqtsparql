@@ -58,24 +58,17 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDecla
     Q_OBJECT
     Q_ENUMS(Status)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QString driver WRITE setDriver READ getdriverName)
+    Q_PROPERTY(QString driver WRITE setDriver READ getDriver)
     Q_PROPERTY(QVariant result READ getResult NOTIFY resultReady)
     Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
     Q_INTERFACES(QDeclarativeParserStatus)
 
 public:
-    QString driverName;
-    QString lastErrorMessage;
-    // for async queries
-    QSparqlResult *asyncResult;
-    QVariant lastResult;
-
-    SparqlConnectionOptions *options;
     SparqlConnection();
     ~SparqlConnection() {}
 
-    QString getdriverName() { return driverName; }
+    enum Status { Null, Ready, Loading, Error };
 
     void classBegin();
     void componentComplete();
@@ -86,30 +79,28 @@ public:
     Q_INVOKABLE QVariant construct(QString query, bool async = false);
     Q_INVOKABLE QString errorString() const;
 
+private:
+    QString driverName;
+    QString lastErrorMessage;
+    QSparqlResult *asyncResult; // for async queries
+    QVariant lastResult;
+    SparqlConnectionOptions *options;
+    Status connectionStatus;
+
     QVariant resultToVariant(QSparqlResult *result);
     QVariant runQuery(QSparqlQuery query, bool async);
     QVariant getResult();
 
-    void setOptions(SparqlConnectionOptions* options)
-    {
-        if (options)
-        {
-            this->options = options;
-        }
-    }
-
-    SparqlConnectionOptions* getOptions()
-    {
-        return options;
-    }
-
-    void setDriver(QString driverName) { this->driverName = driverName; }
-
-    enum Status { Null, Ready, Loading, Error };
-    Status connectionStatus;
+    // property methods
+    void setOptions(SparqlConnectionOptions* options);
+    SparqlConnectionOptions* getOptions();
+    void setDriver(QString driverName);
+    QString getDriver();
     Status status();
+
 public Q_SLOTS:
     void onResultFinished();
+
 Q_SIGNALS:
     void statusChanged(SparqlConnection::Status);
     void resultReady(QVariant);

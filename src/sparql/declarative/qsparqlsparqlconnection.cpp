@@ -177,7 +177,32 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
     return lastResult;
 }
 
+// property set/get methods
+
 SparqlConnection::Status SparqlConnection::status()
 {
     return connectionStatus;
+}
+
+void SparqlConnection::setOptions(SparqlConnectionOptions* options)
+{
+    if (options)
+    {
+       this->options = options;
+    }
+}
+
+SparqlConnectionOptions* SparqlConnection::getOptions()
+{
+    return options;
+}
+
+void SparqlConnection::setDriver(QString driverName)
+{
+    this->driverName = driverName;
+}
+
+QString SparqlConnection::getDriver()
+{
+    return driverName;
 }
