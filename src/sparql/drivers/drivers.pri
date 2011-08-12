@@ -13,7 +13,7 @@ contains(sparql-drivers, tracker) {
 }
 
 contains(sparql-drivers, tracker_direct) {
-    HEADERS += drivers/tracker_direct/qsparql_tracker_direct.h \
+    HEADERS += drivers/tracker_direct/qsparql_tracker_direct_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_driver_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_result_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_select_result_p.h \

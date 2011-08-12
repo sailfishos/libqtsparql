@@ -39,7 +39,7 @@
 
 #include <QtSparql/private/qsparqldriverplugin_p.h>
 #include <qstringlist.h>
-#include "../../../sparql/drivers/tracker_direct/qsparql_tracker_direct.h"
+#include "../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_p.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -1,7 +1,7 @@
 TARGET   = qsparqltrackerdirect
 CONFIG += no_keywords
 
-HEADERS         = ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct.h \
+HEADERS         = ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_p.h \
                   ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_driver_p.h \
                   ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_result_p.h \
                   ../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_select_result_p.h \
