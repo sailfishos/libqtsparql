@@ -79,6 +79,14 @@ public:
     Q_INVOKABLE QVariant construct(QString query, bool async = false);
     Q_INVOKABLE QString errorString() const;
 
+Q_SIGNALS:
+    void statusChanged(SparqlConnection::Status);
+    void resultReady(QVariant);
+    void onCompleted();
+
+private Q_SLOTS:
+    void onResultFinished();
+
 private:
     QString driverName;
     QString lastErrorMessage;
@@ -97,14 +105,6 @@ private:
     void setDriver(QString driverName);
     QString getDriver();
     Status status();
-
-public Q_SLOTS:
-    void onResultFinished();
-
-Q_SIGNALS:
-    void statusChanged(SparqlConnection::Status);
-    void resultReady(QVariant);
-    void onCompleted();
 };
 
 QT_END_NAMESPACE

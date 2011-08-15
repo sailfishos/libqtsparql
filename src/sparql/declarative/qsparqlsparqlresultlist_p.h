@@ -75,26 +75,28 @@ public:
 
     enum Status { Null, Ready, Loading, Error };
 
+
+Q_SIGNALS:
+    void countChanged();
+    void statusChanged(SparqlResultList::Status);
+
+private Q_SLOTS:
+    void onFinished();
+    void onStarted();
+    void onConnectionComplete();
+
 private:
     SparqlConnection *connection;
     QString queryString;
     QString lastErrorMessage;
     Status modelStatus;
 
+    // property methods
     Status status();
     void setConnection(SparqlConnection* connection);
     SparqlConnection* getConnection();
     void setQuery(QString query);
     QString getQuery() const;
-
-public Q_SLOTS:
-    void onFinished();
-    void onStarted();
-    void onConnectionComplete();
-
-Q_SIGNALS:
-    void countChanged();
-    void statusChanged(SparqlResultList::Status);
 };
 
 QT_END_NAMESPACE
