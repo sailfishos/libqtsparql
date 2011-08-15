@@ -98,7 +98,7 @@ private:
     QVariant resultToVariant(QSparqlResult *result);
     QVariant runQuery(QSparqlQuery query, bool async);
     QVariant getResult();
-
+    void changeStatus(SparqlConnection::Status);
     // property methods
     void setOptions(SparqlConnectionOptions* options);
     SparqlConnectionOptions* getOptions();

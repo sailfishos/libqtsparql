@@ -54,8 +54,7 @@ SparqlConnection::SparqlConnection()
 
 void SparqlConnection::classBegin()
 {
-    connectionStatus = Loading;
-    Q_EMIT statusChanged(connectionStatus);
+    changeStatus(Loading);
 }
 
 void SparqlConnection::componentComplete()
@@ -70,12 +69,11 @@ void SparqlConnection::componentComplete()
 
     // check connection opening when ok
     if (isValid()) {
-        connectionStatus = Ready;
+        changeStatus(Ready);
     } else {
         lastErrorMessage = QLatin1String("Failed to open connection");
-        connectionStatus = Error;
+        changeStatus(Error);
     }
-    Q_EMIT statusChanged(connectionStatus);
     Q_EMIT onCompleted();
 }
 
@@ -117,13 +115,14 @@ QVariant SparqlConnection::runQuery(QSparqlQuery query, bool async)
     if (!isValid()) {
         return -1;
     }
-    connectionStatus = Ready;
-    Q_EMIT statusChanged(connectionStatus);
-
+    changeStatus(Ready);
+    // clear the last result
+    lastResult.clear();
     if (async) {
+        // in case of previous active async result
+        delete asyncResult;
         asyncResult = exec(query);
         connect(asyncResult, SIGNAL(finished()), this, SLOT(onResultFinished()));
-        lastResult = 0;
     } else {
         QSparqlResult *result = syncExec(query);
         return resultToVariant(result);
@@ -139,17 +138,15 @@ QVariant SparqlConnection::getResult()
 void SparqlConnection::onResultFinished()
 {
     resultToVariant(asyncResult);
+    asyncResult = 0;
 }
 
 QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
 {
-    // clear the last result
-    lastResult.clear();
     // check for a result error
     if (result->hasError()) {
-        connectionStatus = Error;
         lastErrorMessage = result->lastError().message();
-        Q_EMIT statusChanged(connectionStatus);
+        changeStatus(Error);
         delete result;
         return -1;
     }
@@ -177,6 +174,13 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
     return lastResult;
 }
 
+void SparqlConnection::changeStatus(SparqlConnection::Status status)
+{
+    if (connectionStatus != status) {
+        connectionStatus = status;
+        Q_EMIT statusChanged(connectionStatus);
+    }
+}
 // property set/get methods
 
 SparqlConnection::Status SparqlConnection::status()
