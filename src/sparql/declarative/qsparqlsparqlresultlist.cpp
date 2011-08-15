@@ -57,8 +57,7 @@ void SparqlResultList::classBegin()
 
 void SparqlResultList::componentComplete()
 {
-    modelStatus = Loading;
-    Q_EMIT statusChanged(modelStatus);
+    changeStatus(Loading);
     // we will create the connection once the component has finished reading, that way
     // we know if any connection options have been set
 }
@@ -103,8 +102,7 @@ void SparqlResultList::onConnectionComplete()
         setQueryQML(QSparqlQuery(queryString), *connection);
     } else {
         lastErrorMessage = QLatin1String("Error opening connection");
-        modelStatus = Error;
-        Q_EMIT statusChanged(modelStatus);
+        changeStatus(Error);
     }
 }
 
@@ -125,17 +123,23 @@ QString SparqlResultList::errorString() const
 
 void SparqlResultList::onStarted()
 {
-    modelStatus = Loading;
-    Q_EMIT statusChanged(modelStatus);
+    changeStatus(Loading);
 }
 
 void SparqlResultList::onFinished()
 {
     if (lastError().type() == QSparqlError::NoError) {
-        modelStatus = Ready;
+        changeStatus(Ready);
     } else {
         lastErrorMessage = lastError().message();
-        modelStatus = Error;
+        changeStatus(Error);
     }
-    Q_EMIT statusChanged(modelStatus);
+}
+
+void SparqlResultList::changeStatus(SparqlResultList::Status status)
+{
+    if (modelStatus != status) {
+        modelStatus = status;
+        Q_EMIT statusChanged(modelStatus);
+    }
 }

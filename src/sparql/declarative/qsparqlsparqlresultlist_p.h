@@ -91,6 +91,7 @@ private:
     QString lastErrorMessage;
     Status modelStatus;
 
+    void changeStatus(SparqlResultList::Status status);
     // property methods
     Status status();
     void setConnection(SparqlConnection* connection);
