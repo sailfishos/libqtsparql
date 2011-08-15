@@ -258,6 +258,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
     QFETCH(QString, connectionName);
     QFETCH(QString, queryString);
     QFETCH(int, executionMethod);
+    QFETCH(bool, forwardOnly);
 
     QSparqlQuery query(queryString);
     QSparqlConnection conn(connectionName);
@@ -269,6 +270,7 @@ void tst_QSparqlBenchmark::queryBenchmark()
         QTest::qWait(2000);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
 
     QSparqlResult* r = 0;
@@ -295,23 +297,35 @@ void tst_QSparqlBenchmark::queryBenchmark_data()
     QTest::addColumn<QString>("benchmarkName");
     QTest::addColumn<QString>("connectionName");
     QTest::addColumn<int>("executionMethod");
+    QTest::addColumn<bool>("forwardOnly");
     QTest::addColumn<QString>("queryString");
 
     QTest::newRow("TrackerDBusArtistsAndAlbums")
         << "dbus-artistsandalbums"
         << "QTRACKER"
         << (int)QSparqlQueryOptions::AsyncExec
+        << false
         << artistsAndAlbumsQuery;
 
     QTest::newRow("TrackerDirectArtistsAndAlbums-Async")
         << "direct-artistsandalbums-Async"
         << "QTRACKER_DIRECT"
         << (int)QSparqlQueryOptions::AsyncExec
+        << false
         << artistsAndAlbumsQuery;
+
+    QTest::newRow("TrackerDirectArtistsAndAlbums-Async-ForwardOnly")
+        << "direct-artistsandalbums-Async-ForwardOnly"
+        << "QTRACKER_DIRECT"
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true
+        << artistsAndAlbumsQuery;
+
     QTest::newRow("TrackerDirectArtistsAndAlbums-Sync")
         << "direct-artistandalbums-Sync"
         << "QTRACKER_DIRECT"
         << (int)QSparqlQueryOptions::SyncExec
+        << false
         << artistsAndAlbumsQuery;
 
 }
@@ -322,6 +336,7 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     QFETCH(QString, queryString);
     QFETCH(int, columnCount);
     QFETCH(int, executionMethod);
+    QFETCH(bool, forwardOnly);
 
     // Set the dataReadyInterval to be large enough so that it won't affect this
     // test case.
@@ -329,6 +344,7 @@ void tst_QSparqlBenchmark::dataReadingBenchmark()
     opts.setDataReadyInterval(1000000);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod((QSparqlQueryOptions::ExecutionMethod)executionMethod);
     QSparqlConnection conn("QTRACKER_DIRECT", opts);
     // Note: connection opening cost is left out of the benchmark. Connection
@@ -390,30 +406,49 @@ void tst_QSparqlBenchmark::dataReadingBenchmark_data()
     QTest::addColumn<QString>("queryString");
     QTest::addColumn<int>("columnCount");
     QTest::addColumn<int>("executionMethod");
+    QTest::addColumn<bool>("forwardOnly");
 
     QTest::newRow("ReadingArtistsAndAlbums-Async")
         << "read-artistsandalbums-Async"
         << artistsAndAlbumsQuery
         << artistsAndAlbumsColumnCount
-        << (int)QSparqlQueryOptions::AsyncExec;
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("ReadingArtistsAndAlbums-Async-ForwardOnly")
+        << "read-artistsandalbums-Async-ForwardOnly"
+        << artistsAndAlbumsQuery
+        << artistsAndAlbumsColumnCount
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true;
 
     QTest::newRow("ReadingArtistsAndAlbums-Sync")
         << "read-artistsandalbums-Sync"
         << artistsAndAlbumsQuery
         << artistsAndAlbumsColumnCount
-        << (int)QSparqlQueryOptions::SyncExec;
+        << (int)QSparqlQueryOptions::SyncExec
+        << false;
 
     QTest::newRow("ReadingMusic-Async")
         << "read-music-Async"
         << musicQuery
         << musicQueryColumnCount
-        << (int)QSparqlQueryOptions::AsyncExec;
+        << (int)QSparqlQueryOptions::AsyncExec
+        << false;
+
+    QTest::newRow("ReadingMusic-Async-ForwardOnly")
+        << "read-music-Async-ForwardOnly"
+        << musicQuery
+        << musicQueryColumnCount
+        << (int)QSparqlQueryOptions::AsyncExec
+        << true;
 
     QTest::newRow("ReadingMusic-Sync")
         << "read-music-Sync"
         << musicQuery
         << musicQueryColumnCount
-        << (int)QSparqlQueryOptions::SyncExec;
+        << (int)QSparqlQueryOptions::SyncExec
+        << false;
 }
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
