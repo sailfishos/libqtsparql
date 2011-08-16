@@ -59,8 +59,6 @@ private slots:
     void insert_and_delete_contact();
     void insert_new_urn();
 
-    void query_with_error();
-
     void batch_update();
 
     void iterate_result();
@@ -269,20 +267,6 @@ void tst_QSparqlTracker::insert_new_urn()
         contactNames[r->binding(1).value().toString()] = r->binding(0);
     }
     QCOMPARE(contactNames.size(), 3);
-    delete r;
-}
-
-void tst_QSparqlTracker::query_with_error()
-{
-    // This test will print out warnings
-    testLogLevel = QtCriticalMsg;
-    QSparqlConnection conn("QTRACKER");
-    QSparqlQuery q("this is not a valid query");
-    QSparqlResult* r = conn.exec(q);
-    QVERIFY(r != 0);
-    r->waitForFinished(); // this test is syncronous only
-    QVERIFY(r->hasError());
-    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
     delete r;
 }
 
