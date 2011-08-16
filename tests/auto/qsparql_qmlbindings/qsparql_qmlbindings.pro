@@ -11,3 +11,7 @@ check.commands = ./tst_qsparql_qmlbindings
 
 #QT = sparql # enable this later
 
+install_qml.files = qsparqlconnection.qml qsparqlresultlist.qml
+install_qml.path = $$PREFIX/lib/$$PACKAGENAME-tests/
+INSTALLS += install_qml
+

@@ -135,9 +135,11 @@ void qmlCleanup()
 
 bool loadQmlFile(QString fileName, QList<QPair<QString, QVariant> > contextProperties)
 {
+    QFileInfo fileInfo(QApplication::argv()[0]);
+
     engine = new QDeclarativeEngine();
     engine->addImportPath("../../../imports");
-    component = new QDeclarativeComponent(engine, QUrl::fromLocalFile(fileName));
+    component = new QDeclarativeComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName));
     context = engine->rootContext();
 
     for(int i=0;i<contextProperties.size();i++) {
@@ -189,8 +191,8 @@ tst_QSparqlQMLBindings::~tst_QSparqlQMLBindings()
 
 void tst_QSparqlQMLBindings::initTestCase()
 {
-
     QCoreApplication::addLibraryPath("../../../plugins");
+    QCoreApplication::addLibraryPath("../../../imports");
 
     const QString insertQueryTemplate =
         "<qml-uri00%1> a nco:PersonContact, nie:InformationElement ;"
@@ -209,9 +211,6 @@ void tst_QSparqlQMLBindings::initTestCase()
     r->waitForFinished();
     QVERIFY(!r->hasError());
     delete r;
-
-    QCoreApplication::addLibraryPath("../../../plugins");
-    QCoreApplication::addLibraryPath("../../../imports");
 }
 
 void tst_QSparqlQMLBindings::cleanupTestCase()
