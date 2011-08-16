@@ -65,7 +65,6 @@ private slots:
     void cleanup();
 
     void qsparqlresultrow();
-    void query_contacts_async();
     void ask_contacts();
     void insert_and_delete_contact_async();
     void insert_new_urn();
@@ -213,38 +212,6 @@ void tst_QSparqlTrackerDirect::qsparqlresultrow()
     QCOMPARE(row.variableName(1), QString());
     QCOMPARE(row.indexOf("ng"), -1);
 
-    delete r;
-}
-
-void tst_QSparqlTrackerDirect::query_contacts_async()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.exec(q);
-    CHECK_QSPARQL_RESULT(r);
-
-    QTime timer;
-    timer.start();
-    QSignalSpy spy(r, SIGNAL(finished()));
-    while (spy.count() == 0 && timer.elapsed() < 5000) {
-        QTest::qWait(100);
-    }
-
-    QCOMPARE(spy.count(), 1);
-
-    CHECK_QSPARQL_RESULT(r);
-    QCOMPARE(r->size(), 3);
-    QHash<QString, QString> contactNames;
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        contactNames[r->value(0).toString()] = r->value(1).toString();
-    }
-    QCOMPARE(contactNames.size(), 3);
-    QCOMPARE(contactNames["uri001"], QString("name001"));
-    QCOMPARE(contactNames["uri002"], QString("name002"));
-    QCOMPARE(contactNames["uri003"], QString("name003"));
     delete r;
 }
 
