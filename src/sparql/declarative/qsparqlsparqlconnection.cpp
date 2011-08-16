@@ -44,12 +44,11 @@
 #include <QSparqlError>
 
 SparqlConnection::SparqlConnection()
+  : asyncResult(0)
+  , lastResult(0)  // To avoid "result" property having undefined value in QML
+  , options(0)
+  , connectionStatus(Null)
 {
-    connectionStatus = Null;
-    options = 0;
-    lastResult = 0;
-    asyncResult = 0;
-    lastErrorMessage = QLatin1String("");
 }
 
 void SparqlConnection::classBegin()

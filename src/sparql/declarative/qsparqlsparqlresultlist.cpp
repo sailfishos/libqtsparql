@@ -41,14 +41,14 @@
 #include "qsparqlsparqlconnection_p.h"
 #include <QtSparql>
 
-SparqlResultList::SparqlResultList() : connection(0)
+SparqlResultList::SparqlResultList()
+  : connection(0)
+  , modelStatus(Null)
 {
-    modelStatus = Null;
     connect(this, SIGNAL(rowsRemoved(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(finished()), this, SLOT(onFinished()));
     connect(this, SIGNAL(started()), this, SLOT(onStarted()));
-    lastErrorMessage = QLatin1String("");
 }
 
 void SparqlResultList::classBegin()
