@@ -158,11 +158,18 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
         lastResult = result->boolValue();
     } else {
         QVariantList resultList;
+        QVector<QString> bindingNames;
         while(result->next()) {
-            QSparqlResultRow row = result->current();
+            // only read the binding names once
+            if (result->pos() == 0) {
+                QSparqlResultRow row = result->current();
+                for (int i=0; i<row.count(); i++) {
+                    bindingNames.append(row.binding(i).name());
+                }
+            }
             QVariantMap resultHash;
-            for (int i=0; i<row.count(); i++) {
-                resultHash.insert(row.binding(i).name(), row.value(i));
+            for (int i=0; i<bindingNames.size(); i++) {
+                resultHash.insert(bindingNames.at(i), result->value(i));
             }
             resultList.append(resultHash);
         }
