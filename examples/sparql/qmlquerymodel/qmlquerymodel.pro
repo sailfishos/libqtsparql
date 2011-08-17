@@ -1,7 +1,5 @@
 include(../sparql-examples.pri)
 
-CONFIG += qt
-
 SOURCES += main.cpp
 
 #QT += sparql #enable this later

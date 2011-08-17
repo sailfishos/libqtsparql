@@ -39,22 +39,22 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include <QtDeclarative>
 #include <QtSparql>
-#include <QtDBus/QtDBus>
+#include <QtDBus>
 #include <QString>
 
 class ModelLiveChange : public QObject
 {
     Q_OBJECT
-public :
-    ModelLiveChange(QSparqlQueryModel *model);
-    ~ModelLiveChange();
-
     QSparqlQueryModel *model;
     QSparqlConnection *connection;
     QString query;
+
+public :
+    ModelLiveChange(QSparqlQueryModel *model);
+    ~ModelLiveChange();
 
 public slots:
     void changed(QString);
@@ -64,10 +64,10 @@ public slots:
 ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
 {
     // The property names in QML will be "u" "firstName" and "secondName"
-    query = "select ?u ?firstName ?secondName"
-            "{ ?u a nco:PersonContact;"
-            "nie:isLogicalPartOf <qml-example>;"
-            "nco:nameGiven ?firstName;"
+    query = "select ?u ?firstName ?secondName "
+            "{ ?u a nco:PersonContact; "
+            "nie:isLogicalPartOf <qml-example>; "
+            "nco:nameGiven ?firstName; "
             "nco:nameFamily ?secondName .} order by ?secondName ?firstName";
 
     // In this example we use the QTRACKER_DIRECT driver, QML model support
@@ -84,15 +84,15 @@ ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model) : model(model)
     // http://live.gnome.org/Tracker/Documentation/SignalsOnChanges
     // Please note: a more complete implementation, TrackerChangeNotifier,
     // is available in libqtsparql-tracker-extensions
-    QString service("org.freedesktop.Tracker1");
-    QString basePath("/org/freedesktop/Tracker1");
-    QString resourcesInterface("org.freedesktop.Tracker1.Resources");
-    QString resourcesPath("/org/freedesktop/Tracker1/Resources");
-    QString changedSignal("GraphUpdated");
-    QString changedSignature("sa(iiii)a(iiii)");
-    QString syncFunction("Sync");
+    const QString service("org.freedesktop.Tracker1");
+    const QString basePath("/org/freedesktop/Tracker1");
+    const QString resourcesInterface("org.freedesktop.Tracker1.Resources");
+    const QString resourcesPath("/org/freedesktop/Tracker1/Resources");
+    const QString changedSignal("GraphUpdated");
+    const QString changedSignature("sa(iiii)a(iiii)");
+    const QString syncFunction("Sync");
     // We'll need to use the long form of the class name to watch.
-    QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
+    const QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
     QDBusConnection::sessionBus().connect(service, resourcesPath,
                                           resourcesInterface, changedSignal,
                                           QStringList() << className,
@@ -120,9 +120,9 @@ void ModelLiveChange::gotClick(QString firstName, QString familyName)
 {
     // We use this slot to handel contact inserts from QML, simply insert
     // them and the change notifier will pick them up and requery
-    QString insertString = QString("insert { _:u a nco:PersonContact;"
-                                   "nie:isLogicalPartOf <qml-example>;"
-                                   "nco:nameGiven '%1';"
+    QString insertString = QString("insert { _:u a nco:PersonContact; "
+                                   "nie:isLogicalPartOf <qml-example>; "
+                                   "nco:nameGiven '%1'; "
                                    "nco:nameFamily '%2' .}").arg(firstName).arg(familyName);
 
     QSparqlQuery insertQuery(insertString, QSparqlQuery::InsertStatement);
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    // Initilise QML
+    // Initialise QML
     QDeclarativeView viewQml;
     QDeclarativeContext *ctxt = viewQml.rootContext();
 
@@ -150,10 +150,11 @@ int main(int argc, char *argv[])
     // this to a slot so we can insert the data into tracker
     QObject::connect(viewQml.rootObject(), SIGNAL(addContact(QString, QString)),
                      &changeNotifier, SLOT(gotClick(QString, QString)));
-    viewQml.show();
 
+    viewQml.show();
     return app.exec();
 }
+
 #include "main.moc"
 
 /*
