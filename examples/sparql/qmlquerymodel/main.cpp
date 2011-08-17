@@ -120,12 +120,15 @@ void ModelLiveChange::gotClick(QString firstName, QString familyName)
 {
     // We use this slot to handel contact inserts from QML, simply insert
     // them and the change notifier will pick them up and requery
-    QString insertString = QString("insert { _:u a nco:PersonContact; "
+    const QString insertString("insert { _:u a nco:PersonContact; "
                                    "nie:isLogicalPartOf <qml-example>; "
-                                   "nco:nameGiven '%1'; "
-                                   "nco:nameFamily '%2' .}").arg(firstName).arg(familyName);
-
+                                   "nco:nameGiven $:firstName; "
+                                   "nco:nameFamily $:familyName .}");
     QSparqlQuery insertQuery(insertString, QSparqlQuery::InsertStatement);
+    // Use bindValue to insert the user-provided strings into the query to
+    // avoid SPARQL injection issues. See QSparqlQuery::bindValue
+    insertQuery.bindValue("firstName", firstName);
+    insertQuery.bindValue("familyName", familyName);
     QSparqlResult *r = connection->syncExec(insertQuery);
     delete r;
 }
