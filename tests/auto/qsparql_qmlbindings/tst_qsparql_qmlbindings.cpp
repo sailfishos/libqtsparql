@@ -73,6 +73,7 @@ private slots:
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
     void sparql_query_model_test_data();
+    void sparql_query_model_reload_test();
     void sparql_query_model_get_test();
     void sparql_query_model_test_role_names();
 };
@@ -464,42 +465,6 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 
     QCOMPARE(NUM_INSERTS, returnValue.toInt());
     QCOMPARE(returnValue.toInt(), model->rowCount());
-    QString selectOneContact = "select <qml-uri001> as ?u ?ng {"
-                               "<qml-uri001> a nco:PersonContact; nco:nameGiven ?ng; "
-                               "nie:isLogicalPartOf <qsparql-qml-tests> }";
-
-    // call set query and change the query model object, this should also update
-    // the qml model, which should now go back to loading state
-    model->setQueryQML(QSparqlQuery(selectOneContact), *connection);
-    status = (Status)callMethod("getStatus").toInt();
-    QCOMPARE(status, Loading);
-    // One signal from the countSpy, since we only insert one contact
-    countSpy.clear();
-    readySpy.clear();
-    QVERIFY(waitForSignals(&countSpy, 1));
-    QVERIFY(waitForSignals(&readySpy, 1));
-
-    status = (Status)callMethod("getStatus").toInt();
-    QCOMPARE(status, Ready);
-    // now check the count again
-    returnValue = callMethod("getCount");
-    QCOMPARE(model->rowCount(), 1);
-    QCOMPARE(returnValue.toInt(), 1);
-
-    // now test reload(), the query should be the original one, since the "query" property was not updated
-    callMethod("reloadModel");
-    countSpy.clear();
-    readySpy.clear();
-    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS));
-    QVERIFY(waitForSignals(&readySpy, 1));
-
-    // now test reload() after setting the query to select one contact
-    callMethod("setQuery", selectOneContact);
-    callMethod("reloadModel");
-    countSpy.clear();
-    readySpy.clear();
-    QVERIFY(waitForSignals(&countSpy, 1));
-    QVERIFY(waitForSignals(&readySpy, 1));
 
     // verify the model is deleted when the QML object is destroyed
     qmlCleanup();
@@ -511,6 +476,28 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_data()
     QList<QPair<QString, QVariant> > contextProperties;
     contextProperties.append(qMakePair(QString("sparqlQueryString"),QVariant(contactSelectQuery)));
     QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+}
+
+void tst_QSparqlQMLBindings::sparql_query_model_reload_test()
+{
+    sparql_query_model_test_data();
+    QSignalSpy countSpy(qmlObject, SIGNAL(modelCountChanged()));
+    QSignalSpy readySpy(qmlObject, SIGNAL(modelStatusReady()));
+
+    // wait for the model to finish
+    QVERIFY(waitForSignals(&readySpy, 1));
+    // we used a query with one contact, check to see the count was correct
+    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS));
+    QVariant returnValue = callMethod("getCount");
+    QCOMPARE(returnValue.toInt(), NUM_INSERTS);
+
+    readySpy.clear();
+    countSpy.clear();
+    // now reload the model, we should get one signal after clearing the model
+    // model, and 10 inserts
+    callMethod("reloadModel");
+    QVERIFY(waitForSignals(&readySpy, 1));
+    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS+1));
 }
 
 void tst_QSparqlQMLBindings::sparql_query_model_get_test()
@@ -552,11 +539,8 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
 
     QSparqlQueryModel *model =
         getObject<QSparqlQueryModel *>("queryModel");
-    QSparqlConnection *connection =
-        getObject<QSparqlConnection *>("sparqlConnection");
 
     QHash<int, QByteArray> roleNames = model->roleNames();
-
     // wait for result
     QTest::qWait(500);
     // role names start from Qt::UserRole + 1,
@@ -564,11 +548,6 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
     QCOMPARE(roleNames[Qt::UserRole+2], QByteArray("ng"));
     QCOMPARE(roleNames[Qt::UserRole+3], QByteArray("nf"));
 
-    model->setQueryQML(QSparqlQuery(select2), *connection);
-    roleNames = model->roleNames();
-    QTest::qWait(500);
-    QCOMPARE(roleNames[Qt::UserRole+1], QByteArray("u"));
-    QCOMPARE(roleNames[Qt::UserRole+2], QByteArray("joinName"));
 }
 
 QTEST_MAIN(tst_QSparqlQMLBindings)
