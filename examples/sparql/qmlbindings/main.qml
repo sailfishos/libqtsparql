@@ -62,9 +62,11 @@ Rectangle {
                     onClicked: {
                         var queryString = "insert { "+
                                          "_:u a nco:PersonContact; nie:isLogicalPartOf <qml-example>; "+
-                                         "nco:nameGiven '"+firstNameInput.text+ "';"+
-                                         "nco:nameFamily '"+familyNameInput.text+ "' . }";
-                        sparqlConnection.update(queryString);
+                                         "nco:nameGiven $:firstName;"+
+                                         "nco:nameFamily $:secondName . }";
+                        var boundValues = { "firstName":firstNameInput.text, "secondName":familyNameInput.text }
+                        sparqlConnection.update(queryString, boundValues);
+                        // clean up
                         firstNameInput.text = ""
                         familyNameInput.text = ""
                         nameInput.visible = false

@@ -103,6 +103,25 @@ QVariant SparqlConnection::update(QString queryString, bool async)
     return runQuery(query, async);
 }
 
+QVariant SparqlConnection::update(QString queryString, QVariant boundValues, bool async)
+{
+    if (!boundValues.convert(QVariant::Map)) {
+        lastErrorMessage = QLatin1String("Invalid bound values hashmap");
+        changeStatus(Error);
+        return -1;
+    }
+
+    QMap<QString, QVariant> boundPairs = boundValues.toMap();
+    QSparqlQuery query(queryString, QSparqlQuery::InsertStatement);
+
+    QMapIterator<QString, QVariant> i(boundPairs);
+    while (i.hasNext()) {
+        i.next();
+        query.bindValue(i.key(), i.value());
+    }
+    return runQuery(query, async);
+}
+
 QVariant SparqlConnection::construct(QString queryString, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
