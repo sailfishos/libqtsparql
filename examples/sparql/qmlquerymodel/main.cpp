@@ -141,7 +141,6 @@ int main(int argc, char *argv[])
     // Create the model
     QSparqlQueryModel *model = new QSparqlQueryModel();
     // Now set the context property for the ListView model to the liveQuery model
-    // access the values in qml using urn and subject
     ctxt->setContextProperty("contactModel", model);
     viewQml.setSource(QUrl::fromLocalFile("main.qml"));
 
