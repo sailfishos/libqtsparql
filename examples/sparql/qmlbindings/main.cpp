@@ -49,17 +49,17 @@ class ModelLiveChange : public QObject
 {
     Q_OBJECT
 public :
-    ModelLiveChange(QSparqlQueryModel *model, QSparqlConnection *connection);
+    ModelLiveChange(QDeclarativeView *view);
     ~ModelLiveChange();
 
-    QSparqlQueryModel *model;
-    QSparqlConnection *connection;
+    QDeclarativeView *view;
 
 public slots:
     void changed(QString);
 };
 
-ModelLiveChange::ModelLiveChange(QSparqlQueryModel *model, QSparqlConnection *connection) : model(model), connection(connection)
+ModelLiveChange::ModelLiveChange(QDeclarativeView *view)
+    : view(view)
 {
     // Monitor dbus for any notifications from Tracker.
     // More information about Tracker over Dbus can be found at :
@@ -92,27 +92,36 @@ void ModelLiveChange::changed(QString className)
 {
     Q_UNUSED(className);
     // We got a change notification from DBus on the class
-    // we are watching, so call setQuery on the model we grabbed from
-    // QML
-    model->setQuery(model->query(), *connection);
+    // we are watching, so now call the "reload" function in the QML
+    // file.
+    QMetaObject::invokeMethod(view->rootObject(),
+                              "reload",
+                              Qt::DirectConnection);
 }
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QCoreApplication::addLibraryPath("../../../plugins");
 
-    // Initilise QML
+    // Initialise QML
     QDeclarativeView viewQml;
+    // Load the QML plugins from the build tree, if
+    // they haven't been install
+    viewQml.engine()->addImportPath("../../../imports");
+
     viewQml.setSource(QUrl::fromLocalFile("main.qml"));
 
-    // Get the model and connection from the QML file,
-    // we'll use this to update the model from C++ when there's a change in the data
-    QSparqlQueryModel *model = 
-                qobject_cast<QSparqlQueryModel *>(viewQml.rootObject()->findChild<QObject*>("queryModel"));
-    QSparqlConnection *connection = 
-                qobject_cast<QSparqlConnection *>(viewQml.rootObject()->findChild<QObject*>("sparqlConnection"));
+    // The bindings can be cast back to the appropriate QtSparql classes by setting
+    // an "objectName" property on them, and casting them, eg :
+    // QSparqlQueryModel *model =
+    //            qobject_cast<QSparqlQueryModel *>(viewQml.rootObject()->findChild<QObject*>("queryModel"));
+    // QSparqlConnection *connection =
+    //            qobject_cast<QSparqlConnection *>(viewQml.rootObject()->findChild<QObject*>("sparqlConnection"));
+    // However, we do not need to do that for this example
 
-    ModelLiveChange changeNotifier(model, connection);
+    // Monitor dbus for changes, we will call a function in the QML file when we get them
+    ModelLiveChange changeNotifier(&viewQml);
     viewQml.show();
 
     return app.exec();

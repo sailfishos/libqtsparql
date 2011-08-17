@@ -6,6 +6,12 @@ Rectangle {
     width: 800
     height: 400
 
+    // this will force the ListView model
+    // to requery the data
+    function reload() {
+        queryModel.reload();
+    }
+
     Rectangle {
         id: contactsRect
         width: parent.width
@@ -20,6 +26,7 @@ Rectangle {
             // By setting the "objectName" property we can use these models and connections
             // in C++, see main.cpp for an example
             model: SparqlResultsList {
+                       id: "queryModel"
                        objectName: "queryModel"
                        // create a new SparqlConnection for the queryModel
                        connection: SparqlConnection { id:sparqlConnection; objectName:"sparqlConnection"; driver:"QTRACKER_DIRECT" }
