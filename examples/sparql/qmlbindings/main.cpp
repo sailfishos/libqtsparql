@@ -39,20 +39,20 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include <QtDeclarative>
 #include <QtSparql>
-#include <QtDBus/QtDBus>
+#include <QtDBus>
 #include <QString>
 
 class ModelLiveChange : public QObject
 {
     Q_OBJECT
+    QDeclarativeView *view;
+
 public :
     ModelLiveChange(QDeclarativeView *view);
     ~ModelLiveChange();
-
-    QDeclarativeView *view;
 
 public slots:
     void changed(QString);
@@ -66,15 +66,15 @@ ModelLiveChange::ModelLiveChange(QDeclarativeView *view)
     // http://live.gnome.org/Tracker/Documentation/SignalsOnChanges
     // Please note: a more complete implementation, TrackerChangeNotifier,
     // is available in libqtsparql-tracker-extensions
-    QString service("org.freedesktop.Tracker1");
-    QString basePath("/org/freedesktop/Tracker1");
-    QString resourcesInterface("org.freedesktop.Tracker1.Resources");
-    QString resourcesPath("/org/freedesktop/Tracker1/Resources");
-    QString changedSignal("GraphUpdated");
-    QString changedSignature("sa(iiii)a(iiii)");
-    QString syncFunction("Sync");
+    const QString service("org.freedesktop.Tracker1");
+    const QString basePath("/org/freedesktop/Tracker1");
+    const QString resourcesInterface("org.freedesktop.Tracker1.Resources");
+    const QString resourcesPath("/org/freedesktop/Tracker1/Resources");
+    const QString changedSignal("GraphUpdated");
+    const QString changedSignature("sa(iiii)a(iiii)");
+    const QString syncFunction("Sync");
     // We'll need to use the long form of the class name to watch.
-    QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
+    const QString className("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#PersonContact");
     QDBusConnection::sessionBus().connect(service, resourcesPath,
                                           resourcesInterface, changedSignal,
                                           QStringList() << className,
@@ -126,6 +126,7 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
+
 #include "main.moc"
 
 /*
