@@ -179,7 +179,24 @@ void compareResults(QVariant qmlResults, int resultSize, QString query)
     delete connection;
 }
 
+bool waitForSignals(QSignalSpy *signalSpy, int numSignals)
+{
+    QTime timer;
+    int timeoutMs = 2000;
+    bool timeout = false;
+    timer.start();
+
+    while (signalSpy->count() !=numSignals && !(timeout = (timer.elapsed() > timeoutMs)))
+        QTest::qWait(100);
+
+    if (signalSpy->count() != numSignals) {
+        qWarning() << "Got" << signalSpy->count() << "signals, expected" << numSignals;
+        return false;
+    }
+    return !timeout;
 }
+
+} // end namespace
 
 tst_QSparqlQMLBindings::tst_QSparqlQMLBindings()
 {
@@ -280,22 +297,14 @@ void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
 void tst_QSparqlQMLBindings::sparql_connection_select_query_async_test()
 {
     sparql_connection_test_data();
-    QTime timer;
-    int timeoutMs = 2000;
-    bool timeout = false;
-
     QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
 
     callMethod("runSelectQueryAsync");
-    timer.start();
     // we should get two result ready signals, one from the property change
     // notification (that a new SparqlConnection.result is ready), and one
     // emitted from the javascript function that handels the resultReady() signal
     // from within javascript
-    while (resultSpy.count() != 2 && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(resultSpy.count(), 2);
+    QVERIFY(waitForSignals(&resultSpy, 2));
 
     // the SparqlConnection.result property should be the same as the
     // result passed to the resultReady() signal slot
@@ -322,17 +331,10 @@ void tst_QSparqlQMLBindings::sparql_connection_ask_query_test()
 void tst_QSparqlQMLBindings::sparql_connection_ask_query_async_test()
 {
     sparql_connection_test_data();
-    QTime timer;
-    int timeoutMs = 2000;
-    bool timeout = false;
     QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
     QString askQuery = "ASK { <qml-uri001> a nco:PersonContact }";
     callMethod("runAskQueryAsync", askQuery);
-    timer.start();
-    while (resultSpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(resultSpy.count(), 1);
+    QVERIFY(waitForSignals(&resultSpy, 1));
 
     QVariant returnValue = callMethod("returnResults");
     QVERIFY(returnValue.canConvert(QVariant::Bool));
@@ -341,11 +343,7 @@ void tst_QSparqlQMLBindings::sparql_connection_ask_query_async_test()
     askQuery = "ASK { <falseask> a nco:PersonContact }";
     resultSpy.clear();
     callMethod("runAskQueryAsync", askQuery);
-    timer.start();
-    while (resultSpy.count() != 1 && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(resultSpy.count(), 1);
+    QVERIFY(waitForSignals(&resultSpy, 1));
 
     returnValue = callMethod("returnResults");
     QVERIFY(returnValue.canConvert(QVariant::Bool));
@@ -369,28 +367,20 @@ void tst_QSparqlQMLBindings::sparql_connection_update_query_test()
 void tst_QSparqlQMLBindings::sparql_connection_update_query_async_test()
 {
     sparql_connection_test_data();
-    QTime timer;
-    int timeoutMs = 2000;
-    bool timeout = false;
 
     QSignalSpy resultSpy(qmlObject, SIGNAL(resultReadySignal()));
     callMethod("insertContactAsync");
-    timer.start();
-    while (resultSpy.count() !=1 && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(resultSpy.count(), 1);
+
+    QVERIFY(waitForSignals(&resultSpy, 1));
+
     QVariant returnValue = callMethod("runSelectQuery");
     compareResults(returnValue, NUM_INSERTS+1, contactSelectQuery);
 
     callMethod("deleteContactAsync");
-    timer.restart();
     // we got a signal from "runSelectQuery" once the results are done, so need to
     // wait for the signal from the delete query, hence 3
-    while (resultSpy.count() !=3 && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(resultSpy.count(), 3);
+    QVERIFY(waitForSignals(&resultSpy, 3));
+
     returnValue = callMethod("runSelectQuery");
     compareResults(returnValue, NUM_INSERTS, contactSelectQuery);
 }
@@ -451,9 +441,6 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 {
     QSignalSpy countSpy(qmlObject, SIGNAL(modelCountChanged()));
     QSignalSpy readySpy(qmlObject, SIGNAL(modelStatusReady()));
-    QTime timer;
-    int timeoutMs = 2000;
-    bool timeout = false;
 
     QSparqlConnection *connection =
         getObject<QSparqlConnection*>("sparqlConnection");
@@ -465,14 +452,9 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     QVERIFY(model->rowCount() != NUM_INSERTS);
     Status status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Loading);
-    timer.start();
+    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS));
+    QVERIFY(waitForSignals(&readySpy, 1));
 
-    while ((countSpy.count() != NUM_INSERTS || readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    // signal spy should have received NUM_INSERTS count changes
-    QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), NUM_INSERTS);
-    QCOMPARE(readySpy.count(), 1);
     // status of the model should now be ready
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);
@@ -491,16 +473,11 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
     model->setQueryQML(QSparqlQuery(selectOneContact), *connection);
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Loading);
-    // Signal spy should now emit twice more, one for the clearing of the model
-    // and another for the one contact the query adds
-    timer.restart();
+    // One signal from the countSpy, since we only insert one contact
     countSpy.clear();
     readySpy.clear();
-    while ((countSpy.count() != 1 ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), 1);
-    QCOMPARE(readySpy.count(), 1);
+    QVERIFY(waitForSignals(&countSpy, 1));
+    QVERIFY(waitForSignals(&readySpy, 1));
 
     status = (Status)callMethod("getStatus").toInt();
     QCOMPARE(status, Ready);
@@ -511,26 +488,18 @@ void tst_QSparqlQMLBindings::sparql_query_model_test()
 
     // now test reload(), the query should be the original one, since the "query" property was not updated
     callMethod("reloadModel");
-    timer.restart();
     countSpy.clear();
     readySpy.clear();
-    while ((countSpy.count() != NUM_INSERTS ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), NUM_INSERTS);
-    QCOMPARE(readySpy.count(), 1);
+    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS));
+    QVERIFY(waitForSignals(&readySpy, 1));
 
     // now test reload() after setting the query to select one contact
     callMethod("setQuery", selectOneContact);
     callMethod("reloadModel");
-    timer.restart();
     countSpy.clear();
     readySpy.clear();
-    while ((countSpy.count() != 1 ||readySpy.count() != 1) && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    //QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), 1);
-    QCOMPARE(readySpy.count(), 1);
+    QVERIFY(waitForSignals(&countSpy, 1));
+    QVERIFY(waitForSignals(&readySpy, 1));
 
     // verify the model is deleted when the QML object is destroyed
     qmlCleanup();
@@ -548,19 +517,13 @@ void tst_QSparqlQMLBindings::sparql_query_model_get_test()
 {
     sparql_query_model_test_data();
     QSignalSpy countSpy(qmlObject, SIGNAL(modelCountChanged()));
-    QTime timer;
-    int timeoutMs = 2000;
-    bool timeout = false;
 
     QSparqlQueryModel *model =
         getObject<QSparqlQueryModel *>("queryModel");
 
     // wait for the model to finish
-    timer.start();
-    while (countSpy.count() != NUM_INSERTS && !(timeout = (timer.elapsed() > timeoutMs)))
-        QTest::qWait(100);
-    QVERIFY(!timeout);
-    QCOMPARE(countSpy.count(), NUM_INSERTS);
+    QVERIFY(waitForSignals(&countSpy, NUM_INSERTS));
+
     // now check that the result from get(i) is the same
     // as the result from model.getRow()
     for (int i=0;i<model->rowCount();i++) {
