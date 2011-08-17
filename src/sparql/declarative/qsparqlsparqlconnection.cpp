@@ -89,10 +89,26 @@ QVariant SparqlConnection::select(QString queryString, bool async)
     return runQuery(query, async);
 }
 
+QVariant SparqlConnection::select(QString queryString, QVariant boundValues, bool async)
+{
+    QSparqlQuery query(queryString);
+    if (bindValues(&query, boundValues))
+        return runQuery(query, async);
+    return -1;
+}
+
 QVariant SparqlConnection::ask(QString queryString, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::AskStatement);
     return runQuery(query, async);
+}
+
+QVariant SparqlConnection::ask(QString queryString, QVariant boundValues, bool async)
+{
+    QSparqlQuery query(queryString, QSparqlQuery::AskStatement);
+    if (bindValues(&query, boundValues))
+        return runQuery(query, async);
+    return -1;
 }
 
 QVariant SparqlConnection::update(QString queryString, bool async)
@@ -105,27 +121,42 @@ QVariant SparqlConnection::update(QString queryString, bool async)
 
 QVariant SparqlConnection::update(QString queryString, QVariant boundValues, bool async)
 {
-    if (!boundValues.convert(QVariant::Map)) {
-        lastErrorMessage = QLatin1String("Invalid bound values hashmap");
-        changeStatus(Error);
-        return -1;
-    }
-
-    QMap<QString, QVariant> boundPairs = boundValues.toMap();
     QSparqlQuery query(queryString, QSparqlQuery::InsertStatement);
-
-    QMapIterator<QString, QVariant> i(boundPairs);
-    while (i.hasNext()) {
-        i.next();
-        query.bindValue(i.key(), i.value());
-    }
-    return runQuery(query, async);
+    if (bindValues(&query, boundValues))
+        return runQuery(query, async);
+    return -1;
 }
 
 QVariant SparqlConnection::construct(QString queryString, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
     return runQuery(query, async);
+}
+
+QVariant SparqlConnection::construct(QString queryString, QVariant boundValues, bool async)
+{
+    QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
+    if (bindValues(&query, boundValues))
+        return runQuery(query, async);
+    return -1;
+}
+
+bool SparqlConnection::bindValues(QSparqlQuery *query, QVariant boundValues)
+{
+    if (!boundValues.convert(QVariant::Map)) {
+        lastErrorMessage = QLatin1String("Invalid bound values hashmap");
+        changeStatus(Error);
+        return false;
+    }
+
+    QMap<QString, QVariant> boundPairs = boundValues.toMap();
+
+    QMapIterator<QString, QVariant> i(boundPairs);
+    while (i.hasNext()) {
+        i.next();
+        query->bindValue(i.key(), i.value());
+    }
+    return true;
 }
 
 QVariant SparqlConnection::runQuery(QSparqlQuery query, bool async)

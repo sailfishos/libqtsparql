@@ -121,6 +121,38 @@ Rectangle {
         sparqlConnection.update(insertQuery);
     }
 
+    function insertBoundContact() {
+        var insertQuery = "insert { <qmlInsert-bound> a nco:PersonContact; "+
+                          "nie:isLogicalPartOf <qsparql-qml-tests>; "+
+                          "nco:nameGiven ?:nameGiven; "+
+                          "nco:nameFamily ?:nameFamily }";
+        var boundValues = { "nameFamily":"QML Family", "nameGiven":"QML Insert" };
+        sparqlConnection.update(insertQuery, boundValues);
+    }
+
+    function deleteBoundContact() {
+        var deleteQuery = "delete { ?u a nco:PersonContact } "+
+                          "where { ?u a nco:PersonContact; nco:nameGiven ?:ng; nco:nameFamily ?:nf } ";
+        var boundValues = { "ng":"QML Insert", "nf":"QML Family" };
+        sparqlConnection.update(deleteQuery, boundValues);
+    }
+
+    function selectBoundContact() {
+        var selectQuery = "select ?u { ?u a nco:PersonContact; "+
+                          "nie:isLogicalPartOf <qsparql-qml-tests>; "+
+                          "nco:nameGiven ?:nameGiven; nco:nameFamily ?:nameFamily}";
+        var boundValues = { "nameFamily":"QML Family", "nameGiven":"QML Insert" };
+        return sparqlConnection.select(selectQuery, boundValues);
+    }
+
+    function askBoundContact() {
+        var askQuery = "ask { ?u a nco:PersonContact; "+
+                       "nco:nameGiven ?:ng;"+
+                       "nco:nameFamily ?:nf .}";
+        var boundValues = { "ng":"QML Insert", "nf":"QML Family" };
+        return sparqlConnection.ask(askQuery, boundValues);
+    }
+
     function insertContactAsync() {
         var insertQuery = "insert { <qmlInsert> a nco:PersonContact; "+
                           "nie:isLogicalPartOf <qsparql-qml-tests>; "+

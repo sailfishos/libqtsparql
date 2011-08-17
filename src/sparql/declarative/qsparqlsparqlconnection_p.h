@@ -74,10 +74,13 @@ public:
     void componentComplete();
 
     Q_INVOKABLE QVariant select(QString query, bool async = false);
+    Q_INVOKABLE QVariant select(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QVariant ask(QString query, bool async = false);
+    Q_INVOKABLE QVariant ask(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QVariant update(QString query, bool async = false);
     Q_INVOKABLE QVariant update(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QVariant construct(QString query, bool async = false);
+    Q_INVOKABLE QVariant construct(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QString errorString() const;
 
 Q_SIGNALS:
@@ -100,6 +103,7 @@ private:
     QVariant runQuery(QSparqlQuery query, bool async);
     QVariant getResult();
     void changeStatus(SparqlConnection::Status);
+    bool bindValues(QSparqlQuery *query, QVariant boundValues);
     // property methods
     void setOptions(SparqlConnectionOptions* options);
     SparqlConnectionOptions* getOptions();

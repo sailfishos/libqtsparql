@@ -69,6 +69,7 @@ private slots:
     void sparql_connection_update_query_test(); //insert and delete
     void sparql_connection_update_query_async_test();
     void sparql_connection_construct_query_test();
+    void sparql_connection_bound_values_test();
     void sparql_connection_options_test();
     void sparql_connection_options_test_data();
     void sparql_query_model_test();
@@ -76,6 +77,7 @@ private slots:
     void sparql_query_model_reload_test();
     void sparql_query_model_get_test();
     void sparql_query_model_test_role_names();
+
 };
 
 namespace {
@@ -436,6 +438,29 @@ void tst_QSparqlQMLBindings::sparql_connection_options_test_data()
     contextProperties.append(qMakePair(QString("setPortNumber"),QVariant(portNumber)));
     contextProperties.append(qMakePair(QString("setHost"), QVariant(hostName)));
     QVERIFY(loadQmlFile("qsparqlconnection.qml", contextProperties));
+}
+
+void tst_QSparqlQMLBindings::sparql_connection_bound_values_test()
+{
+    sparql_connection_test_data();
+    // insert a new contact using bound values
+    callMethod("insertBoundContact");
+    // ask to see if contact was inserted, using bound values
+    QVariant returnValue = callMethod("askBoundContact");
+    QVERIFY(returnValue.canConvert(QVariant::Bool));
+    QVERIFY(returnValue.toBool());
+    // check the select value
+    QList<QVariant> selectValue = callMethod("selectBoundContact").toList();
+    // should only be one contact
+    QCOMPARE(selectValue.size(), 1);
+
+    // Now delete the contact
+    callMethod("deleteBoundContact");
+    // ask the contact again, should be false
+    returnValue = callMethod("askBoundContact");
+    QVERIFY(!returnValue.toBool());
+    selectValue = callMethod("selectBoundContact").toList();
+    QCOMPARE(selectValue.size(), 0);
 }
 
 void tst_QSparqlQMLBindings::sparql_query_model_test()
