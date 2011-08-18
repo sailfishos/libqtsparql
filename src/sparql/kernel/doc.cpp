@@ -94,7 +94,7 @@
     <td>Binding for QSparqlConnection. Allows queries to be run in QML</td>
     </tr>
     <tr>
-    <td><b>\ref qmlSparqlResultList "SparqlResultList"</b></td>
+    <td><b>\ref qmlSparqlListModel "SparqlListModel"</b></td>
     <td>Binding for QSparqlQueryModel. Allows for ListView models to be easily defined</td>
     </tr>
     </table>

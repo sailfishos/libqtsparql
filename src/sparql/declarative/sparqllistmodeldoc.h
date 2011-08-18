@@ -1,5 +1,5 @@
 /*!
-    \page qmlSparqlResultList SparqlResultList
+    \page qmlSparqlListModel SparqlListModel
     \brief Provides a QML binding for QSparqlQueryModel.
 
     \code
@@ -57,16 +57,16 @@
 
     \anchor qmlMethodErrorString
     <table><tr><th>string errorString ()</th></tr></table>
-    Returns a string description of the last error that occurred if status is SparqlResultList::Error.
+    Returns a string description of the last error that occurred if status is SparqlListModel::Error.
 
     \section qmlDetatiled Detailed Description
-    The SparqlResultList binding allows for SPARQL queries to be used as a ListView model.
+    The SparqlListModel binding allows for SPARQL queries to be used as a ListView model.
     The binding requires a \ref qmlSparqlConnection and a \ref qmlPropertyQuery "query" to be set, E.g :
 
     \code
     ListView {
         id: contactView
-        model: SparqlResultList {
+        model: SparqlListModel {
                     id:resultList
                     connection: SparqlConnection { driver:"QTRACKER_DIRECT" }
                     query: "select ?u ?firstName ?secondName"+
@@ -90,7 +90,7 @@
                                                  }
 
     ListView {
-        model: SparqlResultList {
+        model: SparqlListModel {
                 connection: sparqlConnection
                 ...
                }
@@ -101,7 +101,7 @@
     and to be notified of insertions/deletions by connecting to the countChanged() signal, E.g :
 
     \code
-    SparqlResultList {
+    SparqlListModel {
         onCountChanged : someFunction()
         ...
     }
@@ -111,7 +111,7 @@
     be used, E.g :
 
     \code
-    SparqlResultList {
+    SparqlListModel {
         id:resultList
         ...
     }
