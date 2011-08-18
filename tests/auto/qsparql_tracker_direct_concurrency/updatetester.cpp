@@ -46,6 +46,7 @@ UpdateTester::UpdateTester(int id)
     , updateFinishedMapper(0)
     , deleteFinishedMapper(0)
     , id(id), isFinished(false)
+    , validateUpdateResultAttempts(0)
 {
 }
 
@@ -137,6 +138,7 @@ void UpdateTester::initResources()
 
 void UpdateTester::startUpdates()
 {
+    validateUpdateResultAttempts = 0;
     const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
                                     "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
     for (int i=0;i<numInserts;i++) {
@@ -159,8 +161,14 @@ void UpdateTester::startValidateUpdate()
 
 void UpdateTester::validateUpdateResult()
 {
-    doValidateUpdateResult();
-    Q_EMIT validateUpdateComplete();
+    bool retry = false;
+    doValidateUpdateResult(&retry);
+    if (retry) {
+        QMetaObject::invokeMethod(this, "startValidateUpdate", Qt::QueuedConnection);
+    }
+    else {
+        Q_EMIT validateUpdateComplete();
+    }
 }
 
 void UpdateTester::startDeletions()
@@ -208,6 +216,9 @@ void UpdateTester::onDeleteFinished(QObject* mappedResult)
 void UpdateTester::finish()
 {
     isFinished = true;
+    if (validateUpdateResultAttempts > 1) {
+        qDebug() << "Update result validation attempts" << validateUpdateResultAttempts;
+    }
     Q_EMIT finished();
 }
 
@@ -240,19 +251,39 @@ bool UpdateTester::removePendingResultWasLast(QObject* mappedResult)
     return pendingResults.isEmpty();
 }
 
-void UpdateTester::doValidateUpdateResult()
+void UpdateTester::doValidateUpdateResult(bool* retry)
 {
+    QVERIFY( ++validateUpdateResultAttempts < 10 );
+
     QSparqlResult* result = resultList.back();
     QVERIFY( !result->hasError() );
+
+    // Verify that we get most numInserts results
+    // The result size may temporarily be smaller with tracker direct access
+    // due to its transaction management
+    QVERIFY( result->size() <= numInserts );
+
     QHash<QString, QString> contactNameValues;
-    QCOMPARE(result->size(), numInserts);
     while (result->next()) {
         contactNameValues[result->value(0).toString()] = result->value(1).toString();
     }
-    QCOMPARE(contactNameValues.size(), numInserts);
+    // Verify that all resource uris were unique
+    QVERIFY( contactNameValues.count() == result->size() );
+
+    // Verify that all succesfully inserted data was present in the result
+    int missingInsertsCount = 0;
     for(int i=0; i<numInserts; i++) {
-        QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
+        const QString resourceUri = QString("addeduri00%1-%2").arg(i).arg(id);
+        if (contactNameValues.contains(resourceUri)) {
+            QCOMPARE(contactNameValues[resourceUri], QString("addedname00%1").arg(i));
+        }
+        else {
+            ++missingInsertsCount;
+        }
     }
+    QCOMPARE( numInserts - result->size(), missingInsertsCount );
+
+    *retry = (missingInsertsCount > 0);
 }
 
 void UpdateTester::doValidateDeleteResult()

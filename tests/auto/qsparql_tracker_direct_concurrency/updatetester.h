@@ -60,6 +60,7 @@ class UpdateTester : public QObject
     int numDeletes;
     int id;
     bool isFinished;
+    int validateUpdateResultAttempts;
 
 public:
     UpdateTester(int id);
@@ -98,7 +99,7 @@ private:
     void appendPendingResult(QSparqlResult* result, QSignalMapper* signalMapper);
     void checkIsPendingResult(QObject* mappedResult) const;
     bool removePendingResultWasLast(QObject* mappedResult);
-    void doValidateUpdateResult();
+    void doValidateUpdateResult(bool* retry);
     void doValidateDeleteResult();
 };
 
