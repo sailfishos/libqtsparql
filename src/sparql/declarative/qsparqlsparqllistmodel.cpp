@@ -37,11 +37,11 @@
 **
 ****************************************************************************/
 
-#include "qsparqlsparqlresultlist_p.h"
+#include "qsparqlsparqllistmodel_p.h"
 #include "qsparqlsparqlconnection_p.h"
 #include <QtSparql>
 
-SparqlResultList::SparqlResultList()
+SparqlListModel::SparqlListModel()
   : connection(0)
   , modelStatus(Null)
 {
@@ -51,28 +51,28 @@ SparqlResultList::SparqlResultList()
     connect(this, SIGNAL(started()), this, SLOT(onStarted()));
 }
 
-void SparqlResultList::classBegin()
+void SparqlListModel::classBegin()
 {
 }
 
-void SparqlResultList::componentComplete()
+void SparqlListModel::componentComplete()
 {
     changeStatus(Loading);
     // we will create the connection once the component has finished reading, that way
     // we know if any connection options have been set
 }
 
-void SparqlResultList::setQuery(QString query)
+void SparqlListModel::setQuery(QString query)
 {
     queryString = query;
 }
 
-QString SparqlResultList::getQuery() const
+QString SparqlListModel::getQuery() const
 {
     return queryString;
 }
 
-QVariant SparqlResultList::get(int rowNumber)
+QVariant SparqlListModel::get(int rowNumber)
 {
     QVariantMap map;
     QSparqlResultRow row = resultRow(rowNumber);
@@ -82,12 +82,12 @@ QVariant SparqlResultList::get(int rowNumber)
     return map;
 }
 
-void SparqlResultList::reload()
+void SparqlListModel::reload()
 {
     setQueryQML(QSparqlQuery(queryString), *connection);
 }
 
-void SparqlResultList::setConnection(SparqlConnection* connection)
+void SparqlListModel::setConnection(SparqlConnection* connection)
 {
     if (connection)
     {
@@ -96,7 +96,7 @@ void SparqlResultList::setConnection(SparqlConnection* connection)
     }
 }
 
-void SparqlResultList::onConnectionComplete()
+void SparqlListModel::onConnectionComplete()
 {
     if (connection && connection->isValid()) {
         setQueryQML(QSparqlQuery(queryString), *connection);
@@ -106,27 +106,27 @@ void SparqlResultList::onConnectionComplete()
     }
 }
 
-SparqlConnection* SparqlResultList::getConnection()
+SparqlConnection* SparqlListModel::getConnection()
 {
     return connection;
 }
 
-SparqlResultList::Status SparqlResultList::status()
+SparqlListModel::Status SparqlListModel::status()
 {
     return modelStatus;
 }
 
-QString SparqlResultList::errorString() const
+QString SparqlListModel::errorString() const
 {
     return lastErrorMessage;
 }
 
-void SparqlResultList::onStarted()
+void SparqlListModel::onStarted()
 {
     changeStatus(Loading);
 }
 
-void SparqlResultList::onFinished()
+void SparqlListModel::onFinished()
 {
     if (lastError().type() == QSparqlError::NoError) {
         changeStatus(Ready);
@@ -136,7 +136,7 @@ void SparqlResultList::onFinished()
     }
 }
 
-void SparqlResultList::changeStatus(SparqlResultList::Status status)
+void SparqlListModel::changeStatus(SparqlListModel::Status status)
 {
     if (modelStatus != status) {
         modelStatus = status;

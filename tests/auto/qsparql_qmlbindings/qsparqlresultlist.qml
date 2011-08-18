@@ -54,7 +54,7 @@ Rectangle {
         width: parent.width
         height: parent.height
 
-        model: SparqlResultsList {
+        model: SparqlListModel {
             id: sparqlResultList
             onCountChanged: { modelCountChanged() }
             objectName: "queryModel"
@@ -76,7 +76,7 @@ Rectangle {
     function modelStatusChanged()
     {
         modelStatus = sparqlResultList.status;
-        if (modelStatus == SparqlResultsList.Ready) {
+        if (modelStatus == SparqlListModel.Ready) {
             modelStatusReady();
         }
     }

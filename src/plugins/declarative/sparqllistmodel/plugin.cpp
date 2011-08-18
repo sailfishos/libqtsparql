@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (ivan.frade@nokia.com)
 **
-** This file is part of the QtSparql module (not yet part of the Qt Toolkit).
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,66 +40,24 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
+#include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
-#include <QDeclarativeParserStatus>
-#include <QtSparql/qsparqlquerymodel.h>
 
-QT_BEGIN_HEADER
+#include <QtSparql/qsparqlquerymodel.h>
+#include <QtSparql/private/qsparqlsparqllistmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Sparql)
-
-class SparqlConnection;
-
-class Q_SPARQL_EXPORT SparqlResultList : public QSparqlQueryModel, public QDeclarativeParserStatus
+class SparqlListModelPlugin : public QDeclarativeExtensionPlugin
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSparqlQueryModel)
-    Q_ENUMS(Status)
-    Q_PROPERTY(QString query READ getQuery WRITE setQuery)
-    Q_PROPERTY(SparqlConnection* connection READ getConnection WRITE setConnection)
-    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_CLASSINFO("DefaultProperty", "query")
-    Q_INTERFACES(QDeclarativeParserStatus)
-
 public:
-    SparqlResultList();
-    void classBegin();
-    void componentComplete();
-
-    Q_INVOKABLE QString errorString() const;
-    Q_INVOKABLE QVariant get(int rowNumber);
-    Q_INVOKABLE void reload();
-
-    enum Status { Null, Ready, Loading, Error };
-
-
-Q_SIGNALS:
-    void countChanged();
-    void statusChanged(SparqlResultList::Status);
-
-private Q_SLOTS:
-    void onFinished();
-    void onStarted();
-    void onConnectionComplete();
-
-private:
-    SparqlConnection *connection;
-    QString queryString;
-    QString lastErrorMessage;
-    Status modelStatus;
-
-    void changeStatus(SparqlResultList::Status status);
-    // property methods
-    Status status();
-    void setConnection(SparqlConnection* connection);
-    SparqlConnection* getConnection();
-    void setQuery(QString query);
-    QString getQuery() const;
+    void registerTypes(const char *uri)
+    {
+        Q_ASSERT(uri == QLatin1String("QSparql"));
+        qmlRegisterType<SparqlListModel>(uri, 1, 0, "SparqlListModel");
+    }
 };
 
-QT_END_NAMESPACE
+Q_EXPORT_PLUGIN2(sparqllistmodel, SparqlListModelPlugin);
 
-QT_END_HEADER
+QT_END_NAMESPACE

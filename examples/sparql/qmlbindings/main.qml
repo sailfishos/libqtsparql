@@ -25,7 +25,7 @@ Rectangle {
             // We'll use a results list model here
             // By setting the "objectName" property we can use these models and connections
             // in C++, see main.cpp for an example
-            model: SparqlResultsList {
+            model: SparqlListModel {
                        id: "queryModel"
                        objectName: "queryModel"
                        // create a new SparqlConnection for the queryModel
