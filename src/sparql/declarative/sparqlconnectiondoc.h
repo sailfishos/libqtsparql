@@ -106,16 +106,16 @@
     will return 0. For asynchronous usage, see the section \ref asyncQueries "Asynchronous Queries".
 
     <table><tr><th>variant select (string query, QVariantMap boundValues, bool async = false)</th></tr></table>
-    Overloaded method to allow for the replacing of placeholders in query with their correspoding values contained
-    in the hashmap "boundValues". See \ref bindingValues "Binding Values".
+    Overloaded method to allow for the replacing of placeholders in \a query with their corresponding values contained
+    in the hashmap \a boundValues. See \ref bindingValues "Binding Values".
 
     \anchor qmlMethodAsk
     <table><tr><th>bool ask (string query, bool async = false)</th></tr></table>
     Runs a QSparqlQuery::AskStatement, synchronous by default, returning the bool value of the query.
 
     <table><tr><th>bool ask (string query, QVariantMap boundValues, bool async = false)</th></tr></table>
-    Overloaded method to allow for the replacing of placeholders in query with their correspoding values contained
-    in the hashmap "boundValues". See \ref bindingValues "Binding Values".
+    Overloaded method to allow for the replacing of placeholders in \a query with their corresponding values contained
+    in the hashmap \a boundValues. See \ref bindingValues "Binding Values".
 
     \anchor qmlMethodUpdate
     <table><tr><th>variant update (string query, bool async = false)</th></tr></table>
@@ -123,16 +123,16 @@
     update query, -1 will be returned, otherwise an empty list will be returned.
 
     <table><tr><th>variant update (string query, QVariantMap boundValues, bool async = false)</th></tr></table>
-    Overloaded method to allow for the replacing of placeholders in query with their correspoding values contained
-    in the hashmap "boundValues". See \ref bindingValues "Binding Values".
+    Overloaded method to allow for the replacing of placeholders in \a query with their corresponding values contained
+    in the hashmap \a boundValues. See \ref bindingValues "Binding Values".
 
     \anchor qmlMethodConstruct
     <table><tr><th>variant construct (string query, bool async = false)</th></tr></table>
     Runs a QSparqlQuery::ConstructStatement returning the results, or -1 if there was an error.
 
     <table><tr><th>variant construct (string query, QVariantMap boundValues, bool async = false)</th></tr></table>
-    Overloaded method to allow for the replacing of placeholders in query with their correspoding values contained
-    in the hashmap "boundValues". See \ref bindingValues "Binding Values".
+    Overloaded method to allow for the replacing of placeholders in \a query with their corresponding values contained
+    in the hashmap \a boundValues. See \ref bindingValues "Binding Values".
 
     \anchor qmlMethodErrorString
     <table><tr><th>string errorString ()</th></tr></table>
@@ -231,7 +231,7 @@
     \subsection bindingValues Binding Values
 
     The bindings support the QSparqlQuery feature of allowing query placeholders (marked with ?: or $:) to be replaced
-    with strings. This approach may be preferable for \ref qmlMethodUpdate "update" queries as it provides some protection
+    with strings. This approach is preferable for \ref qmlMethodUpdate "update" queries as it provides protection
     against SPARQL injection.
 
     When using placeholders, a hash map containing the placeholder to value pairs must be included with any query execution,
