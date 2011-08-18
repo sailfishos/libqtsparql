@@ -7,11 +7,13 @@ SOURCES  += tst_qsparql_qmlbindings.cpp
 check.depends = $$TARGET
 check.commands = ./tst_qsparql_qmlbindings
 
-# QMAKE_EXTRA_TARGETS += check
+memcheck.depends = $$TARGET
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_qmlbindings
+
+QMAKE_EXTRA_TARGETS += check memcheck
 
 #QT = sparql # enable this later
 
 install_qml.files = qsparqlconnection.qml qsparqlresultlist.qml
 install_qml.path = $$PREFIX/lib/$$PACKAGENAME-tests/
 INSTALLS += install_qml
-
