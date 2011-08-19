@@ -145,7 +145,6 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     options.setDataReadyInterval(dataReadyInterval);
     if (maxThreadCount > 0)
         options.setMaxThreadCount(maxThreadCount);
-    QSparqlConnection conn("QTRACKER_DIRECT", options);
     QueryTester queryTester;
     queryTester.setParameters(numQueries, testDataAmount);
     queryTester.startQueries();
