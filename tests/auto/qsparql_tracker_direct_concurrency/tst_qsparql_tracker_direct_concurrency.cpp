@@ -146,8 +146,11 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     if (maxThreadCount > 0)
         options.setMaxThreadCount(maxThreadCount);
     QSparqlConnection conn("QTRACKER_DIRECT", options);
+
     QueryTester queryTester;
+    queryTester.setConnection(&conn);
     queryTester.setParameters(numQueries, testDataAmount);
+
     queryTester.startQueries();
     QVERIFY(queryTester.waitForAllFinished(8000));
 }
@@ -203,17 +206,11 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, numConnections);
-    const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
-    QList<QSparqlConnection*> connections;
     QList<QueryTester*> queryTesters;
 
     // Create the connections and start the queries
     for (int i = 0; i < numConnections; ++i) {
-        QSparqlConnectionOptions options;
-        options.setDataReadyInterval(dataReadyInterval);
-        QSparqlConnection* conn = new QSparqlConnection("QTRACKER_DIRECT", options);
-        connections << conn;
         QueryTester* queryTester = new QueryTester;
         queryTester->setParameters(numQueries, testDataAmount);
         queryTesters << queryTester;
@@ -226,7 +223,6 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     }
 
     qDeleteAll(queryTesters);
-    qDeleteAll(connections);
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data()
