@@ -86,8 +86,6 @@ private slots:
     void delete_connection_immediately();
     void delete_connection_before_a_wait();
 
-    void go_beyond_columns_number();
-
     void create_2_connections();
 
     void unsupported_statement_type();
@@ -622,27 +620,6 @@ void tst_QSparqlTrackerDirect::delete_connection_before_a_wait()
         QSparqlConnection conn("QTRACKER_DIRECT");
     }
     QTest::qWait(1000);
-}
-
-void tst_QSparqlTrackerDirect::go_beyond_columns_number()
-{
-    // This test will print out warnings
-    setMsgLogLevel(QtCriticalMsg);
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven ?ng .}");
-    QSparqlResult* r = conn.exec(q);
-    CHECK_QSPARQL_RESULT(r);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_QSPARQL_RESULT(r);
-    QCOMPARE(r->size(), 3);
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 2);
-        QCOMPARE(r->value(5).toString(), QString());
-        QCOMPARE(r->binding(5).toString(), QString());
-    }
-    delete r;
 }
 
 void tst_QSparqlTrackerDirect::create_2_connections()
