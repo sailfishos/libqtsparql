@@ -198,8 +198,8 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries_data()
         10 << 10;
     QTest::newRow("100 inserts, 100 deletes") <<
         100 << 100;
-    QTest::newRow("1000 inserts, 1000 deletes") <<
-        1000 << 1000;
+    QTest::newRow("250 inserts, 250 deletes") <<
+        250 << 250;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
@@ -288,14 +288,14 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries_data
         10 << 10 << 2;
     QTest::newRow("100 inserts, 100 deletes, 2 connections") <<
         100 << 100 << 2;
-    QTest::newRow("1000 inserts, 1000 deletes, 2 connections") <<
-        1000 << 1000 << 2;
+    QTest::newRow("250 inserts, 250 deletes, 2 connections") <<
+        250 << 250 << 2;
     QTest::newRow("10 inserts, 10 deletes, 4 connections") <<
         10 << 10 << 4;
     QTest::newRow("100 inserts, 100 deletes, 4 connections") <<
         100 << 100 << 4;
-    QTest::newRow("1000 inserts, 1000 deletes, 4 connections") <<
-        1000 << 1000 << 4;
+    QTest::newRow("250 inserts, 250 deletes, 4 connections") <<
+        250 << 250 << 4;
 
 }
 
@@ -380,12 +380,12 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_up
         1 << 10 << 10;
     QTest::newRow("2 Threads, 100 inserts, 100 deletes") <<
         2 << 100 << 100;
-    QTest::newRow("2 Threads, 1000 inserts, 1000 deletes") <<
-        2 << 1000 << 1000;
+    QTest::newRow("2 Threads, 250 inserts, 250 deletes") <<
+        2 << 250 << 250;
     QTest::newRow("4 Threads, 100 inserts, 100 deletes") <<
         4 << 100 << 100;
-    QTest::newRow("4 Threads, 1000 inserts, 1000 deletes") <<
-        4 << 1000 << 1000;
+    QTest::newRow("4 Threads, 250 inserts, 250 deletes") <<
+        4 << 250 << 250;
 }
 
 QTEST_MAIN( tst_QSparqlTrackerDirectConcurrency )
