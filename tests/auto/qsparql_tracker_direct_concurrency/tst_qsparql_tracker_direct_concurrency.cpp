@@ -171,10 +171,6 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
         TEST_DATA_AMOUNT << 10 << 4;
     QTest::newRow("100 queries, 4 Threads") <<
         TEST_DATA_AMOUNT << 100 << 4;
-    QTest::newRow("10 queries, 8 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 8;
-    QTest::newRow("100 queries, 8 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 8;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
@@ -244,10 +240,10 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
         TEST_DATA_AMOUNT << 10 << 2;
     QTest::newRow("100 queries, 2 connections") <<
         TEST_DATA_AMOUNT << 100 << 2;
-    QTest::newRow("10 queries, 10 connections") <<
-        TEST_DATA_AMOUNT << 10 << 10;
-    QTest::newRow("100 queries, 10 connections") <<
-        TEST_DATA_AMOUNT << 100 << 10;
+    QTest::newRow("10 queries, 4 connections") <<
+        TEST_DATA_AMOUNT << 10 << 4;
+    QTest::newRow("100 queries, 4 connections") <<
+        TEST_DATA_AMOUNT << 100 << 4;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
@@ -337,10 +333,10 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
         TEST_DATA_AMOUNT << 10 << 2;
     QTest::newRow("100 queries, 2 Threads") <<
         TEST_DATA_AMOUNT << 100 << 2;
-    QTest::newRow("10 queries, 10 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 10;
-    QTest::newRow("100 queries, 10 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 10;
+    QTest::newRow("10 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 10 << 4;
+    QTest::newRow("100 queries, 4 Threads") <<
+        TEST_DATA_AMOUNT << 100 << 4;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_updateQueries()
