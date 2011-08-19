@@ -83,7 +83,7 @@ void QTrackerDirectSyncResult::run()
 void QTrackerDirectSyncResult::terminate()
 {
     resultFinished = 1;
-    // can revert back to async mode for the result now
+    // can revert back to sync mode for the result now
     isAsync = false;
     Q_EMIT finished();
 }
@@ -102,6 +102,7 @@ void QTrackerDirectSyncResult::startFetcher()
 void QTrackerDirectSyncResult::exec()
 {
     if (isAsync && !queryRunner->started) {
+        // we queue this method to allow client to connect signals
         QMetaObject::invokeMethod(this, "startFetcher",  Qt::QueuedConnection);
     } else {
         runQuery();

@@ -55,13 +55,14 @@ class QueryTester : public QObject
 
     int numQueries;
     int testDataSize;
+    bool forwardOnly;
 
 public:
     QueryTester();
     ~QueryTester();
 
     void cleanup();
-    void setParameters(int numQueries, int testDataSize);
+    void setParameters(int numQueries, int testDataSize, bool forwardOnly);
     void setConnection(QSparqlConnection* connection);
     bool waitForAllFinished(int silenceTimeoutMs);
 
