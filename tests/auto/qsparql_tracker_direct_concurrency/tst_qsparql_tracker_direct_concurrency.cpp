@@ -219,7 +219,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
 
     // Wait for all the queries to finish
     Q_FOREACH(QueryTester* queryTester, queryTesters) {
-        QVERIFY(queryTester->waitForAllFinished(15000));
+        QVERIFY(queryTester->waitForAllFinished(60000));
     }
 
     qDeleteAll(queryTesters);
@@ -313,7 +313,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
         thread->start();
     }
 
-    waitForAllFinished(createdThreads, 15000*numThreads);
+    waitForAllFinished(createdThreads, 60000*numThreads);
     qDeleteAll(queryTesters);
     qDeleteAll(createdThreads);
 }
@@ -357,7 +357,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_up
         thread->start();
     }
 
-    waitForAllFinished(createdThreads, 15000*numThreads);
+    waitForAllFinished(createdThreads, 60000*numThreads);
     qDeleteAll(updateTesters);
     qDeleteAll(createdThreads);
 }

@@ -9,6 +9,9 @@ SOURCES  += tst_qsparql_tracker_direct_concurrency.cpp \
 check.depends = $$TARGET
 check.commands = ./tst_qsparql_tracker_direct_concurrency
 
-QMAKE_EXTRA_TARGETS += check
+memcheck.depends = $$TARGET
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_tracker_direct_concurrency
+
+QMAKE_EXTRA_TARGETS += check memcheck
 
 #QT = sparql # enable this later
