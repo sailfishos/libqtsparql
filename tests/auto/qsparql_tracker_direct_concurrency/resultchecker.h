@@ -37,54 +37,41 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_COMMON_H
-#define QSPARQL_TRACKER_COMMON_H
+#ifndef RESULTCHECKER_H
+#define RESULTCHECKER_H
 
-#include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtCore/qobject.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qpair.h>
 
-class TrackerDirectCommon : public QObject
+class QSignalMapper;
+class QSparqlResult;
+
+class ResultChecker : public QObject
 {
     Q_OBJECT
+    QSignalMapper* dataReadyMapper;
+    QSignalMapper* finishedMapper;
+    QList<QSparqlResult*> allResults;
+    QHash<QSparqlResult*, QPair<int,int> > pendingResults;
 
-    public:
-        TrackerDirectCommon();
-        virtual ~TrackerDirectCommon();
-        void installMsgHandler();
-        void setMsgLogLevel(int logLevel);
-        bool setupData();
-        bool cleanData();
-        void testError(const QString& msg);
+public:
+    ResultChecker();
+    ~ResultChecker();
+    void append(QSparqlResult *r, const QPair<int, int>& range);
+    bool waitForAllFinished(int silenceTimeoutMs);
 
-    private:
-        QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
-        virtual QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q) =0;
-        virtual void waitForQueryFinished(QSparqlResult* r) =0;
-        virtual bool checkResultSize(QSparqlResult* r, int s) =0;
+Q_SIGNALS:
+    void allFinished();
 
-    private slots:
-        void query_contacts();
-        void insert_and_delete_contact();
-        void query_with_error();
-        void iterate_result();
-        void iterate_result_rows();
-        void iterate_result_bindings();
-        void iterate_result_values();
-        void iterate_result_stringValues();
-        void special_chars();
-        void data_types();
-        void explicit_data_types();
-        void large_integer();
-        void datatype_string_data();
-        void datatype_int_data();
-        void datatype_double_data();
-        void datatype_datetime_data();
-        void datatype_boolean_data();
-        void datatypes_as_properties_data();
-        void datatypes_as_properties();
+private Q_SLOTS:
+    void onDataReady(QObject* mappedResult);
+    void onFinished(QObject* mappedResult);
 
-    private:
-        QtMsgHandler origMsgHandler;
+private:
+    void initResources();
 };
 
-#endif // QSPARQL_TRACKER_COMMON_H
+
+#endif // RESULTCHECKER_H

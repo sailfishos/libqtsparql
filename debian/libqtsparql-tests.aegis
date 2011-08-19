@@ -15,5 +15,6 @@
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_threading" />
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_benchmark" />
       <for path="/usr/lib/libqtsparql-tests/tst_qsparql_qmlbindings" />
+      <for path="/usr/lib/libqtsparql-tests/tst_qsparql_tracker_direct_concurrency" />
    </request>
 </aegis>

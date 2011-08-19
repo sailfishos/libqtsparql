@@ -37,54 +37,70 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_COMMON_H
-#define QSPARQL_TRACKER_COMMON_H
+#ifndef UPDATETESTER_H
+#define UPDATETESTER_H
 
-#include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtCore/qobject.h>
+#include <QtCore/qset.h>
 
-class TrackerDirectCommon : public QObject
+class QSignalMapper;
+class QSparqlConnection;
+class QSparqlResult;
+
+class UpdateTester : public QObject
 {
     Q_OBJECT
+    QSparqlConnection *connection;
+    QSparqlConnection *ownConnection;
+    QList<QSparqlResult*> resultList;
+    QSet<QSparqlResult*> pendingResults;
+    QSignalMapper* updateFinishedMapper;
+    QSignalMapper* deleteFinishedMapper;
+    int numInserts;
+    int numDeletes;
+    int id;
+    bool isFinished;
+    int validateUpdateResultAttempts;
 
-    public:
-        TrackerDirectCommon();
-        virtual ~TrackerDirectCommon();
-        void installMsgHandler();
-        void setMsgLogLevel(int logLevel);
-        bool setupData();
-        bool cleanData();
-        void testError(const QString& msg);
+public:
+    UpdateTester(int id);
+    void setParameters(int numInserts, int numDeletes);
+    void setConnection(QSparqlConnection *connection);
+    void waitForFinished();
+    void startInThread(QThread* thread);
 
-    private:
-        QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
-        virtual QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q) =0;
-        virtual void waitForQueryFinished(QSparqlResult* r) =0;
-        virtual bool checkResultSize(QSparqlResult* r, int s) =0;
+Q_SIGNALS:
+    void updatesComplete();
+    void validateUpdateComplete();
+    void deletionsComplete();
+    void validateDeletionComplete();
+    void finished();
 
-    private slots:
-        void query_contacts();
-        void insert_and_delete_contact();
-        void query_with_error();
-        void iterate_result();
-        void iterate_result_rows();
-        void iterate_result_bindings();
-        void iterate_result_values();
-        void iterate_result_stringValues();
-        void special_chars();
-        void data_types();
-        void explicit_data_types();
-        void large_integer();
-        void datatype_string_data();
-        void datatype_int_data();
-        void datatype_double_data();
-        void datatype_datetime_data();
-        void datatype_boolean_data();
-        void datatypes_as_properties_data();
-        void datatypes_as_properties();
+public Q_SLOTS:
+    void start();
+    void run();
+    void runInThread();
+    void cleanup();
 
-    private:
-        QtMsgHandler origMsgHandler;
+private Q_SLOTS:
+    void initResources();
+    void startUpdates();
+    void startValidateUpdate();
+    void validateUpdateResult();
+    void startDeletions();
+    void startValidateDeletion();
+    void validateDeleteResult();
+    void onUpdateFinished(QObject* mappedResult);
+    void onDeleteFinished(QObject* mappedResult);
+    void finish();
+
+private:
+    static QString selectTemplate();
+    void appendPendingResult(QSparqlResult* result, QSignalMapper* signalMapper);
+    void checkIsPendingResult(QObject* mappedResult) const;
+    bool removePendingResultWasLast(QObject* mappedResult);
+    void doValidateUpdateResult(bool* retry);
+    void doValidateDeleteResult();
 };
 
-#endif // QSPARQL_TRACKER_COMMON_H
+#endif // UPDATETESTER_H
