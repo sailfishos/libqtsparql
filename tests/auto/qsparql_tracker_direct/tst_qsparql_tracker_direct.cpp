@@ -65,7 +65,6 @@ private slots:
     void cleanup();
 
     void qsparqlresultrow();
-    void ask_contacts();
     void insert_new_urn();
 
     void delete_unfinished_result();
@@ -211,30 +210,6 @@ void tst_QSparqlTrackerDirect::qsparqlresultrow()
     QCOMPARE(row.variableName(1), QString());
     QCOMPARE(row.indexOf("ng"), -1);
 
-    delete r;
-}
-
-void tst_QSparqlTrackerDirect::ask_contacts()
-{
-    QSparqlConnection conn("QTRACKER_DIRECT");
-    QSparqlQuery q1("ask {<uri003> a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven \"name003\" .}", QSparqlQuery::AskStatement);
-    QSparqlResult* r = conn.exec(q1);
-    CHECK_QSPARQL_RESULT(r);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_QSPARQL_RESULT(r);
-    QCOMPARE(r->boolValue(), true);
-    delete r;
-
-    QSparqlQuery q2("ask {<uri005> a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
-                   "nco:nameGiven \"name005\" .}", QSparqlQuery::AskStatement);
-    r = conn.exec(q2);
-    CHECK_QSPARQL_RESULT(r);
-    r->waitForFinished(); // this test is synchronous only
-    CHECK_QSPARQL_RESULT(r);
-    QCOMPARE(r->boolValue(), false);
     delete r;
 }
 
