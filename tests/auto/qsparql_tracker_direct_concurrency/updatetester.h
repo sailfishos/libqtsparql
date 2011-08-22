@@ -61,6 +61,7 @@ class UpdateTester : public QObject
     int id;
     bool isFinished;
     int validateUpdateResultAttempts;
+    int validateDeleteResultAttempts;
 
 public:
     UpdateTester(int id);
@@ -100,7 +101,7 @@ private:
     void checkIsPendingResult(QObject* mappedResult) const;
     bool removePendingResultWasLast(QObject* mappedResult);
     void doValidateUpdateResult(bool* retry);
-    void doValidateDeleteResult();
+    void doValidateDeleteResult(bool* retry);
 };
 
 #endif // UPDATETESTER_H

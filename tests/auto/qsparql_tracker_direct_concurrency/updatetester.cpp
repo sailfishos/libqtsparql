@@ -47,6 +47,7 @@ UpdateTester::UpdateTester(int id)
     , deleteFinishedMapper(0)
     , id(id), isFinished(false)
     , validateUpdateResultAttempts(0)
+    , validateDeleteResultAttempts(0)
 {
 }
 
@@ -174,6 +175,7 @@ void UpdateTester::validateUpdateResult()
 
 void UpdateTester::startDeletions()
 {
+    validateDeleteResultAttempts = 0;
     const QString deleteTemplate = "delete { <addeduri00%1-%2> a nco:PersonContact }"
                                    " WHERE { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2> . }";
     for (int i=0;i<numDeletes;i++) {
@@ -196,8 +198,14 @@ void UpdateTester::startValidateDeletion()
 
 void UpdateTester::validateDeleteResult()
 {
-    doValidateDeleteResult();
-    Q_EMIT validateDeletionComplete();
+    bool retry = false;
+    doValidateDeleteResult(&retry);
+    if (retry) {
+        QMetaObject::invokeMethod(this, "startValidateDeletion", Qt::QueuedConnection);
+    }
+    else {
+        Q_EMIT validateDeletionComplete();
+    }
 }
 
 void UpdateTester::onUpdateFinished(QObject* mappedResult)
@@ -220,6 +228,10 @@ void UpdateTester::finish()
     if (validateUpdateResultAttempts > 1) {
         qDebug() << "Update result validation attempts" << validateUpdateResultAttempts;
     }
+    if (validateDeleteResultAttempts > 1) {
+        qDebug() << "Delete result validation attempts" << validateDeleteResultAttempts;
+    }
+
     Q_EMIT finished();
 }
 
@@ -287,21 +299,27 @@ void UpdateTester::doValidateUpdateResult(bool* retry)
     *retry = (missingInsertsCount > 0);
 }
 
-void UpdateTester::doValidateDeleteResult()
+void UpdateTester::doValidateDeleteResult(bool* retry)
 {
+    QVERIFY( ++validateDeleteResultAttempts < 10 );
+
     QSparqlResult* result = resultList.back();
     QVERIFY( !result->hasError() );
-    QCOMPARE(result->size(), numInserts-numDeletes);
-    QHash<QString, QString> contactNameValues;
-    while (result->next()) {
-        contactNameValues[result->value(0).toString()] = result->value(1).toString();
-    }
-    QCOMPARE(contactNameValues.size(), numInserts-numDeletes);
-    // number of deletes might be less than the number of inserts, we delete from 0 -> numDeletes-1, so
-    int startFrom = numInserts - numDeletes;
-    if (startFrom != 0) {
-        for (int i=startFrom;i<numInserts;i++) {
-            QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
+    if (result->size() == numInserts-numDeletes) {
+        QHash<QString, QString> contactNameValues;
+        while (result->next()) {
+            contactNameValues[result->value(0).toString()] = result->value(1).toString();
         }
+        QCOMPARE(contactNameValues.size(), numInserts-numDeletes);
+        // number of deletes might be less than the number of inserts, we delete from 0 -> numDeletes-1, so
+        int startFrom = numInserts - numDeletes;
+        if (startFrom != 0) {
+            for (int i=startFrom;i<numInserts;i++) {
+                QCOMPARE(contactNameValues[QString("addeduri00%1-%2").arg(i).arg(id)], QString("addedname00%1").arg(i));
+            }
+        }
+    }
+    else {
+        *retry = true;
     }
 }
