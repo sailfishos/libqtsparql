@@ -95,6 +95,9 @@ private slots:
 
     void syncExec_waitForFinished_update_query_test();
     void syncExec_waitForFinished_update_query_test_data();
+    
+    void query_with_prefix();
+    void query_with_prefix_data();
 
 private:
     void insertTrackerTestData();
@@ -1460,6 +1463,43 @@ void tst_QSparqlAPI::syncExec_waitForFinished_update_query_test_data()
             << contactInsertAmount
             << contactDeleteAmount;
     }
+}
+
+void tst_QSparqlAPI::query_with_prefix()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, queryTemplate);
+    QFETCH(int, expectedResultsSize);
+    QFETCH(int, executionMethod);
+    QFETCH(bool, useAsyncObject);
+    
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
+    conn.addPrefix("alias", QUrl("http://www.semanticdesktop.org/ontologies/2007/03/22/nco#"));
+    
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
+    
+    const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") ).
+                                replace(QString("nco"), QString("alias"));
+    const QSparqlQuery q(queryString);
+    
+    QSparqlResult* r = conn.exec(q, queryOptions);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
+    validateResults(r, expectedResultsSize);
+    
+    conn.clearPrefixes();
+    
+    r = conn.exec(q, queryOptions);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
+    QVERIFY(r->hasError());
+    
+    delete r;
+}
+
+void tst_QSparqlAPI::query_with_prefix_data()
+{
+    query_test_data();
 }
 
 QTEST_MAIN( tst_QSparqlAPI )
