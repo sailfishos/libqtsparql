@@ -140,6 +140,7 @@ void UpdateTester::startUpdates()
 {
     validateUpdateResultAttempts = 0;
     const QString insertTemplate = "insert { <addeduri00%1-%2> a nco:PersonContact; nie:isLogicalPartOf <qsparql-tracker-direct-concurrency-thread%2>;"
+                                    "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress>;"
                                     "nco:nameGiven \"addedname00%1\"; nco:nameFamily \"addedFamily00%1\" . }";
     for (int i=0;i<numInserts;i++) {
         QSparqlQuery insertQuery(insertTemplate.arg(i).arg(id), QSparqlQuery::InsertStatement);

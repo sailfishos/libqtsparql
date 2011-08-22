@@ -106,6 +106,14 @@ void tst_QSparqlTrackerDirectConcurrency::initTestCase()
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
     testData = 0;
+
+    // delete any previous pieces of test data that may have been left
+    // over if the test was killed prematurely
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    QString deleteString = "delete { ?u a rdfs:Resource } WHERE { ?u nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> }";
+    QSparqlResult *result = conn.syncExec(QSparqlQuery(deleteString, QSparqlQuery::DeleteStatement));
+    QVERIFY(!result->hasError());
+    delete result;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::cleanupTestCase()
