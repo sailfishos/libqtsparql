@@ -166,10 +166,18 @@ class FinishedSignalReceiver : public QObject
 {
     Q_OBJECT
     bool finished;
+    QObject* expectedSender;
 
 public:
-    FinishedSignalReceiver() : finished(false)
+    FinishedSignalReceiver()
+        : finished(false), expectedSender(0)
     { }
+
+    void connectFinished(QObject* sender)
+    {
+        QVERIFY( QObject::connect(sender, SIGNAL(finished()), this, SLOT(onFinished())) );
+        expectedSender = sender;
+    }
 
     void waitForFinished(int timeoutMs)
     {
@@ -183,7 +191,11 @@ public:
     }
 
 public slots:
-    void onFinished() { finished = true; }
+    void onFinished()
+    {
+        finished = true;
+        QCOMPARE( sender(), expectedSender );
+    }
 };
 
 void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const bool useAsyncObject)
@@ -194,9 +206,9 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
             // As per documentation requirement, only attempt to connect the
             // signals after first validating that there is no error
             if (!r->hasError()) {
-                FinishedSignalReceiver signalObject;
-                QObject::connect(r, SIGNAL(finished()), &signalObject, SLOT(onFinished()));
-                signalObject.waitForFinished(2000);
+                FinishedSignalReceiver signalReceiver;
+                signalReceiver.connectFinished(r);
+                signalReceiver.waitForFinished(2000);
             }
         } else {
             r->waitForFinished();
@@ -1274,7 +1286,7 @@ void tst_QSparqlAPI::queryModel_test()
     model.setQuery(QSparqlQuery(query), conn);
 
     FinishedSignalReceiver signalReceiver;
-    connect(&model, SIGNAL(finished()), &signalReceiver, SLOT(onFinished()));
+    signalReceiver.connectFinished(&model);
     signalReceiver.waitForFinished(2000);
 
     QCOMPARE(model.rowCount(), expectedResultsSize);
