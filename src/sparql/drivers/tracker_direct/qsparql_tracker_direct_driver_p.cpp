@@ -398,12 +398,14 @@ void QTrackerDirectDriver::close()
 QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QSparqlResult* result = 0;
+    QString query_with_prefixes(query);
+    query_with_prefixes.prepend(prefixes());
     switch (options.executionMethod()) {
     case QSparqlQueryOptions::AsyncExec:
-        result = asyncExec(query, type, options);
+        result = asyncExec(query_with_prefixes, type, options);
         break;
     case QSparqlQueryOptions::SyncExec:
-        result = syncExec(query, type, options);
+        result = syncExec(query_with_prefixes, type, options);
         break;
     }
 

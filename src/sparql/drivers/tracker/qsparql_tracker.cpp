@@ -482,8 +482,9 @@ QTrackerResult* QTrackerDriver::exec(const QString& query,
 {
     if (options.executionMethod() == QSparqlQueryOptions::SyncExec)
         return 0;
-
-    QTrackerResult* res = new QTrackerResult(query, type, this);
+    QString query_with_prefixes(query);
+    query_with_prefixes.prepend(prefixes());
+    QTrackerResult* res = new QTrackerResult(query_with_prefixes, type, this);
     res->exec(options);
     return res;
 }
