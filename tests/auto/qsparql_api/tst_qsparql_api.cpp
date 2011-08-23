@@ -165,12 +165,12 @@ const QString invalidQuery =
 class FinishedSignalReceiver : public QObject
 {
     Q_OBJECT
-    bool finished;
+    int numFinished;
     QObject* expectedSender;
 
 public:
     FinishedSignalReceiver()
-        : finished(false), expectedSender(0)
+        : numFinished(0), expectedSender(0)
     { }
 
     void connectFinished(QObject* sender)
@@ -181,19 +181,27 @@ public:
 
     void waitForFinished(int timeoutMs)
     {
+        bool timeout = false;
+        numFinished = 0;
         QTime timeoutTimer;
         timeoutTimer.start();
-        bool timeout = false;
-        while (!finished && !(timeout = (timeoutTimer.elapsed() > timeoutMs))) {
+        while (numFinished == 0 && !(timeout = (timeoutTimer.elapsed() > timeoutMs))) {
             QTest::qWait(qMax(20, timeoutMs / 100));
         }
         QVERIFY(!timeout);
     }
 
+    void ensureOneFinishedReceived(int timeoutMs)
+    {
+        QCOMPARE( numFinished, 1 );
+        QTest::qWait(timeoutMs);
+        QCOMPARE( numFinished, 1 );
+    }
+
 public slots:
     void onFinished()
     {
-        finished = true;
+        ++numFinished;
         QCOMPARE( sender(), expectedSender );
     }
 };
@@ -209,6 +217,7 @@ void checkExecutionMethod(QSparqlResult* r, const int executionMethod, const boo
                 FinishedSignalReceiver signalReceiver;
                 signalReceiver.connectFinished(r);
                 signalReceiver.waitForFinished(2000);
+                signalReceiver.ensureOneFinishedReceived(100);
             }
         } else {
             r->waitForFinished();
@@ -1288,6 +1297,7 @@ void tst_QSparqlAPI::queryModel_test()
     FinishedSignalReceiver signalReceiver;
     signalReceiver.connectFinished(&model);
     signalReceiver.waitForFinished(2000);
+    signalReceiver.ensureOneFinishedReceived(100);
 
     QCOMPARE(model.rowCount(), expectedResultsSize);
     QCOMPARE(model.columnCount(), contactSelectColumnCount);
