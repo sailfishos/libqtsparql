@@ -281,9 +281,10 @@ void QTrackerDirectSelectResult::terminate()
         emitDataReady(results.count());
     }
 
-    resultFinished = 1;
-    Q_EMIT finished();
-    this->disconnect(SIGNAL(finished()));
+    if (!resultFinished) {
+        resultFinished = 1;
+        Q_EMIT finished();
+    }
     if (cursor) {
         g_object_unref(cursor);
         cursor = 0;
