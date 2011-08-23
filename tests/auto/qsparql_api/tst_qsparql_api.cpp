@@ -99,6 +99,9 @@ private slots:
     void query_with_prefix();
     void query_with_prefix_data();
 
+    void go_beyond_columns_number();
+    void go_beyond_columns_number_data();
+
 private:
     void insertTrackerTestData();
     void insertEndpointTestData();
@@ -1520,6 +1523,40 @@ void tst_QSparqlAPI::query_with_prefix()
 }
 
 void tst_QSparqlAPI::query_with_prefix_data()
+{
+    query_test_data();
+}
+
+void tst_QSparqlAPI::go_beyond_columns_number()
+{
+    QFETCH(QString, connectionDriver);
+    QFETCH(QString, queryTemplate);
+    QFETCH(int, expectedResultsSize);
+    QFETCH(int, executionMethod);
+    QFETCH(bool, useAsyncObject);
+
+    QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
+    QSparqlConnection conn(connectionDriver, options);
+
+    QSparqlQueryOptions queryOptions;
+    queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
+
+    const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
+    const QSparqlQuery q(queryString);
+
+    QSparqlResult* r = conn.exec(q, queryOptions);
+    checkExecutionMethod(r, executionMethod, useAsyncObject);
+
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        QCOMPARE(r->value(expectedResultsSize+1).toString(), QString());
+        QCOMPARE(r->binding(expectedResultsSize+1).toString(), QString());
+        QCOMPARE(r->binding(-2).toString(), QString());
+    }
+    delete r;
+}
+
+void tst_QSparqlAPI::go_beyond_columns_number_data()
 {
     query_test_data();
 }
