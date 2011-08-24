@@ -63,7 +63,7 @@ private slots:
     void unbind_and_replace();
     void different_datatypes_data();
     void different_datatypes();
-    void copyQuery();
+    void copy();
 };
 
 tst_QSparqlQuery::tst_QSparqlQuery()
@@ -247,29 +247,45 @@ void tst_QSparqlQuery::different_datatypes()
     QCOMPARE(q.preparedQueryText(), replacedString);
 }
 
-void tst_QSparqlQuery::copyQuery()
+void tst_QSparqlQuery::copy()
 {
-    QString query1("insert { _:c a nco:Contact ; "
+    const QString query1("insert { _:c a nco:Contact ; "
                    "nco:fullname \"NAME\" ; "
                    "nco:hasPhoneNumber _:pn . "
                    "_:pn a nco:PhoneNumber ; "
                    "nco:phoneNumber \"PHONE\" . }");
-    QString query2("select ?r { ?r a nie:InformationElement ; "
+    const QString query2("select ?r { ?r a nie:InformationElement ; "
                    "nie:isLogicalPartOf <qsparql-query-tests> .}");
     
-    QSparqlQuery::StatementType type1(QSparqlQuery::InsertStatement);
-    QSparqlQuery::StatementType type2(QSparqlQuery::SelectStatement);
-    QSparqlQuery q1(query1, type1);
-    QSparqlQuery q2(query2, type2);
-    
-    q1=q2;
-    QCOMPARE(q1.query(), q2.query());
-    QCOMPARE(q1.type(), q2.type());
+    const QSparqlQuery::StatementType type1(QSparqlQuery::InsertStatement);
+    const QSparqlQuery::StatementType type2(QSparqlQuery::SelectStatement);
+    const QSparqlQuery q1(query1, type1);
+
+    // Copy construct q2 from q1
+    QSparqlQuery q2(q1);
+    QCOMPARE(q2.query(), query1);
+    QCOMPARE(q2.type(), type1);
+
     q2.setType(type2);
+    QCOMPARE(q2.type(), type2);
+    QCOMPARE(q1.type(), type1);
+
     q2.setQuery(query2);
-    QCOMPARE(type2, q2.type());
     QCOMPARE(q2.query(), query2);
-    
+    QCOMPARE(q1.query(), query1);
+
+    // Assign q1 to q2
+    q2 = q1;
+    QCOMPARE(q2.query(), query1);
+    QCOMPARE(q2.type(), type1);
+
+    q2.setType(type2);
+    QCOMPARE(q2.type(), type2);
+    QCOMPARE(q1.type(), type1);
+
+    q2.setQuery(query2);
+    QCOMPARE(q2.query(), query2);
+    QCOMPARE(q1.query(), query1);
 }
 
 QTEST_MAIN( tst_QSparqlQuery )
