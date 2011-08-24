@@ -185,6 +185,8 @@ void QSparqlDriver::setOpenError(bool error)
         d->isOpen = false;
 }
 
+// Exclude from covarage virtual function that will be never called
+// LCOV_EXCL_START
 /*!
     This function is called to begin a transaction. If successful,
     return true, otherwise return false. The default implementation
@@ -223,7 +225,7 @@ bool QSparqlDriver::rollbackTransaction()
 {
     return false;
 }
-
+// LCOV_EXCL_STOP
 /*!
     This function is used to set the value of the last error, \a error,
     that occurred on the database.

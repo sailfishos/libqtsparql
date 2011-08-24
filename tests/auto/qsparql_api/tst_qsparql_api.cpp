@@ -60,6 +60,9 @@ private slots:
     void init();
     void cleanup();
 
+    void connection_test();
+    void connection_test_data();
+
     void query_test();
     void query_test_data();
 
@@ -499,6 +502,27 @@ void tst_QSparqlAPI::cleanup()
 {
     delete msgRecorder;
     msgRecorder = 0;
+}
+
+void tst_QSparqlAPI::connection_test()
+{
+    QFETCH(QString, driverName);
+    QFETCH(bool, isValid);
+    
+    QSparqlConnection conn(driverName);
+    QCOMPARE(driverName, conn.driverName());
+    QCOMPARE(conn.isValid(), isValid);
+}
+
+void tst_QSparqlAPI::connection_test_data()
+{
+    QTest::addColumn<QString>("driverName");
+    QTest::addColumn<bool>("isValid");
+    
+    QTest::newRow("dbus driver") << "QTRACKER" << true;
+    QTest::newRow("direct driver") <<  "QTRACKER_DIRECT" << true;
+    QTest::newRow("dummy driver") << "QTRACKER_DUMMY" << false;
+
 }
 
 void tst_QSparqlAPI::query_test()

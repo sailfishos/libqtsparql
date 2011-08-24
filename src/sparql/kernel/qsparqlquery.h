@@ -47,6 +47,7 @@
 #include <QtSparql/qsparql.h>
 
 #include <QtCore/qstring.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_HEADER
 
@@ -88,7 +89,7 @@ public:
     QString preparedQueryText() const;
 
 private:
-    QSparqlQueryPrivate* d;
+    QSharedDataPointer<QSparqlQueryPrivate> d;
 };
 
 QT_END_NAMESPACE

@@ -66,10 +66,11 @@ struct QHolder {
     int holderPos;
 };
 
-struct QSparqlQueryPrivate
+class QSparqlQueryPrivate : public QSharedData
 {
-    QSparqlQueryPrivate(const QString& q = QString(),
-                        QSparqlQuery::StatementType t = QSparqlQuery::SelectStatement)
+public:
+    QSparqlQueryPrivate(const QString& q,
+                        QSparqlQuery::StatementType t)
         : query(q), type(t)
     {
         findPlaceholders();
@@ -79,7 +80,6 @@ struct QSparqlQueryPrivate
 
     void findPlaceholders();
 
-    QAtomicInt ref;
     QString query;
     QSparqlQuery::StatementType type;
 
@@ -176,9 +176,8 @@ QSparqlQueryPrivate::~QSparqlQueryPrivate()
 */
 
 QSparqlQuery::QSparqlQuery(const QString& query, StatementType type)
+  : d(new QSparqlQueryPrivate(query, type))
 {
-    d = new QSparqlQueryPrivate(query, type);
-    d->ref.ref();
 }
 
 /*!
@@ -187,8 +186,7 @@ QSparqlQuery::QSparqlQuery(const QString& query, StatementType type)
 
 QSparqlQuery::~QSparqlQuery()
 {
-    if (!d->ref.deref())
-        delete d;
+     // QSharedDataPointer takes care of deleting the data object
 }
 
 /*!
@@ -197,9 +195,8 @@ QSparqlQuery::~QSparqlQuery()
 
 
 QSparqlQuery::QSparqlQuery(const QSparqlQuery& other)
+  : d(other.d)
 {
-    d = other.d;
-    d->ref.ref();
 }
 
 /*!
@@ -208,7 +205,7 @@ QSparqlQuery::QSparqlQuery(const QSparqlQuery& other)
 
 QSparqlQuery& QSparqlQuery::operator=(const QSparqlQuery& other)
 {
-    qAtomicAssign(d, other.d);
+    d = other.d;
     return *this;
 }
 
