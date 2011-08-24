@@ -54,7 +54,7 @@ public:
     {
         Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
         qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
-        qmlRegisterType<QSparqlConnectionOptionsWrapper>(uri, 0, 1, "SparqlConnectionOptions");
+        qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
     }
 };
 

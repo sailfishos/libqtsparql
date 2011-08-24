@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtCore/QDebug>
+#include <QtNetwork/qnetworkaccessmanager.h>
 
 #include <QtSparql/qsparqlerror.h>
 
@@ -62,7 +63,7 @@ public:
     QSparqlConnection *connection;
     QSparqlResult *result;
     QString query;
-    QSparqlConnectionOptionsWrapper *options;
+    SparqlConnectionOptions *options;
     int lastRowCount;
     QSparqlResultsList::Status status;
 };
@@ -75,6 +76,8 @@ QSparqlResultsList::QSparqlResultsList(QObject *parent) :
 
 QSparqlResultsList::~QSparqlResultsList()
 {
+    delete d->result;
+    delete d->connection;
     delete d;
 }
 
@@ -113,9 +116,10 @@ void QSparqlResultsList::reload()
             delete d->result;
     }
 
+    delete d->result;
     delete d->connection;
 
-    d->connection = new QSparqlConnection(d->options->driverName(), d->options->options());
+    d->connection = new QSparqlConnection(d->options->driverName(), *d->options);
     d->result = d->connection->exec(QSparqlQuery(d->query));
 
     if (d->result->hasError())
@@ -171,12 +175,12 @@ void QSparqlResultsList::queryFinished()
     Q_EMIT countChanged();
 }
 
-QSparqlConnectionOptionsWrapper* QSparqlResultsList::options() const
+SparqlConnectionOptions* QSparqlResultsList::options() const
 {
     return d->options;
 }
 
-void QSparqlResultsList::setOptions(QSparqlConnectionOptionsWrapper *options)
+void QSparqlResultsList::setOptions(SparqlConnectionOptions *options)
 {
     d->options = options;
     reload();
