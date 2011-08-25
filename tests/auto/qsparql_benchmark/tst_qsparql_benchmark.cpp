@@ -45,6 +45,7 @@
 #include <QtSparql/QtSparql>
 #include <sys/time.h>
 #include <stdio.h>
+#include <QDomDocument>
 
 #define START_BENCHMARK \
     int benchmarkTotal=0; { \
@@ -77,7 +78,9 @@
     fprintf(stderr, "\n%s\n%s\n\n", qPrintable(BENCHMARKNAME), qPrintable(underline)); \
     fprintf(stderr, "median\t\t\t\t\t\t\t%i\n", LIST[median]); \
     fprintf(stderr, "mean\t\t\t\t\t\t\t%i\n", average/LIST.size());\
-    fprintf(stderr, "total time\t\t\t\t\t\t%i\n\n", average); }
+    fprintf(stderr, "total time\t\t\t\t\t\t%i\n\n", average); \
+    appendResult(BENCHMARKNAME, LIST[median], average/LIST.size(), average); \
+    }
 #define NO_QUERIES 100
 
 class tst_QSparqlBenchmark : public QObject
@@ -110,6 +113,10 @@ private slots:
     void queryWithLibtrackerSparqlInThread_data();
 
     void threadCreatingOverhead();
+    void generateResultsReport();
+private:
+    void appendResult(QString name, int median, int mean, int total);
+    QDomDocument result;
 };
 
 namespace {
@@ -172,8 +179,24 @@ void readValuesFromCursor(TrackerSparqlCursor* cursor,
 
 }
 
-tst_QSparqlBenchmark::tst_QSparqlBenchmark()
+tst_QSparqlBenchmark::tst_QSparqlBenchmark() : result("Benchmark_results")
 {
+    QString description("Some description of what was improved "
+                        "comparing to previous verion");
+    QDomElement benchmarks = result.createElement("benchmark");
+    QDomElement asset = result.createElement("asset");
+    QDomElement tests = result.createElement("tests");
+    QDomElement created = result.createElement("created");
+    QDomElement descriptionNode = result.createElement("description");
+    QDomText date = result.createTextNode(QDate::currentDate().toString());
+    QDomText text = result.createTextNode(description);
+    created.appendChild(date);
+    descriptionNode.appendChild(text);
+    asset.appendChild(created);
+    asset.appendChild(descriptionNode);
+    result.appendChild(benchmarks);
+    benchmarks.appendChild(asset);
+    benchmarks.appendChild(tests);
 }
 
 tst_QSparqlBenchmark::~tst_QSparqlBenchmark()
@@ -524,6 +547,29 @@ void tst_QSparqlBenchmark::threadCreatingOverhead()
             QVERIFY(runner.hasRun);
         }
     }
+}
+
+void tst_QSparqlBenchmark::generateResultsReport()
+{
+    QDomElement tests = result.firstChild().namedItem("tests").toElement();
+    tests.setAttribute("count", tests.elementsByTagName("test").count());
+    qDebug() << result.toString();
+}
+
+void tst_QSparqlBenchmark::appendResult(QString name, int median, int mean, int total)
+{
+    QDomNode test = result.createElement("test");
+    test.toElement().setAttribute("name", name);
+    result.firstChild().namedItem("tests").appendChild(test);
+    QDomNode medianNode = result.createElement("median");
+    medianNode.toElement().setAttribute("value", median);
+    test.appendChild(medianNode);
+    QDomNode meanNode = result.createElement("mean");
+    meanNode.toElement().setAttribute("value", mean);
+    test.appendChild(meanNode);
+    QDomNode totalNode = result.createElement("total");
+    totalNode.toElement().setAttribute("value", total);
+    test.appendChild(totalNode);
 }
 
 QTEST_MAIN(tst_QSparqlBenchmark)
