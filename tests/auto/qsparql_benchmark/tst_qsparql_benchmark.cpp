@@ -553,7 +553,30 @@ void tst_QSparqlBenchmark::generateResultsReport()
 {
     QDomElement tests = result.firstChild().namedItem("tests").toElement();
     tests.setAttribute("count", tests.elementsByTagName("test").count());
-    qDebug() << result.toString();
+    //include date in filename so it can be sorted by filename and still have chronological order
+    QString coreFilenameTemplate("benchmark-%1-%2-%3");
+    QString filenameTemplate("%1.run-%2.xml");
+    QString dirPath = QDir::homePath() + QDir::separator();
+    int y, m, d;
+    QDate::currentDate().getDate(&y, &m, &d);
+    QString coreFilename = coreFilenameTemplate.arg(y).arg(m, 2, 10, QLatin1Char('0'))
+                                                        .arg(d, 2, 10, QLatin1Char('0'));
+    int run =1;
+    QString filePath= dirPath + filenameTemplate.arg(coreFilename).arg(run);
+    QFileInfo fi(filePath);
+    while(fi.exists())
+    {
+        run++;
+        filePath= dirPath + filenameTemplate.arg(coreFilename).arg(run);
+        fi.setFile(filePath);
+    }
+    QFile data(filePath);
+    if (data.open(QFile::WriteOnly | QFile::Truncate)) {
+        QTextStream out(&data);
+        result.save(out, 4);
+    }
+    else
+        qDebug() << "Could not open "<< filePath <<" for writing. Check permissions";
 }
 
 void tst_QSparqlBenchmark::appendResult(QString name, int median, int mean, int total)
