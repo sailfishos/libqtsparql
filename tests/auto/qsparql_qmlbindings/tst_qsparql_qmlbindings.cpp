@@ -77,6 +77,7 @@ private slots:
     void sparql_query_model_reload_test();
     void sparql_query_model_get_test();
     void sparql_query_model_test_role_names();
+    void sparql_legacy_test();
 
 };
 
@@ -573,6 +574,16 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
     QCOMPARE(roleNames[Qt::UserRole+2], QByteArray("ng"));
     QCOMPARE(roleNames[Qt::UserRole+3], QByteArray("nf"));
 
+}
+
+void tst_QSparqlQMLBindings::sparql_legacy_test()
+{
+    // This test simple checks to see if the old SparqlResultList binding still
+    // works, along with its options
+    QList<QPair<QString, QVariant> > contextProperties;
+    // If theres a problem with finding the binding, or in setting a property (driverName())
+    // this will return false
+    QVERIFY(loadQmlFile("qsparqllegacy.qml", contextProperties));
 }
 
 QTEST_MAIN(tst_QSparqlQMLBindings)
