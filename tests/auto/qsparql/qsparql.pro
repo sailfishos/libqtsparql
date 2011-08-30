@@ -1,6 +1,6 @@
 include(../sparqltest.pri)
 CONFIG += qt warn_on console depend_includepath
-QT += testlib
+QT += testlib network
 SOURCES  += tst_qsparql.cpp
 
 check.depends = $$TARGET
