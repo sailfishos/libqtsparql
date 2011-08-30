@@ -50,7 +50,7 @@
 #include <QtSparql/QSparqlConnectionOptions>
 #include <QtSparql/QSparqlConnection>
 
-#include "qsparqlconnectionoptionswrapper_p.h"
+#include <QtSparql/private/qsparqlsparqlconnectionoptions_p.h>
 
 QT_BEGIN_HEADER
 
@@ -64,7 +64,7 @@ class Q_SPARQL_EXPORT QSparqlResultsList : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(Status)
-    Q_PROPERTY(QSparqlConnectionOptionsWrapper * options READ options WRITE setOptions NOTIFY optionsChanged)
+    Q_PROPERTY(SparqlConnectionOptions * options READ options WRITE setOptions NOTIFY optionsChanged)
     Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
@@ -77,8 +77,8 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent) const;
 
-    QSparqlConnectionOptionsWrapper * options() const;
-    void setOptions(QSparqlConnectionOptionsWrapper *options);
+    SparqlConnectionOptions * options() const;
+    void setOptions(SparqlConnectionOptions *options);
 
     QString query() const;
     void setQuery(const QString &query);

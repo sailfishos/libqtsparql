@@ -39,6 +39,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qstring.h>
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QDeclarativeParserStatus>
@@ -59,11 +60,24 @@ class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QDeclarat
     Q_PROPERTY(QString hostName READ hostName WRITE setHostName)
     Q_PROPERTY(QString path READ path WRITE setPath)
     Q_PROPERTY(int port READ port WRITE setPort)
+    Q_PROPERTY(QString driverName READ driverName WRITE setDriverName)
     Q_INTERFACES(QDeclarativeParserStatus)
 public:
     SparqlConnectionOptions() {}
     void classBegin() {}
     void componentComplete() {}
+
+    void setDriverName(const QString& name)
+    {
+        driver = name;
+    }
+
+    QString driverName() const
+    {
+        return driver;
+    }
+private:
+    QString driver;
 };
 
 QT_END_NAMESPACE
