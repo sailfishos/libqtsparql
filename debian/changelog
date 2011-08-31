@@ -1,4 +1,4 @@
-libqtsparql (0.2.0~unreleased) unstable; urgency=low
+libqtsparql (0.2.0) unstable; urgency=low
 
   * Fixes: NB#275331 - [TASK] QML Bindings for QSparqlConnection and QSparqlQueryModel
   * Fixes: NB#276497 - [TASK] Implement addPrefix() for all drivers
@@ -9,7 +9,7 @@ libqtsparql (0.2.0~unreleased) unstable; urgency=low
   * Fixes: NB#268129 - libqtsparql mainpage has a placeholder \brief
   * Test improvements in coverage, API test and added new concurrency stress test
 
- -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Tue, 30 Aug 2011 16:15:00 +0300
+ -- Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>  Wed, 31 Aug 2011 13:58:00 +0300
 
 libqtsparql (0.0.29) unstable; urgency=low
 
