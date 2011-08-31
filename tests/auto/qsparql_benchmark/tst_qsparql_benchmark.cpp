@@ -98,6 +98,9 @@ public slots:
     void cleanup();
 
 private slots:
+    // Data injection
+    void trackerDataInjection();
+
     // Actual benchmarks
     void queryBenchmark();
     void queryBenchmark_data();
@@ -127,7 +130,8 @@ const QString artistsAndAlbumsQuery =
     "SELECT nmm:artistName(?artist) GROUP_CONCAT(nie:title(?album),'|') "
     "WHERE "
     "{ "
-    "?song a nmm:MusicPiece . "
+    "?song a nmm:MusicPiece ; "
+    "nie:isLogicalPartOf <qsparql-benchmark-tests> . "
     "?song nmm:performer ?artist . "
     "?song nmm:musicAlbum ?album . "
         "} GROUP BY ?artist";
@@ -144,7 +148,8 @@ const QString musicQuery =
     "tracker:id(?song) tracker:id(nmm:performer(?song)) "
     "tracker:id(nmm:musicAlbum(?song)) "
     "where { ?song a nmm:MusicPiece . "
-    "?song nie:title ?title . } "
+    "?song nie:title ?title ;"
+    "nie:isLogicalPartOf <qsparql-benchmark-tests> }"
     "order by ?title "
     "<http://www.tracker-project.org/ontologies/tracker#id>(?song)";
 
@@ -212,6 +217,16 @@ void tst_QSparqlBenchmark::initTestCase()
 
 void tst_QSparqlBenchmark::cleanupTestCase()
 {
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    const QSparqlQuery q("DELETE { ?u a rdfs:Resource . } "
+                         "WHERE { ?u nie:isLogicalPartOf <qsparql-benchmark-tests> . } "
+                         "DELETE { <qsparql-benchmark-tests> a rdfs:Resource . }",
+                        QSparqlQuery::DeleteStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(!r->hasError());
+    r->waitForFinished();
+    QVERIFY(!r->hasError());
+    delete r;
 }
 
 void tst_QSparqlBenchmark::init()
@@ -250,6 +265,136 @@ private:
 
 };
 
+}
+
+void tst_QSparqlBenchmark::trackerDataInjection()
+{
+    QSparqlConnection conn("QTRACKER_DIRECT");
+    const QString insertHeader = "INSERT {<qsparql-benchmark-tests> a nie:InformationElement. ";
+
+    const QString albumDiscInsertItem = " <urn:album-disk:%1> a nmm:MusicAlbumDisc ;"
+                                        "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
+    const QString artistInsertItem = " <urn:artist:%1> a nmm:Artist ;"
+                                        " nmm:artistName \"Artist %1\" ; "
+                                        "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
+    const QString albumInsertItem = " <urn:album:%1> a nmm:MusicAlbum ;"
+                                        "nie:title        \"Album %1\" ;"
+                                        "nmm:albumTitle   \"Album %1\" ;"
+                                        "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
+    // create exact copy of tracker's ttls data
+    QString insertQuery(insertHeader);
+    for (int major = 50; major <= 1000; major+=50){
+        for (int minor = 2; minor <= 6; minor++) {
+            insertQuery.append( albumDiscInsertItem.arg(major+minor) );
+            insertQuery.append( albumInsertItem.arg((major+minor-1)%1000) );
+        }
+        insertQuery.append( artistInsertItem.arg(major % 1000) );
+    }
+    insertQuery.append(" }");
+
+    QSparqlQuery query(insertQuery, QSparqlQuery::InsertStatement);
+    QSparqlResult* r = 0;
+    r = conn.exec(query);
+    r->waitForFinished();
+
+    QString musicPieceItem = "<urn:music:%1> a nmm:MusicPiece, nfo:FileDataObject, nfo:Audio;"
+                                "tracker:available          true ;"
+                                "nie:byteSize               \"%1\" ;"
+                                "nie:url                    \"file://music/Song_%1.mp3\" ;"
+                                "nfo:belongsToContainer     <file://music/> ;"
+                                "nie:title                  \"Song %1\" ;"
+                                "nie:mimeType               \"audio/mpeg\" ;"
+                                "nie:contentCreated         \"%2\" ;"
+                                "nie:isLogicalPartOf        <urn:album:51> ;"
+                                "nco:contributor            <urn:artist:%6> ;"
+                                "nfo:fileLastAccessed       \"%2\" ;"
+                                "nfo:fileSize               \"%1\" ;"
+                                "nfo:fileName               \"Song_%1.mp3\" ;"
+                                "nfo:fileLastModified       \"%2\" ;"
+                                "nfo:codec                  \"MPEG\" ;"
+                                "nfo:averageBitrate         \"%3\" ;"
+                                "nfo:genre                  \"Genre %1\" ;"
+                                "nfo:channels               \"2\" ;"
+                                "nfo:sampleRate             \"44100.0\" ;"
+                                "nmm:musicAlbum             <urn:album:%7> ;"
+                                "nmm:musicAlbumDisc         <urn:album-disk:%8> ;"
+                                "nmm:performer              <urn:artist:%6> ;"
+                                "nfo:duration               \"%5\" ;"
+                                "nmm:trackNumber            \"%4\" ;"
+                                "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
+    QString dateTemplate("%1-%2-%3T01:01:01Z");
+    insertQuery = insertHeader;
+    int artistId = 50;
+    int albumId = 50;
+    QString benchmarkName("data-injection");
+    QList<int> totalTimes;
+    for (int i = 0; i < 1000; i++) {
+        QString date = dateTemplate.arg(2000 + (i % 10)).arg((i % 12) + 1, 2, 10, QLatin1Char('0'))
+                                    .arg((i%25) + 1, 2, 10, QLatin1Char('0'));
+        int bitrate = 16 + (i % 300);
+        int track = 1 + (i % 100);
+        int duration = i + 1;
+        if(i%50 == 0)
+            artistId = i % 1000 + 50;
+        if(i%10 == 0) {
+            albumId++;
+            if(albumId%10 ==6)
+                albumId+=45;
+        }
+        insertQuery.append(musicPieceItem.arg(i).arg(date).arg(bitrate).arg(track).arg(duration).
+                                                arg(artistId).arg(albumId).arg(albumId+1));
+        if((i+1)%100 == 0) {
+            insertQuery.append(" }");
+            START_BENCHMARK {
+                QSparqlQuery queryData(insertQuery, QSparqlQuery::InsertStatement);
+                r = conn.exec(queryData);
+                r->waitForFinished();
+                CHECK_QSPARQL_RESULT(r);
+            }
+            END_BENCHMARK(benchmarkName);
+            totalTimes.append(benchmarkTotal);
+            insertQuery = insertHeader;
+        }
+    }
+    PRINT_STATS(benchmarkName, totalTimes);
+    QTest::qWait(4000);
+    // do some validation if data is ready for tests
+
+    QString validateData("SELECT ?url ?title ?album WHERE {?url a nmm:MusicAlbum ;"
+                         " nie:isLogicalPartOf <qsparql-benchmark-tests>; "
+                         " nie:title ?title; nmm:albumTitle ?album. }");
+    QSparqlQuery validateQuery(validateData);
+    r = conn.exec(validateQuery);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QVERIFY(!r->hasError());
+    QCOMPARE(r->size(), 100);
+
+    validateData="SELECT ?url WHERE {?url a nmm:MusicAlbumDisc; "
+                 "nie:isLogicalPartOf <qsparql-benchmark-tests> . }";
+    validateQuery.setQuery(validateData);
+    r = conn.exec(validateQuery);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QVERIFY(!r->hasError());
+    QCOMPARE(r->size(), 100);
+
+    validateData="SELECT ?url ?name WHERE {?url a nmm:Artist; "
+                 "nie:isLogicalPartOf <qsparql-benchmark-tests> ;  nmm:artistName ?name.}";
+    validateQuery.setQuery(validateData);
+    r = conn.exec(validateQuery);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QVERIFY(!r->hasError());
+    QCOMPARE(r->size(), 20);
+
+    validateQuery.setQuery(musicQuery);
+    r = conn.exec(validateQuery);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QVERIFY(!r->hasError());
+    QCOMPARE(r->size(), 1000);
+    delete r;
 }
 
 void tst_QSparqlBenchmark::queryBenchmark()
