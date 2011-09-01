@@ -65,6 +65,10 @@ void SparqlListModel::componentComplete()
 void SparqlListModel::setQuery(QString query)
 {
     queryString = query;
+    // if the query property changes, after the binding has been
+    // initilised, call reload
+    if (modelStatus != Null)
+        reload();
 }
 
 QString SparqlListModel::getQuery() const
@@ -84,6 +88,7 @@ QVariant SparqlListModel::get(int rowNumber)
 
 void SparqlListModel::reload()
 {
+    changeStatus(Loading);
     setQueryQML(QSparqlQuery(queryString), *connection);
 }
 

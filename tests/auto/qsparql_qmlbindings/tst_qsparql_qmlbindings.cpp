@@ -519,11 +519,20 @@ void tst_QSparqlQMLBindings::sparql_query_model_reload_test()
 
     readySpy.clear();
     countSpy.clear();
+    // check the status is ready
+    Status status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
     // now reload the model, we should get one signal after clearing the model
     // model, and 10 inserts
     callMethod("reloadModel");
+    // reloading the model should set the status to loading again
+    status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Loading);
     QVERIFY(waitForSignals(&readySpy, 1));
     QVERIFY(waitForSignals(&countSpy, NUM_INSERTS+1));
+    // should be ready when finished
+    status = (Status)callMethod("getStatus").toInt();
+    QCOMPARE(status, Ready);
 }
 
 void tst_QSparqlQMLBindings::sparql_query_model_get_test()
