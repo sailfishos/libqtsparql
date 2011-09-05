@@ -418,7 +418,7 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
     } else {
         result = new QTrackerDirectUpdateResult(d, query, type, options);
     }
-    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()), Qt::DirectConnection);
     d->onConnectionOpen(result, "exec", SLOT(exec()));
     return result;
 }
@@ -427,7 +427,7 @@ QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QTrackerDirectResult* result = new QTrackerDirectSyncResult(d, query, type, options);
-    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()));
+    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()), Qt::DirectConnection);
     d->waitForConnectionOpen();
     result->exec();
     return result;
