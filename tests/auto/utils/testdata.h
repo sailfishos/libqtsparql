@@ -37,54 +37,21 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQL_TRACKER_COMMON_H
-#define QSPARQL_TRACKER_COMMON_H
+#ifndef TESTDATA_H
+#define TESTDATA_H
 
-#include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtCore/qobject.h>
 
-class TrackerDirectCommon : public QObject
-{
+class QSparqlQuery;
+
+class TestData : public QObject {
     Q_OBJECT
-
-    public:
-        TrackerDirectCommon();
-        virtual ~TrackerDirectCommon();
-        void installMsgHandler();
-        void setMsgLogLevel(int logLevel);
-        bool setupData();
-        bool cleanData();
-        void testError(const QString& msg);
-
-    private:
-        QSparqlResult* runQuery(QSparqlConnection &conn, const QSparqlQuery &q);
-        virtual QSparqlResult* execQuery(QSparqlConnection &conn, const QSparqlQuery &q) =0;
-        virtual void waitForQueryFinished(QSparqlResult* r) =0;
-        virtual bool checkResultSize(QSparqlResult* r, int s) =0;
-
-    private slots:
-        void query_contacts();
-        void insert_and_delete_contact();
-        void query_with_error();
-        void iterate_result();
-        void iterate_result_rows();
-        void iterate_result_bindings();
-        void iterate_result_values();
-        void iterate_result_stringValues();
-        void special_chars();
-        void data_types();
-        void explicit_data_types();
-        void large_integer();
-        void datatype_string_data();
-        void datatype_int_data();
-        void datatype_double_data();
-        void datatype_datetime_data();
-        void datatype_boolean_data();
-        void datatypes_as_properties_data();
-        void datatypes_as_properties();
-
-    private:
-        QtMsgHandler origMsgHandler;
+public:
+    static TestData* createTrackerTestData(int testDataAmount, const QString& testSuiteTag, const QString& testCaseTag);
+    virtual ~TestData() { }
+    virtual bool isOK() const =0;
+    virtual QSparqlQuery selectQuery() const = 0;
 };
 
-#endif // QSPARQL_TRACKER_COMMON_H
+#endif // TESTDATA_H
+
