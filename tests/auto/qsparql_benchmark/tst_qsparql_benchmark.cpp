@@ -272,12 +272,12 @@ void tst_QSparqlBenchmark::trackerDataInjection()
     QSparqlConnection conn("QTRACKER_DIRECT");
     const QString insertHeader = "INSERT {<qsparql-benchmark-tests> a nie:InformationElement. ";
 
-    const QString albumDiscInsertItem = " <urn:album-disk:%1> a nmm:MusicAlbumDisc ;"
+    const QString albumDiscInsertItem = " <urn:qsparql-benchmark:album-disk:%1> a nmm:MusicAlbumDisc ;"
                                         "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
-    const QString artistInsertItem = " <urn:artist:%1> a nmm:Artist ;"
+    const QString artistInsertItem = " <urn:qsparql-benchmark:artist:%1> a nmm:Artist ;"
                                         " nmm:artistName \"Artist %1\" ; "
                                         "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
-    const QString albumInsertItem = " <urn:album:%1> a nmm:MusicAlbum ;"
+    const QString albumInsertItem = " <urn:qsparql-benchmark:album:%1> a nmm:MusicAlbum ;"
                                         "nie:title        \"Album %1\" ;"
                                         "nmm:albumTitle   \"Album %1\" ;"
                                         "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
@@ -297,7 +297,8 @@ void tst_QSparqlBenchmark::trackerDataInjection()
     r = conn.exec(query);
     r->waitForFinished();
 
-    QString musicPieceItem = "<urn:music:%1> a nmm:MusicPiece, nfo:FileDataObject, nfo:Audio;"
+    QString musicPieceItem = "<urn:qsparql-benchmark:music:%1> a nmm:MusicPiece, "
+                                "nfo:FileDataObject, nfo:Audio; "
                                 "tracker:available          true ;"
                                 "nie:byteSize               \"%1\" ;"
                                 "nie:url                    \"file://music/Song_%1.mp3\" ;"
