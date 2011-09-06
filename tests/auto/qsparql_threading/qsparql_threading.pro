@@ -6,9 +6,7 @@ SOURCES  += tst_qsparql_threading.cpp
 #QT = sparql # enable this later
 
 TEST_EXE = ./tst_qsparql_threading
-TEST_CASES = concurrentTrackerQueries \
-             concurrentTrackerDirectQueries \
-             concurrentTrackerDirectInserts
+TEST_CASES = concurrentTrackerQueries
 
 check.depends = $$TARGET
 check.commands = $$TEST_EXE $$TEST_CASES

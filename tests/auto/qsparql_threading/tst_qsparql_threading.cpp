@@ -103,8 +103,6 @@ public Q_SLOTS:
     void concurrentEndpointQueries_thread();
     void concurrentVirtuosoQueries_thread();
     void concurrentTrackerQueries_thread();
-    void concurrentTrackerDirectQueries_thread();
-    void concurrentTrackerDirectInserts_thread();
 
     void queryFinished();
     void resultsReturned(int count);
@@ -115,8 +113,6 @@ private Q_SLOTS:
     void concurrentEndpointQueries();
     void concurrentVirtuosoQueries();
     void concurrentTrackerQueries();
-    void concurrentTrackerDirectQueries();
-    void concurrentTrackerDirectInserts();
 };
 tst_QSparqlThreading *tst_QSparqlThreading::_self;
 
@@ -357,179 +353,6 @@ void tst_QSparqlThreading::concurrentTrackerQueries()
     CHECK_QSPARQL_RESULT(r1);
     CHECK_QSPARQL_RESULT(r2);
     QCOMPARE(r1->size(), r2->size());
-}
-
-void tst_QSparqlThreading::concurrentTrackerDirectQueries_thread()
-{
-    sem1.acquire();
-
-    conn2 = new QSparqlConnection("QTRACKER_DIRECT");
-
-    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-
-    r2 = conn2->exec(q);
-
-    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
-    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
-    sem2.release();
-
-    r2->waitForFinished();
-
-    // set the parent to 0 so we don't delete the result with the connection
-    r2->setParent(0);
-    // Delete the connection now, so we don't delete it AFTER the thread has been deleted.
-    // This will emit a warning, which is suppressed in the test function.
-    delete conn2;
-    conn2=0;
-}
-
-void tst_QSparqlThreading::concurrentTrackerDirectQueries()
-{
-    // Suppress warning message from conn2 deletion in the test thread
-    MessageRecorder messageRecorder;
-    messageRecorder.addMsgTypeToRecord(QtWarningMsg);
-
-    QPointer<Thread> th = new Thread;
-
-    sem1.release();
-    conn1 = new QSparqlConnection("QTRACKER_DIRECT");
-
-    QSparqlQuery q("select ?u {?u a rdfs:Resource .}");
-    r1 = conn1->exec(q);
-    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
-    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
-    sem2.acquire();
-
-    r1->waitForFinished();
-
-    if (!th.isNull())
-        waitForSignal(th, SIGNAL(finished()));
-    CHECK_QSPARQL_RESULT(r1);
-    CHECK_QSPARQL_RESULT(r2);
-    QCOMPARE(r1->size(), r2->size());
-
-    // Delete r2 now since we reparented it to avoid it being deleted
-    // when we deleted the connection
-    delete r2;
-    r2 = 0;
-}
-
-void tst_QSparqlThreading::concurrentTrackerDirectInserts_thread()
-{
-    sem1.acquire();
-    conn2 = new QSparqlConnection("QTRACKER_DIRECT");
-
-    QSparqlQuery q("insert { ?:addeduri a nco:PersonContact; "
-                     "nie:isLogicalPartOf <qsparql-threading-tests> ;"
-                     "nco:nameGiven \"addedname007\" .}",
-                     QSparqlQuery::InsertStatement);
-    q.bindValue(conn2->createUrn("addeduri"));
-
-    r2 = conn2->exec(q);
-    connect(r2, SIGNAL(finished()), QThread::currentThread(), SLOT(queryFinished()));
-    connect(r2, SIGNAL(dataReady(int)), QThread::currentThread(), SLOT(resultsReturned(int)));
-    sem2.release();
-    r2->waitForFinished();
-
-    CHECK_QSPARQL_RESULT(r2);
-
-    delete r2;
-
-    // Verify that the insertion succeeded
-    QSparqlQuery q2("select ?addeduri {?addeduri a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-threading-tests> ;"
-                   "nco:nameGiven \"addedname007\" .}");
-    r2 = conn2->exec(q2);
-    QVERIFY(r2 != 0);
-    r2->waitForFinished();
-    QCOMPARE(r2->size(), 1);
-    if (r2->next()) {
-        // We can only compare the first 9 chars because the rest is a new uuid string
-        QCOMPARE(r2->value(0).toString().mid(0, 9), QString("urn:uuid:"));
-    }
-
-    // Delete the uri
-    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
-                     QSparqlQuery::DeleteStatement);
-
-    del.bindValue(r2->binding(0));
-    delete r2;
-    r2 = conn2->exec(del);
-    qDebug() << "r2 delete query:" << r2->query();
-    QVERIFY(r2 != 0);
-    r2->waitForFinished(); // this test is synchronous only
-    CHECK_QSPARQL_RESULT(r2);
-    delete r2;
-
-    // Verify that it got deleted
-    r2 = conn2->exec(q2);
-    QVERIFY(r2 != 0);
-    r2->waitForFinished();
-    QCOMPARE(r2->size(), 0);
-    delete r2;
-
-}
-
-void tst_QSparqlThreading::concurrentTrackerDirectInserts()
-{
-    QPointer<Thread> th = new Thread;
-
-    sem1.release();
-    conn1 = new QSparqlConnection("QTRACKER_DIRECT");
-
-    QSparqlQuery q1("insert { ?:addeduri a nco:PersonContact; "
-                     "nie:isLogicalPartOf <qsparql-threading-tests> ;"
-                     "nco:nameGiven \"addedname008\" .}",
-                     QSparqlQuery::InsertStatement);
-    q1.bindValue(conn1->createUrn("addeduri"));
-
-    r1 = conn1->exec(q1);
-    connect(r1, SIGNAL(finished()), SLOT(queryFinished()));
-    connect(r1, SIGNAL(dataReady(int)), SLOT(resultsReturned(int)));
-    sem2.acquire();
-
-    r1->waitForFinished();
-
-    CHECK_QSPARQL_RESULT(r1);
-
-    delete r1;
-
-    // Verify that the insertion succeeded
-    QSparqlQuery q2("select ?addeduri {?addeduri a nco:PersonContact; "
-                   "nie:isLogicalPartOf <qsparql-threading-tests> ;"
-                   "nco:nameGiven \"addedname008\" .}");
-    r1 = conn1->exec(q2);
-    QVERIFY(r1 != 0);
-    r1->waitForFinished();
-    QCOMPARE(r1->size(), 1);
-    if (r1->next()) {
-        // We can only compare the first 9 chars because the rest is a new uuid string
-        QCOMPARE(r1->value(0).toString().mid(0, 9), QString("urn:uuid:"));
-    }
-
-    // Delete the uri
-    QSparqlQuery del("delete { ?:addeduri a rdfs:Resource. }",
-                     QSparqlQuery::DeleteStatement);
-
-    del.bindValue(r1->binding(0));
-    delete r1;
-    r1 = conn1->exec(del);
-    qDebug() << "r1 delete query:" << r1->query();
-    CHECK_QSPARQL_RESULT(r1);
-    r1->waitForFinished(); // this test is synchronous only
-    CHECK_QSPARQL_RESULT(r1);
-    delete r1;
-
-    // Verify that it got deleted
-    r1 = conn1->exec(q2);
-    QVERIFY(r1 != 0);
-    r1->waitForFinished();
-    QCOMPARE(r1->size(), 0);
-    delete r1;
-
-    if (!th.isNull()) {
-        waitForSignal(th, SIGNAL(finished()));
-    }
 }
 
 QTEST_MAIN(tst_QSparqlThreading)
