@@ -72,17 +72,6 @@
                 su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerQueries"
             </step>
         </case>
-        <case name="test-tracker-direct-queries" description="Tracker direct queries">
-            <step>
-                su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectQueries"
-            </step>
-        </case>
-        <case name="test-tracker-direct-inserts" description="Tracker direct inserts" insignificant="true">
-            <!-- this is marked as insigficant since it fails sporadically; this needs debugging! -->
-            <step>
-                su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_threading concurrentTrackerDirectInserts"
-            </step>
-        </case>
         <environments>
             <scratchbox>true</scratchbox>
             <hardware>true</hardware>
