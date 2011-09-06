@@ -1,7 +1,7 @@
 libqtsparql (0.1.2~unreleased) unstable; urgency=low
 
   * Fixes: NB#280978 - QSparqlResult may run even after connection is deleted, resulting in a crash.
-  * Added a new concurrenct stress test for the QTRACKER_DIRECT driver.
+  * Added a new concurrency stress test for the QTRACKER_DIRECT driver.
 
  -- James Thomas <james.thomas@codethink.co.uk>  Tue, 6 Sep 2011 11:09:00 +0300
 
