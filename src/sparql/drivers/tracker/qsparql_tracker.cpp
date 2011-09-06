@@ -253,7 +253,7 @@ QTrackerResult::QTrackerResult(const QString& query, QSparqlQuery::StatementType
     setQuery(query);
     setStatementType(tp);
     d = new QTrackerResultPrivate(this, driver->d);
-    connect(driver, SIGNAL(closing()), this, SLOT(driverClosing()));
+    connect(driver, SIGNAL(closing()), this, SLOT(driverClosing()), Qt::DirectConnection);
 }
 
 QTrackerResult::~QTrackerResult()
