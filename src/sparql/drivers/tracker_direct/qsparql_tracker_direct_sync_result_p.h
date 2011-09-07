@@ -71,8 +71,8 @@ public:
     virtual QString stringValue(int i) const;
 
     virtual bool isFinished() const;
-
     virtual bool hasFeature(QSparqlResult::Feature feature) const;
+    virtual void waitForFinished();
 
 public Q_SLOTS:
     virtual void exec();
@@ -81,10 +81,16 @@ private:
     TrackerSparqlCursor* cursor;
     mutable int n_columns;
     const QSparqlQueryOptions* options;
+    bool isAsync;
+
+    Q_INVOKABLE void startFetcher();
 
     virtual void stopAndWait();
+    virtual void run();
+    void runQuery();
     void updateQuery();
     void selectQuery();
+    void terminate();
 };
 
 QT_END_NAMESPACE

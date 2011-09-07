@@ -147,6 +147,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, maxThreadCount);
+    QFETCH(bool, forwardOnly);
     const int dataReadyInterval = qMax(testDataAmount/100, 10);
 
     QSparqlConnectionOptions options;
@@ -157,7 +158,7 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries()
 
     QueryTester queryTester;
     queryTester.setConnection(&conn);
-    queryTester.setParameters(numQueries, testDataAmount);
+    queryTester.setParameters(numQueries, testDataAmount, forwardOnly);
 
     queryTester.startQueries();
     QVERIFY(queryTester.waitForAllFinished(8000));
@@ -169,19 +170,32 @@ void tst_QSparqlTrackerDirectConcurrency::sameConnection_selectQueries_data()
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("maxThreadCount");
+    QTest::addColumn<bool>("forwardOnly");
 
     QTest::newRow("10 queries, 1 Thread") <<
-        TEST_DATA_AMOUNT << 10 << 1;
+        TEST_DATA_AMOUNT << 10 << 1 << false;
+    QTest::newRow("10 queries, 1 Thread, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 1 << true;
     QTest::newRow("100 queries, 1 Thread") <<
-        TEST_DATA_AMOUNT << 100 << 1;
+        TEST_DATA_AMOUNT << 100 << 1 << false;
+    QTest::newRow("100 queries, 1 Thread, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 1 << true;
     QTest::newRow("10 queries, default number of threads") <<
-        TEST_DATA_AMOUNT << 10 << 0;
+        TEST_DATA_AMOUNT << 10 << 0 << false;
+    QTest::newRow("10 queries, default number of threads, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 0 << true;
     QTest::newRow("100 queries, default number of threads") <<
-        TEST_DATA_AMOUNT << 100 << 0;
+        TEST_DATA_AMOUNT << 100 << 0 << false;
+    QTest::newRow("100 queries, default number of threads, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 0 << true;
     QTest::newRow("10 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 4;
+        TEST_DATA_AMOUNT << 10 << 4 << false;
+    QTest::newRow("10 queries, 4 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 4 << true;
     QTest::newRow("100 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 4;
+        TEST_DATA_AMOUNT << 100 << 4 << false;
+    QTest::newRow("100 queries, 4 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 4 << true;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::sameConnection_updateQueries()
@@ -214,13 +228,13 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries()
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, numConnections);
-
+    QFETCH(bool, forwardOnly);
     QList<QueryTester*> queryTesters;
 
     // Create the connections and start the queries
     for (int i = 0; i < numConnections; ++i) {
         QueryTester* queryTester = new QueryTester;
-        queryTester->setParameters(numQueries, testDataAmount);
+        queryTester->setParameters(numQueries, testDataAmount, forwardOnly);
         queryTesters << queryTester;
         queryTester->startQueries();
     }
@@ -239,15 +253,24 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_selectQueries_data
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numConnections");
+    QTest::addColumn<bool>("forwardOnly");
 
     QTest::newRow("10 queries, 2 connections") <<
-        TEST_DATA_AMOUNT << 10 << 2;
+        TEST_DATA_AMOUNT << 10 << 2 << false;
+    QTest::newRow("10 queries, 2 connections, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 2 << true;
     QTest::newRow("100 queries, 2 connections") <<
-        TEST_DATA_AMOUNT << 100 << 2;
+        TEST_DATA_AMOUNT << 100 << 2 << false;
+    QTest::newRow("100 queries, 2 connections, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 2 << true;
     QTest::newRow("10 queries, 4 connections") <<
-        TEST_DATA_AMOUNT << 10 << 4;
+        TEST_DATA_AMOUNT << 10 << 4 << false;
+    QTest::newRow("10 queries, 4 connections, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 4 << true;
     QTest::newRow("100 queries, 4 connections") <<
-        TEST_DATA_AMOUNT << 100 << 4;
+        TEST_DATA_AMOUNT << 100 << 4 << false;
+    QTest::newRow("100 queries, 4 connections, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 4 << true;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_updateQueries()
@@ -304,6 +327,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     QFETCH(int, testDataAmount);
     QFETCH(int, numQueries);
     QFETCH(int, numThreads);
+    QFETCH(bool, forwardOnly);
 
     QList<QThread*> createdThreads;
     QList<QueryTester*> queryTesters;
@@ -312,7 +336,7 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
         createdThreads.append(newThread);
 
         QueryTester *queryTester = new QueryTester;
-        queryTester->setParameters(numQueries, testDataAmount);
+        queryTester->setParameters(numQueries, testDataAmount, forwardOnly);
         queryTesters.append(queryTester);
         queryTester->startInThread(newThread);
     }
@@ -332,15 +356,24 @@ void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_se
     QTest::addColumn<int>("testDataAmount");
     QTest::addColumn<int>("numQueries");
     QTest::addColumn<int>("numThreads");
+    QTest::addColumn<bool>("forwardOnly");
 
     QTest::newRow("10 queries, 2 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 2;
+        TEST_DATA_AMOUNT << 10 << 2 << false;
+    QTest::newRow("10 queries, 2 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 2 << true;
     QTest::newRow("100 queries, 2 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 2;
+        TEST_DATA_AMOUNT << 100 << 2 << false;
+    QTest::newRow("100 queries, 2 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 2 << true;
     QTest::newRow("10 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 10 << 4;
+        TEST_DATA_AMOUNT << 10 << 4 << false;
+    QTest::newRow("10 queries, 4 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 10 << 4 << true;
     QTest::newRow("100 queries, 4 Threads") <<
-        TEST_DATA_AMOUNT << 100 << 4;
+        TEST_DATA_AMOUNT << 100 << 4 << false;
+    QTest::newRow("100 queries, 4 Threads, forward only") <<
+        TEST_DATA_AMOUNT << 100 << 4 << true;
 }
 
 void tst_QSparqlTrackerDirectConcurrency::multipleConnections_multipleThreads_updateQueries()

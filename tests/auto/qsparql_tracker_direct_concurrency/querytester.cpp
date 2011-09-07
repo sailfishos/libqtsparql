@@ -82,10 +82,11 @@ void QueryTester::cleanup()
     ownConnection = 0;
 }
 
-void QueryTester::setParameters(int numQueries, int testDataSize)
+void QueryTester::setParameters(int numQueries, int testDataSize, bool forwardOnly)
 {
     this->numQueries = numQueries;
     this->testDataSize = testDataSize;
+    this->forwardOnly = forwardOnly;
 }
 
 void QueryTester::setConnection(QSparqlConnection* connection)
@@ -119,7 +120,9 @@ void QueryTester::startQueries()
                                     "nmm:trackNumber ?t; "
                                     "nie:isLogicalPartOf <qsparql-tracker-direct-tests-concurrency-stress> "
                                     + filter));
-        QSparqlResult *result = connection->exec(select);
+        QSparqlQueryOptions queryOptions;
+        queryOptions.setForwardOnly(forwardOnly);
+        QSparqlResult *result = connection->exec(select, queryOptions);
         resultChecker->append(result, resultRange);
     }
 }

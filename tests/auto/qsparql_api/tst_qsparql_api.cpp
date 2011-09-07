@@ -532,11 +532,13 @@ void tst_QSparqlAPI::query_test()
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
     const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
@@ -556,20 +558,39 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async No Results Query")))
         << connectionDriver
         << contactSelectNothingQuery
         << 0
         << int(QSparqlQueryOptions::AsyncExec)
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async No Results Query Forward Only")))
+        << connectionDriver
+        << contactSelectNothingQuery
+        << 0
+        << int(QSparqlQueryOptions::AsyncExec)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
         << connectionDriver
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::SyncExec)
+        << false
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync No Results Query")))
@@ -577,6 +598,7 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
         << contactSelectNothingQuery
         << 0
         << int(QSparqlQueryOptions::SyncExec)
+        << false
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
@@ -584,6 +606,15 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << true
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object No Results Query")))
@@ -591,6 +622,15 @@ void tst_QSparqlAPI::add_query_test_data(const QString& connectionDriver, const 
         << contactSelectNothingQuery
         << 0
         << int(QSparqlQueryOptions::AsyncExec)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object No Results Query Forward Only")))
+        << connectionDriver
+        << contactSelectNothingQuery
+        << 0
+        << int(QSparqlQueryOptions::AsyncExec)
+        << true
         << true;
 }
 
@@ -601,6 +641,7 @@ void tst_QSparqlAPI::query_test_data()
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<bool>("forwardOnly");
     add_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_query_test_data("QTRACKER", "Tracker DBus");
     if (testEndpoint)
@@ -662,11 +703,13 @@ void tst_QSparqlAPI::query_error_test()
     QFETCH(int, executionMethod);
     QFETCH(int, expectedErrorType);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
     const QSparqlQuery q(query);
 
@@ -686,20 +729,40 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
         << ""
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Empty Query Forward Only")))
+        << connectionDriver
+        << ""
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Empty Query")))
         << connectionDriver
         << ""
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Empty Query Forward Only")))
+        << connectionDriver
+        << ""
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << true
         << true;
+
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Empty Query")))
         << connectionDriver
         << ""
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::StatementError)
+        << false
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Invalid Query")))
@@ -707,13 +770,31 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
         << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Invalid Query Forward Only")))
+        << connectionDriver
+        << invalidQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Invalid Query")))
         << connectionDriver
         << invalidQuery
         << int(QSparqlQueryOptions::AsyncExec)
         << int(QSparqlError::StatementError)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Invalid Query Forward Only")))
+        << connectionDriver
+        << invalidQuery
+        << int(QSparqlQueryOptions::AsyncExec)
+        << int(QSparqlError::StatementError)
+        << true
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Invalid Query")))
@@ -721,6 +802,7 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
         << invalidQuery
         << int(QSparqlQueryOptions::SyncExec)
         << int(QSparqlError::StatementError)
+        << false
         << false;
 
     if (!supportsConstruct) {
@@ -729,6 +811,15 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
             << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
             << int(QSparqlError::BackendError)
+            << false
+            << false;
+
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Unsupported Construct Query Forward Only")))
+            << connectionDriver
+            << constructQuery
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::BackendError)
+            << false
             << false;
 
         QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query")))
@@ -736,6 +827,15 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
             << constructQuery
             << int(QSparqlQueryOptions::AsyncExec)
             << int(QSparqlError::BackendError)
+            << true
+            << false;
+
+        QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Unsupported Construct Query Forward Only")))
+            << connectionDriver
+            << constructQuery
+            << int(QSparqlQueryOptions::AsyncExec)
+            << int(QSparqlError::BackendError)
+            << true
             << true;
 
         QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Unsupported Construct Query")))
@@ -743,6 +843,7 @@ void tst_QSparqlAPI::add_query_error_test_data(const QString& connectionDriver, 
             << constructQuery
             << int(QSparqlQueryOptions::SyncExec)
             << int(QSparqlError::BackendError)
+            << false
             << false;
     }
 }
@@ -754,6 +855,7 @@ void tst_QSparqlAPI::query_error_test_data()
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<int>("expectedErrorType");
     QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<bool>("forwardOnly");
     add_query_error_test_data("QTRACKER_DIRECT", "Tracker Direct", false);
     add_query_error_test_data("QTRACKER", "Tracker DBus", false);
     if (testEndpoint)
@@ -767,11 +869,13 @@ void tst_QSparqlAPI::query_destroy_connection_test()
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection *conn = new QSparqlConnection(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
     const QString queryString = query.arg( getTemplateArguments(connectionDriver, "SELECT") );
@@ -817,13 +921,30 @@ void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& conne
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << false
         << false;
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query")))
         << connectionDriver
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::AsyncExec)
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Query Forward Only")))
+        << connectionDriver
+        << contactSelectQueryTemplate
+        << NUM_INSERTS
+        << int(QSparqlQueryOptions::AsyncExec)
+        << true
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync Query")))
@@ -831,6 +952,7 @@ void tst_QSparqlAPI::add_query_destroy_connection_test_data(const QString& conne
         << contactSelectQueryTemplate
         << NUM_INSERTS
         << int(QSparqlQueryOptions::SyncExec)
+        << false
         << false;
 }
 
@@ -841,6 +963,7 @@ void tst_QSparqlAPI::query_destroy_connection_test_data()
     QTest::addColumn<int>("expectedResultsSize");
     QTest::addColumn<int>("executionMethod");
     QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<bool>("forwardOnly");
     add_query_destroy_connection_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_query_destroy_connection_test_data("QTRACKER", "Tracker DBus");
     if (testEndpoint)
@@ -1174,6 +1297,7 @@ void tst_QSparqlAPI::ask_query_test()
     QFETCH(int, executionMethod);
     QFETCH(bool, expectedResult);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
@@ -1182,6 +1306,7 @@ void tst_QSparqlAPI::ask_query_test()
     const QSparqlQuery q(query, QSparqlQuery::AskStatement);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
     QSparqlResult *r = conn.exec(q, queryOptions);
@@ -1219,12 +1344,30 @@ void tst_QSparqlAPI::add_ask_query_test_data(const QString& connectionDriver, co
         << int(QSparqlQueryOptions::AsyncExec)
         << askQueryTrue
         << true
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Forward Only True Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryTrue
+        << true
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object True Query")))
         << connectionDriver
         << int(QSparqlQueryOptions::AsyncExec)
         << askQueryTrue
+        << true
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Forward Only True Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryTrue
+        << true
         << true
         << true;
 
@@ -1233,6 +1376,7 @@ void tst_QSparqlAPI::add_ask_query_test_data(const QString& connectionDriver, co
         << int(QSparqlQueryOptions::SyncExec)
         << askQueryTrue
         << true
+        << false
         << false;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async False Query")))
@@ -1240,19 +1384,38 @@ void tst_QSparqlAPI::add_ask_query_test_data(const QString& connectionDriver, co
         << int(QSparqlQueryOptions::AsyncExec)
         << askQueryFalse
         << false
+        << false
         << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Forward Only False Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryFalse
+        << false
+        << false
+        << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object False Query")))
         << connectionDriver
         << int(QSparqlQueryOptions::AsyncExec)
         << askQueryFalse
         << false
+        << true
+        << false;
+
+    QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Async Object Forward Only False Query")))
+        << connectionDriver
+        << int(QSparqlQueryOptions::AsyncExec)
+        << askQueryFalse
+        << false
+        << true
         << true;
 
     QTest::newRow(qPrintable(QString(dataTagPrefix).append(" Sync False Query")))
         << connectionDriver
         << int(QSparqlQueryOptions::SyncExec)
         << askQueryFalse
+        << false
         << false
         << false;
 }
@@ -1264,6 +1427,7 @@ void tst_QSparqlAPI::ask_query_test_data()
     QTest::addColumn<QString>("query");
     QTest::addColumn<bool>("expectedResult");
     QTest::addColumn<bool>("useAsyncObject");
+    QTest::addColumn<bool>("forwardOnly");
     add_ask_query_test_data("QTRACKER_DIRECT", "Tracker Direct");
     add_ask_query_test_data("QTRACKER", "Tracker DBus");
     if (testEndpoint)
@@ -1277,11 +1441,13 @@ void tst_QSparqlAPI::isFinished_test()
     QFETCH(int, expectedResultsSize);
     QFETCH(int, executionMethod);
     QFETCH(bool, useAsyncObject);
+    QFETCH(bool, forwardOnly);
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
 
     QSparqlQueryOptions queryOptions;
+    queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
 
     const QString queryString = queryTemplate.arg( getTemplateArguments(connectionDriver, "SELECT") );
@@ -1293,8 +1459,12 @@ void tst_QSparqlAPI::isFinished_test()
 
     // According to the documentation, isFinished() will be false for sync queries
     // until the results have been iterated
-    if (executionMethod == QSparqlQueryOptions::SyncExec &&
-            conn.hasFeature(QSparqlConnection::SyncExec)) {
+    // If the result has been set as ForwardOnly, it should behave in the same
+    // way as a Sync result, so also check that here by also testing
+    // if the result reports as ForwardOnly
+    bool forwardOnlyResult = r->hasFeature(QSparqlResult::ForwardOnly);
+    if ((executionMethod == QSparqlQueryOptions::SyncExec &&
+        conn.hasFeature(QSparqlConnection::SyncExec)) || forwardOnlyResult) {
         QVERIFY(!r->isFinished());
         validateResults(r, expectedResultsSize);
         QVERIFY(r->isFinished());

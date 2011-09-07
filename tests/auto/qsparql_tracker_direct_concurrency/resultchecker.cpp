@@ -102,20 +102,33 @@ void ResultChecker::onFinished(QObject* mappedResult)
 
     const QPair<int, int> resultRange = pendingResults.value(result);
     const int expectedResultSize = (resultRange.second - resultRange.first) + 1;
-    QCOMPARE(result->size(), expectedResultSize);
+    int resultSize = result->size();
+    if (result->hasFeature(QSparqlResult::ForwardOnly)) {
+        resultSize = 0;
+        while (result->next()) {
+            resultSize++;
+            // Also verify the results here
+            QVERIFY(result->value(1).toInt() >= resultRange.first);
+            QVERIFY(result->value(1).toInt() <= resultRange.second);
+        }
+    }
+    QCOMPARE(resultSize, expectedResultSize);
 
     // the results should have been fully nexted in the data ready function
     QCOMPARE(result->pos(), int(QSparql::AfterLastRow));
-    // go back through the results and validate that they are in range
-    int resultCount = 0;
-    while (result->previous()) {
-        //we don't know the order, so just ensure the result is within range
-        QVERIFY(result->value(1).toInt() >= resultRange.first);
-        QVERIFY(result->value(1).toInt() <= resultRange.second);
-        resultCount++;
+
+    if (!result->hasFeature(QSparqlResult::ForwardOnly)) {
+        // go back through the results and validate that they are in range
+        int resultCount = 0;
+        while (result->previous()) {
+            //we don't know the order, so just ensure the result is within range
+            QVERIFY(result->value(1).toInt() >= resultRange.first);
+            QVERIFY(result->value(1).toInt() <= resultRange.second);
+            resultCount++;
+        }
+        // now make sure the results counted match the size
+        QCOMPARE(resultCount, expectedResultSize);
     }
-    // now make sure the results counted match the size
-    QCOMPARE(resultCount, expectedResultSize);
 
     pendingResults.remove(result);
     if (pendingResults.empty())

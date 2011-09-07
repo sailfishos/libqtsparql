@@ -91,7 +91,7 @@ bool QTrackerDirectQueryRunner::acquireRunSemaphore()
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectResult::QTrackerDirectResult()
-  : queryRunner(0)
+  : queryRunner(0), resultFinished(0)
 {
 }
 

@@ -347,6 +347,11 @@
     that may have been added after your original query will not be included in any subsequent
     queries you make.
 
+    The driver supports executing asynchronous queries as ForwardOnly synchronous results by setting
+    QSparqlQueryOptions::setForwardOnly to true. This may be prefarable if you are using the asynchronous
+    API to execute large queries quickly, since the results will not be retrieved before QSparqlResult::finished
+    is emitted.
+
     \section backendspecific Accessing backend-specific functionalities
 
     QtSparql doesn't offer backend-specific functionalities.  For that purpose,
