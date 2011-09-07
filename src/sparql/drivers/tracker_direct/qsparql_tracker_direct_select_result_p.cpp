@@ -58,8 +58,9 @@ QT_BEGIN_NAMESPACE
 
 QTrackerDirectSelectResult::QTrackerDirectSelectResult(QTrackerDirectDriverPrivate* p,
                                            const QString& query,
-                                           QSparqlQuery::StatementType type)
-  : cursor(0), resultMutex(QMutex::Recursive)
+                                           QSparqlQuery::StatementType type,
+                                           const QSparqlQueryOptions& options)
+  : QTrackerDirectResult(options), cursor(0), resultMutex(QMutex::Recursive)
 {
     setQuery(query);
     setStatementType(type);

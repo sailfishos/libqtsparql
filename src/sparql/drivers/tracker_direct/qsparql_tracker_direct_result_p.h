@@ -41,7 +41,7 @@
 #define QSPARQL_TRACKER_DIRECT_RESULT_P_H
 
 #include <QtSparql/qsparqlresult.h>
-
+#include <QtSparql/qsparqlqueryoptions.h>
 #include <QtCore/qrunnable.h>
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qsemaphore.h>
@@ -58,11 +58,11 @@ class QTrackerDirectResult : public QSparqlResult
     Q_OBJECT
     friend class QTrackerDirectQueryRunner;
 public:
-    QTrackerDirectResult();
+    QTrackerDirectResult(const QSparqlQueryOptions& options);
     ~QTrackerDirectResult();
 
     virtual bool isFinished() const;
-
+    QSparqlQueryOptions options;
 private:
     // Will be called by the query runner to execute the query, results that don't
     // need a thread to run in (sync) do not need to implement this

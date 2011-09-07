@@ -156,6 +156,8 @@ QSparqlError::ErrorType errorCodeToType(gint code)
 gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
 {
     switch (priority) {
+    case QSparqlQueryOptions::HighPriority:
+        return G_PRIORITY_HIGH;
     case QSparqlQueryOptions::LowPriority:
         return G_PRIORITY_LOW;
     case QSparqlQueryOptions::NormalPriority:
@@ -419,7 +421,7 @@ QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuer
         if (options.isForwardOnly())
             result = new QTrackerDirectSyncResult(d, query, type, options);
         else
-            result = new QTrackerDirectSelectResult(d, query, type);
+            result = new QTrackerDirectSelectResult(d, query, type, options);
     } else {
         result = new QTrackerDirectUpdateResult(d, query, type, options);
     }

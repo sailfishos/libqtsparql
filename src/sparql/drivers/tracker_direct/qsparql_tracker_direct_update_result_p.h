@@ -76,7 +76,6 @@ public Q_SLOTS:
 
 private:
     Q_INVOKABLE void terminate();
-    QSparqlQueryOptions options;
 
     // QTrackerDirectResult implementation
     virtual void stopAndWait();

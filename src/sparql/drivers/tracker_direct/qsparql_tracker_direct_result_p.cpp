@@ -62,8 +62,13 @@ void QTrackerDirectQueryRunner::runOrWait()
 
 void QTrackerDirectQueryRunner::queue(QThreadPool& threadPool)
 {
-    if(acquireRunSemaphore())
-        threadPool.start(this);
+    if(acquireRunSemaphore()) {
+        // QSparqlQueryPriority's are the wrong way round for
+        // the thread pool, so just * -1 to get the correct
+        // number
+        int priority = result->options.priority() * -1;
+        threadPool.start(this, priority);
+    }
 }
 
 void QTrackerDirectQueryRunner::wait()
@@ -90,8 +95,8 @@ bool QTrackerDirectQueryRunner::acquireRunSemaphore()
 
 ////////////////////////////////////////////////////////////////////////////
 
-QTrackerDirectResult::QTrackerDirectResult()
-  : queryRunner(0), resultFinished(0)
+QTrackerDirectResult::QTrackerDirectResult(const QSparqlQueryOptions& options)
+  : options(options), queryRunner(0), resultFinished(0)
 {
 }
 

@@ -80,7 +80,6 @@ public Q_SLOTS:
 private:
     TrackerSparqlCursor* cursor;
     mutable int n_columns;
-    const QSparqlQueryOptions* options;
     bool isAsync;
 
     Q_INVOKABLE void startFetcher();

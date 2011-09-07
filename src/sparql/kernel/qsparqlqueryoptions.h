@@ -77,6 +77,7 @@ public:
     ExecutionMethod executionMethod() const;
 
     enum Priority {
+        HighPriority =  -10,
         NormalPriority =  0,
         LowPriority    = 10
     };
