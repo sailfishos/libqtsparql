@@ -1269,7 +1269,6 @@ void tst_QSparqlTrackerDirect::test_threadpool_priority_select_results()
         QSparqlQueryOptions result5_options;
 
         result1_options.setPriority(QSparqlQueryOptions::NormalPriority);
-        result1_options.setForwardOnly(forwardOnly);
         result2_options.setPriority(QSparqlQueryOptions::LowPriority);
         result2_options.setForwardOnly(forwardOnly);
         result3_options.setPriority(QSparqlQueryOptions::NormalPriority);
