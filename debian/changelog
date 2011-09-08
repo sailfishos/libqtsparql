@@ -1,8 +1,9 @@
 libqtsparql (0.2.1~unreleased) unstable; urgency=low
 
-  *
+  * Fixes: NB#278959 - [TASK] Forward Only Tracker Direct Asynchronous Results
+  * Fixes: NB#276498 - [TASK] Add support for asynchronous result priority in tracker_direct driver
 
- -- James Thomas <james.thomas@codethink.co.uk>  Wed, 7 Sep 2011 17:21:00 +0300
+ -- James Thomas <james.thomas@codethink.co.uk>  Thu, 8 Sep 2011 09:35:00 +0300
 
 libqtsparql (0.2.0) unstable; urgency=low
 
