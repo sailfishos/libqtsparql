@@ -102,5 +102,16 @@
         </step>
       </case>
     </set>
+    <set name="qsparql-qmlbindings" description="Tests for qsparql QML bindings">
+      <case name="tst_qsparql_qmlbindings" description="Executing tst_qsparql_qmlbindings">
+        <step>
+            su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_qmlbindings"
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
   </suite>
 </testdefinition>
