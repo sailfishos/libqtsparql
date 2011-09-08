@@ -281,6 +281,7 @@ void tst_QSparqlBenchmark::trackerDataInjection()
                                         "nie:title        \"Album %1\" ;"
                                         "nmm:albumTitle   \"Album %1\" ;"
                                         "nie:isLogicalPartOf <qsparql-benchmark-tests> .";
+
     // create exact copy of tracker's ttls data
     QString insertQuery(insertHeader);
     for (int major = 50; major <= 1000; major+=50){
@@ -358,9 +359,11 @@ void tst_QSparqlBenchmark::trackerDataInjection()
         }
     }
     PRINT_STATS(benchmarkName, totalTimes);
-    QTest::qWait(4000);
-    // do some validation if data is ready for tests
+    qDebug() << "Insertion finished. 2 minutes wait until tracker harvests the data and settles down";
+    QTest::qWait(120000);
+    qDebug() << "2 minutes passed. Now tracker should be ready for fast cooperation";
 
+    // do some validation if data is ready for tests
     QString validateData("SELECT ?url ?title ?album WHERE {?url a nmm:MusicAlbum ;"
                          " nie:isLogicalPartOf <qsparql-benchmark-tests>; "
                          " nie:title ?title; nmm:albumTitle ?album. }");
