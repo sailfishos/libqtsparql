@@ -186,22 +186,38 @@ void readValuesFromCursor(TrackerSparqlCursor* cursor,
 
 tst_QSparqlBenchmark::tst_QSparqlBenchmark() : result("Benchmark_results")
 {
-    QString description("Some description of what was improved "
-                        "comparing to previous verion");
-    QDomElement benchmarks = result.createElement("benchmark");
-    QDomElement asset = result.createElement("asset");
-    QDomElement tests = result.createElement("tests");
-    QDomElement created = result.createElement("created");
-    QDomElement descriptionNode = result.createElement("description");
-    QDomText date = result.createTextNode(QDate::currentDate().toString());
-    QDomText text = result.createTextNode(description);
-    created.appendChild(date);
-    descriptionNode.appendChild(text);
-    asset.appendChild(created);
-    asset.appendChild(descriptionNode);
-    result.appendChild(benchmarks);
-    benchmarks.appendChild(asset);
-    benchmarks.appendChild(tests);
+    //Get QSparql and tracker version number
+    QProcess p;
+    p.start("pkg-config --modversion QtSparql");
+    p.waitForFinished(10000);
+    QString qsparql_ver = p.readAllStandardOutput();
+    p.start("tracker-info -V");
+    p.waitForFinished(10000);
+    QString tracker_ver = p.readAllStandardOutput();
+
+    //Build xml tree
+    QDomElement benchmarksElement = result.createElement("benchmark");
+    QDomElement assetElement = result.createElement("asset");
+    QDomElement testsElement = result.createElement("tests");
+    QDomElement createdElement = result.createElement("created");
+    QDomElement trackerElement = result.createElement("tracker");
+    QDomElement qsparqlElement = result.createElement("qsparql");
+
+    QDomText dateText = result.createTextNode(QDate::currentDate().toString());
+    QDomText trackerText = result.createTextNode(tracker_ver.
+                                                split("\n", QString::SkipEmptyParts).at(0));
+    QDomText sparqlText = result.createTextNode(QString("QSparql %1").
+                                arg(qsparql_ver.split("\n", QString::SkipEmptyParts).at(0)));
+
+    createdElement.appendChild(dateText);
+    trackerElement.appendChild(trackerText);
+    qsparqlElement.appendChild(sparqlText);
+    assetElement.appendChild(createdElement);
+    assetElement.appendChild(trackerElement);
+    assetElement.appendChild(qsparqlElement);
+    result.appendChild(benchmarksElement);
+    benchmarksElement.appendChild(assetElement);
+    benchmarksElement.appendChild(testsElement);
 }
 
 tst_QSparqlBenchmark::~tst_QSparqlBenchmark()
