@@ -348,6 +348,7 @@ bool QTrackerResult::hasFeature(QSparqlResult::Feature feature) const
 void QTrackerResult::exec(const QSparqlQueryOptions& options)
 {
     QString funcToCall;
+    bool fireAndForget = false;
     switch (statementType()) {
     case QSparqlQuery::AskStatement:
     case QSparqlQuery::SelectStatement:
@@ -358,6 +359,12 @@ void QTrackerResult::exec(const QSparqlQueryOptions& options)
     case QSparqlQuery::InsertStatement: // fall-through
     case QSparqlQuery::DeleteStatement:
     {
+        // only check this here since it's only useful for
+        // update queries
+        if (options.isFireAndForget()) {
+            fireAndForget = true;
+        }
+
         if (d->driverPrivate->doBatch || options.priority() == QSparqlQueryOptions::LowPriority) {
             funcToCall = QString::fromLatin1("BatchSparqlUpdate");
         }
@@ -375,7 +382,12 @@ void QTrackerResult::exec(const QSparqlQueryOptions& options)
     }
     QDBusPendingCall call = d->driverPrivate->iface->asyncCall(funcToCall,
                                                 QVariant(query()));
-    d->setCall(call);
+    // if it's an insert or delete, and fireAndForget was set to true, don't
+    // bother creating the watcher, by not doing this isFinished() will return
+    // true
+    if (!fireAndForget) {
+        d->setCall(call);
+    }
 }
 
 void QTrackerResult::driverClosing()

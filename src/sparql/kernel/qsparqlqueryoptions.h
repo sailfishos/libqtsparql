@@ -74,6 +74,8 @@ public:
     void setExecutionMethod(ExecutionMethod em);
     void setForwardOnly(bool value);
     bool isForwardOnly() const;
+    void setFireAndForget(bool value);
+    bool isFireAndForget() const;
     ExecutionMethod executionMethod() const;
 
     enum Priority {
