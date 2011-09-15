@@ -188,9 +188,14 @@ tst_QSparqlBenchmark::tst_QSparqlBenchmark() : result("Benchmark_results")
 {
     //Get QSparql and tracker version number
     QProcess p;
-    p.start("pkg-config --modversion QtSparql");
+    p.start("apt-cache show libqtsparql0");
     p.waitForFinished(10000);
-    QString qsparql_ver = p.readAllStandardOutput();
+    QString qsparql_output = p.readAllStandardOutput();
+    QString qsparql_ver;
+    QRegExp rx("Version:\\s+(\\d+\\.\\d+\\.\\d+)");
+    if (rx.indexIn(qsparql_output) != -1) {
+        qsparql_ver = "QSparql " + rx.cap(1);
+    }
     p.start("tracker-info -V");
     p.waitForFinished(10000);
     QString tracker_ver = p.readAllStandardOutput();
