@@ -47,6 +47,7 @@ tests/auto/qsparql_threading/tst_qsparql_threading
 tests/auto/qsparql_ntriples/tst_qsparql_ntriples
 tests/auto/qsparqlresultrow/tst_qsparqlresultrow
 tests/auto/qsparql_benchmark/tst_qsparql_benchmark
+tests/auto/qsparql_benchmark/comparison_tool/comparison_tool
 tests/auto/qsparql_api/tst_qsparql_api
 tests/auto/qsparql_qmlbindings/tst_qsparql_qmlbindings
 
