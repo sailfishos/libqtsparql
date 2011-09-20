@@ -187,15 +187,23 @@ void readValuesFromCursor(TrackerSparqlCursor* cursor,
 tst_QSparqlBenchmark::tst_QSparqlBenchmark() : result("Benchmark_results")
 {
     //Get QSparql and tracker version number
+    QString qsparql_ver;
     QProcess p;
     p.start("apt-cache show libqtsparql0");
     p.waitForFinished(10000);
     QString qsparql_output = p.readAllStandardOutput();
-    QString qsparql_ver;
     QRegExp rx("Version:\\s+(\\d+\\.\\d+\\.\\d+)");
     if (rx.indexIn(qsparql_output) != -1) {
-        qsparql_ver = "QSparql " + rx.cap(1);
+        qsparql_ver = rx.cap(1);
     }
+    if(qsparql_ver.isNull())
+    {
+        p.start("pkg-config --modversion QtSparql");
+        p.waitForFinished(10000);
+        qsparql_ver = p.readAllStandardOutput();
+    }
+    if(qsparql_ver.isNull())
+        qsparql_ver="Unknown";
     p.start("tracker-info -V");
     p.waitForFinished(10000);
     QString tracker_ver = p.readAllStandardOutput();
