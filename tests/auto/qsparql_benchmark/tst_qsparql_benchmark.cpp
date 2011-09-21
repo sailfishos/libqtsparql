@@ -191,19 +191,56 @@ tst_QSparqlBenchmark::tst_QSparqlBenchmark() : result("Benchmark_results")
     QProcess p;
     p.start("apt-cache show libqtsparql0");
     p.waitForFinished(10000);
-    QString qsparql_output = p.readAllStandardOutput();
-    QRegExp rx("Version:\\s+(\\d+\\.\\d+\\.\\d+)");
-    if (rx.indexIn(qsparql_output) != -1) {
-        qsparql_ver = rx.cap(1);
-    }
-    if(qsparql_ver.isNull())
+    QProcess::ProcessError processError = p.error();
+    if(processError == QProcess::FailedToStart)
     {
+        //apt-cache failed to start. Either the invoked program is missing, or you may have
+        //insufficient permissions to invoke the program
+        qDebug() << "No apt-cache tool installed. Trying pkg-config...";
         p.start("pkg-config --modversion QtSparql");
         p.waitForFinished(10000);
-        qsparql_ver = p.readAllStandardOutput();
+        processError = p.error();
+        if(processError == QProcess::FailedToStart)
+        {
+            qDebug() << "pkg-config is missing as well, QtSparql version is unknown.";
+            qsparql_ver="Unknown";
+        }
+        else
+        {
+            //check if pkg-config returned error
+            QString standardError = p.readAllStandardError();
+            if(!standardError.isEmpty())
+            {
+                qDebug() << "pkg-config returned error:" << standardError;
+                qsparql_ver="Unknown";
+            }
+            else
+                qsparql_ver = p.readAllStandardOutput();
+        }
     }
-    if(qsparql_ver.isNull())
-        qsparql_ver="Unknown";
+    else
+    {
+        //apt-cache launched
+        QString standardError = p.readAllStandardError();
+        if(!standardError.isEmpty())
+        {
+            qDebug() << "apt-cache returned error:" << standardError;
+            qsparql_ver="Unknown";
+        }
+        else
+        {
+            QString qsparql_output = p.readAllStandardOutput();
+            QRegExp rx("Version:\\s+(\\d+\\.\\d+\\.\\d+)");
+            if (rx.indexIn(qsparql_output) != -1) {
+                qsparql_ver = rx.cap(1);
+            }
+            else
+            {
+                qDebug() << "'apt-cache show libqtsparql0' didn't return proper version number";
+                qsparql_ver="Unknown";
+            }
+        }
+    }
     p.start("tracker-info -V");
     p.waitForFinished(10000);
     QString tracker_ver = p.readAllStandardOutput();
