@@ -50,6 +50,8 @@
 QString makeTable(QHash<QString, QStringList> &results, QString fileName,
                   QString testName1, QString testName2)
 {
+    if(results[fileName+testName1].count()<2 || results[fileName+testName2].count()<2)
+        return QString("No valid data<br>");
     int test1Total = results[fileName+testName1].at(2).toInt();
     int test2Total = results[fileName+testName2].at(2).toInt();
     int fasterTime, slowerTime;
@@ -77,6 +79,9 @@ QString makeTable(QHash<QString, QStringList> &results, QString fileName,
 QString makeTableCombined(QHash<QString, QStringList> &results, QString fileName,
                   QStringList testNames1, QStringList testNames2)
 {
+    for(int i=0; i<testNames1.count(); i++)
+        if(results[fileName+testNames1[i]].count()<2)
+            return QString("No valid data<br>");
     int test1Total = 0;
     for(int i=0; i<testNames1.count(); i++)
         test1Total+= results[fileName+testNames1[i]].at(2).toInt();
