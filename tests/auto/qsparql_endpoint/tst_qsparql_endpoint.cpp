@@ -63,6 +63,8 @@ private:
 tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
 {
     endpointService.start();
+    /*for development purpose, let the www server work for 20 sec*/
+    QTest::qWait(20000);
 }
 
 tst_QSparqlEndpoint::~tst_QSparqlEndpoint()

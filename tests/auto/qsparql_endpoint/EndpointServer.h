@@ -54,6 +54,10 @@ public:
     bool resume();
 private:
     void incomingConnection(int socket);
+private Q_SLOTS:
+    void readClient();
+    void discardClient();
+private:
     int port;
     bool disabled;
 };

@@ -38,6 +38,9 @@
 ****************************************************************************/
 
 #include "EndpointServer.h"
+#include <QTextStream>
+#include <QTcpSocket>
+#include <QStringList>
 
 EndpointServer::EndpointServer(int _port) : port(_port), disabled(false)
 {
@@ -47,15 +50,61 @@ EndpointServer::EndpointServer(int _port) : port(_port), disabled(false)
         qDebug() << "Can't bind server to port "<< port;
     }
 }
+    
+EndpointServer::~EndpointServer()
+{
+    qDebug() << "Shutting down fake endpoint www server";
+}
 
 void EndpointServer::incomingConnection(int socket)
 {
     if (disabled)
         return;
+
+    QTcpSocket* s = new QTcpSocket(this);
+    connect(s, SIGNAL(readyRead()), this, SLOT(readClient()));
+    connect(s, SIGNAL(disconnected()), this, SLOT(discardClient()));
+    s->setSocketDescriptor(socket);
+    
+    qDebug() << "New Connection";
 }
 
-EndpointServer::~EndpointServer()
+void EndpointServer::readClient()
 {
+    if (disabled)
+        return;
+
+    // This slot is called when the client sent data to the server. The
+    // server looks if it was a get request and sends a very simple HTML
+    // document back.
+    QTcpSocket* socket = (QTcpSocket*)sender();
+    if (socket->canReadLine()) {
+        QStringList tokens = QString(socket->readLine()).split(QRegExp("[ \r\n][ \r\n]*"));
+        if (tokens[0] == "GET") {
+            QString url = tokens[1];
+            qDebug() << url;
+            QTextStream os(socket);
+            os.setAutoDetectUnicode(true);
+            os << "HTTP/1.0 200 Ok\r\n"
+            "Content-Type: text/html; charset=\"utf-8\"\r\n"
+            "\r\n"
+            "page content here\n";
+            socket->close();
+
+            if (socket->state() == QTcpSocket::UnconnectedState) {
+                delete socket;
+                qDebug() << "Connection closed";
+            }
+        }
+    }
+}
+
+void EndpointServer::discardClient()
+{
+    QTcpSocket* socket = (QTcpSocket*)sender();
+    socket->deleteLater();
+    
+    qDebug() << "Connection closed";
 }
 
 bool EndpointServer::isRunning() const
