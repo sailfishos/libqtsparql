@@ -49,11 +49,24 @@ EndpointServer::EndpointServer(int _port) : port(_port), disabled(false)
         disabled=true;
         qDebug() << "Can't bind server to port "<< port;
     }
+    else
+    {
+        qDebug() << "Starting fake endpoint server";
+        while(!disabled)
+            loop.processEvents();
+    }
 }
     
 EndpointServer::~EndpointServer()
 {
+    stop();
+}
+
+void EndpointServer::stop()
+{
+    disabled=true;
     qDebug() << "Shutting down fake endpoint www server";
+    close();
 }
 
 void EndpointServer::incomingConnection(int socket)

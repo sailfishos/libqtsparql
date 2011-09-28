@@ -41,6 +41,7 @@
 #define QSPARQL_ENDPOINT_SERVER_H
 
 #include <QTcpServer>
+#include <QEventLoop>
 
 class EndpointServer : public QTcpServer
 {
@@ -52,6 +53,7 @@ public:
     bool isRunning() const;
     void pause();
     bool resume();
+    void stop();
 private:
     void incomingConnection(int socket);
 private Q_SLOTS:
@@ -60,6 +62,7 @@ private Q_SLOTS:
 private:
     int port;
     bool disabled;
+    QEventLoop loop;
 };
 
 #endif // QSPARQL_ENDPOINT_SERVER_H

@@ -54,7 +54,7 @@ public:
     void run();
 private:
     int port;
-    EndpointServer server;
+    EndpointServer *server;
 };
 
 #endif // QSPARQL_ENDPOINT_SERVICE_H

@@ -40,7 +40,7 @@
 #include "EndpointService.h"
 #include <QDebug>
 
-EndpointService::EndpointService(int _port) : port(_port), server(_port)
+EndpointService::EndpointService(int _port) : port(_port), server(0)
 {
 }
 
@@ -50,5 +50,5 @@ EndpointService::~EndpointService()
 
 void EndpointService::run()
 {
-    qDebug() << "Starting fake endpoint server";
+    server = new EndpointServer(port);
 }
