@@ -56,6 +56,7 @@ public slots:
     void cleanup();
 
 private slots:
+    void select_query();
 private:
     EndpointService endpointService;
 };
@@ -64,7 +65,7 @@ tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
 {
     endpointService.start();
     /*for development purpose, let the www server work for 20 sec*/
-    QTest::qWait(20000);
+    //QTest::qWait(20000);
 }
 
 tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
@@ -105,5 +106,32 @@ void tst_QSparqlEndpoint::cleanup()
 {
 }
 
+void tst_QSparqlEndpoint::select_query()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
+    QCOMPARE(r->size(), 2);
+    QHash<QString, QString> author;
+    while (r->next()) {
+        QCOMPARE(r->current().count(), 2);
+        author[r->current().binding(0).toString()] = r->current().binding(1).toString();
+    }
+    QCOMPARE(author["<http://www.example/book/book5>"], QString("_:r29392923r2922"));
+    QCOMPARE(author["<http://www.example/book/book6>"], QString("_:r8484882r49593"));
+
+    delete r;
+}
 QTEST_MAIN( tst_QSparqlEndpoint )
 #include "tst_qsparql_endpoint.moc"
