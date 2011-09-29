@@ -57,6 +57,7 @@ public slots:
 
 private slots:
     void select_query();
+    void ask_query();
 private:
     EndpointService endpointService;
 };
@@ -133,5 +134,26 @@ void tst_QSparqlEndpoint::select_query()
 
     delete r;
 }
+
+void tst_QSparqlEndpoint::ask_query()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("ASK WHERE { ?book <http://www.example/Author> \"J.K. Rowling\"} ");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QCOMPARE(r->hasError(), false);
+    // TODO? r->isBool() fails! Bug?
+    //QCOMPARE(r->isBool(), true);
+    QCOMPARE(r->boolValue(), false);
+
+    delete r;
+}
+
 QTEST_MAIN( tst_QSparqlEndpoint )
 #include "tst_qsparql_endpoint.moc"

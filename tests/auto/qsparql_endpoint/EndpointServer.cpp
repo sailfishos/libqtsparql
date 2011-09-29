@@ -84,6 +84,7 @@ void EndpointServer::incomingConnection(int socket)
 
 QString EndpointServer::sparqlData(QString url)
 {
+    // returned data is based on http://www.w3.org/TR/rdf-sparql-protocol/
     if(url.contains("select", Qt::CaseInsensitive))
     {
         return QString("<head>"
@@ -101,6 +102,9 @@ QString EndpointServer::sparqlData(QString url)
         "</result>"
         "</results>");
     }
+    else if(url.contains("ask", Qt::CaseInsensitive))
+        return QString("<head></head>"
+        "<boolean>false</boolean>");
     return QString();
 }
 
