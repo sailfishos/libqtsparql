@@ -82,6 +82,28 @@ void EndpointServer::incomingConnection(int socket)
     qDebug() << "New Connection";
 }
 
+QString EndpointServer::sparqlData(QString url)
+{
+    if(url.contains("select", Qt::CaseInsensitive))
+    {
+        return QString("<head>"
+        "   <variable name=\"book\"/>"
+        "   <variable name=\"who\"/>"
+        "</head>"
+        "<results distinct=\"false\" ordered=\"false\">"
+        "<result>"
+        "    <binding name=\"book\"><uri>http://www.example/book/book5</uri></binding>"
+        "    <binding name=\"who\"><bnode>r29392923r2922</bnode></binding>"
+        "</result>"
+        "<result>"
+        "    <binding name=\"book\"><uri>http://www.example/book/book6</uri></binding>"
+        "    <binding name=\"who\"><bnode>r8484882r49593</bnode></binding>"
+        "</result>"
+        "</results>");
+    }
+    return QString();
+}
+
 void EndpointServer::readClient()
 {
     if (disabled)
@@ -103,20 +125,7 @@ void EndpointServer::readClient()
             "\r\n"
             "<?xml version=\"1.0\"?>"
             "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
-            "<head>"
-            "   <variable name=\"book\"/>"
-            "   <variable name=\"who\"/>"
-            "</head>"
-            "<results distinct=\"false\" ordered=\"false\">"
-            "<result>"
-            "    <binding name=\"book\"><uri>http://www.example/book/book5</uri></binding>"
-            "    <binding name=\"who\"><bnode>r29392923r2922</bnode></binding>"
-            "</result>"
-            "<result>"
-            "    <binding name=\"book\"><uri>http://www.example/book/book6</uri></binding>"
-            "    <binding name=\"who\"><bnode>r8484882r49593</bnode></binding>"
-            "</result>"
-            "</results>"
+            + sparqlData(url) +
             "</sparql>\n";
             socket->close();
 

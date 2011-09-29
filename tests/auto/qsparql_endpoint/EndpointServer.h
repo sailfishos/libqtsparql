@@ -42,6 +42,7 @@
 
 #include <QTcpServer>
 #include <QEventLoop>
+#include <QString>
 
 class EndpointServer : public QTcpServer
 {
@@ -56,6 +57,7 @@ public:
     void stop();
 private:
     void incomingConnection(int socket);
+    QString sparqlData(QString url);
 private Q_SLOTS:
     void readClient();
     void discardClient();
