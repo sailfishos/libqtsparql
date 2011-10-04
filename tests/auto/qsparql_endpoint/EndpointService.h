@@ -52,6 +52,7 @@ public:
     EndpointService(int port);
     ~EndpointService();
     void run();
+    void stopService(int timeout);
 private:
     int port;
     EndpointServer *server;

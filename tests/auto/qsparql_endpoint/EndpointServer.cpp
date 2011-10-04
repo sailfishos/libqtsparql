@@ -52,8 +52,6 @@ EndpointServer::EndpointServer(int _port) : port(_port), disabled(false)
     else
     {
         qDebug() << "Starting fake endpoint server";
-        while(!disabled)
-            loop.processEvents();
     }
 }
     
@@ -78,8 +76,6 @@ void EndpointServer::incomingConnection(int socket)
     connect(s, SIGNAL(readyRead()), this, SLOT(readClient()));
     connect(s, SIGNAL(disconnected()), this, SLOT(discardClient()));
     s->setSocketDescriptor(socket);
-    
-    qDebug() << "New Connection";
 }
 
 QString EndpointServer::sparqlData(QString url)
@@ -151,7 +147,6 @@ void EndpointServer::readClient()
 
             if (socket->state() == QTcpSocket::UnconnectedState) {
                 delete socket;
-                qDebug() << "Connection closed";
             }
         }
     }
@@ -161,8 +156,6 @@ void EndpointServer::discardClient()
 {
     QTcpSocket* socket = (QTcpSocket*)sender();
     socket->deleteLater();
-    
-    qDebug() << "Connection closed";
 }
 
 bool EndpointServer::isRunning() const

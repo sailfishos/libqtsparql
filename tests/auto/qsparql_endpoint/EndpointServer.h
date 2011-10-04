@@ -64,7 +64,6 @@ private Q_SLOTS:
 private:
     int port;
     bool disabled;
-    QEventLoop loop;
 };
 
 #endif // QSPARQL_ENDPOINT_SERVER_H

@@ -72,7 +72,7 @@ tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
 
 tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
 {
-    endpointService.wait(2000);
+    endpointService.stopService(2000);
 }
 
 void tst_QSparqlEndpoint::initTestCase()
