@@ -58,6 +58,7 @@ public slots:
 private slots:
     void select_query();
     void ask_query();
+    void query_with_error();
 private:
     EndpointService endpointService;
 };
@@ -151,6 +152,26 @@ void tst_QSparqlEndpoint::ask_query()
     // TODO? r->isBool() fails! Bug?
     //QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), false);
+
+    delete r;
+}
+
+
+void tst_QSparqlEndpoint::query_with_error()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("bad query");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QCOMPARE(r->hasError(), true);
+    // TODO: Bug! Endpoint driver sets error to ConnectionError instead of StatementError
+    //QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
 
     delete r;
 }

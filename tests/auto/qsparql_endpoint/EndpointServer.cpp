@@ -87,7 +87,12 @@ QString EndpointServer::sparqlData(QString url)
     // returned data is based on http://www.w3.org/TR/rdf-sparql-protocol/
     if(url.contains("select", Qt::CaseInsensitive))
     {
-        return QString("<head>"
+        return QString( "HTTP/1.0 200 Ok\r\n"
+        "Content-Type: text/html; charset=\"utf-8\"\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"
+        "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
+        "<head>"
         "   <variable name=\"book\"/>"
         "   <variable name=\"who\"/>"
         "</head>"
@@ -100,11 +105,28 @@ QString EndpointServer::sparqlData(QString url)
         "    <binding name=\"book\"><uri>http://www.example/book/book6</uri></binding>"
         "    <binding name=\"who\"><bnode>r8484882r49593</bnode></binding>"
         "</result>"
-        "</results>");
+        "</results>"
+        "</sparql>\n");
     }
     else if(url.contains("ask", Qt::CaseInsensitive))
-        return QString("<head></head>"
-        "<boolean>false</boolean>");
+    {
+        return QString( "HTTP/1.0 200 Ok\r\n"
+        "Content-Type: text/html; charset=\"utf-8\"\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"
+        "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
+        "<head></head>"
+        "<boolean>false</boolean>"
+        "</sparql>\n");
+    }
+    else if(url.contains("bad query", Qt::CaseInsensitive))
+    {
+        return QString( "HTTP/1.1 400 Bad Request\r\n"
+        "Connection: close\r\n"
+        "Content-Type: text/html; charset=\"utf-8\"\r\n"
+        "\r\n"
+        "4:syntax error, unknown bad command");
+    }
     return QString();
 }
 
@@ -124,13 +146,7 @@ void EndpointServer::readClient()
             qDebug() << url;
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
-            os << "HTTP/1.0 200 Ok\r\n"
-            "Content-Type: text/html; charset=\"utf-8\"\r\n"
-            "\r\n"
-            "<?xml version=\"1.0\"?>"
-            "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
-            + sparqlData(url) +
-            "</sparql>\n";
+            os << sparqlData(url);
             socket->close();
 
             if (socket->state() == QTcpSocket::UnconnectedState) {
