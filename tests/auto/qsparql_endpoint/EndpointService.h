@@ -37,71 +37,24 @@
 **
 ****************************************************************************/
 
-#include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
-#include "EndpointService.h"
+#ifndef QSPARQL_ENDPOINT_SERVICE_H
+#define QSPARQL_ENDPOINT_SERVICE_H
 
-class tst_QSparqlEndpoint : public QObject
+#include <QThread>
+#include <QMutex>
+#include "EndpointServer.h"
+
+class EndpointService : public QThread
 {
     Q_OBJECT
-
+    
 public:
-    tst_QSparqlEndpoint();
-    virtual ~tst_QSparqlEndpoint();
-
-public slots:
-    void initTestCase();
-    void cleanupTestCase();
-    void init();
-    void cleanup();
-
-private slots:
+    EndpointService(int port);
+    ~EndpointService();
+    void run();
 private:
-    EndpointService endpointService;
+    int port;
+    EndpointServer server;
 };
 
-tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
-{
-    endpointService.start();
-}
-
-tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
-{
-    endpointService.wait();
-}
-
-void tst_QSparqlEndpoint::initTestCase()
-{
-    // For running the test without installing the plugins. Should work in
-    // normal and vpath builds.
-    QCoreApplication::addLibraryPath("../../../plugins");
-
-    // Check for a proxy
-    QString url = getenv("http_proxy");
-    if (!url.isEmpty()) {
-        qDebug() << "Proxy found:"<<url;
-        QUrl proxyUrl(url);
-
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::HttpProxy);
-        proxy.setHostName(proxyUrl.host());
-        proxy.setPort(proxyUrl.port());
-        QNetworkProxy::setApplicationProxy(proxy);
-        qDebug() << "Proxy Setup";
-    }
-}
-
-void tst_QSparqlEndpoint::cleanupTestCase()
-{
-}
-
-void tst_QSparqlEndpoint::init()
-{
-}
-
-void tst_QSparqlEndpoint::cleanup()
-{
-}
-
-QTEST_MAIN( tst_QSparqlEndpoint )
-#include "tst_qsparql_endpoint.moc"
+#endif // QSPARQL_ENDPOINT_SERVICE_H

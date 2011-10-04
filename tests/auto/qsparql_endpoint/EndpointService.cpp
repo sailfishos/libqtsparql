@@ -37,71 +37,18 @@
 **
 ****************************************************************************/
 
-#include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
 #include "EndpointService.h"
+#include <QDebug>
 
-class tst_QSparqlEndpoint : public QObject
-{
-    Q_OBJECT
-
-public:
-    tst_QSparqlEndpoint();
-    virtual ~tst_QSparqlEndpoint();
-
-public slots:
-    void initTestCase();
-    void cleanupTestCase();
-    void init();
-    void cleanup();
-
-private slots:
-private:
-    EndpointService endpointService;
-};
-
-tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
-{
-    endpointService.start();
-}
-
-tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
-{
-    endpointService.wait();
-}
-
-void tst_QSparqlEndpoint::initTestCase()
-{
-    // For running the test without installing the plugins. Should work in
-    // normal and vpath builds.
-    QCoreApplication::addLibraryPath("../../../plugins");
-
-    // Check for a proxy
-    QString url = getenv("http_proxy");
-    if (!url.isEmpty()) {
-        qDebug() << "Proxy found:"<<url;
-        QUrl proxyUrl(url);
-
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::HttpProxy);
-        proxy.setHostName(proxyUrl.host());
-        proxy.setPort(proxyUrl.port());
-        QNetworkProxy::setApplicationProxy(proxy);
-        qDebug() << "Proxy Setup";
-    }
-}
-
-void tst_QSparqlEndpoint::cleanupTestCase()
+EndpointService::EndpointService(int _port) : port(_port), server(_port)
 {
 }
 
-void tst_QSparqlEndpoint::init()
+EndpointService::~EndpointService()
 {
 }
 
-void tst_QSparqlEndpoint::cleanup()
+void EndpointService::run()
 {
+    qDebug() << "Starting fake endpoint server";
 }
-
-QTEST_MAIN( tst_QSparqlEndpoint )
-#include "tst_qsparql_endpoint.moc"
