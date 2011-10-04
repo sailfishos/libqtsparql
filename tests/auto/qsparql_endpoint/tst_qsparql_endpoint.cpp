@@ -143,14 +143,13 @@ void tst_QSparqlEndpoint::ask_query()
     options.setHostName("127.0.0.1");
     QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
-    QSparqlQuery q("ASK WHERE { ?book <http://www.example/Author> \"J.K. Rowling\"} ");
+    QSparqlQuery q("ASK WHERE { ?book <http://www.example/Author> \"J.K. Rowling\"} ", QSparqlQuery::AskStatement);
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished();
     QCOMPARE(r->hasError(), false);
-    // TODO? r->isBool() fails! Bug?
-    //QCOMPARE(r->isBool(), true);
+    QCOMPARE(r->isBool(), true);
     QCOMPARE(r->boolValue(), false);
 
     delete r;
