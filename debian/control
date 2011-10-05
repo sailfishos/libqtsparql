@@ -30,6 +30,7 @@ Package: libqtsparql-dev
 Section: libdevel
 Architecture: any
 Depends: libqtsparql0 (= ${binary:Version}),
+         libqt4-dev (>= 4.7),
          ${misc:Depends}
 Description: Library for accessing RDF stores.
 
