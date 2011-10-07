@@ -60,6 +60,7 @@ private slots:
     void ask_query();
     void query_with_error();
     void select_query_server_not_responding();
+    void connection_to_nonexisting_server();
 private:
     EndpointService endpointService;
 };
@@ -197,6 +198,27 @@ void tst_QSparqlEndpoint::select_query_server_not_responding()
     r->waitForFinished(); // this test is synchronous only
     endpointService.resume();
     QCOMPARE(r->hasError(), true);
+    delete r;
+}
+
+void tst_QSparqlEndpoint::connection_to_nonexisting_server()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8085);
+    options.setHostName("127.0.0.8");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), true);
+    QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
     delete r;
 }
 
