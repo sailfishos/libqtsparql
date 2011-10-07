@@ -60,3 +60,17 @@ void EndpointService::stopService(int timeout)
     exit();
     wait(timeout);
 }
+
+void EndpointService::pause()
+{
+    if(server)
+        server->pause();
+}
+
+bool EndpointService::resume()
+{
+    if(server)
+        return server->resume();
+    else
+        return false;
+}

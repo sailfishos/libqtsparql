@@ -59,6 +59,7 @@ private slots:
     void select_query();
     void ask_query();
     void query_with_error();
+    void select_query_server_not_responding();
 private:
     EndpointService endpointService;
 };
@@ -172,6 +173,30 @@ void tst_QSparqlEndpoint::query_with_error()
     // TODO: Bug! Endpoint driver sets error to ConnectionError instead of StatementError
     //QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
 
+    delete r;
+}
+
+void tst_QSparqlEndpoint::select_query_server_not_responding()
+{
+    QSKIP("Neither endpoint driver nor QNetworkAccessManager has timeout functionality", SkipAll);
+    // When connection is established but server doesn't respond, client (endpoint driver) hangs
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+                   
+    endpointService.pause();
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    endpointService.resume();
+    QCOMPARE(r->hasError(), true);
     delete r;
 }
 

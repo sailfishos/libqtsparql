@@ -53,6 +53,8 @@ public:
     ~EndpointService();
     void run();
     void stopService(int timeout);
+    void pause();
+    bool resume();
 private:
     int port;
     EndpointServer *server;
