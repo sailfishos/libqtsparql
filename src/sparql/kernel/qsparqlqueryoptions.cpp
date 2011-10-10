@@ -52,6 +52,7 @@ public:
     QSparqlQueryOptions::ExecutionMethod executionMethod;
     QSparqlQueryOptions::Priority priority;
     bool forwardOnly;
+    bool fireAndForget;
 };
 
 QSparqlQueryOptionsPrivate::QSparqlQueryOptionsPrivate()
@@ -59,6 +60,7 @@ QSparqlQueryOptionsPrivate::QSparqlQueryOptionsPrivate()
     : executionMethod(QSparqlQueryOptions::AsyncExec)
     , priority(QSparqlQueryOptions::NormalPriority)
     , forwardOnly(false)
+    , fireAndForget(false)
 {
 }
 
@@ -153,6 +155,28 @@ void QSparqlQueryOptions::setForwardOnly(bool forward)
 bool QSparqlQueryOptions::isForwardOnly() const
 {
     return d->forwardOnly;
+}
+
+/*!
+    Sets whether or not to execute an QSparqlQuery::InsertStatment or QSparqlQuery::DeleteStatement
+    in a "fire and forget" manner, where there is no requirement to wait on the result to finish.
+    When using this option, no QSparqlResult::finished() signal will  be emitted, and QSparqlResult::isFinished()
+    will return true after the query is executed.
+
+    Support for this option is currently limited to the QTRACKER driver, and setting this for other statement types
+    will have no effect.
+*/
+void QSparqlQueryOptions::setFireAndForget(bool fireAndForget)
+{
+    d->fireAndForget = fireAndForget;
+}
+
+/*!
+    Returns whether or not the query is to be executed in a "fire and forget" manner.
+*/
+bool QSparqlQueryOptions::isFireAndForget() const
+{
+    return d->fireAndForget;
 }
 
 /*!

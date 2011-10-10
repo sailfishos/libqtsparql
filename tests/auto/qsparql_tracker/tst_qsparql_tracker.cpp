@@ -63,6 +63,9 @@ private slots:
     void iterate_result();
 
     void delete_unfinished_result();
+
+    void fire_and_forget();
+    void fire_and_forget_behaviour();
 };
 
 namespace {
@@ -232,6 +235,7 @@ void tst_QSparqlTracker::batch_update()
     delete r;
 
     // Verify that the insertion succeeded
+    QTest::qWait(1000);
     QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
@@ -330,6 +334,109 @@ void tst_QSparqlTracker::delete_unfinished_result()
     CHECK_QSPARQL_RESULT(r);
     delete r;
     QTest::qWait(1000);
+}
+
+void tst_QSparqlTracker::fire_and_forget()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery add("insert { <fireandforget> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                     "nco:nameGiven \"addedname006\" .}",
+                     QSparqlQuery::InsertStatement);
+
+    QSparqlQueryOptions options;
+    options.setFireAndForget(true);
+    QSparqlResult* r = conn.exec(add, options);
+    // is finished should be instantly true
+    QVERIFY(r->isFinished());
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // Verify that the insertion succeeded and that setting fireAndForget
+    // to true for select queries has no impact
+    QTest::qWait(1000);
+    QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                   "nco:nameGiven ?ng .}");
+    QHash<QString, QSparqlBinding> contactNames;
+    r = conn.exec(q, options);
+    QVERIFY(!r->isFinished());
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QCOMPARE(r->size(), 4);
+    while (r->next()) {
+        contactNames[r->binding(1).value().toString()] = r->binding(0);
+    }
+    QCOMPARE(contactNames.size(), 4);
+    // Now validate the contact was added
+    QCOMPARE(contactNames["addedname006"].value().toString(), QString("fireandforget"));
+    delete r;
+
+    // Delete the insert.
+    QSparqlQuery del("delete { <fireandforget> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+    r = conn.exec(del, options);
+    QVERIFY(r->isFinished());
+    CHECK_QSPARQL_RESULT(r);
+
+    // Now make sure the delete happend
+    QTest::qWait(1000);
+    r = conn.exec(q, options);
+    QVERIFY(!r->isFinished());
+    CHECK_QSPARQL_RESULT(r);
+    r->waitForFinished();
+    CHECK_QSPARQL_RESULT(r);
+    QCOMPARE(r->size(), 3);
+
+    delete r;
+}
+
+void tst_QSparqlTracker::fire_and_forget_behaviour()
+{
+    QSparqlConnection conn("QTRACKER");
+    QSparqlQuery add("insert { <fireandforget> a nco:PersonContact; "
+                     "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
+                     "nco:nameGiven \"addedname006\" .}",
+                     QSparqlQuery::InsertStatement);
+    QSparqlQueryOptions options;
+    options.setFireAndForget(true);
+    QSparqlResult* r = conn.exec(add, options);
+    // is finished should be instantly true
+    QVERIFY(r->isFinished());
+    // waitForFinished should not hang
+    r->waitForFinished();
+    // check the result to make sure there are no problems
+    // related to not waiting for the result reply
+    QCOMPARE(r->size(), 0);
+    QCOMPARE(r->value(0).toString(), QString(""));
+    QCOMPARE(r->current().count(), 0);
+    QCOMPARE(r->binding(0), QSparqlBinding());
+    // Check next, previous, and that the position isn't 0
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(!r->next());
+    QVERIFY(r->pos() != 0);
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
+
+    // cleanup and do the check on deletes as well
+    QTest::qWait(1000);
+    QSparqlQuery del("delete { <fireandforget> a rdfs:Resource. }",
+                     QSparqlQuery::DeleteStatement);
+    r = conn.exec(del, options);
+    QVERIFY(r->isFinished());
+    r->waitForFinished();
+    QCOMPARE(r->size(), 0);
+    QCOMPARE(r->value(0).toString(), QString(""));
+    QCOMPARE(r->current().count(), 0);
+    QCOMPARE(r->binding(0), QSparqlBinding());
+    QVERIFY(!r->next());
+    QVERIFY(!r->previous());
+    QVERIFY(!r->next());
+    QVERIFY(r->pos() != 0);
+    CHECK_QSPARQL_RESULT(r);
+    delete r;
 }
 
 QTEST_MAIN( tst_QSparqlTracker )
