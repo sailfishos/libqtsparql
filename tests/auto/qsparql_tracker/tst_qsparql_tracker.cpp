@@ -354,7 +354,7 @@ void tst_QSparqlTracker::fire_and_forget()
 
     // Verify that the insertion succeeded and that setting fireAndForget
     // to true for select queries has no impact
-    QTest::qWait(1000);
+    QTest::qWait(5000);
     QSparqlQuery q("select ?addeduri ?ng {?addeduri a nco:PersonContact; "
                    "nie:isLogicalPartOf <qsparql-tracker-tests> ;"
                    "nco:nameGiven ?ng .}");
@@ -381,7 +381,7 @@ void tst_QSparqlTracker::fire_and_forget()
     CHECK_QSPARQL_RESULT(r);
 
     // Now make sure the delete happend
-    QTest::qWait(1000);
+    QTest::qWait(5000);
     r = conn.exec(q, options);
     QVERIFY(!r->isFinished());
     CHECK_QSPARQL_RESULT(r);
@@ -421,7 +421,7 @@ void tst_QSparqlTracker::fire_and_forget_behaviour()
     delete r;
 
     // cleanup and do the check on deletes as well
-    QTest::qWait(1000);
+    QTest::qWait(5000);
     QSparqlQuery del("delete { <fireandforget> a rdfs:Resource. }",
                      QSparqlQuery::DeleteStatement);
     r = conn.exec(del, options);
