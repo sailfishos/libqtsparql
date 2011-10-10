@@ -61,6 +61,7 @@ private slots:
     void query_with_error();
     void select_query_server_not_responding();
     void connection_to_nonexisting_server();
+    void destroy_connection();
 private:
     EndpointService endpointService;
 };
@@ -219,6 +220,42 @@ void tst_QSparqlEndpoint::connection_to_nonexisting_server()
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    delete r;
+}
+
+void tst_QSparqlEndpoint::destroy_connection()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection *conn = new QSparqlConnection("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+    QSparqlResult* r = conn->exec(q);
+    const bool immediatelyFinished = r->isFinished();
+    r->setParent(this);
+    delete conn; conn = 0;
+    QVERIFY(r != 0);
+    if(immediatelyFinished)
+    {
+        QCOMPARE(r->hasError(), false);
+        QCOMPARE(r->size(), 2);
+        QHash<QString, QString> author;
+        while (r->next()) {
+            QCOMPARE(r->current().count(), 2);
+            author[r->current().binding(0).toString()] = r->current().binding(1).toString();
+        }
+        QCOMPARE(author["<http://www.example/book/book5>"], QString("_:r29392923r2922"));
+        QCOMPARE(author["<http://www.example/book/book6>"], QString("_:r8484882r49593"));
+    }
+    else
+    {
+        QCOMPARE(r->hasError(), true);
+        QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    }
     delete r;
 }
 
