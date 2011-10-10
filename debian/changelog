@@ -1,8 +1,10 @@
 libqtsparql (0.2.2~unreleased) unstable; urgency=low
 
   * Fixes: NB#276974 - libqtsparql provides dev package with unresolved dependencies
+  * Fixes: NB#282106 - [TASK] Add "Fire and Forget" update query support to QTRACKER driver
+  * Benchmark improvements - Benchmark now generates own test data.
 
- -- James Thomas <james.thomas@codethink.co.uk>  Wed, 5 Oct 2011 11:51:00 +0100
+ -- James Thomas <james.thomas@codethink.co.uk>  Mon, 10 Oct 2011 10:55:00 +0100
 
 libqtsparql (0.2.1) unstable; urgency=low
 
