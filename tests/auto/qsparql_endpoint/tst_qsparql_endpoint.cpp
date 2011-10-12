@@ -62,6 +62,7 @@ private slots:
     void select_query_server_not_responding();
     void connection_to_nonexisting_server();
     void destroy_connection();
+    void broken_result();
 private:
     EndpointService endpointService;
 };
@@ -256,6 +257,23 @@ void tst_QSparqlEndpoint::destroy_connection()
         QCOMPARE(r->hasError(), true);
         QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
     }
+    delete r;
+}
+
+void tst_QSparqlEndpoint::broken_result()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("broken result");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), true);
+    QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
     delete r;
 }
 

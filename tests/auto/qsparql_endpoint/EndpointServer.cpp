@@ -122,6 +122,20 @@ QString EndpointServer::sparqlData(QString url)
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
         "4:syntax error, unknown bad command");
+    }else if(url.contains("broken result", Qt::CaseInsensitive))
+    {
+        return QString( "HTTP/1.0 200 Ok\r\n"
+        "Content-Type: text/html; charset=\"utf-8\"\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"
+        "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
+        "<head>"
+        "   <variable name=\"book\"/>"
+        "   <variable name=\"who\"/>"
+        "</head>"
+        "<results distinct=\"false\" ordered=\"false\">"
+        "<result>"
+        "    <binding name=\"book\"><uri>http://www.example/book/book5</uri></binding>\n");
     }
     return QString();
 }
