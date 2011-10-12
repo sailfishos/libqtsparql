@@ -74,3 +74,11 @@ bool EndpointService::resume()
     else
         return false;
 }
+
+bool EndpointService::isRunning()
+{
+    if(server)
+        return server->isRunning();
+    else
+        return false;
+}

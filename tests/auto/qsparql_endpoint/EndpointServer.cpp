@@ -42,15 +42,15 @@
 #include <QTcpSocket>
 #include <QStringList>
 
-EndpointServer::EndpointServer(int _port) : port(_port), disabled(false)
+EndpointServer::EndpointServer(int _port) : port(_port), disabled(true)
 {
     if(!listen(QHostAddress::Any, port))
     {
-        disabled=true;
         qDebug() << "Can't bind server to port "<< port;
     }
     else
     {
+        disabled=false;
         qDebug() << "Starting fake endpoint server";
     }
 }
