@@ -46,12 +46,12 @@ EndpointServer::EndpointServer(int _port) : port(_port), disabled(true)
 {
     if(!listen(QHostAddress::Any, port))
     {
-        qDebug() << "Can't bind server to port "<< port;
+        qWarning() << "Can't bind server to port "<< port;
     }
     else
     {
         disabled=false;
-        qDebug() << "Starting fake endpoint server";
+        //qDebug() << "Starting fake endpoint server";
     }
 }
     
@@ -63,7 +63,7 @@ EndpointServer::~EndpointServer()
 void EndpointServer::stop()
 {
     disabled=true;
-    qDebug() << "Shutting down fake endpoint www server";
+    //qDebug() << "Shutting down fake endpoint www server";
     close();
 }
 
@@ -122,7 +122,8 @@ QString EndpointServer::sparqlData(QString url)
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
         "4:syntax error, unknown bad command");
-    }else if(url.contains("broken result", Qt::CaseInsensitive))
+    }
+    else if(url.contains("broken result", Qt::CaseInsensitive))
     {
         return QString( "HTTP/1.0 200 Ok\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
@@ -159,17 +160,19 @@ void EndpointServer::readClient()
     // server looks if it was a get request and sends a very simple HTML
     // document back.
     QTcpSocket* socket = (QTcpSocket*)sender();
-    if (socket->canReadLine()) {
+    if (socket->canReadLine())
+    {
         QStringList tokens = QString(socket->readLine()).split(QRegExp("[ \r\n][ \r\n]*"));
-        if (tokens[0] == "GET") {
+        if (tokens[0] == "GET")
+        {
             QString url = tokens[1];
-            qDebug() << url;
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
             os << sparqlData(url);
             socket->close();
 
-            if (socket->state() == QTcpSocket::UnconnectedState) {
+            if (socket->state() == QTcpSocket::UnconnectedState)
+            {
                 delete socket;
             }
         }
@@ -201,7 +204,7 @@ bool EndpointServer::resume()
     }
     else
     {
-        qDebug() << "Can't resume server as there was problem with binding on port " << port;
+        //qDebug() << "Can't resume server as there was problem with binding on port " << port;
         return false;
     }
 }
