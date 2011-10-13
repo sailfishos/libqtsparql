@@ -137,6 +137,16 @@ QString EndpointServer::sparqlData(QString url)
         "<result>"
         "    <binding name=\"book\"><uri>http://www.example/book/book5</uri></binding>\n");
     }
+    else if(url.contains("insert", Qt::CaseInsensitive))
+    {
+        return QString( "HTTP/1.0 200 Ok\r\n"
+        "Content-Type: text/html; charset=\"utf-8\"\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"
+        "<sparql xmlns=\"http://www.w3.org/2005/sparql-results#\">"
+        "<head></head>"
+        "</sparql>\n");
+    }
     return QString();
 }
 
