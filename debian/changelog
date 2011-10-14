@@ -1,3 +1,9 @@
+libqtsparql (0.2.3~unreleased) unstable; urgency=low
+
+  *
+
+ -- James Thomas <james.thomas@codethink.co.uk> Fri, 14 Oct 2011 18:03:00 +0100
+
 libqtsparql (0.2.2) unstable; urgency=low
 
   * Fixes: NB#276974 - libqtsparql provides dev package with unresolved dependencies
