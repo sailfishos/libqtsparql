@@ -241,8 +241,7 @@ void tst_QSparqlEndpoint::destroy_connection()
     r->setParent(this);
     delete conn; conn = 0;
     QVERIFY(r != 0);
-    if(immediatelyFinished)
-    {
+    if(immediatelyFinished) {
         QCOMPARE(r->hasError(), false);
         QCOMPARE(r->size(), 2);
         QHash<QString, QString> author;
@@ -253,8 +252,7 @@ void tst_QSparqlEndpoint::destroy_connection()
         QCOMPARE(author["<http://www.example/book/book5>"], QString("_:r29392923r2922"));
         QCOMPARE(author["<http://www.example/book/book6>"], QString("_:r8484882r49593"));
     }
-    else
-    {
+    else {
         QCOMPARE(r->hasError(), true);
         QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
     }

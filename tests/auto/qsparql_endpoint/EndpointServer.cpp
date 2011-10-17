@@ -44,12 +44,10 @@
 
 EndpointServer::EndpointServer(int _port) : port(_port), disabled(true)
 {
-    if(!listen(QHostAddress::Any, port))
-    {
+    if(!listen(QHostAddress::Any, port)) {
         qWarning() << "Can't bind server to port "<< port;
     }
-    else
-    {
+    else {
         disabled=false;
         //qDebug() << "Starting fake endpoint server";
     }
@@ -81,8 +79,7 @@ void EndpointServer::incomingConnection(int socket)
 QString EndpointServer::sparqlData(QString url)
 {
     // returned data is based on http://www.w3.org/TR/rdf-sparql-protocol/
-    if(url.contains("select", Qt::CaseInsensitive))
-    {
+    if(url.contains("select", Qt::CaseInsensitive)) {
         return QString( "HTTP/1.0 200 Ok\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
@@ -104,8 +101,7 @@ QString EndpointServer::sparqlData(QString url)
         "</results>"
         "</sparql>\n");
     }
-    else if(url.contains("ask", Qt::CaseInsensitive))
-    {
+    else if(url.contains("ask", Qt::CaseInsensitive)) {
         return QString( "HTTP/1.0 200 Ok\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
@@ -115,16 +111,14 @@ QString EndpointServer::sparqlData(QString url)
         "<boolean>false</boolean>"
         "</sparql>\n");
     }
-    else if(url.contains("bad query", Qt::CaseInsensitive))
-    {
+    else if(url.contains("bad query", Qt::CaseInsensitive)) {
         return QString( "HTTP/1.1 400 Bad Request\r\n"
         "Connection: close\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
         "4:syntax error, unknown bad command");
     }
-    else if(url.contains("broken result", Qt::CaseInsensitive))
-    {
+    else if(url.contains("broken result", Qt::CaseInsensitive)) {
         return QString( "HTTP/1.0 200 Ok\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
@@ -138,8 +132,7 @@ QString EndpointServer::sparqlData(QString url)
         "<result>"
         "    <binding name=\"book\"><uri>http://www.example/book/book5</uri></binding>\n");
     }
-    else if(url.contains("insert", Qt::CaseInsensitive))
-    {
+    else if(url.contains("insert", Qt::CaseInsensitive)) {
         return QString( "HTTP/1.0 200 Ok\r\n"
         "Content-Type: text/html; charset=\"utf-8\"\r\n"
         "\r\n"
@@ -160,19 +153,16 @@ void EndpointServer::readClient()
     // server looks if it was a get request and sends a very simple HTML
     // document back.
     QTcpSocket* socket = (QTcpSocket*)sender();
-    if (socket->canReadLine())
-    {
+    if (socket->canReadLine()) {
         QStringList tokens = QString(socket->readLine()).split(QRegExp("[ \r\n][ \r\n]*"));
-        if (tokens[0] == "GET")
-        {
+        if (tokens[0] == "GET") {
             QString url = tokens[1];
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
             os << sparqlData(url);
             socket->close();
 
-            if (socket->state() == QTcpSocket::UnconnectedState)
-            {
+            if (socket->state() == QTcpSocket::UnconnectedState) {
                 delete socket;
             }
         }
@@ -197,13 +187,11 @@ void EndpointServer::pause()
 
 bool EndpointServer::resume()
 {
-    if(isListening())
-    {
+    if(isListening()) {
         disabled=false;
         return true;
     }
-    else
-    {
+    else {
         //qDebug() << "Can't resume server as there was problem with binding on port " << port;
         return false;
     }
