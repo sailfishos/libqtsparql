@@ -63,13 +63,13 @@ void EndpointService::stopService(int timeout)
 
 void EndpointService::pause()
 {
-    if(server)
+    if (server)
         server->pause();
 }
 
 bool EndpointService::resume()
 {
-    if(server)
+    if (server)
         return server->resume();
     else
         return false;
@@ -77,7 +77,7 @@ bool EndpointService::resume()
 
 bool EndpointService::isRunning()
 {
-    if(server)
+    if (server)
         return server->isRunning();
     else
         return false;
