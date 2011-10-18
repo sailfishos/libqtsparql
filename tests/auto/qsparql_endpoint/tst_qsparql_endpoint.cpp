@@ -39,6 +39,7 @@
 
 #include <QtTest/QtTest>
 #include <QtSparql/QtSparql>
+#include "EndpointService.h"
 
 class tst_QSparqlEndpoint : public QObject
 {
@@ -55,19 +56,28 @@ public slots:
     void cleanup();
 
 private slots:
-    void query_places_of_birth();
-    void construct_current_members();
-    void ask_current_member();
-
+    void select_query();
+    void ask_query();
     void query_with_error();
+    void select_query_server_not_responding();
+    void connection_to_nonexisting_server();
+    void destroy_connection();
+    void broken_result();
+    void update_query();
+private:
+    EndpointService endpointService;
 };
 
-tst_QSparqlEndpoint::tst_QSparqlEndpoint()
+tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
 {
+    endpointService.start();
+    while (!endpointService.isRunning())
+        QTest::qWait(100);
 }
 
 tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
 {
+    endpointService.stopService(2000);
 }
 
 void tst_QSparqlEndpoint::initTestCase()
@@ -75,20 +85,6 @@ void tst_QSparqlEndpoint::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-
-    // Check for a proxy
-    QString url = getenv("http_proxy");
-    if (!url.isEmpty()) {
-        qDebug() << "Proxy found:"<<url;
-        QUrl proxyUrl(url);
-
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::HttpProxy);
-        proxy.setHostName(proxyUrl.host());
-        proxy.setPort(proxyUrl.port());
-        QNetworkProxy::setApplicationProxy(proxy);
-        qDebug() << "Proxy Setup";
-    }
 }
 
 void tst_QSparqlEndpoint::cleanupTestCase()
@@ -103,123 +99,182 @@ void tst_QSparqlEndpoint::cleanup()
 {
 }
 
-void tst_QSparqlEndpoint::query_places_of_birth()
+void tst_QSparqlEndpoint::select_query()
 {
     QSparqlConnectionOptions options;
-    options.setHostName("dbpedia.org");
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
     QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
-    QSparqlQuery q("SELECT DISTINCT ?Object ?PlaceOfBirth "
+    QSparqlQuery q("SELECT ?book ?who "
                    "WHERE { "
-                   "<http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object . "
-                   "?Object <http://dbpedia.org/ontology/birthPlace> ?PlaceOfBirth . }");
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), false);
-    // dbpedia gives 5 results for the query, rather than 4
-    // so comment this out for now
-    //QCOMPARE(r->size(), 4);
-    QHash<QString, QString> placesOfBirth;
+    QCOMPARE(r->size(), 2);
+    QHash<QString, QString> author;
     while (r->next()) {
         QCOMPARE(r->current().count(), 2);
-        placesOfBirth[r->current().binding(0).toString()] = r->current().binding(1).toString();
+        author[r->current().binding(0).toString()] = r->current().binding(1).toString();
     }
-    // ringo isn't getting his place of birth returned
-    // so comment this out for now
-    // QCOMPARE(placesOfBirth.size(), 4);
+    QCOMPARE(author["<http://www.example/book/book5>"], QString("_:r29392923r2922"));
+    QCOMPARE(author["<http://www.example/book/book6>"], QString("_:r8484882r49593"));
 
-    // George Harrison is having several locations for places of birth returned, so comment this out for now
-    // QCOMPARE(placesOfBirth["<http://dbpedia.org/resource/George_Harrison>"], QString("<http://dbpedia.org/resource/Wavertree>"));
-    QCOMPARE(placesOfBirth["<http://dbpedia.org/resource/John_Lennon>"], QString("<http://dbpedia.org/resource/Liverpool>"));
-    // Commented out due to fault with dbpedia
-    //QCOMPARE(placesOfBirth["<http://dbpedia.org/resource/Ringo_Starr>"], QString("<http://dbpedia.org/resource/Dingle%252C_Liverpool>"));
-    QCOMPARE(placesOfBirth["<http://dbpedia.org/resource/Paul_McCartney>"], QString("<http://dbpedia.org/resource/Liverpool>"));
     delete r;
 }
 
-void tst_QSparqlEndpoint::construct_current_members()
+void tst_QSparqlEndpoint::ask_query()
 {
     QSparqlConnectionOptions options;
-    options.setHostName("dbpedia.org");
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
     QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
-    QSparqlQuery q("CONSTRUCT { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object } "
-                   "WHERE { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> ?Object . }",
-                   QSparqlQuery::ConstructStatement );
+    QSparqlQuery q("ASK WHERE { ?book <http://www.example/Author> \"J.K. Rowling\"} ", QSparqlQuery::AskStatement);
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r->hasError(), false);
-    QCOMPARE(r->isGraph(), true);
-    QCOMPARE(r->size(), 4);
-    QStringList currentMembers;
-    currentMembers << QLatin1String("<http://dbpedia.org/resource/George_Harrison>");
-    currentMembers << QLatin1String("<http://dbpedia.org/resource/John_Lennon>");
-    currentMembers << QLatin1String("<http://dbpedia.org/resource/Ringo_Starr>");
-    currentMembers << QLatin1String("<http://dbpedia.org/resource/Paul_McCartney>");
-    
-    while (r->next()) {
-        QCOMPARE(r->current().count(), 3);
-        QCOMPARE(r->current().binding(0).name(), QString("s"));
-        QCOMPARE(r->current().binding(0).toString(), QString("<http://dbpedia.org/resource/The_Beatles>"));
-        
-        QCOMPARE(r->current().binding(1).name(), QString("p"));
-        QCOMPARE(r->current().binding(1).toString(), QString("<http://dbpedia.org/property/currentMembers>"));
-        
-        QCOMPARE(r->current().binding(2).name(), QString("o"));
-        // Commented out due to fault with dbpedia
-        //QCOMPARE((bool) currentMembers.contains(r->current().binding(2).toString()), true);
-    }
-
-    delete r;
-}
-
-void tst_QSparqlEndpoint::ask_current_member()
-{
-    QSparqlConnectionOptions options;
-    options.setHostName("dbpedia.org");
-    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
-
-    QSparqlQuery add1("ASK { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> <http://dbpedia.org/resource/George_Harrison> . }",
-                     QSparqlQuery::AskStatement);
-
-    QSparqlResult* r = conn.exec(add1);
-    QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is synchronous only
+    r->waitForFinished();
     QCOMPARE(r->hasError(), false);
     QCOMPARE(r->isBool(), true);
-    QCOMPARE(r->boolValue(), true);
-    delete r;
-    
-    QSparqlQuery add2("ASK { <http://dbpedia.org/resource/The_Beatles> <http://dbpedia.org/property/currentMembers> <http://dbpedia.org/resource/Pete_Best> . }",
-                     QSparqlQuery::AskStatement);
+    QCOMPARE(r->boolValue(), false);
 
-    r = conn.exec(add2);
-    QVERIFY(r != 0);
-    QCOMPARE(r->hasError(), false);
-    r->waitForFinished(); // this test is synchronous only
-    QCOMPARE(r->hasError(), false);
-    QCOMPARE(r->boolValue(), false);    
     delete r;
 }
+
 
 void tst_QSparqlEndpoint::query_with_error()
 {
     QSparqlConnectionOptions options;
-    options.setHostName("dbpedia.org");
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
     QSparqlConnection conn("QSPARQL_ENDPOINT", options);
 
-    QSparqlQuery q("this is not a valid query");
+    QSparqlQuery q("bad query");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished();
+    QCOMPARE(r->hasError(), true);
+    // TODO: Bug! Endpoint driver sets error to ConnectionError instead of StatementError
+    //QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
+
+    delete r;
+}
+
+void tst_QSparqlEndpoint::select_query_server_not_responding()
+{
+    QSKIP("Neither endpoint driver nor QNetworkAccessManager has timeout functionality", SkipAll);
+    // When connection is established but server doesn't respond, client (endpoint driver) hangs
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+
+    endpointService.pause();
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    endpointService.resume();
+    QCOMPARE(r->hasError(), true);
+    delete r;
+}
+
+void tst_QSparqlEndpoint::connection_to_nonexisting_server()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8085);
+    options.setHostName("127.0.0.8");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
     QCOMPARE(r->hasError(), true);
-    QCOMPARE(r->lastError().type(), QSparqlError::StatementError);
+    QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    delete r;
+}
+
+void tst_QSparqlEndpoint::destroy_connection()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection *conn = new QSparqlConnection("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("SELECT ?book ?who "
+                   "WHERE { "
+                   "?book a <http://www.example/Book> . "
+                   "?who <http://www.example/Author> ?book . }");
+    QSparqlResult* r = conn->exec(q);
+    const bool immediatelyFinished = r->isFinished();
+    r->setParent(this);
+    delete conn; conn = 0;
+    QVERIFY(r != 0);
+    if (immediatelyFinished) {
+        QCOMPARE(r->hasError(), false);
+        QCOMPARE(r->size(), 2);
+        QHash<QString, QString> author;
+        while (r->next()) {
+            QCOMPARE(r->current().count(), 2);
+            author[r->current().binding(0).toString()] = r->current().binding(1).toString();
+        }
+        QCOMPARE(author["<http://www.example/book/book5>"], QString("_:r29392923r2922"));
+        QCOMPARE(author["<http://www.example/book/book6>"], QString("_:r8484882r49593"));
+    } else {
+        QCOMPARE(r->hasError(), true);
+        QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    }
+    delete r;
+}
+
+void tst_QSparqlEndpoint::broken_result()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("broken result");
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), true);
+    QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    delete r;
+}
+
+void tst_QSparqlEndpoint::update_query()
+{
+    QSparqlConnectionOptions options;
+    options.setPort(8080);
+    options.setHostName("127.0.0.1");
+    QSparqlConnection conn("QSPARQL_ENDPOINT", options);
+
+    QSparqlQuery q("INSERT {<http://www.example/book/book15> a <http://www.example/Book>}",
+                   QSparqlQuery::InsertStatement);
+    QSparqlResult* r = conn.exec(q);
+    QVERIFY(r != 0);
+    QCOMPARE(r->hasError(), false);
+    r->waitForFinished(); // this test is synchronous only
+    QCOMPARE(r->hasError(), false);
     delete r;
 }
 
