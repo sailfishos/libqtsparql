@@ -85,20 +85,6 @@ void tst_QSparqlEndpoint::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
-
-    // Check for a proxy
-    QString url = getenv("http_proxy");
-    if (!url.isEmpty()) {
-        qDebug() << "Proxy found:"<<url;
-        QUrl proxyUrl(url);
-
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::HttpProxy);
-        proxy.setHostName(proxyUrl.host());
-        proxy.setPort(proxyUrl.port());
-        QNetworkProxy::setApplicationProxy(proxy);
-        qDebug() << "Proxy Setup";
-    }
 }
 
 void tst_QSparqlEndpoint::cleanupTestCase()
