@@ -12,7 +12,7 @@ SOURCES  += tst_qsparql_endpoint.cpp \
 check.commands = ./tst_qsparql_endpoint
 
 memcheck.depends = $$TARGET
-memcheck.commands = echo '-'
+memcheck.commands = $$VALGRIND $$VALGRIND_OPT ./tst_qsparql_endpoint
 
 QMAKE_EXTRA_TARGETS += check memcheck
 

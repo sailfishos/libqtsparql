@@ -65,23 +65,25 @@ private slots:
     void broken_result();
     void update_query();
 private:
-    EndpointService endpointService;
+    EndpointService *endpointService;
 };
 
-tst_QSparqlEndpoint::tst_QSparqlEndpoint() : endpointService(8080)
+tst_QSparqlEndpoint::tst_QSparqlEndpoint()
 {
-    endpointService.start();
-    while (!endpointService.isRunning())
-        QTest::qWait(100);
 }
 
 tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
 {
-    endpointService.stopService(2000);
 }
 
 void tst_QSparqlEndpoint::initTestCase()
 {
+
+    endpointService = new EndpointService(8080);
+    endpointService->start();
+    while (!endpointService->isRunning())
+        QTest::qWait(100);
+
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
@@ -89,6 +91,8 @@ void tst_QSparqlEndpoint::initTestCase()
 
 void tst_QSparqlEndpoint::cleanupTestCase()
 {
+    endpointService->stopService(2000);
+    delete endpointService;
 }
 
 void tst_QSparqlEndpoint::init()
@@ -180,12 +184,12 @@ void tst_QSparqlEndpoint::select_query_server_not_responding()
                    "?book a <http://www.example/Book> . "
                    "?who <http://www.example/Author> ?book . }");
 
-    endpointService.pause();
+    endpointService->pause();
     QSparqlResult* r = conn.exec(q);
     QVERIFY(r != 0);
     QCOMPARE(r->hasError(), false);
     r->waitForFinished(); // this test is synchronous only
-    endpointService.resume();
+    endpointService->resume();
     QCOMPARE(r->hasError(), true);
     delete r;
 }
