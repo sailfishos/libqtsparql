@@ -89,3 +89,30 @@
    fun:uuid_generate_random
 }
 
+{
+   <invalid_write_in_qtnetwork>
+   Memcheck:Addr1
+   fun:_ZN22QAbstractSocketPrivate19canReadNotificationEv
+   fun:_ZN21QAbstractSocketEngine16readNotificationEv
+   fun:_ZN13QReadNotifier5eventEP6QEvent
+   fun:_ZN23QCoreApplicationPrivate13notify_helperEP7QObjectP6QEvent
+   fun:_ZN16QCoreApplication6notifyEP7QObjectP6QEvent
+   fun:_ZN16QCoreApplication14notifyInternalEP7QObjectP6QEvent
+   ...
+   fun:start_thread
+   fun:clone
+}
+
+{
+   <invalid_read_in_qtnetwork>
+   Memcheck:Addr4
+   fun:_ZN22QAbstractSocketPrivate19canReadNotificationEv
+   fun:_ZN21QAbstractSocketEngine16readNotificationEv
+   fun:_ZN13QReadNotifier5eventEP6QEvent
+   fun:_ZN23QCoreApplicationPrivate13notify_helperEP7QObjectP6QEvent
+   fun:_ZN16QCoreApplication6notifyEP7QObjectP6QEvent
+   fun:_ZN16QCoreApplication14notifyInternalEP7QObjectP6QEvent
+   ...
+   fun:start_thread
+   fun:clone
+}
