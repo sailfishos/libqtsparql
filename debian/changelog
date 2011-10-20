@@ -1,8 +1,8 @@
-libqtsparql (0.2.3~unreleased) unstable; urgency=low
+libqtsparql (0.2.3) unstable; urgency=low
 
   * Fixes: NB#284064 - Make a self-sufficient, automated test for QtSparql endpoint driver
 
- -- James Thomas <james.thomas@codethink.co.uk> Tue, 18 Oct 2011 12:33:00 +0100
+ -- James Thomas <james.thomas@codethink.co.uk>  Thu, 20 Oct 2011 11:22:00 +0100
 
 libqtsparql (0.2.2) unstable; urgency=low
 
