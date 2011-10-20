@@ -50,6 +50,7 @@ Depends: ${shlibs:Depends},
          libqtsparql0 (>= ${binary:Version}),
          libqtsparql-tracker (>= ${binary:Version}),
          libqtsparql-tracker-direct (>= ${binary:Version}),
+         libqtsparql-endpoint (>= ${binary:Version}),
          ci-testing
 XB-Maemo-CI-Packages: libqtsparql0, libqtsparql-tracker, libqtsparql-tracker-direct
 XB-Maemo-CI-Stage: staging, acceptance
