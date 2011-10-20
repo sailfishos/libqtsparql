@@ -42,7 +42,6 @@
 
 EndpointService::EndpointService(int _port) : port(_port), server(0)
 {
-    moveToThread(this);
 }
 
 EndpointService::~EndpointService()
@@ -53,12 +52,15 @@ void EndpointService::run()
 {
     server = new EndpointServer(port);
     exec();
+    delete server;
+    server = 0;
 }
 
 void EndpointService::stopService(int timeout)
 {
     exit();
     wait(timeout);
+    quit();
 }
 
 void EndpointService::pause()
