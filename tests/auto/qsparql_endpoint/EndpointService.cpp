@@ -42,7 +42,6 @@
 
 EndpointService::EndpointService(int _port) : port(_port), server(0)
 {
-    moveToThread(this);
 }
 
 EndpointService::~EndpointService()
