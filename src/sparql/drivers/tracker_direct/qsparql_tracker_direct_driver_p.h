@@ -47,6 +47,7 @@
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qthreadpool.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_HEADER
 
@@ -54,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriver;
 class QTrackerDirectSelectResult;
+class QTrackerDirectResult;
 class QTrackerDirectDriverConnectionOpen;
 
 class QTrackerDirectDriverPrivate : public QObject
@@ -79,6 +81,12 @@ public:
     bool asyncOpenCalled;
 
     QThreadPool threadPool;
+
+    // We'll keep track of sync results using this list and method
+    // TODO: investigate using a list for all results, rather than
+    // using a signal
+    QList<QPointer<QTrackerDirectResult> > activeResults;
+    void addActiveResult(QTrackerDirectResult *result);
 
 private Q_SLOTS:
     void asyncOpenComplete();

@@ -270,6 +270,20 @@ void QTrackerDirectDriverPrivate::asyncOpenComplete()
     }
 }
 
+void QTrackerDirectDriverPrivate::addActiveResult(QTrackerDirectResult *result)
+{
+    for (QList<QPointer<QTrackerDirectResult> >::iterator it = activeResults.begin();
+            it != activeResults.end(); ++it) {
+        if (it->isNull()) {
+            // Replace entry for deleted result if one is found. This is done
+            // to avoid the activeResults list from growing indefinitely.
+            *it = result;
+            return;
+        }
+    }
+    activeResults.append(result);
+}
+
 void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *conn, GError* gerr)
 {
     if (!conn) {
@@ -376,6 +390,14 @@ void QTrackerDirectDriver::close()
 {
     Q_EMIT closing();
 
+    // Also check for reparented sync results
+    Q_FOREACH(QPointer<QTrackerDirectResult> result, d->activeResults) {
+        if (!result.isNull()) {
+            qDebug() << "closing reparented sync result";
+            result->driverClosing();
+        }
+    }
+
     // We no longer want to emit any signals, since the driver is
     // closing, so block all signals to prevent any exec methods being
     // called
@@ -434,7 +456,13 @@ QSparqlResult* QTrackerDirectDriver::syncExec
         (const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)
 {
     QTrackerDirectResult* result = new QTrackerDirectSyncResult(d, query, type, options);
-    connect(this, SIGNAL(closing()), result, SLOT(driverClosing()), Qt::DirectConnection);
+    // connect(this, SIGNAL(closing()), result, SLOT(driverClosing()), Qt::DirectConnection);
+    // NB:#287141 - Instead of connecting syncExec results to the driver closing() signal, we'll add them
+    // to a list of QPointers. When the driver is deleted we can check this list for any non-null
+    // results (i.e re-parented results) and issue the driverClosing() signal to them directly.
+    // TODO: * currently child results cleanup using their dtor, change it to use driverClosing() directly
+    //       * check performance of this when being used with all results
+    d->addActiveResult(result);
     d->waitForConnectionOpen();
     result->exec();
     return result;
