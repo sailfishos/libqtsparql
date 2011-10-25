@@ -393,7 +393,6 @@ void QTrackerDirectDriver::close()
     // Also check for reparented sync results
     Q_FOREACH(QPointer<QTrackerDirectResult> result, d->activeResults) {
         if (!result.isNull()) {
-            qDebug() << "closing reparented sync result";
             result->driverClosing();
         }
     }
