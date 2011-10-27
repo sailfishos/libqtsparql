@@ -63,6 +63,7 @@ public:
 
     // Implementation of the QSparqlDriver interface
     bool hasFeature(QSparqlConnection::Feature f) const;
+    bool hasError() const;
     bool open(const QSparqlConnectionOptions& options);
     void close();
     QSparqlResult* exec(const QString& query,

@@ -96,6 +96,7 @@ public:
                                   QSparqlError::ConnectionError));
     }
     inline bool hasFeature(QSparqlConnection::Feature) const { return false; }
+    inline bool hasError() const { return false; }
     inline bool open(const QSparqlConnectionOptions&)
         { return false; }
     inline void close() {}

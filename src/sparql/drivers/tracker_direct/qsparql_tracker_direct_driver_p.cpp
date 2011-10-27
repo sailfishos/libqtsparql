@@ -352,6 +352,11 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
     return false;
 }
 
+bool QTrackerDirectDriver::hasError() const
+{
+    return false;
+}
+
 bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)
 {
     QMutexLocker connectionLocker(&(d->connectionMutex));

@@ -81,6 +81,7 @@ public:
 
     virtual QVariant handle() const;
     virtual bool hasFeature(QSparqlConnection::Feature f) const = 0;
+    virtual bool hasError() const = 0;
     virtual void close() = 0;
     virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options) = 0;
 

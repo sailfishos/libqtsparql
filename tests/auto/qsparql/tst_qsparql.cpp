@@ -144,6 +144,10 @@ class MockDriver : public QSparqlDriver
             return true;
         return false;
     }
+    bool hasError() const
+    {
+        return false;
+    }
     QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions& options)
     {
         switch(options.executionMethod()) {

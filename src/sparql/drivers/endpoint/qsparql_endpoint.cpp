@@ -536,6 +536,11 @@ bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
     }
 }
 
+bool EndpointDriver::hasError() const
+{
+    return false;
+}
+
 bool EndpointDriver::open(const QSparqlConnectionOptions& options)
 {
     if (isOpen())

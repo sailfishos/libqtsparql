@@ -597,6 +597,15 @@ bool QSparqlConnection::hasFeature(Feature feature) const
 }
 
 /*!
+    Returns true if the QSparqlConnection wasn't able to establish
+    connection to service(tracker/enpoint server) with chosen driver.
+*/
+bool QSparqlConnection::hasError() const
+{
+    return d->driver->hasError();
+}
+
+/*!
     Returns true if the QSparqlConnection has a valid driver, i.e.
     the name of the driver given in the constructor was valid.
 */

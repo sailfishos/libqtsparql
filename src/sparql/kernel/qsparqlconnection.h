@@ -85,6 +85,7 @@ public:
     bool isValid() const;
     QString driverName() const;
     bool hasFeature(Feature feature) const;
+    bool hasError() const;
 
     void addPrefix(const QString& prefix, const QUrl& uri);
     void clearPrefixes();

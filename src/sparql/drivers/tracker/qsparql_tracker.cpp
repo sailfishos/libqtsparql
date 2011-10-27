@@ -455,6 +455,11 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
     return false;
 }
 
+bool QTrackerDriver::hasError() const
+{
+    return false;
+}
+
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 {
     // This option has been removed from API documentation as it is replaced by
