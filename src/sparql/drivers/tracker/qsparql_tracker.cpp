@@ -457,7 +457,7 @@ bool QTrackerDriver::hasFeature(QSparqlConnection::Feature f) const
 
 bool QTrackerDriver::hasError() const
 {
-    return false;
+    return isOpenError();
 }
 
 bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
@@ -475,11 +475,22 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
     d->iface = new QDBusInterface(service, resourcesPath,
                                   resourcesInterface,
                                   QDBusConnection::sessionBus());
+    if (d->iface->isValid()) {
+        setOpen(true);
+        setOpenError(false);
 
-    setOpen(true);
-    setOpenError(false);
+        return true;
+    }
+    else {
+        setOpen(false);
+        setOpenError(true);
+        QString errorMsg = d->iface->lastError().message();
+        qWarning() << errorMsg;
+        setLastError(QSparqlError(errorMsg, QSparqlError::ConnectionError));
 
-    return true;
+        return false;
+    }
+
 }
 
 void QTrackerDriver::close()
