@@ -606,6 +606,15 @@ bool QSparqlConnection::hasError() const
 }
 
 /*!
+    If hasError() returned true, this function gives access to
+    \a QSparqlError describing the cause of problem
+*/
+QSparqlError QSparqlConnection::lastError() const
+{
+    return d->driver->lastError();
+}
+
+/*!
     Returns true if the QSparqlConnection has a valid driver, i.e.
     the name of the driver given in the constructor was valid.
 */
