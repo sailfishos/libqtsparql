@@ -1,9 +1,9 @@
-libqtsparql (0.2.4~unreleased) unstable; urgency=low
+libqtsparql (0.2.4) unstable; urgency=low
 
   * Fixes: NB#287141 - QSparqlConnection::syncExec calls QObject::connect,
     leading to long lived mutexes on heap
 
- -- James Thomas <james.thomas@codethink.co.uk>  Tue, 1 Nov 2011 10:20:00 +0000
+ -- James Thomas <james.thomas@codethink.co.uk>  Tue, 1 Nov 2011 10:33:00 +0000
 
 libqtsparql (0.2.3) unstable; urgency=low
 
