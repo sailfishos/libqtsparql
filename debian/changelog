@@ -1,3 +1,9 @@
+libqtsparql (0.2.5~unreleased) unstable; urgency=low
+
+  *
+
+ -- James Thomas <james.thomas@codethink.co.uk>  Tue, 1 Nov 2011 12:27:00 +0000
+
 libqtsparql (0.2.4) unstable; urgency=low
 
   * Fixes: NB#287141 - QSparqlConnection::syncExec calls QObject::connect,
