@@ -83,10 +83,8 @@ public:
     QThreadPool threadPool;
 
     // We'll keep track of sync results using this list and method
-    // TODO: investigate using a list for all results, rather than
-    // using a signal
-    QList<QPointer<QTrackerDirectResult> > activeResults;
-    void addActiveResult(QTrackerDirectResult *result);
+    QList<QPointer<QTrackerDirectResult> > activeSyncResults;
+    void addActiveSyncResult(QTrackerDirectResult *result);
 
 private Q_SLOTS:
     void asyncOpenComplete();
