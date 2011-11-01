@@ -66,6 +66,7 @@ private slots:
     void ask_contacts_sync();
 
     void delete_partially_iterated_result();
+    void reparented_results();
 
     void concurrent_queries();
 
@@ -77,6 +78,7 @@ private slots:
     void async_conn_opening_with_2_connections_data();
     void async_conn_opening_for_update();
     void async_conn_opening_for_update_data();
+
 };
 
 tst_QSparqlTrackerDirectSync::tst_QSparqlTrackerDirectSync()
@@ -170,6 +172,69 @@ void tst_QSparqlTrackerDirectSync::delete_partially_iterated_result()
     QVERIFY(r->next());
 
     delete r;
+}
+
+void tst_QSparqlTrackerDirectSync::reparented_results()
+{
+    // We're not that interested in actual results here, we have enough
+    // tests for that (qsparql_api), just that deleting the connection + results
+    // doesn't cause any issues
+    // Set the log level to Critical since there is a lot of warning output related
+    // to deleting the connection before a result completed.
+    setMsgLogLevel(QtCriticalMsg);
+
+    QSparqlConnection *connection = new QSparqlConnection("QTRACKER_DIRECT");
+    QList<QPointer<QSparqlResult> > resultList;
+    QSparqlQuery q("select ?u ?ng {?u a nco:PersonContact; "
+                   "nie:isLogicalPartOf <qsparql-tracker-direct-tests> ;"
+                   "nco:nameGiven ?ng .}");
+
+    for (int i=0;i<50;i++) {
+        QSparqlResult *result = 0;
+        // have a mix of syncExec, exec with options
+        if (i%3 == 0) {
+            QSparqlQueryOptions options;
+            options.setExecutionMethod(QSparqlQueryOptions::SyncExec);
+            result = connection->exec(q, options);
+        } else {
+            result = connection->syncExec(q);
+        }
+        resultList.append(result);
+        // also reparent half of them
+        if (i%2 == 0)
+            result->setParent(this);
+    }
+
+    // Delete the connection, check that non-null results (there should be 25)
+    // don't crash when nexting...
+    delete connection;
+    int reparentedResults = 0;
+    Q_FOREACH (QPointer<QSparqlResult> result, resultList) {
+        if (!result.isNull()) {
+            reparentedResults++;
+            // Check some behaviour of these results to make sure everything
+            // got cleaned up correctly in the result, after deleting the connection
+            //
+            // hasError() should be true since we deleted the result
+            // before we read any data (isFinished() was false)
+            QVERIFY(result->hasError());
+            // next() should be false since there is no longer a
+            // connection to use
+            QVERIFY(!result->next());
+            // try and read some value from it, should be a null
+            // QVariant
+            QCOMPARE(result->value(0), QVariant());
+            QCOMPARE(result->value(0).toString(), QString());
+            // check the binding, again this should be null
+            QCOMPARE(result->binding(0), QSparqlBinding());
+            delete result;
+        }
+    }
+    QCOMPARE(reparentedResults, 25);
+    // now make sure all pointers are null
+    Q_FOREACH (QPointer<QSparqlResult> result, resultList) {
+        QVERIFY(result.isNull());
+    }
 }
 
 void tst_QSparqlTrackerDirectSync::result_type_bool()
