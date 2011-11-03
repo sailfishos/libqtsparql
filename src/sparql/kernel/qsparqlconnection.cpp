@@ -602,7 +602,7 @@ bool QSparqlConnection::hasFeature(Feature feature) const
 */
 bool QSparqlConnection::hasError() const
 {
-    return d->driver->hasError();
+    return !(isValid() && !d->driver->hasError());
 }
 
 /*!
