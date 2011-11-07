@@ -59,6 +59,7 @@ private slots:
     void syncExec_crashes_when_connection_opening_fails();
     void syncExec_update_crashes_when_connection_opening_fails();
     void syncExec_failed_connection();
+    void asyncExec_failed_connection();
 
     void two_failing_connections();
 };
@@ -146,7 +147,7 @@ void tst_QSparqlTrackerDirectCrashes::syncExec_failed_connection()
     QSparqlConnection conn ("QTRACKER_DIRECT");
     QCOMPARE(conn.isValid(), true);
     //Connection opening in direct driver is asynchronous so we have to wait until it's finished
-    QTest::qWait(200);
+    QTest::qWait(1000);
     QCOMPARE(conn.hasError(), true);
     QCOMPARE(conn.lastError().type(), QSparqlError::ConnectionError);
 
@@ -156,6 +157,28 @@ void tst_QSparqlTrackerDirectCrashes::syncExec_failed_connection()
                              QSparqlQuery::InsertStatement);
 
     QSparqlResult* r = conn.syncExec(insertQuery);
+    QCOMPARE(r->hasError(), true);
+    QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
+    delete r;
+}
+
+void tst_QSparqlTrackerDirectCrashes::asyncExec_failed_connection()
+{
+    // Run this in a setup where the libtracker-sparql connection opening fails
+    QSparqlConnection conn ("QTRACKER_DIRECT");
+    QCOMPARE(conn.isValid(), true);
+    //Connection opening in direct driver is asynchronous so we have to wait until it's finished
+    QTest::qWait(1000);
+    QCOMPARE(conn.hasError(), true);
+    QCOMPARE(conn.lastError().type(), QSparqlError::ConnectionError);
+
+    QSparqlQuery insertQuery("insert { "
+                             "<testcontact> a nco:PersonContact ; "
+                             "nie:isLogicalPartOf <qsparql-tracker-direct-tests> . }",
+                             QSparqlQuery::InsertStatement);
+
+    QSparqlResult* r = conn.exec(insertQuery);
+    r->waitForFinished();
     QCOMPARE(r->hasError(), true);
     QCOMPARE(r->lastError().type(), QSparqlError::ConnectionError);
     delete r;
