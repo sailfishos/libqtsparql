@@ -537,6 +537,12 @@ void tst_QSparqlAPI::query_test()
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
 
+    //QTRACKER_DIRECT uses asynchronous conn opening, so we have to wait a while
+    // to get valid hasError() state
+    if(connectionDriver == "QTRACKER_DIRECT")
+        QTest::qWait(1000);
+    QCOMPARE(conn.hasError(), false);
+
     QSparqlQueryOptions queryOptions;
     queryOptions.setForwardOnly(forwardOnly);
     queryOptions.setExecutionMethod(QSparqlQueryOptions::ExecutionMethod(executionMethod));
