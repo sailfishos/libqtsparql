@@ -512,6 +512,10 @@ void tst_QSparqlAPI::connection_test()
     QSparqlConnection conn(driverName);
     QCOMPARE(driverName, conn.driverName());
     QCOMPARE(conn.isValid(), isValid);
+    // Connection in direct driver is asynchronous so we have to wait a while
+    if(driverName == "QTRACKER_DIRECT")
+        QTest::qWait(1000);
+    QCOMPARE(conn.hasError(), !isValid);
 }
 
 void tst_QSparqlAPI::connection_test_data()
