@@ -83,7 +83,6 @@ public:
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
 
     void setQuery(const QSparqlQuery &query, QSparqlConnection &conn);
-    void setQueryQML(const QSparqlQuery &query, QSparqlConnection &conn);
     QSparqlQuery query() const;
     virtual void clear(); // FIXME: do we need this?
 
