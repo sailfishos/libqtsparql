@@ -1,4 +1,4 @@
-libqtsparql (0.2.5~unreleased) unstable; urgency=low
+libqtsparql (0.2.5) unstable; urgency=low
 
   * Fixes: NB#289786 - Restore API compatibility for QSparqlQueryModel QML usage
 
