@@ -371,11 +371,12 @@ void QSparqlQueryModel::queryChange()
     lastError() can be used to retrieve verbose information if there
     was an error setting the query.
 
-    \sa setQueryQML(), query(), queryChange(), lastError()
+    \sa query(), queryChange(), lastError()
 */
 void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &connection)
 {
     d->query = query;
+    d->findRoleNames();
     bool mustClearModel = d->bottom.isValid();
     if (mustClearModel) {
         d->atEnd = true;
@@ -392,19 +393,6 @@ void QSparqlQueryModel::setQuery(const QSparqlQuery &query, QSparqlConnection &c
     connect(d->result, SIGNAL(dataReady(int)), d, SLOT(addData(int)));
     Q_EMIT started();
 
-}
-
-/*!
-    Same as setQuery(), however role names are extracted from the query to be used as
-    property values in QML.
-
-    \sa setQuery()
-*/
-void QSparqlQueryModel::setQueryQML(const QSparqlQuery &query, QSparqlConnection &connection)
-{
-    d->query = query;
-    d->findRoleNames();
-    setQuery(query, connection);
 }
 
 /*!

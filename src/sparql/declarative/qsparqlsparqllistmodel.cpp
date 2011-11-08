@@ -62,7 +62,7 @@ void SparqlListModel::componentComplete()
     // we know if any connection options have been set
 }
 
-void SparqlListModel::setQuery(QString query)
+void SparqlListModel::setQueryQML(QString query)
 {
     queryString = query;
     // if the query property changes, after the binding has been
@@ -89,7 +89,7 @@ QVariant SparqlListModel::get(int rowNumber)
 void SparqlListModel::reload()
 {
     changeStatus(Loading);
-    setQueryQML(QSparqlQuery(queryString), *connection);
+    setQuery(QSparqlQuery(queryString), *connection);
 }
 
 void SparqlListModel::setConnection(SparqlConnection* connection)
@@ -104,7 +104,7 @@ void SparqlListModel::setConnection(SparqlConnection* connection)
 void SparqlListModel::onConnectionComplete()
 {
     if (connection && connection->isValid()) {
-        setQueryQML(QSparqlQuery(queryString), *connection);
+        setQuery(QSparqlQuery(queryString), *connection);
     } else {
         lastErrorMessage = QLatin1String("Error opening connection");
         changeStatus(Error);

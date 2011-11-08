@@ -57,7 +57,7 @@ class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel, public QDeclar
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSparqlQueryModel)
     Q_ENUMS(Status)
-    Q_PROPERTY(QString query READ getQuery WRITE setQuery)
+    Q_PROPERTY(QString query READ getQuery WRITE setQueryQML)
     Q_PROPERTY(SparqlConnection* connection READ getConnection WRITE setConnection)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
@@ -96,7 +96,7 @@ private:
     Status status();
     void setConnection(SparqlConnection* connection);
     SparqlConnection* getConnection();
-    void setQuery(QString query);
+    void setQueryQML(QString query);
     QString getQuery() const;
 };
 
