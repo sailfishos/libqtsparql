@@ -1,7 +1,7 @@
 Source: libqtsparql
 Section: libs
 Priority: optional
-Maintainer: Sami Rosendahl <ext-sami.1.rosendahl@nokia.com>
+Maintainer: James Thomas <james.thomas@codethink.co.uk>
 Build-Depends: debhelper (>= 5),
 	       quilt,
                libqt4-dev (>= 4.7),
