@@ -793,6 +793,11 @@ bool QVirtuosoDriver::hasFeature(QSparqlConnection::Feature f) const
     }
 }
 
+bool QVirtuosoDriver::hasError() const
+{
+    return false;
+}
+
 bool QVirtuosoDriver::open(const QSparqlConnectionOptions& options)
 {
     QMutexLocker connectionLocker(&(d->mutex));

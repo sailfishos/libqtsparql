@@ -296,6 +296,8 @@ void QTrackerDirectDriverPrivate::checkConnectionError(TrackerSparqlConnection *
         error = QString::fromUtf8("Couldn't obtain a direct connection to the Tracker store: ") + trackerErr;
         qWarning() << error;
         driver->setOpen(false);
+        driver->setOpenError(true);
+        driver->setLastError(QSparqlError(error, QSparqlError::ConnectionError));
     }
 }
 
@@ -350,6 +352,11 @@ bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
         return false;
     }
     return false;
+}
+
+bool QTrackerDirectDriver::hasError() const
+{
+    return isOpenError();
 }
 
 bool QTrackerDirectDriver::open(const QSparqlConnectionOptions& options)

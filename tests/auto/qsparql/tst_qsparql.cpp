@@ -144,6 +144,10 @@ class MockDriver : public QSparqlDriver
             return true;
         return false;
     }
+    bool hasError() const
+    {
+        return !openRetVal;
+    }
     QSparqlResult* exec(const QString&, QSparqlQuery::StatementType, const QSparqlQueryOptions& options)
     {
         switch(options.executionMethod()) {
@@ -285,6 +289,7 @@ void tst_QSparql::open_fails()
 {
     MockDriver::openRetVal = false;
     QSparqlConnection conn("MOCK");
+    QVERIFY(conn.hasError());
     QSparqlResult* res = conn.exec(QSparqlQuery("foo"));
     QVERIFY(res->hasError());
     QCOMPARE(res->lastError().type(), QSparqlError::ConnectionError);

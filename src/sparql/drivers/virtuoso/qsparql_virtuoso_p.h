@@ -145,6 +145,7 @@ public:
     QVirtuosoDriver(SQLHANDLE env, SQLHANDLE con, QObject * parent=0);
     virtual ~QVirtuosoDriver();
     bool hasFeature(QSparqlConnection::Feature f) const;
+    bool hasError() const;
     void close();
     QVariant handle() const;
     bool open(const QSparqlConnectionOptions& options);

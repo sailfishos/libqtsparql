@@ -99,6 +99,7 @@ public:
 //    explicit EndpointDriver(ENDPOINT *con, QObject * parent=0);
     ~EndpointDriver();
     bool hasFeature(QSparqlConnection::Feature f) const;
+    bool hasError() const;
     bool open(const QSparqlConnectionOptions& options);
     void close();
     EndpointResult* createResult() const;

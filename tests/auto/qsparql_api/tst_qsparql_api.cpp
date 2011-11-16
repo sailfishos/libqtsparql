@@ -512,6 +512,10 @@ void tst_QSparqlAPI::connection_test()
     QSparqlConnection conn(driverName);
     QCOMPARE(driverName, conn.driverName());
     QCOMPARE(conn.isValid(), isValid);
+    // Connection in direct driver is asynchronous so we have to wait a while
+    if(driverName == "QTRACKER_DIRECT")
+        QTest::qWait(1000);
+    QCOMPARE(conn.hasError(), !isValid);
 }
 
 void tst_QSparqlAPI::connection_test_data()
@@ -536,6 +540,12 @@ void tst_QSparqlAPI::query_test()
 
     QSparqlConnectionOptions options = getConnectionOptions(connectionDriver);
     QSparqlConnection conn(connectionDriver, options);
+
+    //QTRACKER_DIRECT uses asynchronous conn opening, so we have to wait a while
+    // to get valid hasError() state
+    if(connectionDriver == "QTRACKER_DIRECT")
+        QTest::qWait(1000);
+    QCOMPARE(conn.hasError(), false);
 
     QSparqlQueryOptions queryOptions;
     queryOptions.setForwardOnly(forwardOnly);
