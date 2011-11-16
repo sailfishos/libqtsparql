@@ -1,6 +1,6 @@
 libqtsparql (0.2.6~unreleased) unstable; urgency=low
 
-  *
+  * Introduced new function in API: QSparqlConnection::hasError() NB#287728
 
  -- James Thomas <james.thomas@codethink.co.uk>  Thu, 10 Nov 2011 11:54:00 +0000
 
