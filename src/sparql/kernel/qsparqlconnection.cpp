@@ -598,7 +598,14 @@ bool QSparqlConnection::hasFeature(Feature feature) const
 
 /*!
     Returns true if the QSparqlConnection wasn't able to establish
-    connection to service(tracker/enpoint server) with chosen driver.
+    a connection to the service provided by the driver. Initially
+    hasError() will report the status of the plugin/driver loading.
+
+    Be aware that the QTRACKER_DIRECT driver uses asynchronous
+    connection opening, so this function will not return valid data just after
+    creating QSparqlConnection instance. You must wait a while or issue a query with exec().
+
+    If hasError() returns true, you can get error with lastError().
 */
 bool QSparqlConnection::hasError() const
 {
@@ -607,7 +614,7 @@ bool QSparqlConnection::hasError() const
 
 /*!
     If hasError() returned true, this function gives access to
-    \a QSparqlError describing the cause of problem
+    \a QSparqlError describing the cause of the problem
 */
 QSparqlError QSparqlConnection::lastError() const
 {
