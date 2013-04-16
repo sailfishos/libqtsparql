@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 #if !WE_ARE_QT
 #    undef QT_MODULE // hack; remove this when we go back to Qt repo
-#    define QT_MODULE(x) ;
+#    define QT_MODULE(x)
 #endif
 
 QT_MODULE(Sparql)
