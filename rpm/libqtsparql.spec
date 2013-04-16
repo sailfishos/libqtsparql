@@ -4,7 +4,7 @@ Release: 1
 Summary: Library for accessing RDF stores
 Group:   System/Libraries
 License: LGPLv2
-URL:     http://maemo.gitorious.org/maemo-af/qsparql
+URL:     https://github.com/nemomobile/libqtsparql
 Source0: %{name}-%{version}.tar.gz
 BuildRequires: doxygen
 BuildRequires: pkgconfig(QtCore)
