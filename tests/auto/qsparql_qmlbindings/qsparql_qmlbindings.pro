@@ -1,6 +1,8 @@
 include(../sparqltest.pri)
 CONFIG += qt warn_on console depend_includepath
-QT += testlib declarative
+# Without 'gui' QTEST_MAIN() would instantiate QCoreApplication instead of
+# QApplication which is needed for the declarative stuff to work.
+QT += testlib declarative gui
 
 SOURCES  += tst_qsparql_qmlbindings.cpp
 
