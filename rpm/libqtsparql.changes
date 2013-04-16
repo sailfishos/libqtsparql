@@ -1,0 +1,99 @@
+* Thu Mar 07 2013 Martin Kampas <martin.kampamar@tieto.com> - 0.2.1
+- Fix NEMO#527: libqtsparql-tests: tst_qsparql_qmlbindings fails
+- Move qml plugin libraries from -devel package to the "normal" one
+- Add tests-qmlbindings-compile-with-qt-gui.patch
+
+* Mon Oct 15 2012 Mohammed Hassan <mohammed.hassan@jollamobile.com> - 0.2.1
+- Added 0002-fix-compile-against-newer-tracker.patch (Written by Jens Georg)
+
+* Tue Sep 20 2011 Marko Saukko <marko.saukko@cybercom.com> - 0.2.1
+- Moved tracker dependency to tracker related packages.
+- Updated to latest released version.
+- BMC#22527 Fix compile with qt 4.8
+
+* Mon Jun 06 2011 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.28
+- Update to upstream, fixes BMC#18670
+- Fixes: Copyright text in QtSparql has outdated year
+- QSparqlQueryModel can now be used in QML apps
+- Documentation updates
+- Fixes (re-integrated due to merging issue in 0.0.26)
+- Fix memory leak in tracker direct driver update result
+- Improve error reporting from tracker direct driver tests
+
+* Wed May 18 2011 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.26
+- Update to upstream, fixes BMC#16510
+- Fixes Add support for update priority in Tracker driver
+- Added QSparqlQueryOptions
+- Fix: Export only the needed symbols in the .so's
+- Every asynchronous query in the libqtsparql produces a new thread
+- Tracker direct driver now uses a thread pool
+- Fixes Delete QSparqlConnection before QSparqlResult crashes QSparql
+- Tracker direct driver fix: Don't crash if Result is reparented and
+  Connection is deleted before Result.
+- Fixes Sparql queries are slower when using QtSparql compared to tracker-sparql
+- Fix Virtuoso driver build
+- Don't spawn event loop in direct driver dtor if there's no QCoreApplication 
+- Removed Q_EXPECT_FAILs from tests which should now pass
+- Virtuoso driver fixes (it couldn't be loaded)
+
+* Thu Apr 07 2011 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.21
+- Update to upstream, fixes BMC#14163
+- Crash after deleting QSparqlResult
+- Sparql queries are slower when using QtSparql compared to tracker-sparql
+- API clarification: QSparqlResult::hasError() returns always false if QSparqlResult::isFinished() returns false.
+- Minor API change: QSparqlResultRow::indexOf() was changed to case-sensitive from case-insensitive to match Sparql definition.
+- Feeds Application not launching
+- QtSparql does not allow to use async connection opening with direct driver
+- Update to upstream, fixes BMC#14163
+- Need easy access to "out of disk space" errors from tracker
+- Tracker driver: Don't create one QDBusConnection per thread
+- Spurious lock-up in QtSparql direct driver
+- Copyright tag not defined in libqtsparql
+- Virtuoso driver: syncExec support
+- Tracker direct driver: run inserts + deletes with async libtracker-sparql
+- Small static code analysis fixes
+- Adding sync api: QSparqlConnection::syncExec()
+- ABI break: Functions of QSparqlResult made virtual
+- Access to sync libtracker-sparql iterators via QtSparql
+
+* Tue Jan 25 2011 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.16
+- Update to upstream, fixes BMC - 13072
+- contacts triggers an assertion during impor 
+- Direct driver fix: don't unref the cursor twice
+- Direct driver fix: Result shouldn't get finished too early (before the
+  user has a change to connect to the signals).
+- Direct driver: transmitting the error code got from libtracker-sparql
+- Direct driver: use a thread and sync libtracker-sparql api
+- libtracker-sparql: async direct access is considerably slower than sync direct access
+- QTRACKER_DIRECT special characters in metadata causing problem
+- Added test cases to the test package
+
+* Thu Jan 06 2011 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.13
+- Update to upstream, fixes BMC - 12328 
+- dataReadyInterval connection option
+- QSparqlQueryModel: added signal finished()
+- QSparqlResultList now adds rows as the come in
+- Fixes for QDateTime handling
+- description is missing in QSparqlQueryModel
+
+* Thu Nov 11 2010 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.12
+- Update to upstream, fixes BMC - 10666 
+- Tracker direct driver: fixing bool handing.
+- Enabling easier installation to a custom directory.
+- Fixed xsd:integer handling (maps to long long).
+- API break: QSparqlResult::lastQuery() -> QSparqlResult::query()
+- Fix: deleting a QSparqlResult before data was retrieved caused a segfault
+- Added QSparqlConnection::createUrn() functions
+- Removed QTrackerChangeNotifier; use libqtsparql-tracker instead.
+- Linking plugins against libQtSparql
+- Added .prf file
+- Endpoint driver renamed: QENDPOINT -> QSPARQL_ENDPOINT
+- QSparqlConnection: added prefix adding API
+- QSparqlResult API simplification (towards drivers)
+- Adapting to libqtsparql-tracker-extensions API changes
+
+* Thu Sep 30 2010 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.7
+- BMC- 5740
+
+* Tue Sep 21 2010 Maitrey Mishra <ext-maitrey.mishra@nokia.com> - 0.0.7
+- Update to 0.0.7
