@@ -3,7 +3,7 @@ include(../../shared.pri)
 TEMPLATE = lib
 CONFIG += create_pc create_prl
 TARGET = QtSparql
-DESTDIR = $$QT_BUILD_TREE/lib
+DESTDIR = $$QTSPARQL_BUILD_TREE/lib
 DEFINES += QT_BUILD_SPARQL_LIB
 DEFINES += QT_NO_USING_NAMESPACE
 QT += network
@@ -15,7 +15,7 @@ DEFINES += QT_NO_CAST_FROM_ASCII
 install_headers.path = $$QTSPARQL_INSTALL_HEADERS
 install_headers.files = 
 
-include($$QT_BUILD_TREE/include/QtSparql/headers.pri)
+include($$QTSPARQL_BUILD_TREE/include/QtSparql/headers.pri)
 
 include_headers.files = $$SYNCQT.HEADER_FILES
 include_headers.path = $$QTSPARQL_INSTALL_HEADERS
@@ -27,8 +27,8 @@ INSTALLS += class_headers
 
 # The following creates a mkspecs/features directory at make time, instead of at install time,
 # so that it doesn't end up with root permissions in the build area
-create_mkspecs_dir.commands = $$QMAKE_MKDIR $$QT_BUILD_TREE/mkspecs/; $$QMAKE_MKDIR $$QT_BUILD_TREE/mkspecs/features
-create_mkspecs_dir.target = $$QT_BUILD_TREE/mkspecs/features
+create_mkspecs_dir.commands = $$QMAKE_MKDIR $$QTSPARQL_BUILD_TREE/mkspecs/; $$QMAKE_MKDIR $$QTSPARQL_BUILD_TREE/mkspecs/features
+create_mkspecs_dir.target = $$QTSPARQL_BUILD_TREE/mkspecs/features
 QMAKE_EXTRA_TARGETS += create_mkspecs_dir
 create_mkspecs_dirhook.depends = create_mkspecs_dir
 create_mkspecs_dirhook.target = Makefile
@@ -36,9 +36,9 @@ QMAKE_EXTRA_TARGETS += create_mkspecs_dirhook
 
 install_prf.path = $$[QT_INSTALL_DATA]/mkspecs/features
 install_prf.files = \
-    $$QT_BUILD_TREE/mkspecs/features/qtsparql.prf
+    $$QTSPARQL_BUILD_TREE/mkspecs/features/qtsparql.prf
 install_prf.commands = \
-    sed "\"s,QTSPARQL_INSTALL_HEADERS,$$QTSPARQL_INSTALL_HEADERS,g;s,QTSPARQL_INSTALL_LIBS,$$QTSPARQL_INSTALL_LIBS,g\"" $$QT_SOURCE_TREE/mkspecs/features/qtsparql.prf.in > $$QT_BUILD_TREE/mkspecs/features/qtsparql.prf
+    sed "\"s,QTSPARQL_INSTALL_HEADERS,$$QTSPARQL_INSTALL_HEADERS,g;s,QTSPARQL_INSTALL_LIBS,$$QTSPARQL_INSTALL_LIBS,g\"" $$QTSPARQL_SOURCE_TREE/mkspecs/features/qtsparql.prf.in > $$QTSPARQL_BUILD_TREE/mkspecs/features/qtsparql.prf
 install_prf.CONFIG = no_check_exist
 
 include(kernel/kernel.pri)

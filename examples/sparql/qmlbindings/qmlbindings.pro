@@ -5,8 +5,8 @@ SOURCES += main.cpp
 #QT += sparql #enable this later
 QT += gui declarative dbus
 
-copy2build.target = $$QT_BUILD_TREE/examples/sparql/qmlbindings/main.qml
-copy2build.commands = $$QMAKE_COPY $$PWD/main.qml $$QT_BUILD_TREE/examples/sparql/qmlbindings
+copy2build.target = $$QTSPARQL_BUILD_TREE/examples/sparql/qmlbindings/main.qml
+copy2build.commands = $$QMAKE_COPY $$PWD/main.qml $$QTSPARQL_BUILD_TREE/examples/sparql/qmlbindings
 QMAKE_EXTRA_TARGETS += copy2build
 
 copy2buildhook.depends = copy2build

@@ -446,8 +446,8 @@ rm -f "$QMAKE_VARS_FILE" 2>/dev/null
 #-------------------------------------------------------------------------------
 
 cat >>"$CACHEFILE.tmp" <<EOF
-QT_SOURCE_TREE = \$\$quote($relpath)
-QT_BUILD_TREE = \$\$quote($outpath)
+QTSPARQL_SOURCE_TREE = \$\$quote($relpath)
+QTSPARQL_BUILD_TREE = \$\$quote($outpath)
 
 EOF
 
