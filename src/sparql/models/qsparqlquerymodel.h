@@ -45,9 +45,10 @@
 #ifndef QSPARQLQUERYMODEL_H
 #define QSPARQLQUERYMODEL_H
 
+#include <qsparqlconnection.h>
+#include <QSparqlQuery>
+
 #include <QtCore/qabstractitemmodel.h>
-#include <QtSparql/qsparqlconnection.h>
-#include <QtSparql/QSparqlQuery>
 
 QT_BEGIN_HEADER
 
@@ -87,6 +88,10 @@ public:
     virtual void clear(); // FIXME: do we need this?
 
     QSparqlError lastError() const;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    virtual QHash<int, QByteArray> roleNames() const;
+#endif
 
 Q_SIGNALS:
     void finished();

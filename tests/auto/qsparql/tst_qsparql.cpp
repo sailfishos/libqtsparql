@@ -38,10 +38,10 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
-#include "private/qsparqlconnection_p.h"
-#include "private/qsparqldriver_p.h"
+#include <private/qsparqlconnection_p.h>
+#include <private/qsparqldriver_p.h>
 
 class MockDriver;
 

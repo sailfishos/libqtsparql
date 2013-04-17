@@ -37,12 +37,13 @@
 **
 ****************************************************************************/
 
+#include <qsparqlquerymodel.h>
+
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QDeclarativeParserStatus>
-#include <QtSparql/qsparqlquerymodel.h>
 
 QT_BEGIN_HEADER
 
@@ -53,7 +54,8 @@ QT_MODULE(Sparql)
 class SparqlQuery;
 class SparqlConnectionOptions;
 
-class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection, public QDeclarativeParserStatus
+class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection,
+                                         public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_ENUMS(Status)

@@ -37,7 +37,8 @@
 **
 ****************************************************************************/
 
-#include <QtGui>
+#include <QApplication>
+#include <QTableView>
 #include <QtSparql>
 
 #include "customsparqlmodel.h"

@@ -39,7 +39,7 @@
 
 #include "updatetester.h"
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 UpdateTester::UpdateTester(int id)
     : connection(0), ownConnection(0)

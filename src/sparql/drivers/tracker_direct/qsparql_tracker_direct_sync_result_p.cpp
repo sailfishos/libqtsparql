@@ -40,17 +40,20 @@
 #include "qsparql_tracker_direct_sync_result_p.h"
 #include "qsparql_tracker_direct_p.h"
 #include "qsparql_tracker_direct_driver_p.h"
+#include "atomic_int_operations_p.h"
 
-#include <QtSparql/qsparqlerror.h>
-#include <QtSparql/qsparqlbinding.h>
-#include <QtSparql/qsparqlquery.h>
-#include <QtSparql/qsparqlqueryoptions.h>
-#include <QtSparql/qsparqlresultrow.h>
+#include <qsparqlerror.h>
+#include <qsparqlbinding.h>
+#include <qsparqlquery.h>
+#include <qsparqlqueryoptions.h>
+#include <qsparqlresultrow.h>
 #define XSD_INTEGER
 #include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qdebug.h>
+
+using namespace AtomicIntOperations;
 
 QT_BEGIN_NAMESPACE
 
@@ -82,7 +85,7 @@ void QTrackerDirectSyncResult::run()
 
 void QTrackerDirectSyncResult::terminate()
 {
-    resultFinished = 1;
+    setValue(resultFinished, 1);
     // can revert back to sync mode for the result now
     isAsync = false;
     Q_EMIT finished();
@@ -285,7 +288,7 @@ QString QTrackerDirectSyncResult::stringValue(int i) const
 void QTrackerDirectSyncResult::stopAndWait()
 {
     if (queryRunner) {
-        resultFinished = 1;
+        setValue(resultFinished, 1);
         queryRunner->wait();
         delete queryRunner; queryRunner = 0;
     }
@@ -302,7 +305,7 @@ bool QTrackerDirectSyncResult::isFinished() const
     // check isAsync
     if (queryRunner && isAsync) {
         // return false until the async execution as finnished
-        return resultFinished == 1;
+        return (getValue(resultFinished) == 1);
     } else {
         return !cursor;
     }

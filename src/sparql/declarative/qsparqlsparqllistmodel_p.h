@@ -37,12 +37,14 @@
 **
 ****************************************************************************/
 
+#include <qsparqlquerymodel.h>
+
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QDeclarativeParserStatus>
-#include <QtSparql/qsparqlquerymodel.h>
+
 
 QT_BEGIN_HEADER
 
@@ -52,7 +54,8 @@ QT_MODULE(Sparql)
 
 class SparqlConnection;
 
-class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel, public QDeclarativeParserStatus
+class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel,
+                                        public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSparqlQueryModel)

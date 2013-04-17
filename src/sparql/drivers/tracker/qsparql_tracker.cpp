@@ -57,6 +57,16 @@
 
 Q_DECLARE_METATYPE(QVector<QStringList>)
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#define ATOMIC_INT_IS_ZERO(val) ((val).load() == 0)
+#define SET_ATOMIC_INT(val, n) (val).store(n)
+#define ATOMIC_INT_VALUE(val) (val).load()
+#else
+#define ATOMIC_INT_IS_ZERO(val) !(val)
+#define SET_ATOMIC_INT(val, n) (val) = n
+#define ATOMIC_INT_VALUE(val) static_cast<int>(val)
+#endif
+
 /*
     Allows a metatype to be declared for a type containing commas.
     For example:
@@ -71,10 +81,12 @@ Q_DECLARE_METATYPE(QVector<QStringList>)
         static int qt_metatype_id()                                     \
         {                                                               \
             static QBasicAtomicInt metatype_id = Q_BASIC_ATOMIC_INITIALIZER(0); \
-            if (!metatype_id)                                           \
-                metatype_id = qRegisterMetaType< __VA_ARGS__ >( #__VA_ARGS__, \
-                              reinterpret_cast< __VA_ARGS__ *>(quintptr(-1))); \
-            return metatype_id;                                         \
+            if (ATOMIC_INT_IS_ZERO(metatype_id)) {                      \
+                int n = qRegisterMetaType< __VA_ARGS__ >( #__VA_ARGS__, \
+                            reinterpret_cast< __VA_ARGS__ *>(quintptr(-1))); \
+                SET_ATOMIC_INT(metatype_id, n);                         \
+            }                                                           \
+            return ATOMIC_INT_VALUE(metatype_id);                       \
         }                                                               \
     };                                                                  \
     QT_END_NAMESPACE

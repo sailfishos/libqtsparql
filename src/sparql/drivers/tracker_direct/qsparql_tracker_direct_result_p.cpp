@@ -38,8 +38,12 @@
 ****************************************************************************/
 
 #include "qsparql_tracker_direct_result_p.h"
-#include <QtSparql/qsparqlerror.h>
+#include "atomic_int_operations_p.h"
+
+#include <qsparqlerror.h>
 #include <QtCore/qdebug.h>
+
+using namespace AtomicIntOperations;
 
 // Query Runner Implementation
 QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *result)
@@ -51,7 +55,7 @@ QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *resul
 void QTrackerDirectQueryRunner::runOrWait()
 {
     if(acquireRunSemaphore()) {
-        if (!runFinished)
+        if (getValue(runFinished) == 0)
             run();
         else
             runSemaphore.release(1);
@@ -81,10 +85,10 @@ void QTrackerDirectQueryRunner::wait()
 
 void QTrackerDirectQueryRunner::run()
 {
-    if (!runFinished) {
+    if (getValue(runFinished) == 0) {
         result->run();
     }
-    runFinished=1;
+    setValue(runFinished, 1);
     runSemaphore.release(1);
 }
 
@@ -96,7 +100,7 @@ bool QTrackerDirectQueryRunner::acquireRunSemaphore()
 ////////////////////////////////////////////////////////////////////////////
 
 QTrackerDirectResult::QTrackerDirectResult(const QSparqlQueryOptions& options)
-  : options(options), queryRunner(0), resultFinished(0)
+  : options(options), resultFinished(0), queryRunner(0)
 {
 }
 
@@ -119,6 +123,6 @@ void QTrackerDirectResult::driverClosing()
 
 bool QTrackerDirectResult::isFinished() const
 {
-    return resultFinished == 1;
+    return (getValue(resultFinished) == 1);
 }
 

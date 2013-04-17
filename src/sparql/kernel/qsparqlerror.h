@@ -45,7 +45,7 @@
 #ifndef QSPARQLERROR_H
 #define QSPARQLERROR_H
 
-#include <QtSparql/qsparql.h>
+#include <qsparql.h>
 
 #include <QtCore/qstring.h>
 

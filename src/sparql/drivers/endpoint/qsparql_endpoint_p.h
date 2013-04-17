@@ -40,8 +40,8 @@
 #ifndef QSPARQL_ENDPOINT_H
 #define QSPARQL_ENDPOINT_H
 
-#include <QtSparql/private/qsparqldriver_p.h>
-#include <QtSparql/qsparqlresult.h>
+#include <private/qsparqldriver_p.h>
+#include <qsparqlresult.h>
 
 #if defined (Q_OS_WIN32)
 #include <QtCore/qt_windows.h>

@@ -213,7 +213,7 @@ QSparqlBinding QSparqlNTriples::parseLiteral(QString name)
                     } else if (buffer[i] == 'u') {
                         // Unicode escape \uxxxx
                         isUtf8 = true;
-                        QString str = QString::fromAscii(buffer.mid(i + 1, 4));
+                        QString str = QString::fromLatin1(buffer.mid(i + 1, 4));
                         bool ok = false;
                         ushort unicode = str.toUShort(&ok, 16);
                         if (ok) {
@@ -225,7 +225,7 @@ QSparqlBinding QSparqlNTriples::parseLiteral(QString name)
                     } else if (buffer[i] == 'U') {
                         // Unicode escape \Uxxxxxxxx
                         isUtf8 = true;
-                        QString str = QString::fromAscii(buffer.mid(i + 1, 8));
+                        QString str = QString::fromLatin1(buffer.mid(i + 1, 8));
                         bool ok = false;
                         uint unicode = str.toUInt(&ok, 16);
                         if (ok) {
@@ -248,7 +248,7 @@ QSparqlBinding QSparqlNTriples::parseLiteral(QString name)
     if (isUtf8) 
         value = QString::fromUtf8(literal);
     else
-        value = QString::fromAscii(literal);
+        value = QString::fromLatin1(literal);
         
     if (!languageTag.isEmpty()) {
         binding.setValue(value);

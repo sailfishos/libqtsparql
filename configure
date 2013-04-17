@@ -71,7 +71,6 @@ OPT_SHADOW=maybe
 PERL=`$WHICH perl 2>/dev/null`
 
 QMAKE=`$WHICH qmake 2>/dev/null`
-export QMAKE
 
 if [ -z "$QMAKE" ] ; then
 	QMAKE=`$WHICH qmake-qt4 2>/dev/null`
@@ -81,6 +80,21 @@ if [ -z "$QMAKE" ] ; then
 	echo
 	echo "You need qmake in your PATH to build QSparql."
 	echo "Cannot proceed."
+	exit 1
+fi
+
+export QMAKE
+
+QT_VERSION=`$QMAKE -query QT_VERSION`
+if [ $? -ne 0 ]; then
+    # May fail because 'qmake' yields the qtchooser wrapper, which needs -qt argument?
+    QMAKE="qmake -qt=5"
+    QT_VERSION=`$QMAKE -query QT_VERSION`
+fi
+
+if [ -z "$QT_VERSION" ] ; then
+	echo
+	echo "Cannot proceed without QT_VERSION determined."
 	exit 1
 fi
 
@@ -168,12 +182,18 @@ CFG_PREFIX_INSTALL=yes
 QTSPARQL_INSTALL_PREFIX=
 QTSPARQL_INSTALL_DOCS=
 QTSPARQL_INSTALL_HEADERS=
-QTSPARQL_INSTALL_IMPORTS=`$QMAKE -query QT_INSTALL_IMPORTS`
+QTSPARQL_INSTALL_IMPORTS=
 QTSPARQL_INSTALL_PLUGINS=`$QMAKE -query QT_INSTALL_PLUGINS`
 QTSPARQL_INSTALL_LIBS=
 QTSPARQL_INSTALL_EXAMPLES=
 QTSPARQL_INSTALL_TESTS=
 CFG_QTSPARQL_COVERAGE=
+
+case $QT_VERSION in
+    # In qt5, QML imports are in the 'qml' directory
+    "5."*) QTSPARQL_INSTALL_IMPORTS=`$QMAKE -query QT_INSTALL_QML`;;
+    *) QTSPARQL_INSTALL_IMPORTS=`$QMAKE -query QT_INSTALL_IMPORTS`;;
+esac
 
 # check how the user wants the SPARQL drivers to be built
 # options: 
@@ -325,7 +345,10 @@ fi
 QTSPARQL_INSTALL_DOCS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_DOCS"`
 
 if [ -z "$QTSPARQL_INSTALL_HEADERS" ]; then
-    QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/QtSparql"
+    case $QT_VERSION in
+        "5."*) QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/Qt5Sparql";;
+        *) QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/QtSparql";;
+    esac
 fi
 QTSPARQL_INSTALL_HEADERS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_HEADERS"`
 

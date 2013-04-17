@@ -39,7 +39,7 @@
 
 #include "querytester.h"
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 #include "resultchecker.h"
 
 namespace {

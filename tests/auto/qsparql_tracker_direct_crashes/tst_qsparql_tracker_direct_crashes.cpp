@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 class tst_QSparqlTrackerDirectCrashes : public QObject
 {

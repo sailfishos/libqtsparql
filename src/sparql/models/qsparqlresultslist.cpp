@@ -37,10 +37,10 @@
 **
 ****************************************************************************/
 
+#include <qsparqlerror.h>
+
 #include <QtCore/QDebug>
 #include <QtNetwork/qnetworkaccessmanager.h>
-
-#include <QtSparql/qsparqlerror.h>
 
 #include "qsparqlresultslist_p.h"
 
@@ -66,6 +66,9 @@ public:
     SparqlConnectionOptions *options;
     int lastRowCount;
     QSparqlResultsList::Status status;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QHash<int, QByteArray> roleNames;
+#endif
 };
 
 QSparqlResultsList::QSparqlResultsList(QObject *parent) :
@@ -138,7 +141,12 @@ void QSparqlResultsList::queryData(int rowCount)
     QAbstractItemModel::beginInsertRows(QModelIndex(), d->lastRowCount, rowCount - 1);
 
     if (d->lastRowCount == 0 && d->result->first()) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        QHash<int, QByteArray> &roleNames = d->roleNames;
+        roleNames = QAbstractItemModel::roleNames();
+#else
         QHash<int, QByteArray> roleNames = QAbstractItemModel::roleNames();
+#endif
         QSparqlResultRow resultRow = d->result->current();
 
         // Create two sets of declarative variables from the variable names used
@@ -154,7 +162,9 @@ void QSparqlResultsList::queryData(int rowCount)
             roleNames.insert((Qt::UserRole + 1) + i + resultRow.count(), QByteArray("$") + resultRow.binding(i).name().toLatin1());
         }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         setRoleNames(roleNames);
+#endif
     }
 
     d->lastRowCount = rowCount;
@@ -164,7 +174,8 @@ void QSparqlResultsList::queryData(int rowCount)
 
 void QSparqlResultsList::queryFinished()
 {
-    reset();
+    beginResetModel();
+    endResetModel();
     
     if (d->result->hasError())
         d->status = Error;
@@ -218,3 +229,11 @@ QString QSparqlResultsList::errorString() const
     
     return d->result->lastError().message();
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+QHash<int, QByteArray> QSparqlResultsList::roleNames() const
+{
+    return d->roleNames;
+}
+#endif
+

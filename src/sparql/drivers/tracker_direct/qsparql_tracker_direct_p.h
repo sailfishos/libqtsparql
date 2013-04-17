@@ -40,7 +40,7 @@
 #ifndef QSPARQL_TRACKER_DIRECT_H
 #define QSPARQL_TRACKER_DIRECT_H
 
-#include <QtSparql/private/qsparqldriver_p.h>
+#include <private/qsparqldriver_p.h>
 
 #ifdef QT_PLUGIN
 #define Q_EXPORT_SPARQLDRIVER_TRACKER_DIRECT

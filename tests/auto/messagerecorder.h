@@ -45,12 +45,20 @@ public:
     MessageRecorder()
     {
         selfPtr = this;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        prevMsgHandler = qInstallMessageHandler(&MessageRecorder::msgHandler);
+#else
         prevMsgHandler = qInstallMsgHandler(&MessageRecorder::msgHandler);
+#endif
     }
 
     ~MessageRecorder()
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        qInstallMessageHandler(prevMsgHandler);
+#else
         qInstallMsgHandler(prevMsgHandler);
+#endif
         selfPtr = 0;
     }
 
@@ -62,21 +70,42 @@ public:
 private:
     static MessageRecorder* selfPtr;
 
-    void handleMsg(QtMsgType type, const char *msg)
+    template<typename T>
+    QString toString(T msg) { return msg; }
+
+    QString toString(const char *msg) { return QString::fromLatin1(msg); }
+
+    template<typename MsgType>
+    bool handleMsg(QtMsgType type, MsgType msg)
     {
-        if (msgsToRecord.contains(type))
-            msgs[type] << QString(msg);
-        else
-            (*prevMsgHandler)(type, msg);
+        if (msgsToRecord.contains(type)) {
+            msgs[type] << toString(msg);
+            return true;
+        }
+        return false;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    static void msgHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
+#else
     static void msgHandler(QtMsgType type, const char *msg)
+#endif
     {
-        selfPtr->handleMsg(type, msg);
+        if (!selfPtr->handleMsg(type, msg)) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+            (*selfPtr->prevMsgHandler)(type, ctxt, msg);
+#else
+            (*selfPtr->prevMsgHandler)(type, msg);
+#endif
+        }
     }
 
 private:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QtMessageHandler prevMsgHandler;
+#else
     QtMsgHandler prevMsgHandler;
+#endif
     QSet<QtMsgType> msgsToRecord;
     QMap<QtMsgType, QStringList> msgs;
 };

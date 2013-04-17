@@ -44,7 +44,7 @@
 #ifndef QSPARQLQUERY_H
 #define QSPARQLQUERY_H
 
-#include <QtSparql/qsparql.h>
+#include <qsparql.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qshareddata.h>

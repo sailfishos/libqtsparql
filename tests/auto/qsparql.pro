@@ -35,6 +35,7 @@ memcheck.recurse = $$QSPARQL_TESTS
 QMAKE_EXTRA_TARGETS += check memcheck
 
 testxml.target = tests.xml
-install_testxml.files = $$testxml.target
+equals(QT_MAJOR_VERSION, 4): install_testxml.files = $$testxml.target
+equals(QT_MAJOR_VERSION, 5): install_testxml.files = qt5/$$testxml.target
 install_testxml.path = $$PREFIX/share/$$PACKAGENAME-tests/
 INSTALLS += target install_testxml

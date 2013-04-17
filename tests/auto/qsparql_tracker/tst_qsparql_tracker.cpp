@@ -40,7 +40,7 @@
 #include "../testhelpers.h"
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 class tst_QSparqlTracker : public QObject
 {
@@ -70,8 +70,16 @@ private slots:
 
 namespace {
 int testLogLevel = QtWarningMsg;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+void myMessageOutput(QtMsgType type, const QMessageLogContext &, const QString &msgString)
+#else
 void myMessageOutput(QtMsgType type, const char *msg)
+#endif
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    const QByteArray ba(msgString.toLocal8Bit());
+    const char *msg(ba.constData());
+#endif
     switch (type) {
     case QtDebugMsg:
         if (testLogLevel <= 0)
@@ -106,7 +114,11 @@ void tst_QSparqlTracker::initTestCase()
     // For running the test without installing the plugins. Should work in
     // normal and vpath builds.
     QCoreApplication::addLibraryPath("../../../plugins");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    qInstallMessageHandler(myMessageOutput);
+#else
     qInstallMsgHandler(myMessageOutput);
+#endif
 
     // clean any remainings
     cleanupTestCase();

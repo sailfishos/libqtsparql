@@ -39,10 +39,10 @@
 
 #include <QDebug>
 #include <QtSparql>
-#include <QtGui/QApplication>
-#include <QtGui/QLayout>
-#include <QtGui/QWidget>
-#include <QtGui/QPushButton>
+#include <QApplication>
+#include <QLayout>
+#include <QWidget>
+#include <QPushButton>
 
 #include "sparqlquerytext.h"
 

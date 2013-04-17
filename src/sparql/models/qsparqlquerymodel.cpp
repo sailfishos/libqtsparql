@@ -84,7 +84,7 @@ void QSparqlQueryModelPrivate::beginQuery(int totalResults)
     atEnd = false;
 
     if (columnsChanged && hasNewData)
-        q->reset();
+        q->beginResetModel();
 
     QModelIndex newBottom;
     newBottom = q->createIndex(totalResults - 1, resultRow.count() - 1);
@@ -92,6 +92,9 @@ void QSparqlQueryModelPrivate::beginQuery(int totalResults)
     bottom = q->createIndex(totalResults - 1, columnsChanged ? 0 : resultRow.count() - 1);
     q->endInsertRows();
     bottom = newBottom;
+
+    if (columnsChanged && hasNewData)
+        q->endResetModel();
 
     q->queryChange();
 }
@@ -186,7 +189,7 @@ void QSparqlQueryModelPrivate::findRoleNames()
             }
         }
 
-        QStringList stringList = queryString.split(QLatin1Char(' '));
+        QStringList stringList = queryString.split(QLatin1Char(' '), QString::SkipEmptyParts);
         Q_FOREACH(QString word, stringList) {
             if ((word.at(0) == QLatin1Char('?') || word.at(0) == QLatin1Char('$'))
             && (!word.contains(QLatin1Char(';')) && !word.contains(QLatin1Char(':')))) {
@@ -195,7 +198,7 @@ void QSparqlQueryModelPrivate::findRoleNames()
                 // select ?u{?u a ... is valid, need to make sure
                 // this is dealt with
                 if (word.contains(QLatin1Char('{'))) {
-                   word = word.split(QLatin1Char('{')).at(0);
+                   word = word.split(QLatin1Char('{'), QString::SkipEmptyParts).at(0);
                 }
                 QRegExp cleanUp(QLatin1String("[,]|[{]|[}]|[.]"));
                 word.replace(cleanUp,QLatin1String(""));
@@ -209,7 +212,9 @@ void QSparqlQueryModelPrivate::findRoleNames()
         Q_FOREACH(QString word, uniqueNames) {
             roleNames[roleCounter++] = word.toLatin1();
         }
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         q->setRoleNames(roleNames);
+#endif
     } else {
         qWarning() << "QSparqlQueryModel: Invalid Query";
     }
@@ -597,5 +602,12 @@ QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
     return createIndex(item.row(), item.column() - d->colOffsets[item.column()],
                        item.internalPointer());
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+QHash<int, QByteArray> QSparqlQueryModel::roleNames() const
+{
+    return d->roleNames;
+}
+#endif
 
 QT_END_NAMESPACE

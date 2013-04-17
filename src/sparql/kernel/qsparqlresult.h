@@ -45,10 +45,11 @@
 #ifndef QSPARQLRESULT_H
 #define QSPARQLRESULT_H
 
+#include <qsparqlresultrow.h>
+#include <qsparqlquery.h>
+
 #include <QtCore/qvariant.h>
 #include <QtCore/qobject.h>
-#include <QtSparql/qsparqlresultrow.h>
-#include <QtSparql/qsparqlquery.h>
 
 QT_BEGIN_HEADER
 

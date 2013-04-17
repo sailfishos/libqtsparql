@@ -51,11 +51,12 @@
 // We mean it.
 //
 
-#include "QtCore/qvariant.h"
-#include "QtSparql/private/qsparqldriver_p.h"
-#include "QtSparql/qsparqlerror.h"
-#include "QtSparql/qsparqlresult.h"
-#include "QtSparql/qsparqlbinding.h"
+#include <private/qsparqldriver_p.h>
+#include <qsparqlerror.h>
+#include <qsparqlresult.h>
+#include <qsparqlbinding.h>
+
+#include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
 

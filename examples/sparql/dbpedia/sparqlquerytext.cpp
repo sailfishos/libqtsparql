@@ -38,10 +38,10 @@
 ****************************************************************************/
 #include "sparqlquerytext.h"
 
-#include <QtSparql/QSparqlResultRow>
-#include <QtSparql/QSparqlError>
+#include <QSparqlResultRow>
+#include <QSparqlError>
 
-#include <QtGui/QHeaderView>
+#include <QHeaderView>
 
 SparqlQueryText::SparqlQueryText(QSparqlConnection& conn, QWidget *parent)
     : QTextEdit(parent), connection(conn)
@@ -53,7 +53,11 @@ SparqlQueryText::SparqlQueryText(QSparqlConnection& conn, QWidget *parent)
     tableView = new QTableView();
     tableView->setModel(model);
     tableView->resize(1000, 600);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
     tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 }
 
 void SparqlQueryText::runQuery()

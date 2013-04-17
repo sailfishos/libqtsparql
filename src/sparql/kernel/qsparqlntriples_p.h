@@ -51,12 +51,12 @@
 // We mean it.
 //
 
+#include <qsparqlbinding.h>
+#include <qsparqlresultrow.h>
+
 #include <QtCore/qbytearray.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qvector.h>
-
-#include <QtSparql/qsparqlbinding.h>
-#include <QtSparql/qsparqlresultrow.h>
 
 QT_BEGIN_NAMESPACE
 

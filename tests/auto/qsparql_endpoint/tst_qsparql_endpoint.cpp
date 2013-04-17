@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 #include "EndpointService.h"
 
 class tst_QSparqlEndpoint : public QObject
@@ -172,7 +172,11 @@ void tst_QSparqlEndpoint::query_with_error()
 
 void tst_QSparqlEndpoint::select_query_server_not_responding()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QSKIP("Neither endpoint driver nor QNetworkAccessManager has timeout functionality");
+#else
     QSKIP("Neither endpoint driver nor QNetworkAccessManager has timeout functionality", SkipAll);
+#endif
     // When connection is established but server doesn't respond, client (endpoint driver) hangs
     QSparqlConnectionOptions options;
     options.setPort(8080);

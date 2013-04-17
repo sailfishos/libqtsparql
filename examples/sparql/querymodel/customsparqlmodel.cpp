@@ -37,7 +37,8 @@
 **
 ****************************************************************************/
 
-#include <QtGui>
+#include <QVariant>
+#include <QColor>
 
 #include "customsparqlmodel.h"
 

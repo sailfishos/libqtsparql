@@ -51,13 +51,14 @@
 // We mean it.
 //
 
-#include "QtSparql/qsparqlerror.h"
-#include "QtSparql/qsparqlquery.h"
-#include "QtSparql/qsparqlresultrow.h"
-#include "QtCore/qhash.h"
-#include "QtCore/qvarlengtharray.h"
-#include "QtCore/qvector.h"
-#include "QtCore/qabstractitemmodel.h"
+#include <qsparqlerror.h>
+#include <qsparqlquery.h>
+#include <qsparqlresultrow.h>
+
+#include <QtCore/qhash.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qabstractitemmodel.h>
 #include "qsparqlquerymodel.h"
 
 QT_BEGIN_NAMESPACE

@@ -45,7 +45,8 @@
 #ifndef QSPARQLCONNECTIONOPTIONS_H
 #define QSPARQLCONNECTIONOPTIONS_H
 
-#include <QtSparql/qsparql.h>
+#include <qsparql.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qshareddata.h>

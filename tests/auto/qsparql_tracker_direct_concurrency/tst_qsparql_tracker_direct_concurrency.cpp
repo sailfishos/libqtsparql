@@ -44,7 +44,7 @@
 #include "../utils/testdata.h"
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 #define TEST_DATA_AMOUNT 3000
 
