@@ -61,7 +61,7 @@ Tracker direct access driver for QtSparql.
 %build
 ./configure -prefix /usr
 qmake 
-make 
+make %{?jobs:-j%jobs}
 make doc
 
 %clean
