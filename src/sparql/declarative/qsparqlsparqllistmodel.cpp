@@ -37,14 +37,8 @@
 **
 ****************************************************************************/
 
-#include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-#include "qsparqlsparqllistmodel-qt5_p.h"
-#include "qsparqlsparqlconnection-qt5_p.h"
-#else
 #include "qsparqlsparqllistmodel_p.h"
 #include "qsparqlsparqlconnection_p.h"
-#endif
 #include <QtSparql>
 
 SparqlListModel::SparqlListModel()

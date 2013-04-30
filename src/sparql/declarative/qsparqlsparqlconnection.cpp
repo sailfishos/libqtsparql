@@ -37,14 +37,8 @@
 **
 ****************************************************************************/
 
-#include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-#include "qsparqlsparqlconnection-qt5_p.h"
-#include "qsparqlsparqlconnectionoptions-qt5_p.h"
-#else
 #include "qsparqlsparqlconnection_p.h"
 #include "qsparqlsparqlconnectionoptions_p.h"
-#endif
 
 #include <QSparqlResult>
 #include <QSparqlResultRow>

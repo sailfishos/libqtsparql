@@ -43,8 +43,14 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstring.h>
 
+#ifdef QT_VERSION_5
+#include <QtQml/qqml.h>
+#include <QQmlParserStatus>
+#define QDeclarativeParserStatus QQmlParserStatus
+#else
 #include <QtDeclarative/qdeclarative.h>
 #include <QDeclarativeParserStatus>
+#endif
 
 QT_BEGIN_HEADER
 
