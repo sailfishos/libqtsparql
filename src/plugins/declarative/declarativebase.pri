@@ -8,7 +8,10 @@ target.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
 
 QT = core
 equals(QT_MAJOR_VERSION, 4): QT *= declarative
-equals(QT_MAJOR_VERSION, 5): QT *= qml
+equals(QT_MAJOR_VERSION, 5): {
+    QT *= qml
+    DEFINES *= QT_VERSION_5
+}
 
 INSTALLS += target
 equals(QT_MAJOR_VERSION, 4): LIBS += -lQtSparql

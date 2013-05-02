@@ -44,12 +44,11 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
-#include <private/qsparqlsparqlconnection-qt5_p.h>
 #else
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative>
-#include <private/qsparqlsparqlconnection_p.h>
 #endif
+#include <private/qsparqlsparqlconnection_p.h>
 #include <QtSparql>
 
 #define NUM_INSERTS 10

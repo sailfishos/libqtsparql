@@ -40,17 +40,30 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
+#ifdef QT_VERSION_5
+#include <QQmlExtensionPlugin>
+#include <QtQml/qqml.h>
+#else
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
+#endif
 #include <private/qsparqlsparqllistmodel_p.h>
 
 #include <qsparqlquerymodel.h>
 
 QT_BEGIN_NAMESPACE
 
-class SparqlListModelPlugin : public QDeclarativeExtensionPlugin
+class SparqlListModelPlugin
+#ifdef QT_VERSION_5
+    : public QQmlExtensionPlugin
+#else
+    : public QDeclarativeExtensionPlugin
+#endif
 {
     Q_OBJECT
+#ifdef QT_VERSION_5
+    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql.SparqlListModelInterface")
+#endif
 
 public:
     void registerTypes(const char *uri)
@@ -60,7 +73,9 @@ public:
     }
 };
 
+#ifndef QT_VERSION_5
 Q_EXPORT_PLUGIN2(sparqllistmodel, SparqlListModelPlugin);
+#endif
 
 QT_END_NAMESPACE
 
