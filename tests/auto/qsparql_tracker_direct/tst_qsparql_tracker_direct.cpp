@@ -42,7 +42,7 @@
 #include "../utils/testdata.h"
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 class tst_QSparqlTrackerDirect : public TrackerDirectCommon
 {

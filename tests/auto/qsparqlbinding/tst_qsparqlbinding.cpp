@@ -41,7 +41,7 @@
 Q_DECLARE_METATYPE(QVariant)
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 Q_DECLARE_METATYPE(QSparqlBinding)
 
 #include <QUrl>

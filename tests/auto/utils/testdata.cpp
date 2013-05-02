@@ -38,7 +38,8 @@
 ****************************************************************************/
 
 #include "testdata.h"
-#include <QtSparql/QtSparql>
+#include <QtGlobal>
+#include <QtSparql>
 
 namespace {
 

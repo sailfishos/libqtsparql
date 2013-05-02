@@ -40,8 +40,8 @@
 #ifndef QSPARQL_TRACKER_DIRECT_RESULT_P_H
 #define QSPARQL_TRACKER_DIRECT_RESULT_P_H
 
-#include <QtSparql/qsparqlresult.h>
-#include <QtSparql/qsparqlqueryoptions.h>
+#include <qsparqlresult.h>
+#include <qsparqlqueryoptions.h>
 #include <QtCore/qrunnable.h>
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qsemaphore.h>

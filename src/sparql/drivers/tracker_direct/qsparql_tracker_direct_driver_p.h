@@ -42,8 +42,8 @@
 
 #include <tracker-sparql.h>
 
-#include <QtSparql/qsparqlqueryoptions.h>
-#include <QtSparql/qsparqlerror.h>
+#include <qsparqlqueryoptions.h>
+#include <qsparqlerror.h>
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qthreadpool.h>

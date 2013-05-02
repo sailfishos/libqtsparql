@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 #define TEST_PORT 1234
 // #define TEST_PORT 1111

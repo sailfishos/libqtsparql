@@ -36,14 +36,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtCore/QtCore>
-#include <QtGui/QTextEdit>
-#include <QtGui/QTableView>
+#include <QtCore>
+#include <QTextEdit>
+#include <QTableView>
 
-#include <QtSparql/QSparqlConnection>
-#include <QtSparql/QSparqlQuery>
-#include <QtSparql/QSparqlResult>
-#include <QtSparql/QSparqlQueryModel>
+#include <QSparqlConnection>
+#include <QSparqlQuery>
+#include <QSparqlResult>
+#include <QSparqlQueryModel>
 
 class SparqlQueryText : public QTextEdit
 {

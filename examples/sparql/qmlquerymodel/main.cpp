@@ -39,8 +39,16 @@
 **
 ****************************************************************************/
 
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QGuiApplication>
+#include <QQmlContext>
+#include <QQuickItem>
+#include <QQuickView>
+#else
 #include <QApplication>
 #include <QtDeclarative>
+#endif
 #include <QtSparql>
 #include <QtDBus>
 #include <QString>
@@ -135,17 +143,30 @@ void ModelLiveChange::gotClick(QString firstName, QString familyName)
 
 int main(int argc, char *argv[])
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QGuiApplication app(argc, argv);
+#else
     QApplication app(argc, argv);
+#endif
 
     // Initialise QML
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QQuickView viewQml;
+    QQmlContext *ctxt = viewQml.rootContext();
+#else
     QDeclarativeView viewQml;
     QDeclarativeContext *ctxt = viewQml.rootContext();
+#endif
 
     // Create the model
     QSparqlQueryModel *model = new QSparqlQueryModel();
     // Now set the context property for the ListView model to the liveQuery model
     ctxt->setContextProperty("contactModel", model);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    viewQml.setSource(QUrl::fromLocalFile("main-qt5.qml"));
+#else
     viewQml.setSource(QUrl::fromLocalFile("main.qml"));
+#endif
 
     ModelLiveChange changeNotifier(model);
 

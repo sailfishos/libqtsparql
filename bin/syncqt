@@ -28,8 +28,22 @@ die "syncqt: QTDIR not defined" if ! $ENV{"QTDIR"}; # sanity check
 my $isunix = 0;
 my $basedir = $ENV{"QTDIR"};
 $basedir =~ s=\\=/=g;
+my $modulepath = "";
+my $qtversion = `qmake -query QT_VERSION`;
+if (($? >> 8) != 0) {
+    # Using the qtchooser qmake wrapper?
+    $qtversion = `qmake -qt=5 -query QT_VERSION`;
+}
+if ($qtversion =~ /^5./) {
+    $modulepath = "Qt5Sparql"
+} else {
+    $modulepath = "QtSparql"
+}
 my %modules = ( # path to module name map
         "QtSparql" => "$basedir/src/sparql",
+);
+my %modulepaths = ( # path to module directory map
+        "QtSparql" => $modulepath,
 );
 my %moduleheaders = ( # restrict the module headers to those found in relative path
 );
@@ -640,6 +654,7 @@ foreach (@modules_to_sync) {
     #iteration info
     my $lib = $_;
     my $dir = "$modules{$lib}";
+    my $libpath = "$modulepaths{$lib}";
     my $pathtoheaders = "";
     $pathtoheaders = "$moduleheaders{$lib}" if ($moduleheaders{$lib});
 
@@ -650,6 +665,10 @@ foreach (@modules_to_sync) {
 
     my $libcapitals = $lib;
     $libcapitals =~ y/a-z/A-Z/;
+
+    # '-' is not legal in macro identifiers
+    $libcapitals =~ s/[-]/_/g;
+
     my $master_contents = "#ifndef QT_".$libcapitals."_MODULE_H\n#define QT_".$libcapitals."_MODULE_H\n";
 
     #get dependencies
@@ -669,7 +688,7 @@ foreach (@modules_to_sync) {
 			$master_contents .= "#include <QtScriptTools/QtScriptTools>\n" if("$_" eq "scripttools");
 			$master_contents .= "#include <Qt3Support/Qt3Support>\n" if("$_" eq "qt3support");
 			$master_contents .= "#include <QtSql/QtSql>\n" if("$_" eq "sql");
-			$master_contents .= "#include <QtSparql/QtSparql>\n" if("$_" eq "sparql");
+			$master_contents .= "#include <$modulepath/QtSparql>\n" if("$_" eq "sparql");
 			$master_contents .= "#include <QtXml/QtXml>\n" if("$_" eq "xml");
 			$master_contents .= "#include <QtXmlPatterns/QtXmlPatterns>\n" if("$_" eq "xmlpatterns");
 			$master_contents .= "#include <QtOpenGL/QtOpenGL>\n" if("$_" eq "opengl");
@@ -683,7 +702,7 @@ foreach (@modules_to_sync) {
 
     #remove the old files
     if($remove_stale) {
-	my @subdirs = ("$out_basedir/include/$lib");
+	my @subdirs = ("$out_basedir/include/$libpath");
 	foreach (@subdirs) {
 	    my $subdir = "$_";
 	    if (opendir DIR, "$subdir") {
@@ -774,7 +793,7 @@ foreach (@modules_to_sync) {
 			#find out all the places it goes..
 			my @headers;
 			if ($public_header) {
-			    @headers = ( "$out_basedir/include/$lib/$header" );
+			    @headers = ( "$out_basedir/include/$libpath/$header" );
 			    push @headers, "$out_basedir/include/Qt/$header"
 			      if ("$lib" ne "phonon" && "$subdir" =~ /^$basedir\/src/);
 
@@ -787,15 +806,15 @@ foreach (@modules_to_sync) {
 #				   class =~ s,::,/,g;
 #				}
 				$class_lib_map_contents .= "QT_CLASS_LIB($_, $lib, $header_base)\n";
-				$header_copies++ if(syncHeader("$out_basedir/include/$lib/$class", "$out_basedir/include/$lib/$header", 0));
+				$header_copies++ if(syncHeader("$out_basedir/include/$libpath/$class", "$out_basedir/include/$libpath/$header", 0));
 
 				# KDE-Compat headers for Phonon
 				if ($lib eq "phonon") {
-				    $header_copies++ if (syncHeader("$out_basedir/include/phonon_compat/Phonon/$class", "$out_basedir/include/$lib/$header", 0));
+				    $header_copies++ if (syncHeader("$out_basedir/include/phonon_compat/Phonon/$class", "$out_basedir/include/$libpath/$header", 0));
 				}
 			    }
 			} elsif ($create_private_headers) {
-			    @headers = ( "$out_basedir/include/$lib/private/$header" );
+			    @headers = ( "$out_basedir/include/$libpath/private/$header" );
 			    push @headers, "$out_basedir/include/Qt/private/$header"
                               if ("$lib" ne "phonon");
 			}
@@ -817,7 +836,7 @@ foreach (@modules_to_sync) {
 #				    if ($class =~ m/::/) {
 #					$class =~ s,::,/,g;
 #				    }
-				    my $class_header = fixPaths("$out_basedir/include/$lib/$class",
+				    my $class_header = fixPaths("$out_basedir/include/$libpath/$class",
 								$current_dir) . " ";
 				    $pri_install_classes .= $class_header
 								unless($pri_install_classes =~ $class_header);
@@ -841,7 +860,7 @@ foreach (@modules_to_sync) {
 
     unless($showonly) {
         my @master_includes;
-	push @master_includes, "$out_basedir/include/$lib/$lib";
+	push @master_includes, "$out_basedir/include/$libpath/$lib";
 	push @master_includes, "$out_basedir/include/phonon_compat/Phonon/Phonon" if ($lib eq "phonon");
         foreach my $master_include (@master_includes) {
             #generate the "master" include file
@@ -871,7 +890,7 @@ foreach (@modules_to_sync) {
 	$headers_pri_contents .= "SYNCQT.HEADER_FILES = $pri_install_files\n";
 	$headers_pri_contents .= "SYNCQT.HEADER_CLASSES = $pri_install_classes\n";
 	$headers_pri_contents .= "SYNCQT.PRIVATE_HEADER_FILES = $pri_install_pfiles\n";
-        my $headers_pri_file = "$out_basedir/include/$lib/headers.pri";
+        my $headers_pri_file = "$out_basedir/include/$libpath/headers.pri";
         if(-e "$headers_pri_file") {
             open HEADERS_PRI_FILE, "<$headers_pri_file";
             local $/;

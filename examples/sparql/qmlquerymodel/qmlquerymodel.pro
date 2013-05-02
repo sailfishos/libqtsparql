@@ -3,7 +3,9 @@ include(../sparql-examples.pri)
 SOURCES += main.cpp
 
 #QT += sparql #enable this later
-QT += gui declarative dbus
+QT += gui dbus
+equals(QT_MAJOR_VERSION, 4): QT += declarative
+equals(QT_MAJOR_VERSION, 5): QT += quick
 
 copy2build.target = $$QTSPARQL_BUILD_TREE/examples/sparql/qmlquerymodel/main.qml
 copy2build.commands = $$QMAKE_COPY $$PWD/main.qml $$QTSPARQL_BUILD_TREE/examples/sparql/qmlquerymodel

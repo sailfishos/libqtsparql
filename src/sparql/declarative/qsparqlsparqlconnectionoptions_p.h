@@ -37,13 +37,20 @@
 **
 ****************************************************************************/
 
+#include <qsparqlquerymodel.h>
+
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qstring.h>
 
+#ifdef QT_VERSION_5
+#include <QtQml/qqml.h>
+#include <QQmlParserStatus>
+#define QDeclarativeParserStatus QQmlParserStatus
+#else
 #include <QtDeclarative/qdeclarative.h>
 #include <QDeclarativeParserStatus>
-#include <QtSparql/qsparqlquerymodel.h>
+#endif
 
 QT_BEGIN_HEADER
 
@@ -51,7 +58,9 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject, public QDeclarativeParserStatus, public QSparqlConnectionOptions
+class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
+                                                public QDeclarativeParserStatus,
+                                                public QSparqlConnectionOptions
 {
     Q_OBJECT
     Q_PROPERTY(QString databaseName READ databaseName WRITE setDatabaseName)

@@ -38,10 +38,18 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QtQml/qqml.h>
+#include <QQmlEngine>
+#include <QQmlComponent>
+#include <QQmlContext>
+#include <private/qsparqlsparqlconnection-qt5_p.h>
+#else
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative>
-#include <QtSparql/private/qsparqlsparqlconnection_p.h>
+#include <private/qsparqlsparqlconnection_p.h>
+#endif
 #include <QtSparql>
 
 #define NUM_INSERTS 10
@@ -86,9 +94,15 @@ namespace {
 // QML stuff
 enum Status { Null, Ready, Loading, Error };
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+QQmlEngine *engine;
+QQmlComponent *component;
+QQmlContext *context;
+#else
 QDeclarativeEngine *engine;
 QDeclarativeComponent *component;
 QDeclarativeContext *context;
+#endif
 QObject* qmlObject;
 
 const QString contactSelectQuery =
@@ -110,12 +124,12 @@ QVariant callMethod(QString methodName, QVariant parameter = QVariant())
     QVariant returnValue;
     if (parameter.isNull()) {
         QMetaObject::invokeMethod(qmlObject,
-                                methodName.toAscii(),
+                                methodName.toLatin1(),
                                 Qt::DirectConnection,
                                 Q_RETURN_ARG(QVariant, returnValue));
     } else {
         QMetaObject::invokeMethod(qmlObject,
-                                methodName.toAscii(),
+                                methodName.toLatin1(),
                                 Qt::DirectConnection,
                                 Q_RETURN_ARG(QVariant, returnValue),
                                 Q_ARG(QVariant, parameter));
@@ -139,11 +153,19 @@ void qmlCleanup()
 
 bool loadQmlFile(QString fileName, QList<QPair<QString, QVariant> > contextProperties)
 {
-    QFileInfo fileInfo(QApplication::argv()[0]);
+    QFileInfo fileInfo(qApp->arguments()[0]);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    engine = new QQmlEngine();
+#else
     engine = new QDeclarativeEngine();
+#endif
     engine->addImportPath("../../../imports");
-    component = new QDeclarativeComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    component = new QQmlComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName+"-qt5.qml"));
+#else
+    component = new QDeclarativeComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName+".qml"));
+#endif
     context = engine->rootContext();
 
     for(int i=0;i<contextProperties.size();i++) {
@@ -279,7 +301,7 @@ void tst_QSparqlQMLBindings::sparql_connection_test_data()
     contextProperties.append(qMakePair(QString("setPortNumber"),QVariant(1234)));
     contextProperties.append(qMakePair(QString("setHost"), QVariant("null")));
 
-    QVERIFY(loadQmlFile("qsparqlconnection.qml", contextProperties));
+    QVERIFY(loadQmlFile("qsparqlconnection", contextProperties));
 }
 
 void tst_QSparqlQMLBindings::sparql_connection_select_query_test()
@@ -438,7 +460,7 @@ void tst_QSparqlQMLBindings::sparql_connection_options_test_data()
     contextProperties.append(qMakePair(QString("sparqlQueryString"),QVariant(contactSelectQuery)));
     contextProperties.append(qMakePair(QString("setPortNumber"),QVariant(portNumber)));
     contextProperties.append(qMakePair(QString("setHost"), QVariant(hostName)));
-    QVERIFY(loadQmlFile("qsparqlconnection.qml", contextProperties));
+    QVERIFY(loadQmlFile("qsparqlconnection", contextProperties));
 }
 
 void tst_QSparqlQMLBindings::sparql_connection_bound_values_test()
@@ -501,7 +523,7 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_data()
 {
     QList<QPair<QString, QVariant> > contextProperties;
     contextProperties.append(qMakePair(QString("sparqlQueryString"),QVariant(contactSelectQuery)));
-    QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+    QVERIFY(loadQmlFile("qsparqlresultlist", contextProperties));
 }
 
 void tst_QSparqlQMLBindings::sparql_query_model_reload_test()
@@ -570,7 +592,7 @@ void tst_QSparqlQMLBindings::sparql_query_model_test_role_names()
                       "{ ?u a nco:PersonContact; nco:nameGiven ?ng; nco:nameFamily ?nf }";
     QList<QPair<QString, QVariant> > contextProperties;
     contextProperties.append(qMakePair(QString("sparqlQueryString"), QVariant(select1)));
-    QVERIFY(loadQmlFile("qsparqlresultlist.qml", contextProperties));
+    QVERIFY(loadQmlFile("qsparqlresultlist", contextProperties));
 
     QSparqlQueryModel *model =
         getObject<QSparqlQueryModel *>("queryModel");
@@ -592,7 +614,7 @@ void tst_QSparqlQMLBindings::sparql_legacy_test()
     QList<QPair<QString, QVariant> > contextProperties;
     // If theres a problem with finding the binding, or in setting a property (driverName())
     // this will return false
-    QVERIFY(loadQmlFile("qsparqllegacy.qml", contextProperties));
+    QVERIFY(loadQmlFile("qsparqllegacy", contextProperties));
 }
 
 QTEST_MAIN(tst_QSparqlQMLBindings)

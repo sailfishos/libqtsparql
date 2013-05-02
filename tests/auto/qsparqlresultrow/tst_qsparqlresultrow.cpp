@@ -41,8 +41,8 @@
 Q_DECLARE_METATYPE(QVariant)
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
-#include <QtSparql/qsparqlresultrow.h>
+#include <QtSparql>
+#include <qsparqlresultrow.h>
 Q_DECLARE_METATYPE(QSparqlResultRow)
 
 #include <QUrl>

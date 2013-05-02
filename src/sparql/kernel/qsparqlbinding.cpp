@@ -284,7 +284,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         setValue(QDateTime::fromString(value, Qt::ISODate));
     } else if (s == "http://www.w3.org/2001/XMLSchema#base64Binary") {
         d->dataType = *XSD::Base64Binary();
-        setValue(QByteArray::fromBase64(value.toAscii()));
+        setValue(QByteArray::fromBase64(value.toLatin1()));
     } else {
         d->dataType = dataTypeUri;
         setValue(value);
@@ -302,7 +302,7 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 QString QSparqlBinding::toString() const
 {
     if (d->nodetype == QSparqlBindingPrivate::Uri)
-        return QLatin1Char('<') + QString::fromAscii(val.toUrl().toEncoded()) + QLatin1Char('>');
+        return QLatin1Char('<') + QString::fromLatin1(val.toUrl().toEncoded()) + QLatin1Char('>');
 
     if (d->nodetype == QSparqlBindingPrivate::Blank)
         return QLatin1String("_:") + val.toString();
@@ -404,7 +404,7 @@ QString QSparqlBinding::toString() const
         }
         case QVariant::ByteArray:
             quoted = true;
-            literal = QLatin1Char('\"') + QString::fromAscii(val.toByteArray().toBase64()) + QLatin1Char('\"');
+            literal = QLatin1Char('\"') + QString::fromLatin1(val.toByteArray().toBase64()) + QLatin1Char('\"');
             break;
         default:
             break;
@@ -418,7 +418,7 @@ QString QSparqlBinding::toString() const
                 literal.prepend(QLatin1String("\""));
                 literal.append(QLatin1String("\""));
             }
-            literal.append(QLatin1String("^^<") + QString::fromAscii(dataTypeUri().toEncoded()) + QLatin1Char('>'));
+            literal.append(QLatin1String("^^<") + QString::fromLatin1(dataTypeUri().toEncoded()) + QLatin1Char('>'));
         }
         return literal;
     }

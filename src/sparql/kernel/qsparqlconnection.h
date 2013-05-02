@@ -45,10 +45,11 @@
 #ifndef QSPARQLCONNECTION_H
 #define QSPARQLCONNECTION_H
 
+#include <qsparql.h>
+#include <qsparqlconnectionoptions.h>
+#include <qsparqlbinding.h>
+
 #include <QtCore/qstring.h>
-#include <QtSparql/qsparql.h>
-#include <QtSparql/qsparqlconnectionoptions.h>
-#include <QtSparql/qsparqlbinding.h>
 #include <QDebug>
 QT_BEGIN_HEADER
 

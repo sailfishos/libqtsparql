@@ -39,7 +39,7 @@
 
 #include "resultchecker.h"
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 ResultChecker::ResultChecker()
     : dataReadyMapper(0), finishedMapper(0)

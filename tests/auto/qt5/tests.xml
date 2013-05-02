@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<testdefinition version="1.0">
+  <suite name="libqt5sparql-tests">
+    <set name="qsparlq-unit" description="Unit tests of libqt5sparql">
+      <case name="qsparqlquery" description="qsparqlquery unit tests">
+        <step>
+	  /usr/lib/libqt5sparql-tests/tst_qsparqlquery
+        </step>
+      </case>
+      <case name="qsparqlbinding" description="qsparqlbinding unit tests">
+        <step>
+      /usr/lib/libqt5sparql-tests/tst_qsparqlbinding
+        </step>
+      </case>
+      <case name="qsparqlresultrow" description="qsparqlresultrow unit tests">
+        <step>
+      /usr/lib/libqt5sparql-tests/tst_qsparqlresultrow
+        </step>
+      </case>
+      <case name="qsparql" description="qsparql unit tests">
+        <step>
+	  /usr/lib/libqt5sparql-tests/tst_qsparql
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
+    <set name="qsparql-api" description="Tests for qsparql API">
+      <case name="tst_qsparql_api" description="Executing tst_qsparql_api">
+        <step>
+            /usr/lib/libqt5sparql-tests/tst_qsparql_api
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
+    <set name="qsparql-endpoint" description="Tests for endpoint plugin of qsparql">
+      <case name="tst_qsparql_endpoint" description="Executing tst_qsparql_endpoint" timeout="900">
+        <step>
+            su - user -c "/usr/lib/libqt5sparql-tests/tst_qsparql_endpoint"
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
+    <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
+      <case name="tst_qsparql_tracker" description="Executing tst_qsparql_tracker">
+        <step>
+            /usr/lib/libqt5sparql-tests/tst_qsparql_tracker
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+      <get>
+        <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+      </get>
+    </set>
+    <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
+      <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct" timeout="900">
+        <step>
+            /usr/lib/libqt5sparql-tests/tst_qsparql_tracker_direct
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+      <get>
+        <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+      </get>
+    </set>
+    <set name="qsparql-threading" description="Multithreading tests">
+        <case name="test-tracker-queries" description="Tracker queries">
+            <step>
+                /usr/lib/libqt5sparql-tests/tst_qsparql_threading concurrentTrackerQueries
+            </step>
+        </case>
+        <environments>
+            <scratchbox>true</scratchbox>
+            <hardware>true</hardware>
+        </environments>
+        <get>
+            <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+        </get>
+    </set>
+    <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
+        <case name="tst_qsparql_tracker_direct_sync" description="Executing tst_qsparql_tracker_direct_sync">
+            <step>
+                /usr/lib/libqt5sparql-tests/tst_qsparql_tracker_direct_sync
+            </step>
+        </case>
+        <environments>
+            <scratchbox>true</scratchbox>
+            <hardware>true</hardware>
+        </environments>
+        <get>
+            <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+        </get>
+    </set>
+    <set name="qsparql-tracker-direct-crashes" description="Regression tests">
+      <case name="tst_qsparql_tracker_direct_crashes" description="Regression test">
+        <step>
+            <!-- Note: the env vars should ensure that the direct connection opening fails -->
+            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct /usr/lib/libqt5sparql-tests/tst_qsparql_tracker_direct_crashes
+        </step>
+      </case>
+    </set>
+    <set name="qsparql-qmlbindings" description="Tests for qsparql QML bindings">
+      <case name="tst_qsparql_qmlbindings" description="Executing tst_qsparql_qmlbindings">
+        <step>
+            /usr/lib/libqt5sparql-tests/tst_qsparql_qmlbindings
+        </step>
+      </case>
+      <environments>
+        <scratchbox>true</scratchbox>
+        <hardware>true</hardware>
+      </environments>
+    </set>
+  </suite>
+</testdefinition>

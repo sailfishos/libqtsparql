@@ -39,6 +39,7 @@
 
 #include "qsparqlsparqlconnection_p.h"
 #include "qsparqlsparqlconnectionoptions_p.h"
+
 #include <QSparqlResult>
 #include <QSparqlResultRow>
 #include <QSparqlError>

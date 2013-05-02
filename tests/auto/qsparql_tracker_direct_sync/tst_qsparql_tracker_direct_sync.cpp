@@ -41,7 +41,7 @@
 #include "../tracker_direct_common.h"
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 class tst_QSparqlTrackerDirectSync : public TrackerDirectCommon
 {

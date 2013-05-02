@@ -18,7 +18,8 @@ contains(sparql-drivers, tracker_direct) {
                drivers/tracker_direct/qsparql_tracker_direct_result_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_select_result_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.h \
-               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.h
+               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.h \
+               drivers/tracker_direct/atomic_int_operations_p.h
     SOURCES += drivers/tracker_direct/qsparql_tracker_direct_driver_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_result_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_select_result_p.cpp \

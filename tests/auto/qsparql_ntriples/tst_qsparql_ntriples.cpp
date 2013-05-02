@@ -38,8 +38,8 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
-#include <QtSparql/private/qsparqlntriples_p.h>
+#include <QtSparql>
+#include <private/qsparqlntriples_p.h>
 
 class tst_QSparqlNTriples : public QObject
 {

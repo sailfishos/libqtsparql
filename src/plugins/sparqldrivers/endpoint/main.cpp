@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include <QtSparql/private/qsparqldriverplugin_p.h>
+#include <private/qsparqldriverplugin_p.h>
 #include <qstringlist.h>
 #include "../../../sparql/drivers/endpoint/qsparql_endpoint_p.h"
 
@@ -45,6 +45,11 @@ QT_BEGIN_NAMESPACE
 
 class QSPARQL_ENDPOINTDriverPlugin : public QSparqlDriverPlugin
 {
+    Q_OBJECT
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql.EndpointDriverInterface")
+#endif
+
 public:
     QSPARQL_ENDPOINTDriverPlugin();
 
@@ -73,7 +78,11 @@ QStringList QSPARQL_ENDPOINTDriverPlugin::keys() const
     return l;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 Q_EXPORT_STATIC_PLUGIN(QSPARQL_ENDPOINTDriverPlugin)
 Q_EXPORT_PLUGIN2(qsparqlendpoint, QSPARQL_ENDPOINTDriverPlugin)
+#endif
 
 QT_END_NAMESPACE
+
+#include "main.moc"

@@ -42,7 +42,7 @@
 #include <tracker-sparql.h>
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 #include <sys/time.h>
 #include <stdio.h>
 #include <QDomDocument>

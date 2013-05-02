@@ -39,26 +39,43 @@
 **
 ****************************************************************************/
 
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QGuiApplication>
+#include <QQuickItem>
+#include <QQuickView>
+#include <QQmlEngine>
+#else
 #include <QApplication>
 #include <QtDeclarative>
+#endif
 #include <QtSparql>
 #include <QtDBus>
 #include <QString>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+typedef QGuiApplication ApplicationType;
+typedef QQuickView ViewType;
+#else
+typedef QApplication ApplicationType;
+typedef QDeclarativeView ViewType;
+#endif
+
 class ModelLiveChange : public QObject
 {
     Q_OBJECT
-    QDeclarativeView *view;
+
+    ViewType *view;
 
 public :
-    ModelLiveChange(QDeclarativeView *view);
+    ModelLiveChange(ViewType *view);
     ~ModelLiveChange();
 
 public slots:
     void changed(QString);
 };
 
-ModelLiveChange::ModelLiveChange(QDeclarativeView *view)
+ModelLiveChange::ModelLiveChange(ViewType *view)
     : view(view)
 {
     // Monitor dbus for any notifications from Tracker.
@@ -101,16 +118,20 @@ void ModelLiveChange::changed(QString className)
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    ApplicationType app(argc, argv);
     QCoreApplication::addLibraryPath("../../../plugins");
 
     // Initialise QML
-    QDeclarativeView viewQml;
+    ViewType viewQml;
     // Load the QML plugins from the build tree, if
     // they haven't been install
     viewQml.engine()->addImportPath("../../../imports");
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    viewQml.setSource(QUrl::fromLocalFile("main-qt5.qml"));
+#else
     viewQml.setSource(QUrl::fromLocalFile("main.qml"));
+#endif
 
     // The bindings can be cast back to the appropriate QtSparql classes by setting
     // an "objectName" property on them, and casting them, eg :

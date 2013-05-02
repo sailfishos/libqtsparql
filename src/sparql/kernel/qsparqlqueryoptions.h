@@ -45,7 +45,8 @@
 #ifndef QSPARQLQUERYOPTIONS_H
 #define QSPARQLQUERYOPTIONS_H
 
-#include <QtSparql/qsparql.h>
+#include <qsparql.h>
+
 #include <QtCore/qshareddata.h>
 
 QT_BEGIN_HEADER

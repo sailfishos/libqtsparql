@@ -41,7 +41,7 @@
 #define QSPARQL_TRACKER_COMMON_H
 
 #include <QtTest/QtTest>
-#include <QtSparql/QtSparql>
+#include <QtSparql>
 
 class TrackerDirectCommon : public QObject
 {
@@ -84,7 +84,11 @@ class TrackerDirectCommon : public QObject
         void datatypes_as_properties();
 
     private:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        QtMessageHandler origMsgHandler;
+#else
         QtMsgHandler origMsgHandler;
+#endif
 };
 
 #endif // QSPARQL_TRACKER_COMMON_H

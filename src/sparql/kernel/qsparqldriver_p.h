@@ -41,14 +41,14 @@
 #ifndef QSPARQLDRIVER_H
 #define QSPARQLDRIVER_H
 
+#include <qsparqlconnection.h>
+#include <qsparqlconnectionoptions.h>
+#include <qsparqlquery.h>
+
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
-
-#include <QtSparql/qsparqlconnection.h>
-#include <QtSparql/qsparqlconnectionoptions.h>
-#include <QtSparql/qsparqlquery.h>
 
 
 QT_BEGIN_HEADER

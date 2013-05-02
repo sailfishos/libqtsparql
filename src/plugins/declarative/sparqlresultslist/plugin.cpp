@@ -43,16 +43,18 @@
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
 
-#include <QtSparql/private/qsparqlresultslist_p.h>
+#include <private/qsparqlresultslist_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class SparqlResultsListPlugin : public QDeclarativeExtensionPlugin
 {
+    Q_OBJECT
+
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(qstrcmp(uri, "QSparql") == 0);
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtSparql"));
         qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
         qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
     }
@@ -61,3 +63,5 @@ public:
 Q_EXPORT_PLUGIN2(sparqlresultslist, SparqlResultsListPlugin);
 
 QT_END_NAMESPACE
+
+#include "plugin.moc"

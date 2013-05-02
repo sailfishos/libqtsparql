@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include <QtSparql/private/qsparqldriverplugin_p.h>
+#include <private/qsparqldriverplugin_p.h>
 #include <qstringlist.h>
 #include "../../../sparql/drivers/tracker_direct/qsparql_tracker_direct_p.h"
 
@@ -45,6 +45,11 @@ QT_BEGIN_NAMESPACE
 
 class QTrackerDirectDriverPlugin : public QSparqlDriverPlugin
 {
+    Q_OBJECT
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql.TrackerDirectDriverInterface")
+#endif
+
 public:
     QTrackerDirectDriverPlugin();
 
@@ -73,7 +78,11 @@ QStringList QTrackerDirectDriverPlugin::keys() const
     return l;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 Q_EXPORT_STATIC_PLUGIN(QTrackerDirectDriverPlugin)
 Q_EXPORT_PLUGIN2(qsparqltrackerdirect, QTrackerDirectDriverPlugin)
+#endif
 
 QT_END_NAMESPACE
+
+#include "main.moc"

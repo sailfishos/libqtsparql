@@ -1,6 +1,5 @@
 include(../declarativebase.pri)
 
 TARGET	 = sparqllistmodel
-SOURCES		= plugin.cpp
-
-DESTDIR = $$QTSPARQL_BUILD_TREE/imports/QtSparql
+equals(QT_MAJOR_VERSION, 4): SOURCES		= plugin.cpp
+equals(QT_MAJOR_VERSION, 5): SOURCES		= plugin-qt5.cpp

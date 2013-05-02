@@ -40,9 +40,9 @@
 #ifndef QSPARQL_TRACKER_H
 #define QSPARQL_TRACKER_H
 
-#include <QtSparql/private/qsparqldriver_p.h>
-#include <QtSparql/qsparqlresult.h>
-#include <QtSparql/qsparqlquery.h>
+#include <private/qsparqldriver_p.h>
+#include <qsparqlresult.h>
+#include <qsparqlquery.h>
 
 #include <QtDBus/QtDBus>
 
