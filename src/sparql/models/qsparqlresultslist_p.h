@@ -46,11 +46,7 @@
 #include <QSparqlConnectionOptions>
 #include <QSparqlConnection>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-#include <private/qsparqlsparqlconnectionoptions-qt5_p.h>
-#else
 #include <private/qsparqlsparqlconnectionoptions_p.h>
-#endif
 
 #include <QtCore/QAbstractListModel>
 
