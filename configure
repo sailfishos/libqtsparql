@@ -86,12 +86,6 @@ fi
 export QMAKE
 
 QT_VERSION=`$QMAKE -query QT_VERSION`
-if [ $? -ne 0 ]; then
-    # May fail because 'qmake' yields the qtchooser wrapper, which needs -qt argument?
-    QMAKE="qmake -qt=5"
-    QT_VERSION=`$QMAKE -query QT_VERSION`
-fi
-
 if [ -z "$QT_VERSION" ] ; then
 	echo
 	echo "Cannot proceed without QT_VERSION determined."
