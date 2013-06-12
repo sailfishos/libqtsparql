@@ -6,9 +6,6 @@ Group:   System/Libraries
 License: LGPLv2
 URL:     https://github.com/nemomobile/libqtsparql
 Source0: %{name}-%{version}.tar.gz
-Requires: pkgconfig(Qt5Core)
-Requires: pkgconfig(Qt5Network)
-Requires: pkgconfig(Qt5Qml)
 BuildRequires: doxygen
 BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5Network)
@@ -37,9 +34,9 @@ documentation
 Summary:  QtSparql testsuite 
 Group:    System/X11
 Requires:  %{name} >= %{version}
-Requires: pkgconfig(Qt5Xml)
-Requires: pkgconfig(Qt5Test)
-Requires: pkgconfig(Qt5Gui)
+BuildRequires: pkgconfig(Qt5Xml)
+BuildRequires: pkgconfig(Qt5Test)
+BuildRequires: pkgconfig(Qt5Gui)
 Requires: libqt5sparql-tracker >= %{version}
 Requires: libqt5sparql-tracker-direct >= %{version} 
 
@@ -49,7 +46,7 @@ Tests for libqtsparql.
 %package endpoint
 Summary:  Endpoint driver package for %{name}
 Group:    Libraries
-Requires: pkgconfig(Qt5Xml)
+BuildRequires: pkgconfig(Qt5Xml)
 
 %description endpoint 
 Endpoint driver for QtSparql.
@@ -57,7 +54,9 @@ Endpoint driver for QtSparql.
 %package tracker 
 Summary:  Tracker driver package for %{name}
 Group:    Libraries
+Requires:  %{name} >= %{version}
 Requires: tracker >= 0.10.0
+
 
 %description tracker
 Tracker driver for QtSparql.
@@ -65,6 +64,7 @@ Tracker driver for QtSparql.
 %package tracker-direct
 Summary:  Tracker driver package for %{name}
 Group:    Libraries
+Requires:  %{name} >= %{version}
 Requires: tracker >= 0.10.0
 
 %description tracker-direct
