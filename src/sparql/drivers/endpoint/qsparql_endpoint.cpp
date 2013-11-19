@@ -571,7 +571,7 @@ bool EndpointDriver::open(const QSparqlConnectionOptions& options)
     d->url.setHost(options.hostName());
 
     if (options.path().isEmpty())
-        d->url.setPath(QLatin1String("sparql"));
+        d->url.setPath(QLatin1String("/sparql"));
     else
         d->url.setPath(options.path());
 
