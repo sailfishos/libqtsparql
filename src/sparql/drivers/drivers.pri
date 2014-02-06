@@ -26,7 +26,7 @@ contains(sparql-drivers, tracker_direct) {
                drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_update_result_p.cpp
     CONFIG += no_keywords link_pkgconfig
-    PKGCONFIG += tracker-sparql-0.14
+    PKGCONFIG += tracker-sparql-0.18
     DEFINES += QT_SPARQL_TRACKER_DIRECT
 }
 

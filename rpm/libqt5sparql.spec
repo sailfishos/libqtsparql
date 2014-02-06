@@ -16,7 +16,7 @@ BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
 BuildRequires: pkgconfig(Qt5Widgets)
-BuildRequires: tracker-devel
+BuildRequires: pkgconfig(tracker-sparql-0.18)
 
 %description
 Library for accessing RDF stores.
