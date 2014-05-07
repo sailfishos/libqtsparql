@@ -41,7 +41,7 @@
     <set name="qsparql-endpoint" description="Tests for endpoint plugin of qsparql">
       <case name="tst_qsparql_endpoint" description="Executing tst_qsparql_endpoint" timeout="900">
         <step>
-            su - user -c "/usr/lib/libqtsparql-tests/tst_qsparql_endpoint"
+            /usr/lib/libqtsparql-tests/tst_qsparql_endpoint
         </step>
       </case>
       <environments>
@@ -60,7 +60,7 @@
         <hardware>true</hardware>
       </environments>
       <get>
-        <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+        <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
       </get>
     </set>
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
@@ -74,7 +74,7 @@
         <hardware>true</hardware>
       </environments>
       <get>
-        <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+        <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
       </get>
     </set>
     <set name="qsparql-threading" description="Multithreading tests">
@@ -88,7 +88,7 @@
             <hardware>true</hardware>
         </environments>
         <get>
-            <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+            <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
         </get>
     </set>
     <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
@@ -102,7 +102,7 @@
             <hardware>true</hardware>
         </environments>
         <get>
-            <file>/home/meego/.local/share/tracker/tracker-store.log</file>
+            <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
         </get>
     </set>
     <set name="qsparql-tracker-direct-crashes" description="Regression tests">
