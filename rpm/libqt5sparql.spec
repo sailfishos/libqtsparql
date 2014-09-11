@@ -37,6 +37,7 @@ Requires:  %{name} >= %{version}
 BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
+Requires: libqt5sparql-endpoint >= %{version}
 Requires: libqt5sparql-tracker >= %{version}
 Requires: libqt5sparql-tracker-direct >= %{version} 
 
