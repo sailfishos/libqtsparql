@@ -43,6 +43,7 @@
 
 #include <QtTest/QtTest>
 #include <QtSparql>
+#include <unistd.h>
 
 class tst_QSparqlTrackerDirect : public TrackerDirectCommon
 {
