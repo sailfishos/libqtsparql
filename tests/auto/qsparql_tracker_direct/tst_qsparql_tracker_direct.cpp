@@ -1170,7 +1170,16 @@ void tst_QSparqlTrackerDirect::query_with_data_ready_set_data()
 void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
 {
     setMsgLogLevel(QtCriticalMsg);
-    const int testDataAmount = 300;
+
+    // This is a flaky test.
+
+    // The amount of test data is relevant.
+    // In fast HW, too few won't give us the chance to destroy the
+    // connection before the query has finished.
+    // In slow HW, too much may timeout before we start to have the
+    // results of the query.
+    const int testDataAmount = 1000;
+
     const QString testCaseTag("<qsparql-tracker-direct-tests-destroy_connection_partially_iterated_result>");
     QScopedPointer<TestData> testData(
             TestData::createTrackerTestData(testDataAmount, "<qsparql-tracker-direct-tests>", testCaseTag));
@@ -1193,7 +1202,7 @@ void tst_QSparqlTrackerDirect::destroy_connection_partially_iterated_results()
             if (ensureQueryExecuting(r)) {
                 delete conn; conn = 0;
                 ++succesfulRounds;
-                // Spin the event loop to ensure all asynchrnous activity has a chance to take place
+                // Spin the event loop to ensure all asynchronous activity has a chance to take place
                 QTest::qWait(500);
             }
             // Finally delete the result
