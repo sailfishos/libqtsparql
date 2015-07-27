@@ -1,5 +1,5 @@
 Name: libqtsparql
-Version: 0.2.13
+Version: 0.2.15
 Release: 1
 Summary: Library for accessing RDF stores
 Group:   System/Libraries
