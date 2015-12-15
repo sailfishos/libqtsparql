@@ -3,8 +3,8 @@ Version: 0.2.15
 Release: 1
 Summary: Library for accessing RDF stores
 Group:   System/Libraries
-License: LGPLv2
-URL:     https://github.com/nemomobile/libqtsparql
+License: LGPLv2.1 or GPLv3 or LGPLv2.1 with Nokia Qt LGPL Exception v1.1
+URL:     https://git.merproject.org/mer-core/libqtsparql
 Source0: %{name}-%{version}.tar.gz
 BuildRequires: doxygen
 BuildRequires: pkgconfig(Qt5Core)
@@ -24,7 +24,7 @@ Library for accessing RDF stores.
 %package devel
 Summary:  Qt Sparql development files
 Group:    Development/Libraries
-Requires:  %{name} >= %{version}
+Requires: %{name} >= %{version}
 
 %description devel
 Library for accessing RDF stores.
@@ -32,11 +32,7 @@ documentation
 
 %package tests
 Summary:  QtSparql testsuite 
-Group:    System/X11
-Requires:  %{name} >= %{version}
-BuildRequires: pkgconfig(Qt5Xml)
-BuildRequires: pkgconfig(Qt5Test)
-BuildRequires: pkgconfig(Qt5Gui)
+Requires: %{name} >= %{version}
 Requires: libqt5sparql-endpoint >= %{version}
 Requires: libqt5sparql-tracker >= %{version}
 Requires: libqt5sparql-tracker-direct >= %{version} 
@@ -46,26 +42,21 @@ Tests for libqtsparql.
 
 %package endpoint
 Summary:  Endpoint driver package for %{name}
-Group:    Libraries
-BuildRequires: pkgconfig(Qt5Xml)
 
 %description endpoint 
 Endpoint driver for QtSparql.
 
 %package tracker 
 Summary:  Tracker driver package for %{name}
-Group:    Libraries
-Requires:  %{name} >= %{version}
+Requires: %{name} >= %{version}
 Requires: tracker >= 0.10.0
-
 
 %description tracker
 Tracker driver for QtSparql.
 
 %package tracker-direct
 Summary:  Tracker driver package for %{name}
-Group:    Libraries
-Requires:  %{name} >= %{version}
+Requires: %{name} >= %{version}
 Requires: tracker >= 0.10.0
 
 %description tracker-direct
@@ -80,9 +71,6 @@ export QT_SELECT=5
 %qmake5
 make %{?jobs:-j%jobs}
 make doc
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %install
 %qmake_install
