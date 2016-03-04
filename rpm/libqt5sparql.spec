@@ -1,5 +1,5 @@
 Name: libqt5sparql
-Version: 0.2.15
+Version: 0.2.17
 Release: 1
 Summary: Library for accessing RDF stores
 Group:   System/Libraries
