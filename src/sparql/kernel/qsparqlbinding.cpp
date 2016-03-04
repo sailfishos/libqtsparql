@@ -361,10 +361,7 @@ QString QSparqlBinding::toString() const
             quoted = true;
             QDate dt = val.toDate();
             // Date format has to be "yyyy-MM-dd", with leading zeroes if month or day < 10
-            literal = QLatin1Char('\"') + QString::number(dt.year()) + QLatin1Char('-') +
-                QString::number(dt.month()).rightJustified(2, QLatin1Char('0'), true) +
-                QLatin1Char('-') +
-                QString::number(dt.day()).rightJustified(2, QLatin1Char('0'), true) + QLatin1Char('\"');
+            literal = QLatin1Char('\"') + QLocale::c().toString(dt, QLatin1String("yyyy-MM-dd")) + QLatin1Char('\"');
             break;
         }
         case QVariant::Time:
@@ -372,7 +369,7 @@ QString QSparqlBinding::toString() const
             quoted = true;
             QTime tm = val.toTime();
             // Time format has to be "hh:mm:ss"
-            literal = QLatin1Char('\"') + tm.toString() + QLatin1Char('\"');
+            literal = QLatin1Char('\"') + QLocale::c().toString(tm, QLatin1String("hh:mm:ss")) + QLatin1Char('\"');
             break;
         }
         case QVariant::DateTime:
@@ -380,23 +377,14 @@ QString QSparqlBinding::toString() const
             quoted = true;
             QDateTime dt = val.toDateTime();
             int offset = dt.utcOffset();
-            QDate date = val.toDateTime().date();
-            QTime time = val.toDateTime().time();
             // DateTime format has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
-            literal = QLatin1Char('\"') + QString::number(date.year()) + QLatin1Char('-') +
-                QString::number(date.month()).rightJustified(2, QLatin1Char('0'), true) +
-                QLatin1Char('-') +
-                QString::number(date.day()).rightJustified(2, QLatin1Char('0'), true) +
-                QLatin1Char('T') +
-                time.toString();
+            literal = QLatin1Char('\"') + QLocale::c().toString(dt, QLatin1String("yyyy-MM-ddThh:mm:ss"));
 
             if (offset != 0) {
                 QTime zone(0, 0, 0);
                 zone.addSecs(offset);
-                if (offset > 0)
-                    literal.append(zone.toString(QLatin1String("+HH:mm")));
-                else
-                    literal.append(zone.toString(QLatin1String("-HH:mm")));
+                literal.append(offset > 0 ? QLatin1Char('+') : QLatin1Char('-'));
+                literal.append(QLocale::c().toString(zone, QLatin1String("HH:mm")));
             }
 
             literal.append(QLatin1Char('\"'));
