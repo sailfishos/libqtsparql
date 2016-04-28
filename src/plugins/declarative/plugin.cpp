@@ -49,10 +49,16 @@
 #endif
 
 #include <private/qsparqlresultslist_p.h>
+#include <private/qsparqlsparqllistmodel_p.h>
+#include <private/qsparqlsparqlconnection_p.h>
+#include <private/qsparqlsparqlconnectionoptions_p.h>
+
+#include <qsparqlquerymodel.h>
+
 
 QT_BEGIN_NAMESPACE
 
-class SparqlResultsListPlugin
+class SparqlPlugin
 #ifdef QT_VERSION_5
     : public QQmlExtensionPlugin
 #else
@@ -61,20 +67,23 @@ class SparqlResultsListPlugin
 {
     Q_OBJECT
 #ifdef QT_VERSION_5
-    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql.SparqlResultsListInterface")
+    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql")
 #endif
 
 public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtSparql"));
-        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
+        qmlRegisterType<SparqlListModel>(uri, 1, 0, "SparqlListModel");
+        qmlRegisterType<SparqlConnection>(uri, 1, 0, "SparqlConnection");
+        qmlRegisterType<SparqlConnectionOptions>(uri, 1, 0, "SparqlConnectionOptions");
         qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
+        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
     }
 };
 
 #ifndef QT_VERSION_5
-Q_EXPORT_PLUGIN2(sparqlresultslist, SparqlResultsListPlugin);
+Q_EXPORT_PLUGIN2(sparqlplugin, SparqlPlugin);
 #endif
 
 QT_END_NAMESPACE
