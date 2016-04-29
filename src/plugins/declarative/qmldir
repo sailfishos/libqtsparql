@@ -1,3 +1,2 @@
-plugin sparqllistmodel
-plugin sparqlconnection
-plugin sparqlresultslist
+module QtSparql
+plugin sparqlplugin

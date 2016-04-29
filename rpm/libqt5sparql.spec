@@ -88,9 +88,7 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 %defattr(-,root,root,-)
 %{_libdir}/libQt5Sparql.so.*
 %{_libdir}/qt5/qml/QtSparql/qmldir
-%{_libdir}/qt5/qml/QtSparql/libsparqlresultslist.so
-%{_libdir}/qt5/qml/QtSparql/libsparqlconnection.so
-%{_libdir}/qt5/qml/QtSparql/libsparqllistmodel.so
+%{_libdir}/qt5/qml/QtSparql/libsparqlplugin.so
 
 %files devel
 %defattr(-,root,root,-)

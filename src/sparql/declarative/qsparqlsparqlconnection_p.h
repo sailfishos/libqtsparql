@@ -37,6 +37,9 @@
 **
 ****************************************************************************/
 
+#ifndef QSPARQLSPARQLCONNECTION_P_H
+#define QSPARQLSPARQLCONNECTION_P_H
+
 #include <qsparqlquerymodel.h>
 
 #include <QtCore/qglobal.h>
@@ -123,3 +126,5 @@ private:
 QT_END_NAMESPACE
 
 QT_END_HEADER
+
+#endif
