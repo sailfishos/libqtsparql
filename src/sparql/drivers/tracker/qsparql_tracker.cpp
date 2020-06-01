@@ -116,7 +116,6 @@ class QTrackerDriverPrivate {
 public:
     QTrackerDriverPrivate();
     ~QTrackerDriverPrivate();
-    QDBusInterface* iface;
     bool doBatch; // true: call BatchSparqlUpdate on Tracker instead of
                   // SparqlUpdateBlank
 };
@@ -392,8 +391,10 @@ void QTrackerResult::exec(const QSparqlQueryOptions& options)
         qWarning() << "QTrackerResult:" << lastError() << query();
         return;
     }
-    QDBusPendingCall call = d->driverPrivate->iface->asyncCall(funcToCall,
-                                                QVariant(query()));
+
+    QDBusMessage message = QDBusMessage::createMethodCall(service, resourcesPath, resourcesInterface, funcToCall);
+    message.setArguments(QVariantList() << query());
+    QDBusPendingCall call = QDBusConnection::sessionBus().asyncCall(message);
     // if it's an insert or delete, and fireAndForget was set to true, don't
     // bother creating the watcher, by not doing this isFinished() will return
     // true
@@ -415,13 +416,12 @@ void QTrackerResult::driverClosing()
 }
 
 QTrackerDriverPrivate::QTrackerDriverPrivate()
-    : iface(0),  doBatch(false)
+    : doBatch(false)
 {
 }
 
 QTrackerDriverPrivate::~QTrackerDriverPrivate()
 {
-    delete iface;
 }
 
 QTrackerDriver::QTrackerDriver(QObject* parent)
@@ -484,33 +484,17 @@ bool QTrackerDriver::open(const QSparqlConnectionOptions& options)
 
     if (isOpen())
         close();
-    d->iface = new QDBusInterface(service, resourcesPath,
-                                  resourcesInterface,
-                                  QDBusConnection::sessionBus());
-    if (d->iface->isValid()) {
-        setOpen(true);
-        setOpenError(false);
 
-        return true;
-    }
-    else {
-        setOpen(false);
-        setOpenError(true);
-        QString errorMsg = d->iface->lastError().message();
-        qWarning() << errorMsg;
-        setLastError(QSparqlError(errorMsg, QSparqlError::ConnectionError));
+    setOpen(true);
+    setOpenError(false);
 
-        return false;
-    }
-
+    return true;
 }
 
 void QTrackerDriver::close()
 {
     if (isOpen()) {
         Q_EMIT closing();
-        delete d->iface;
-        d->iface = 0;
         setOpen(false);
         setOpenError(false);
     }
