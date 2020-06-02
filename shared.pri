@@ -13,7 +13,7 @@ equals(QT_MAJOR_VERSION, 5) {
 
 QT = core
 
-QMAKE_LIBDIR = $$QTSPARQL_BUILD_TREE/lib
+QMAKE_LIBDIR = $$QTSPARQL_BUILD_TREE/$$QTSPARQL_INSTALL_LIB
 #if qt is installed in a non standard location (e.g ~/.local/) the order of the include paths is very important
 #don't let qmake automatically generate the includes for Qt libs by setting this to nothing
 QMAKE_INCDIR_QT  = 
