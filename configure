@@ -178,6 +178,7 @@ QTSPARQL_INSTALL_DOCS=
 QTSPARQL_INSTALL_HEADERS=
 QTSPARQL_INSTALL_IMPORTS=
 QTSPARQL_INSTALL_PLUGINS=`$QMAKE -query QT_INSTALL_PLUGINS`
+QTSPARQL_INSTALL_LIB=
 QTSPARQL_INSTALL_LIBS=
 QTSPARQL_INSTALL_EXAMPLES=
 QTSPARQL_INSTALL_TESTS=
@@ -209,7 +210,7 @@ while [ "$#" -gt 0 ]; do
         CFG_QTSPARQL_COVERAGE=yes
         ;;
 
-    -prefix|-docdir|-headerdir|-importdir|-plugindir|-libdir|-examplesdir|-testdir)
+    -prefix|-docdir|-headerdir|-importdir|-plugindir|-lib|-libdir|-examplesdir|-testdir)
         VAR=`echo $1 | sed "s,^-\(.*\),\1,"`
         shift
         VAL="$1"
@@ -249,6 +250,10 @@ while [ "$#" -gt 0 ]; do
 
     plugindir)
         QTSPARQL_INSTALL_PLUGINS="$VAL"
+        ;;
+
+    lib)
+        QTSPARQL_INSTALL_LIB="$VAL"
         ;;
 
     libdir)
@@ -311,6 +316,8 @@ Installation options:
                          (default QT_INSTALL_IMPORTS)
     -plugindir <dir> ... Plugins will be installed to <dir>
                          (default QT_PLUGIN_DIR)
+    -lib <dir> ......... Library folder will be installed to <dir>
+                         (default lib)
     -libdir <dir> ...... Libraries will be installed to <dir>
                          (default PREFIX/lib)
     -examplesdir <dir> . Examples will be installed to <dir>
@@ -354,8 +361,12 @@ if [ -n "$QTSPARQL_INSTALL_PLUGINS" ]; then
     QTSPARQL_INSTALL_PLUGINS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_PLUGINS"`
 fi
 
+if [ -z "$QTSPARQL_INSTALL_LIB" ]; then
+    QTSPARQL_INSTALL_LIB="lib"
+fi
+
 if [ -z "$QTSPARQL_INSTALL_LIBS" ]; then
-    QTSPARQL_INSTALL_LIBS="$QTSPARQL_INSTALL_PREFIX/lib"
+    QTSPARQL_INSTALL_LIBS="$QTSPARQL_INSTALL_PREFIX/$QTSPARQL_INSTALL_LIB"
 fi
 QTSPARQL_INSTALL_LIBS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_LIBS"`
 
@@ -483,6 +494,7 @@ echo "QTSPARQL_INSTALL_DOCS     = $QTSPARQL_INSTALL_DOCS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_HEADERS  = $QTSPARQL_INSTALL_HEADERS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_IMPORTS  = $QTSPARQL_INSTALL_IMPORTS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_PLUGINS  = $QTSPARQL_INSTALL_PLUGINS" >> "$CACHEFILE.tmp"
+echo "QTSPARQL_INSTALL_LIB      = $QTSPARQL_INSTALL_LIB" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_LIBS     = $QTSPARQL_INSTALL_LIBS" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_EXAMPLES = $QTSPARQL_INSTALL_EXAMPLES" >> "$CACHEFILE.tmp"
 echo "QTSPARQL_INSTALL_TESTS    = $QTSPARQL_INSTALL_TESTS" >> "$CACHEFILE.tmp"

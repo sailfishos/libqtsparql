@@ -20,5 +20,5 @@ QMAKE_EXTRA_TARGETS += check memcheck
 
 equals(QT_MAJOR_VERSION, 4): install_qml.files = qsparqlconnection.qml qsparqlresultlist.qml qsparqllegacy.qml
 equals(QT_MAJOR_VERSION, 5): install_qml.files = qsparqlconnection-qt5.qml qsparqlresultlist-qt5.qml qsparqllegacy-qt5.qml
-install_qml.path = $$PREFIX/lib/$$PACKAGENAME-tests/
+install_qml.path = $$PREFIX/$$QTSPARQL_INSTALL_LIB/$$PACKAGENAME-tests/
 INSTALLS += install_qml
