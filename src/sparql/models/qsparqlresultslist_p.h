@@ -87,10 +87,8 @@ public:
     Status status() const;
 
     Q_INVOKABLE QString errorString() const;
-    
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+
     virtual QHash<int, QByteArray> roleNames() const;
-#endif
 
 public Q_SLOTS:
     void reload();

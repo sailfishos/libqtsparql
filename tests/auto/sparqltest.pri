@@ -1,9 +1,6 @@
 include(../../shared.pri)
-equals(QT_MAJOR_VERSION, 4): LIBS += -lQtSparql
-equals(QT_MAJOR_VERSION, 5): {
-    LIBS += -lQt5Sparql
-    DEFINES *= QT_VERSION_5
-}
+LIBS += -lQt5Sparql
+DEFINES *= QT_VERSION_5
 QMAKE_RPATHDIR = $$QTSPARQL_BUILD_TREE/$$QTSPARQL_INSTALL_LIB $$QMAKE_RPATHDIR
 target.path = $$QTSPARQL_INSTALL_TESTS # to be changed when we are part of qt
 INSTALLS += target

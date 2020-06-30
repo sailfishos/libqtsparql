@@ -55,9 +55,7 @@
 #include <QtCore/qeventloop.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QtCore/qurlquery.h>
-#endif
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkrequest.h>
@@ -422,37 +420,23 @@ EndpointResult* EndpointDriver::exec(const QString& query, QSparqlQuery::Stateme
 bool EndpointResult::exec(const QString& query, QSparqlQuery::StatementType type, const QString& prefixes)
 {
     QUrl queryUrl(d->driverPrivate->url);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QUrlQuery urlQuery(queryUrl);
     urlQuery.addQueryItem(QLatin1String("query"), prefixes + query);
-#else
-    queryUrl.addQueryItem(QLatin1String("query"), prefixes + query);
-#endif
     setQuery(query);
     setStatementType(type);
 
     // Virtuoso protocol extension options - timeout and maxrows
     QVariant timeout = d->driverPrivate->options.option(QLatin1String("timeout"));
     if (timeout.isValid()) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         urlQuery.addQueryItem(QLatin1String("timeout"), timeout.toString());
-#else
-        queryUrl.addQueryItem(QLatin1String("timeout"), timeout.toString());
-#endif
     }
 
     QVariant maxrows = d->driverPrivate->options.option(QLatin1String("maxrows"));
     if (maxrows.isValid()) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         urlQuery.addQueryItem(QLatin1String("maxrows"), maxrows.toString());
-#else
-        queryUrl.addQueryItem(QLatin1String("maxrows"), maxrows.toString());
-#endif
     }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     queryUrl.setQuery(urlQuery);
-#endif
 
     // qDebug() << "Real url to run.... " << queryUrl.toString();
 

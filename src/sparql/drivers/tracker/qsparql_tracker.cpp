@@ -57,15 +57,9 @@
 
 Q_DECLARE_METATYPE(QVector<QStringList>)
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #define ATOMIC_INT_IS_ZERO(val) ((val).load() == 0)
 #define SET_ATOMIC_INT(val, n) (val).store(n)
 #define ATOMIC_INT_VALUE(val) (val).load()
-#else
-#define ATOMIC_INT_IS_ZERO(val) !(val)
-#define SET_ATOMIC_INT(val, n) (val) = n
-#define ATOMIC_INT_VALUE(val) static_cast<int>(val)
-#endif
 
 /*
     Allows a metatype to be declared for a type containing commas.

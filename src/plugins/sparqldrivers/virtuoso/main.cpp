@@ -46,9 +46,7 @@ QT_BEGIN_NAMESPACE
 class QVirtuosoDriverPlugin : public QSparqlDriverPlugin
 {
     Q_OBJECT
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql.VirtuosoDriverInterface")
-#endif
 
 public:
     QVirtuosoDriverPlugin();
@@ -77,11 +75,6 @@ QStringList QVirtuosoDriverPlugin::keys() const
     l.append(QLatin1String("QVIRTUOSO"));
     return l;
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_STATIC_PLUGIN(QVirtuosoDriverPlugin)
-Q_EXPORT_PLUGIN2(qsparqlvirtuoso, QVirtuosoDriverPlugin)
-#endif
 
 QT_END_NAMESPACE
 
