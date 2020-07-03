@@ -39,15 +39,10 @@
 
 #include <QtTest/QtTest>
 #include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QtQml/qqml.h>
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
-#else
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative>
-#endif
 #include <private/qsparqlsparqlconnection_p.h>
 #include <QtSparql>
 
@@ -93,15 +88,9 @@ namespace {
 // QML stuff
 enum Status { Null, Ready, Loading, Error };
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 QQmlEngine *engine;
 QQmlComponent *component;
 QQmlContext *context;
-#else
-QDeclarativeEngine *engine;
-QDeclarativeComponent *component;
-QDeclarativeContext *context;
-#endif
 QObject* qmlObject;
 
 const QString contactSelectQuery =
@@ -154,17 +143,9 @@ bool loadQmlFile(QString fileName, QList<QPair<QString, QVariant> > contextPrope
 {
     QFileInfo fileInfo(qApp->arguments()[0]);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     engine = new QQmlEngine();
-#else
-    engine = new QDeclarativeEngine();
-#endif
     engine->addImportPath("../../../imports");
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     component = new QQmlComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName+"-qt5.qml"));
-#else
-    component = new QDeclarativeComponent(engine, QUrl::fromLocalFile(fileInfo.absolutePath()+"/"+fileName+".qml"));
-#endif
     context = engine->rootContext();
 
     for(int i=0;i<contextProperties.size();i++) {

@@ -40,26 +40,16 @@
 ****************************************************************************/
 
 #include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QGuiApplication>
 #include <QQuickItem>
 #include <QQuickView>
 #include <QQmlEngine>
-#else
-#include <QApplication>
-#include <QtDeclarative>
-#endif
 #include <QtSparql>
 #include <QtDBus>
 #include <QString>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 typedef QGuiApplication ApplicationType;
 typedef QQuickView ViewType;
-#else
-typedef QApplication ApplicationType;
-typedef QDeclarativeView ViewType;
-#endif
 
 class ModelLiveChange : public QObject
 {
@@ -127,11 +117,7 @@ int main(int argc, char *argv[])
     // they haven't been install
     viewQml.engine()->addImportPath("../../../imports");
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     viewQml.setSource(QUrl::fromLocalFile("main-qt5.qml"));
-#else
-    viewQml.setSource(QUrl::fromLocalFile("main.qml"));
-#endif
 
     // The bindings can be cast back to the appropriate QtSparql classes by setting
     // an "objectName" property on them, and casting them, eg :

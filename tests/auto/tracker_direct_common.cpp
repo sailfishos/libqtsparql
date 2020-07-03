@@ -46,16 +46,10 @@ namespace {
 
     int testLogLevel = QtWarningMsg;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     void myMessageOutput(QtMsgType type, const QMessageLogContext &, const QString &msgString)
-#else
-    void myMessageOutput(QtMsgType type, const char *msg)
-#endif
     {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         const QByteArray ba(msgString.toLocal8Bit());
         const char *msg(ba.constData());
-#endif
         switch (type) {
             case QtDebugMsg:
                 if (testLogLevel <= 0)
@@ -112,11 +106,7 @@ QSparqlResult* TrackerDirectCommon::runQuery(QSparqlConnection &conn, const QSpa
 
 void TrackerDirectCommon::installMsgHandler()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QtMessageHandler prevHandler = qInstallMessageHandler(myMessageOutput);
-#else
-    QtMsgHandler prevHandler = qInstallMsgHandler(myMessageOutput);
-#endif
     if (!origMsgHandler)
         origMsgHandler = prevHandler;
 }
@@ -186,24 +176,14 @@ bool TrackerDirectCommon::cleanData()
 
 void TrackerDirectCommon::testError(const QString& msg)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QtMessageHandler currMsgHandler = 0;
     if (origMsgHandler != 0)
         currMsgHandler = qInstallMessageHandler(origMsgHandler);
-#else
-    QtMsgHandler currMsgHandler = 0;
-    if (origMsgHandler != 0)
-        currMsgHandler = qInstallMsgHandler(origMsgHandler);
-#endif
 
     qWarning() << "Test error:" << msg;
 
     if (currMsgHandler != 0)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qInstallMessageHandler(currMsgHandler);
-#else
-        qInstallMsgHandler(currMsgHandler);
-#endif
 }
 
 void TrackerDirectCommon::query_contacts()

@@ -212,9 +212,6 @@ void QSparqlQueryModelPrivate::findRoleNames()
         Q_FOREACH(QString word, uniqueNames) {
             roleNames[roleCounter++] = word.toLatin1();
         }
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-        q->setRoleNames(roleNames);
-#endif
     } else {
         qWarning() << "QSparqlQueryModel: Invalid Query";
     }
@@ -603,11 +600,9 @@ QModelIndex QSparqlQueryModel::indexInQuery(const QModelIndex &item) const
                        item.internalPointer());
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 QHash<int, QByteArray> QSparqlQueryModel::roleNames() const
 {
     return d->roleNames;
 }
-#endif
 
 QT_END_NAMESPACE

@@ -89,9 +89,7 @@ public:
 
     QSparqlError lastError() const;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     virtual QHash<int, QByteArray> roleNames() const;
-#endif
 
 Q_SIGNALS:
     void finished();

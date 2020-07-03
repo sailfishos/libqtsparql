@@ -165,13 +165,8 @@ tst_QSparqlThreading::tst_QSparqlThreading()
 
 void tst_QSparqlThreading::joinThreads()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     threadJoin.acquire(threadJoinCount.load());
     threadJoinCount.store(0);
-#else
-    threadJoin.acquire(threadJoinCount);
-    threadJoinCount = 0;
-#endif
 }
 
 bool tst_QSparqlThreading::waitForSignal(QObject *obj, const char *signal, int delay)

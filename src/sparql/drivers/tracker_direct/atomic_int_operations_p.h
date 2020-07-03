@@ -46,20 +46,12 @@ namespace AtomicIntOperations {
 
 inline void setValue(QAtomicInt &v, int n)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     v.store(n);
-#else
-    v = n;
-#endif
 }
 
 inline int getValue(const QAtomicInt &v)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     return v.load();
-#else
-    return static_cast<int>(v);
-#endif
 }
 
 }
