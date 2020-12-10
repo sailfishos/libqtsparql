@@ -2,7 +2,7 @@ Name: libqt5sparql
 Version: 0.2.17
 Release: 1
 Summary: Library for accessing RDF stores
-License: LGPLv2.1 or GPLv3 or LGPLv2.1 with Nokia Qt LGPL Exception v1.1
+License: LGPLv2 or GPLv3 or LGPLv2 with Nokia Qt LGPL Exception v1.1
 URL:     https://git.sailfishos.org/mer-core/libqtsparql
 Source0: %{name}-%{version}.tar.gz
 BuildRequires: doxygen
@@ -84,6 +84,7 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 
 %files
 %defattr(-,root,root,-)
+%license LICENSE.LGPL
 %{_libdir}/libQt5Sparql.so.*
 %{_libdir}/qt5/qml/QtSparql/qmldir
 %{_libdir}/qt5/qml/QtSparql/libsparqlplugin.so
