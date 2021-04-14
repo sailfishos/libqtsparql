@@ -16,7 +16,7 @@ SOURCES         = main.cpp \
 
 unix: {
     CONFIG += link_pkgconfig
-    PKGCONFIG += tracker-sparql-2.0
+    PKGCONFIG += tracker-sparql-3.0
 }
 
 include(../qsparqldriverbase.pri)

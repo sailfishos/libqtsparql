@@ -97,7 +97,6 @@ private:
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);
 QSparqlError::ErrorType errorCodeToType(gint code);
-gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority);
 
 QT_END_NAMESPACE
 

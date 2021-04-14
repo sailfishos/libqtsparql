@@ -1,5 +1,5 @@
 Name: libqt5sparql
-Version: 0.2.17
+Version: 0.3.0
 Release: 1
 Summary: Library for accessing RDF stores
 License: LGPLv2 or GPLv3 or LGPLv2 with Nokia Qt LGPL Exception v1.1
@@ -14,7 +14,7 @@ BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
-BuildRequires: pkgconfig(tracker-sparql-2.0)
+BuildRequires: pkgconfig(tracker-sparql-3.0)
 
 %description
 Library for accessing RDF stores.

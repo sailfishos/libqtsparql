@@ -53,9 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Helper functions used both by QTrackerDirectSelectResult and
-// QTrackerDirectSyncResult
-
 namespace {
 
 QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, int col)
@@ -122,6 +119,9 @@ QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, i
 
 }  // namespace
 
+// Helper functions used both by QTrackerDirectSelectResult and
+// QTrackerDirectSyncResult
+
 QVariant readVariant(TrackerSparqlCursor* cursor, int col)
 {
     const TrackerSparqlValueType type =
@@ -150,19 +150,6 @@ QSparqlError::ErrorType errorCodeToType(gint code)
         return QSparqlError::BackendError;
     default:
         return QSparqlError::BackendError;
-    }
-}
-
-gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
-{
-    switch (priority) {
-    case QSparqlQueryOptions::HighPriority:
-        return G_PRIORITY_HIGH;
-    case QSparqlQueryOptions::LowPriority:
-        return G_PRIORITY_LOW;
-    case QSparqlQueryOptions::NormalPriority:
-    default:
-        return G_PRIORITY_DEFAULT;
     }
 }
 
@@ -228,7 +215,7 @@ private:
     void run()
     {
         if (!runFinished) {
-            cd.connection = tracker_sparql_connection_get(0, &cd.error);
+            cd.connection = tracker_sparql_connection_bus_new("org.freedesktop.Tracker3.Miner.Files", NULL, NULL, &cd.error);
             Q_EMIT connectionOpened();
             runFinished = true;
         }

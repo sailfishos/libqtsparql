@@ -591,7 +591,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
     QFETCH(QString, benchmarkName);
     QFETCH(QString, queryString);
     GError* error = 0;
-    TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
+    TrackerSparqlConnection* connection = tracker_sparql_connection_bus_new("org.freedesktop.Tracker3.Miner.Files", NULL, NULL, &error);
     QVERIFY(connection);
     QVERIFY(error == 0);
     QList<int> totalTimes;
@@ -681,7 +681,7 @@ void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
     benchmarkName += QString("-thread");
     QFETCH(QString, queryString);
     GError* error = 0;
-    TrackerSparqlConnection* connection = tracker_sparql_connection_get(0, &error);
+    TrackerSparqlConnection* connection = tracker_sparql_connection_bus_new("org.freedesktop.Tracker3.Miner.Files", NULL, NULL, &error);
     QVERIFY(connection);
     QVERIFY(error == 0);
     QList<int> totalTimes;

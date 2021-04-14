@@ -150,7 +150,6 @@ void QTrackerDirectSyncResult::updateQuery()
 
     tracker_sparql_connection_update(driverPrivate->connection,
                                      query().toUtf8().constData(),
-                                     qSparqlPriorityToGlib(options.priority()),
                                      0,
                                      &error);
     if (error) {
