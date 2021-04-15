@@ -67,7 +67,7 @@ Tracker direct access driver for QtSparql.
 export QT_SELECT=5
 ./configure -prefix /usr -lib %{_lib}
 %qmake5
-make %{?jobs:-j%jobs}
+%make_build
 make doc
 
 %install
