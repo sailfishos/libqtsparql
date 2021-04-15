@@ -1,8 +1,0 @@
-interface: libqtsparql
-type: library
-scope: Nokia MeeGo
-state: experimental
-libs-pkg: libqtsparql0
-dev-pkg: libqtsparql-dev
-doc-type: doxygen
-doxygen-conf: doc/doxygen.cfg
