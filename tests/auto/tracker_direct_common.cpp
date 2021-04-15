@@ -52,6 +52,7 @@ namespace {
         const char *msg(ba.constData());
         switch (type) {
             case QtDebugMsg:
+            case QtInfoMsg:
                 if (testLogLevel <= 0)
                     fprintf(stderr, "QDEBUG : %s\n", msg);
                 break;
