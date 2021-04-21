@@ -40,7 +40,6 @@
 #include "qsparql_tracker_direct_update_result_p.h"
 #include "qsparql_tracker_direct_p.h"
 #include "qsparql_tracker_direct_driver_p.h"
-#include "atomic_int_operations_p.h"
 
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
@@ -48,8 +47,6 @@
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qdebug.h>
-
-using namespace AtomicIntOperations;
 
 QT_BEGIN_NAMESPACE
 
@@ -139,8 +136,8 @@ void QTrackerDirectUpdateResult::waitForFinished()
 
 void QTrackerDirectUpdateResult::terminate()
 {
-    if (getValue(resultFinished) == 0) {
-        setValue(resultFinished, 1);
+    if (resultFinished.load() == 0) {
+        resultFinished.store(1);
         Q_EMIT finished();
     }
 }
@@ -161,7 +158,7 @@ void QTrackerDirectUpdateResult::stopAndWait()
         queryRunner->wait();
     }
     driverPrivate = 0;
-    setValue(resultFinished, 1);
+    resultFinished.store(1);
     delete queryRunner; queryRunner = 0;
 }
 

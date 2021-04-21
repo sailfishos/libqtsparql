@@ -38,12 +38,9 @@
 ****************************************************************************/
 
 #include "qsparql_tracker_direct_result_p.h"
-#include "atomic_int_operations_p.h"
 
 #include <qsparqlerror.h>
 #include <QtCore/qdebug.h>
-
-using namespace AtomicIntOperations;
 
 // Query Runner Implementation
 QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *result)
@@ -54,8 +51,8 @@ QTrackerDirectQueryRunner::QTrackerDirectQueryRunner(QTrackerDirectResult *resul
 
 void QTrackerDirectQueryRunner::runOrWait()
 {
-    if(acquireRunSemaphore()) {
-        if (getValue(runFinished) == 0)
+    if (acquireRunSemaphore()) {
+        if (runFinished.load() == 0)
             run();
         else
             runSemaphore.release(1);
@@ -66,7 +63,7 @@ void QTrackerDirectQueryRunner::runOrWait()
 
 void QTrackerDirectQueryRunner::queue(QThreadPool& threadPool)
 {
-    if(acquireRunSemaphore()) {
+    if (acquireRunSemaphore()) {
         // QSparqlQueryPriority's are the wrong way round for
         // the thread pool, so just * -1 to get the correct
         // number
@@ -85,10 +82,10 @@ void QTrackerDirectQueryRunner::wait()
 
 void QTrackerDirectQueryRunner::run()
 {
-    if (getValue(runFinished) == 0) {
+    if (runFinished.load() == 0) {
         result->run();
     }
-    setValue(runFinished, 1);
+    runFinished.store(1);
     runSemaphore.release(1);
 }
 
@@ -110,19 +107,16 @@ QTrackerDirectResult::~QTrackerDirectResult()
 
 void QTrackerDirectResult::driverClosing()
 {
-    qWarning() << "QSparqlConnection closed before QSparqlResult with query:" <<
-                    query();
-    if (!isFinished())
-    {
+    qWarning() << "QSparqlConnection closed before QSparqlResult with query:" << query();
+    if (!isFinished()) {
         setLastError(QSparqlError(QString::fromUtf8("QSparqlConnection closed before QSparqlResult"),
-                        QSparqlError::ConnectionError,
-                        -1));
+                                  QSparqlError::ConnectionError, -1));
     }
     stopAndWait();
 }
 
 bool QTrackerDirectResult::isFinished() const
 {
-    return (getValue(resultFinished) == 1);
+    return resultFinished.load() == 1;
 }
 
