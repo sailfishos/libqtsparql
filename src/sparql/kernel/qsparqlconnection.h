@@ -68,10 +68,9 @@ class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
     Q_OBJECT
 public:
-    enum Feature {  QuerySize, DefaultGraph,
+    enum Feature {  DefaultGraph,
                     AskQueries, ConstructQueries, UpdateQueries,
                     SyncExec, AsyncExec };
-    // TODO: QuerySize should be removed (API break).
 
     explicit QSparqlConnection(QObject* parent = 0);
     QSparqlConnection(const QString& type,

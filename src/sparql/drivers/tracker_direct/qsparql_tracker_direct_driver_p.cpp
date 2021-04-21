@@ -339,7 +339,6 @@ QTrackerDirectDriver::~QTrackerDirectDriver()
 bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
-    case QSparqlConnection::QuerySize:
     case QSparqlConnection::AskQueries:
     case QSparqlConnection::UpdateQueries:
     case QSparqlConnection::DefaultGraph:

@@ -549,12 +549,6 @@ QString QSparqlConnection::driverName() const
     This enum contains a list of features a driver might support. Use
     hasFeature() to query whether a feature is supported or not.
 
-    \var QSparqlConnection::Feature QSparqlConnection::QuerySize
-
-    The connection is capable of reporting the size of a query. Note that
-    some databases do not support returning the size (i.e. number of rows
-    returned) of a query, in which case QSparqlQuery::size() will return -1.
-
     \var QSparqlConnection::Feature QSparqlConnection::DefaultGraph
 
     The store has a default graph which doesn't have to be specified. Some
