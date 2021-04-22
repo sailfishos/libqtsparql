@@ -14,7 +14,6 @@ BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
-BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(tracker-sparql-2.0)
 
 %description
