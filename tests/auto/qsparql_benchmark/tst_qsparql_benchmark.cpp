@@ -588,7 +588,6 @@ void tst_QSparqlBenchmark::dataReadingBenchmark_data()
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparql()
 {
-    g_type_init();
     QFETCH(QString, benchmarkName);
     QFETCH(QString, queryString);
     GError* error = 0;
@@ -678,7 +677,6 @@ public:
 
 void tst_QSparqlBenchmark::queryWithLibtrackerSparqlInThread()
 {
-    g_type_init();
     QFETCH(QString, benchmarkName);
     benchmarkName += QString("-thread");
     QFETCH(QString, queryString);

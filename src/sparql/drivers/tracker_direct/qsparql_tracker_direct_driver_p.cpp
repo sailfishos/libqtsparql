@@ -326,9 +326,6 @@ QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
     d = new QTrackerDirectDriverPrivate(this);
-    /* Initialize GLib type system */
-    g_type_init();
-
 }
 
 QTrackerDirectDriver::~QTrackerDirectDriver()
