@@ -69,6 +69,7 @@ public:
     QSparqlResult* exec(const QString& query,
                          QSparqlQuery::StatementType type,
                          const QSparqlQueryOptions& options);
+    void subscribeToGraph(const QString &name);
 
 Q_SIGNALS:
     void opened();

@@ -82,6 +82,8 @@ public:
     QSparqlResult* exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options);
     QSparqlResult* syncExec(const QSparqlQuery& query);
 
+    void subscribeToGraph(const QString &name);
+
     bool isValid() const;
     QString driverName() const;
     bool hasFeature(Feature feature) const;
@@ -95,6 +97,9 @@ public:
     QSparqlBinding createUrn(const QString& name) const;
 
     static QStringList drivers();
+
+Q_SIGNALS:
+    void graphUpdated(const QString &name);
 
 private:
     friend class QSparqlConnectionPrivate;

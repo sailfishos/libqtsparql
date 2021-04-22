@@ -235,7 +235,8 @@ private:
 };
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
-    : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
+    : connection(nullptr), notifier(nullptr),
+      dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
       asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen)
 {
     QObject::connect(connectionOpener, SIGNAL(connectionOpened()), this, SLOT(asyncOpenComplete()));
@@ -397,6 +398,11 @@ void QTrackerDirectDriver::close()
     // We just check to see if we can get a semaphore here
     d->waitForConnectionOpen();
 
+    if (d->notifier) {
+        g_object_unref(d->notifier);
+        d->notifier = 0;
+    }
+
     if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
@@ -423,6 +429,36 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
     }
 
     return result;
+}
+
+static void notifierCallback(TrackerNotifier *self,
+                             char *service,
+                             char *graph,
+                             GPtrArray *events,
+                             gpointer user_data)
+{
+    Q_UNUSED(self);
+    Q_UNUSED(events);
+    QSparqlConnection *connection = static_cast<QTrackerDirectDriver*>(user_data)->connection();
+    if (connection) {
+        connection->graphUpdated(QString::fromLatin1(graph));
+    }
+}
+
+void QTrackerDirectDriver::subscribeToGraph(const QString &name)
+{
+    Q_UNUSED(name);
+
+    if (!d->notifier) {
+        d->waitForConnectionOpen(); // could avoid?
+        d->notifier = tracker_sparql_connection_create_notifier(d->connection);
+        g_signal_connect(d->notifier, "events", G_CALLBACK(notifierCallback), this);
+    }
+
+    // Note: skipping tracker_notifier_signal_subscribe(), the documentation is vague
+    // but the idea upstream seems to be that named subscription is only needed if the
+    // main connection is for app-specific db, not the miner dbus service.
+    // e.g. queries refer to miner via dbus_service declaratio.
 }
 
 QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)

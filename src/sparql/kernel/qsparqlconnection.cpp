@@ -350,6 +350,7 @@ void QSparqlConnection::qmlConstructor(const QString& type, const QSparqlConnect
 {
     delete d;
     QSparqlDriver* driver = QSparqlConnectionPrivate::findDriver(type);
+    driver->setConnection(this);
     d = new QSparqlConnectionPrivate(driver, type, options);
     d->driver->open(d->options);
 }
@@ -368,6 +369,7 @@ QSparqlConnection::QSparqlConnection(const QString& type,
     : QObject(parent)
 {
     QSparqlDriver* driver = QSparqlConnectionPrivate::findDriver(type);
+    driver->setConnection(this);
     d = new QSparqlConnectionPrivate(driver, type, options);
     d->driver->open(d->options);
 }
@@ -533,6 +535,14 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
     QSparqlQueryOptions options;
     options.setExecutionMethod(QSparqlQueryOptions::SyncExec);
     return exec(query, options);
+}
+
+/*!
+    Subscribes to a named graph. Updates signaled with graphUpdated.
+*/
+void QSparqlConnection::subscribeToGraph(const QString &name)
+{
+    d->driver->subscribeToGraph(name);
 }
 
 /*!
