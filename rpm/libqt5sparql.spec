@@ -31,7 +31,6 @@ documentation
 Summary:  QtSparql testsuite 
 Requires: %{name} >= %{version}
 Requires: libqt5sparql-endpoint >= %{version}
-Requires: libqt5sparql-tracker >= %{version}
 Requires: libqt5sparql-tracker-direct >= %{version} 
 
 %description tests
@@ -43,18 +42,10 @@ Summary:  Endpoint driver package for %{name}
 %description endpoint 
 Endpoint driver for QtSparql.
 
-%package tracker 
-Summary:  Tracker driver package for %{name}
-Requires: %{name} >= %{version}
-Requires: tracker >= 0.10.0
-
-%description tracker
-Tracker driver for QtSparql.
 
 %package tracker-direct
 Summary:  Tracker driver package for %{name}
 Requires: %{name} >= %{version}
-Requires: tracker >= 0.10.0
 
 %description tracker-direct
 Tracker direct access driver for QtSparql.
@@ -105,10 +96,6 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 %files endpoint
 %defattr(-,root,root,-)
 %{_libdir}/qt5/plugins/sparqldrivers/libqsparqlendpoint.so
-
-%files tracker
-%defattr(-,root,root,-)
-%{_libdir}/qt5/plugins/sparqldrivers/libqsparqltracker.so
 
 %files tracker-direct
 %defattr(-,root,root,-)

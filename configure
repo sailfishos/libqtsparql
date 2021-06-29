@@ -62,7 +62,6 @@ QMAKE_VARS_FILE=.qmake.vars
 
 # default flags for SPARQL drivers (can get changed later)
 QT_CFLAGS_ENDPOINT=
-QT_CFLAGS_TRACKER=
 QT_LFLAGS_ODBC="-lodbc"
 
 OPT_VERBOSE=no
@@ -291,7 +290,6 @@ done
 #overwrite the way the drivers are built if user wants coverage report
 if [ "$CFG_QTSPARQL_COVERAGE" = "yes" ]; then
     CFG_SPARQL_endpoint=qt
-    CFG_SPARQL_tracker=qt
     CFG_SPARQL_tracker_direct=qt
     echo "Preparing configuration for coverage report..."
 fi
@@ -385,14 +383,6 @@ QTSPARQL_INSTALL_TESTS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_
 # CFG_SPARQL=no (or empty) -> we don't build that driver at all
 for _SPARQLDR in $CFG_SPARQL_AVAILABLE; do
         case $_SPARQLDR in
-        tracker)
-            if [ "$CFG_SPARQL_tracker" != "no" ]; then
-                QT_LFLAGS_TRACKER=
-                if [ "$CFG_SPARQL_tracker" = "auto" ]; then
-                     CFG_SPARQL_tracker=plugin
-                fi
-            fi
-            ;;
 
         tracker_direct)
             if [ "$CFG_SPARQL_tracker_direct" != "no" ]; then
@@ -479,9 +469,6 @@ EOF
 
 if [ -n "$QT_CFLAGS_ENDPOINT" ]; then
     echo "QT_CFLAGS_ENDPOINT   = $QT_CFLAGS_ENDPOINT" >> "$CACHEFILE.tmp"
-fi
-if [ -n "$QT_CFLAGS_TRACKER" ]; then
-    echo "QT_CFLAGS_TRACKER   = $QT_CFLAGS_TRACKER" >> "$CACHEFILE.tmp"
 fi
 if [ -n "$QT_LFLAGS_ODBC" ]; then
     echo "QT_LFLAGS_ODBC   = $QT_LFLAGS_ODBC" >> "$CACHEFILE.tmp"
