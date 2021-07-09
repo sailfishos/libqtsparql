@@ -85,11 +85,16 @@ public:
     virtual void close() = 0;
     virtual QSparqlResult* exec(const QString& query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options) = 0;
 
+    virtual void subscribeToGraph(const QString &name);
+
     virtual bool open(const QSparqlConnectionOptions& options = QSparqlConnectionOptions()) = 0;
 
     void addPrefix(const QString& prefix, const QUrl& uri);
     QString prefixes() const;
     void clearPrefixes();
+
+    void setConnection(QSparqlConnection *connection);
+    QSparqlConnection *connection() const;
 
 protected:
     virtual void setOpen(bool o);

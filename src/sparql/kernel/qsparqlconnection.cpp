@@ -350,6 +350,7 @@ void QSparqlConnection::qmlConstructor(const QString& type, const QSparqlConnect
 {
     delete d;
     QSparqlDriver* driver = QSparqlConnectionPrivate::findDriver(type);
+    driver->setConnection(this);
     d = new QSparqlConnectionPrivate(driver, type, options);
     d->driver->open(d->options);
 }
@@ -368,6 +369,7 @@ QSparqlConnection::QSparqlConnection(const QString& type,
     : QObject(parent)
 {
     QSparqlDriver* driver = QSparqlConnectionPrivate::findDriver(type);
+    driver->setConnection(this);
     d = new QSparqlConnectionPrivate(driver, type, options);
     d->driver->open(d->options);
 }
@@ -536,6 +538,14 @@ QSparqlResult* QSparqlConnection::syncExec(const QSparqlQuery& query)
 }
 
 /*!
+    Subscribes to a named graph. Updates signaled with graphUpdated.
+*/
+void QSparqlConnection::subscribeToGraph(const QString &name)
+{
+    d->driver->subscribeToGraph(name);
+}
+
+/*!
     Returns the connection's driver name.
 */
 QString QSparqlConnection::driverName() const
@@ -548,12 +558,6 @@ QString QSparqlConnection::driverName() const
 
     This enum contains a list of features a driver might support. Use
     hasFeature() to query whether a feature is supported or not.
-
-    \var QSparqlConnection::Feature QSparqlConnection::QuerySize
-
-    The connection is capable of reporting the size of a query. Note that
-    some databases do not support returning the size (i.e. number of rows
-    returned) of a query, in which case QSparqlQuery::size() will return -1.
 
     \var QSparqlConnection::Feature QSparqlConnection::DefaultGraph
 

@@ -40,7 +40,6 @@
 #include "qsparql_tracker_direct_select_result_p.h"
 #include "qsparql_tracker_direct_p.h"
 #include "qsparql_tracker_direct_driver_p.h"
-#include "atomic_int_operations_p.h"
 
 #include <qsparqlerror.h>
 #include <qsparqlbinding.h>
@@ -52,8 +51,6 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qdebug.h>
-
-using namespace AtomicIntOperations;
 
 QT_BEGIN_NAMESPACE
 
@@ -285,8 +282,8 @@ void QTrackerDirectSelectResult::terminate()
         emitDataReady(results.count());
     }
 
-    if (getValue(resultFinished) == 0) {
-        setValue(resultFinished, 1);
+    if (resultFinished.load() == 0) {
+        resultFinished.store(1);
         Q_EMIT finished();
     }
     if (cursor) {
@@ -297,9 +294,8 @@ void QTrackerDirectSelectResult::terminate()
 
 void QTrackerDirectSelectResult::stopAndWait()
 {
-    if (queryRunner)
-    {
-        setValue(resultFinished, 1);
+    if (queryRunner) {
+        resultFinished.store(1);
         queryRunner->wait();
     }
 
@@ -308,7 +304,8 @@ void QTrackerDirectSelectResult::stopAndWait()
         cursor = 0;
     }
 
-    delete queryRunner; queryRunner = 0;
+    delete queryRunner;
+    queryRunner = 0;
 }
 
 int QTrackerDirectSelectResult::size() const

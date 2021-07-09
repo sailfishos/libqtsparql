@@ -60,10 +60,11 @@ public:
     uint isOpenError : 1;
     QSparqlError error;
     QMap<QString, QUrl> prefixes;
+    QSparqlConnection *connection;
 };
 
 inline QSparqlDriverPrivate::QSparqlDriverPrivate()
-    : isOpen(false), isOpenError(false)
+    : isOpen(false), isOpenError(false), connection(nullptr)
 {
 }
 
@@ -269,6 +270,12 @@ QVariant QSparqlDriver::handle() const
     return QVariant();
 }
 
+void QSparqlDriver::subscribeToGraph(const QString &name)
+{
+    Q_UNUSED(name);
+    qWarning() << "Sparql graph subscription not implemented";
+}
+
 /*!
     Adds a prefix/uri pair to the connection. Each SPARQL query made
     with the connection will have the prefixes prepended to it.
@@ -311,6 +318,17 @@ QString QSparqlDriver::prefixes() const
 void QSparqlDriver::clearPrefixes()
 {
     d->prefixes.clear();
+}
+
+// set the connection the driver is attached to
+void QSparqlDriver::setConnection(QSparqlConnection *connection)
+{
+    d->connection = connection;
+}
+
+QSparqlConnection *QSparqlDriver::connection() const
+{
+    return d->connection;
 }
 
 QT_END_NAMESPACE

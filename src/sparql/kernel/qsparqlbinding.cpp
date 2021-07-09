@@ -376,13 +376,13 @@ QString QSparqlBinding::toString() const
         {
             quoted = true;
             QDateTime dt = val.toDateTime();
-            int offset = dt.utcOffset();
+            int offset = dt.offsetFromUtc();
             // DateTime format has to be "yyyy-MM-ddThh:mm:ss", with leading zeroes if month or day < 10
             literal = QLatin1Char('\"') + QLocale::c().toString(dt, QLatin1String("yyyy-MM-ddThh:mm:ss"));
 
             if (offset != 0) {
                 QTime zone(0, 0, 0);
-                zone.addSecs(offset);
+                zone = zone.addSecs(offset);
                 literal.append(offset > 0 ? QLatin1Char('+') : QLatin1Char('-'));
                 literal.append(QLocale::c().toString(zone, QLatin1String("HH:mm")));
             }

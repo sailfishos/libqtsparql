@@ -74,7 +74,6 @@ void QSparqlQueryModelPrivate::beginQuery(int totalResults)
     result->first();
     QSparqlResultRow newResultRow = result->current();
     bool columnsChanged = (newResultRow != resultRow);
-    // bool hasQuerySize = connection->hasFeature(QSparqlConnection::QuerySize);
     bool hasNewData = (newResultRow != QSparqlResultRow()) || !result->hasError();
 
     if (colOffsets.size() != newResultRow.count() || columnsChanged)

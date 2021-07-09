@@ -9,7 +9,6 @@ SUBDIRS = \
     qsparql_endpoint \
     qsparql_ntriples \
     qsparql_threading \
-    qsparql_tracker \
     qsparql_tracker_direct \
     qsparql_tracker_direct_concurrency \
     qsparql_tracker_direct_sync \

@@ -527,7 +527,6 @@ EndpointDriver::~EndpointDriver()
 bool EndpointDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
-    case QSparqlConnection::QuerySize:
     case QSparqlConnection::AskQueries:
     case QSparqlConnection::ConstructQueries:
     case QSparqlConnection::UpdateQueries:

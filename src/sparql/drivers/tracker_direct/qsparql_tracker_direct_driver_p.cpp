@@ -53,9 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Helper functions used both by QTrackerDirectSelectResult and
-// QTrackerDirectSyncResult
-
 namespace {
 
 QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, int col)
@@ -122,6 +119,9 @@ QVariant makeVariant(TrackerSparqlValueType type, TrackerSparqlCursor* cursor, i
 
 }  // namespace
 
+// Helper functions used both by QTrackerDirectSelectResult and
+// QTrackerDirectSyncResult
+
 QVariant readVariant(TrackerSparqlCursor* cursor, int col)
 {
     const TrackerSparqlValueType type =
@@ -150,19 +150,6 @@ QSparqlError::ErrorType errorCodeToType(gint code)
         return QSparqlError::BackendError;
     default:
         return QSparqlError::BackendError;
-    }
-}
-
-gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority)
-{
-    switch (priority) {
-    case QSparqlQueryOptions::HighPriority:
-        return G_PRIORITY_HIGH;
-    case QSparqlQueryOptions::LowPriority:
-        return G_PRIORITY_LOW;
-    case QSparqlQueryOptions::NormalPriority:
-    default:
-        return G_PRIORITY_DEFAULT;
     }
 }
 
@@ -228,7 +215,7 @@ private:
     void run()
     {
         if (!runFinished) {
-            cd.connection = tracker_sparql_connection_get(0, &cd.error);
+            cd.connection = tracker_sparql_connection_bus_new("org.freedesktop.Tracker3.Miner.Files", NULL, NULL, &cd.error);
             Q_EMIT connectionOpened();
             runFinished = true;
         }
@@ -248,7 +235,8 @@ private:
 };
 
 QTrackerDirectDriverPrivate::QTrackerDirectDriverPrivate(QTrackerDirectDriver *driver)
-    : connection(0), dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
+    : connection(nullptr), notifier(nullptr),
+      dataReadyInterval(1), connectionMutex(QMutex::Recursive), driver(driver),
       asyncOpenCalled(false), connectionOpener(new QTrackerDirectDriverConnectionOpen)
 {
     QObject::connect(connectionOpener, SIGNAL(connectionOpened()), this, SLOT(asyncOpenComplete()));
@@ -326,9 +314,6 @@ QTrackerDirectDriver::QTrackerDirectDriver(QObject* parent)
     : QSparqlDriver(parent)
 {
     d = new QTrackerDirectDriverPrivate(this);
-    /* Initialize GLib type system */
-    g_type_init();
-
 }
 
 QTrackerDirectDriver::~QTrackerDirectDriver()
@@ -339,7 +324,6 @@ QTrackerDirectDriver::~QTrackerDirectDriver()
 bool QTrackerDirectDriver::hasFeature(QSparqlConnection::Feature f) const
 {
     switch (f) {
-    case QSparqlConnection::QuerySize:
     case QSparqlConnection::AskQueries:
     case QSparqlConnection::UpdateQueries:
     case QSparqlConnection::DefaultGraph:
@@ -414,6 +398,11 @@ void QTrackerDirectDriver::close()
     // We just check to see if we can get a semaphore here
     d->waitForConnectionOpen();
 
+    if (d->notifier) {
+        g_object_unref(d->notifier);
+        d->notifier = 0;
+    }
+
     if (d->connection) {
         g_object_unref(d->connection);
         d->connection = 0;
@@ -440,6 +429,36 @@ QSparqlResult* QTrackerDirectDriver::exec(const QString &query, QSparqlQuery::St
     }
 
     return result;
+}
+
+static void notifierCallback(TrackerNotifier *self,
+                             char *service,
+                             char *graph,
+                             GPtrArray *events,
+                             gpointer user_data)
+{
+    Q_UNUSED(self);
+    Q_UNUSED(events);
+    QSparqlConnection *connection = static_cast<QTrackerDirectDriver*>(user_data)->connection();
+    if (connection) {
+        connection->graphUpdated(QString::fromLatin1(graph));
+    }
+}
+
+void QTrackerDirectDriver::subscribeToGraph(const QString &name)
+{
+    Q_UNUSED(name);
+
+    if (!d->notifier) {
+        d->waitForConnectionOpen(); // could avoid?
+        d->notifier = tracker_sparql_connection_create_notifier(d->connection);
+        g_signal_connect(d->notifier, "events", G_CALLBACK(notifierCallback), this);
+    }
+
+    // Note: skipping tracker_notifier_signal_subscribe(), the documentation is vague
+    // but the idea upstream seems to be that named subscription is only needed if the
+    // main connection is for app-specific db, not the miner dbus service.
+    // e.g. queries refer to miner via dbus_service declaratio.
 }
 
 QSparqlResult* QTrackerDirectDriver::asyncExec(const QString &query, QSparqlQuery::StatementType type, const QSparqlQueryOptions& options)

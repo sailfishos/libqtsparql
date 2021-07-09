@@ -70,6 +70,7 @@ public:
     void openConnection();
 
     TrackerSparqlConnection *connection;
+    TrackerNotifier *notifier;
     int dataReadyInterval;
     // This mutex is for ensuring that only one thread at a time
     // is using the connection to make tracker queries. This mutex
@@ -97,7 +98,6 @@ private:
 
 QVariant readVariant(TrackerSparqlCursor* cursor, int col);
 QSparqlError::ErrorType errorCodeToType(gint code);
-gint qSparqlPriorityToGlib(QSparqlQueryOptions::Priority priority);
 
 QT_END_NAMESPACE
 

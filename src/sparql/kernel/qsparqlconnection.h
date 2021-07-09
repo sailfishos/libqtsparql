@@ -68,10 +68,9 @@ class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
     Q_OBJECT
 public:
-    enum Feature {  QuerySize, DefaultGraph,
+    enum Feature {  DefaultGraph,
                     AskQueries, ConstructQueries, UpdateQueries,
                     SyncExec, AsyncExec };
-    // TODO: QuerySize should be removed (API break).
 
     explicit QSparqlConnection(QObject* parent = 0);
     QSparqlConnection(const QString& type,
@@ -82,6 +81,8 @@ public:
     QSparqlResult* exec(const QSparqlQuery& query);
     QSparqlResult* exec(const  QSparqlQuery& query, const QSparqlQueryOptions& options);
     QSparqlResult* syncExec(const QSparqlQuery& query);
+
+    void subscribeToGraph(const QString &name);
 
     bool isValid() const;
     QString driverName() const;
@@ -96,6 +97,9 @@ public:
     QSparqlBinding createUrn(const QString& name) const;
 
     static QStringList drivers();
+
+Q_SIGNALS:
+    void graphUpdated(const QString &name);
 
 private:
     friend class QSparqlConnectionPrivate;

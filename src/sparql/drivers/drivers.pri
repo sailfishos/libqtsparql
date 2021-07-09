@@ -1,15 +1,7 @@
 # if sparql-drivers contains the driver name, we build the driver into QtSparql library.
 
 contains(sparql-drivers, all ) {
-    sparql-driver +=   tracker tracker_direct virtuoso endpoint
-}
-
-contains(sparql-drivers, tracker) {
-    HEADERS +=      drivers/tracker/qsparql_tracker_p.h
-    SOURCES +=      drivers/tracker/qsparql_tracker.cpp
-    DEFINES += QT_SPARQL_TRACKER
-
-    QT += dbus
+    sparql-driver +=  tracker_direct virtuoso endpoint
 }
 
 contains(sparql-drivers, tracker_direct) {
@@ -18,15 +10,15 @@ contains(sparql-drivers, tracker_direct) {
                drivers/tracker_direct/qsparql_tracker_direct_result_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_select_result_p.h \
                drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.h \
-               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.h \
-               drivers/tracker_direct/atomic_int_operations_p.h
+               drivers/tracker_direct/qsparql_tracker_direct_update_result_p.h
+
     SOURCES += drivers/tracker_direct/qsparql_tracker_direct_driver_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_result_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_select_result_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_sync_result_p.cpp \
                drivers/tracker_direct/qsparql_tracker_direct_update_result_p.cpp
     CONFIG += no_keywords link_pkgconfig
-    PKGCONFIG += tracker-sparql-2.0
+    PKGCONFIG += tracker-sparql-3.0
     DEFINES += QT_SPARQL_TRACKER_DIRECT
 }
 

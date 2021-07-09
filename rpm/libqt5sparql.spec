@@ -1,5 +1,5 @@
 Name: libqt5sparql
-Version: 0.2.17
+Version: 0.3.0
 Release: 1
 Summary: Library for accessing RDF stores
 License: LGPLv2 or GPLv3 or LGPLv2 with Nokia Qt LGPL Exception v1.1
@@ -14,8 +14,7 @@ BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
-BuildRequires: pkgconfig(Qt5Widgets)
-BuildRequires: pkgconfig(tracker-sparql-2.0)
+BuildRequires: pkgconfig(tracker-sparql-3.0)
 
 %description
 Library for accessing RDF stores.
@@ -32,7 +31,6 @@ documentation
 Summary:  QtSparql testsuite 
 Requires: %{name} >= %{version}
 Requires: libqt5sparql-endpoint >= %{version}
-Requires: libqt5sparql-tracker >= %{version}
 Requires: libqt5sparql-tracker-direct >= %{version} 
 
 %description tests
@@ -44,18 +42,10 @@ Summary:  Endpoint driver package for %{name}
 %description endpoint 
 Endpoint driver for QtSparql.
 
-%package tracker 
-Summary:  Tracker driver package for %{name}
-Requires: %{name} >= %{version}
-Requires: tracker >= 0.10.0
-
-%description tracker
-Tracker driver for QtSparql.
 
 %package tracker-direct
 Summary:  Tracker driver package for %{name}
 Requires: %{name} >= %{version}
-Requires: tracker >= 0.10.0
 
 %description tracker-direct
 Tracker direct access driver for QtSparql.
@@ -67,7 +57,7 @@ Tracker direct access driver for QtSparql.
 export QT_SELECT=5
 ./configure -prefix /usr -lib %{_lib}
 %qmake5
-make %{?jobs:-j%jobs}
+%make_build
 make doc
 
 %install
@@ -106,10 +96,6 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 %files endpoint
 %defattr(-,root,root,-)
 %{_libdir}/qt5/plugins/sparqldrivers/libqsparqlendpoint.so
-
-%files tracker
-%defattr(-,root,root,-)
-%{_libdir}/qt5/plugins/sparqldrivers/libqsparqltracker.so
 
 %files tracker-direct
 %defattr(-,root,root,-)
