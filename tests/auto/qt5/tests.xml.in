@@ -49,20 +49,6 @@
         <hardware>true</hardware>
       </environments>
     </set>
-    <set name="qsparql-tracker" description="Tests for tracker plugin of qsparql">
-      <case name="tst_qsparql_tracker" description="Executing tst_qsparql_tracker">
-        <step>
-            @LIBDIR@/libqt5sparql-tests/tst_qsparql_tracker
-        </step>
-      </case>
-      <environments>
-        <scratchbox>true</scratchbox>
-        <hardware>true</hardware>
-      </environments>
-      <get>
-        <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
-      </get>
-    </set>
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
       <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct" timeout="900">
         <step>
