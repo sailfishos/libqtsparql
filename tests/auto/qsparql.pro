@@ -39,4 +39,4 @@ install_testxml.CONFIG = no_check_exist
 install_testxml.commands = \
         $$QMAKE_STREAM_EDITOR 's~@LIBDIR@~$$[QT_INSTALL_LIBS]~' qt5/$${testxml.target}.in > qt5/$$testxml.target
 install_testxml.path = $$PREFIX/share/$$PACKAGENAME-tests/
-INSTALLS += target install_testxml
+INSTALLS += install_testxml
