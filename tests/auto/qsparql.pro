@@ -8,16 +8,19 @@ SUBDIRS = \
     qsparql \
     qsparql_endpoint \
     qsparql_ntriples \
-    qsparql_tracker_direct \
     qsparql_tracker_direct_concurrency \
-    qsparql_tracker_direct_sync \
     qsparql_tracker_direct_crashes \
     qsparql_virtuoso \
-    qsparql_virtuoso_endpoint \
-    qsparql_api
+    qsparql_virtuoso_endpoint
 
 # can be enabled if qml api is brought back
 # SUBDIRS += qsparql_qmlbindings
+
+# tests need to be migrated away from removed QTRACKER backend and use Tracker3 style sparql with graphs.
+#    qsparql_api \
+#    qsparql_tracker_direct \
+#    qsparql_tracker_direct_sync \
+
 
 contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 

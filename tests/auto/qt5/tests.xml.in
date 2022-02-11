@@ -27,6 +27,7 @@
         <hardware>true</hardware>
       </environments>
     </set>
+    <!--
     <set name="qsparql-api" description="Tests for qsparql API">
       <case name="tst_qsparql_api" description="Executing tst_qsparql_api">
         <step>
@@ -38,6 +39,7 @@
         <hardware>true</hardware>
       </environments>
     </set>
+    -->
     <set name="qsparql-endpoint" description="Tests for endpoint plugin of qsparql">
       <case name="tst_qsparql_endpoint" description="Executing tst_qsparql_endpoint" timeout="900">
         <step>
@@ -49,6 +51,7 @@
         <hardware>true</hardware>
       </environments>
     </set>
+    <!--
     <set name="qsparql-tracker-direct" description="Tests for tracker direct access plugin of qsparql">
       <case name="tst_qsparql_tracker_direct" description="Executing tst_qsparql_tracker_direct" timeout="900">
         <step>
@@ -77,6 +80,7 @@
             <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
         </get>
     </set>
+    -->
     <set name="qsparql-tracker-direct-crashes" description="Regression tests">
       <case name="tst_qsparql_tracker_direct_crashes" description="Regression test">
         <step>
