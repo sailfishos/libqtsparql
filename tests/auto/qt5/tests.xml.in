@@ -95,7 +95,7 @@
       <case name="tst_qsparql_tracker_direct_crashes" description="Regression test">
         <step>
             <!-- Note: the env vars should ensure that the direct connection opening fails -->
-            XDG_CACHE_HOME=bogus TRACKER_SPARQL_BACKEND=direct @LIBDIR@/libqt5sparql-tests/tst_qsparql_tracker_direct_crashes
+            XDG_CACHE_HOME=bogus DBUS_SESSION_BUS_ADDRESS="" @LIBDIR@/libqt5sparql-tests/tst_qsparql_tracker_direct_crashes
         </step>
       </case>
     </set>
