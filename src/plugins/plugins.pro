@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
-SUBDIRS = sparqldrivers declarative
+SUBDIRS = sparqldrivers
+# TODO: revisit the qml api if ever needed
+#declarative
 
 coverage {
 	coverage.CONFIG = recursive

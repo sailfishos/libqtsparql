@@ -48,6 +48,7 @@ class QSparqlConnectionOptionsPrivate: public QSharedData
 public:
     typedef QMap<QString,QVariant> OptionMap;
     OptionMap map;
+    QString driverName;
 
     // Settings that cannot easily be put in a QVariant
 #ifndef QT_NO_NETWORKPROXY
@@ -349,6 +350,12 @@ void QSparqlConnectionOptions::setThreadExpiryTime(int p)
     //threads will not expire until the threadpool is destroyed
     setOption(*threadExpiryKey(), p);
 }
+
+void QSparqlConnectionOptions::setDriverName(const QString &driver)
+{
+    d->driverName = driver;
+}
+
 #ifndef QT_NO_NETWORKPROXY
 /*!
     Convenience function for setting the QNetworkProxy. Valid
@@ -467,6 +474,11 @@ int QSparqlConnectionOptions::maxThreadCount() const
 int QSparqlConnectionOptions::threadExpiryTime() const
 {
     return d->optionOrDefaultValue(*threadExpiryKey()).value<int>();
+}
+
+QString QSparqlConnectionOptions::driverName() const
+{
+    return d->driverName;
 }
 
 /*!

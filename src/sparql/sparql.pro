@@ -45,7 +45,8 @@ install_prf.CONFIG = no_check_exist
 include(kernel/kernel.pri)
 include(drivers/drivers.pri)
 include(models/models.pri)
-include(declarative/declarative.pri)
+# TODO: revisit the qml api if ever needed
+#include(declarative/declarative.pri)
 
 INSTALLS += \
         target \

@@ -78,18 +78,6 @@ public:
     SparqlConnectionOptions() {}
     void classBegin() {}
     void componentComplete() {}
-
-    void setDriverName(const QString& name)
-    {
-        driver = name;
-    }
-
-    QString driverName() const
-    {
-        return driver;
-    }
-private:
-    QString driver;
 };
 
 QT_END_NAMESPACE

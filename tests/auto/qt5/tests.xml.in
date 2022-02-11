@@ -85,6 +85,7 @@
         </step>
       </case>
     </set>
+    <!--
     <set name="qsparql-qmlbindings" description="Tests for qsparql QML bindings">
       <case name="tst_qsparql_qmlbindings" description="Executing tst_qsparql_qmlbindings">
         <step>
@@ -96,5 +97,6 @@
         <hardware>true</hardware>
       </environments>
     </set>
+    -->
   </suite>
 </testdefinition>

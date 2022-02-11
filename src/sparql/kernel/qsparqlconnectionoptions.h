@@ -83,6 +83,7 @@ public:
     void setDataReadyInterval(int p);
     void setMaxThreadCount(int p);
     void setThreadExpiryTime(int p);
+    void setDriverName(const QString &driver);
 
 #ifndef QT_NO_NETWORKPROXY
     void setProxy(const QNetworkProxy& proxy);
@@ -99,6 +100,7 @@ public:
     int dataReadyInterval() const;
     int maxThreadCount() const;
     int threadExpiryTime() const;
+    QString driverName() const;
 
 #ifndef QT_NO_NETWORKPROXY
     QNetworkProxy proxy () const;
