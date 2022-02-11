@@ -63,20 +63,6 @@
         <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
       </get>
     </set>
-    <set name="qsparql-threading" description="Multithreading tests">
-        <case name="test-tracker-queries" description="Tracker queries">
-            <step>
-                @LIBDIR@/libqt5sparql-tests/tst_qsparql_threading concurrentTrackerQueries
-            </step>
-        </case>
-        <environments>
-            <scratchbox>true</scratchbox>
-            <hardware>true</hardware>
-        </environments>
-        <get>
-            <file>${XDG_DATA_HOME:-${HOME}/.local/share}/tracker/tracker-store.log</file>
-        </get>
-    </set>
     <set name="qsparql-tracker-direct-sync" description="Tests for tracker direct access plugin of qsparql, sync mode">
         <case name="tst_qsparql_tracker_direct_sync" description="Executing tst_qsparql_tracker_direct_sync">
             <step>
