@@ -63,7 +63,7 @@ public:
     QSparqlConnection *connection;
     QSparqlResult *result;
     QString query;
-    SparqlConnectionOptions *options;
+    QSparqlConnectionOptions *options;
     int lastRowCount;
     QSparqlResultsList::Status status;
     QHash<int, QByteArray> roleNames;
@@ -176,12 +176,12 @@ void QSparqlResultsList::queryFinished()
     Q_EMIT countChanged();
 }
 
-SparqlConnectionOptions* QSparqlResultsList::options() const
+QSparqlConnectionOptions* QSparqlResultsList::options() const
 {
     return d->options;
 }
 
-void QSparqlResultsList::setOptions(SparqlConnectionOptions *options)
+void QSparqlResultsList::setOptions(QSparqlConnectionOptions *options)
 {
     d->options = options;
     reload();
