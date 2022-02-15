@@ -64,7 +64,7 @@ void EndpointServer::stop()
     close();
 }
 
-void EndpointServer::incomingConnection(int socket)
+void EndpointServer::incomingConnection(qintptr socket)
 {
     if (disabled)
         return;

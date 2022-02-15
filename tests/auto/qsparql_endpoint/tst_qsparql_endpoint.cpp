@@ -78,7 +78,6 @@ tst_QSparqlEndpoint::~tst_QSparqlEndpoint()
 
 void tst_QSparqlEndpoint::initTestCase()
 {
-
     endpointService = new EndpointService(8080);
     endpointService->start();
     while (!endpointService->isRunning())

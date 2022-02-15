@@ -55,8 +55,9 @@ public:
     void pause();
     bool resume();
     void stop();
+protected:
+    void incomingConnection(qintptr socket) override;
 private:
-    void incomingConnection(int socket);
     QString sparqlData(QString url);
 private Q_SLOTS:
     void readClient();
