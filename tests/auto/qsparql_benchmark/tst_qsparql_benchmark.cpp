@@ -65,7 +65,7 @@
     }
 
 #define PRINT_STATS(BENCHMARKNAME, LIST) { \
-    qSort(LIST); \
+    std::sort(LIST.begin(), LIST.end()); \
     int median = (LIST.size()+1)/2; \
     int average = 0; \
     for(int i=0;i<LIST.size();i++) \
