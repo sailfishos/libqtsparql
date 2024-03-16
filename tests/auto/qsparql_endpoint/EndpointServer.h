@@ -51,17 +51,22 @@ class EndpointServer : public QTcpServer
 public:
     EndpointServer(int port);
     ~EndpointServer();
+
     bool isRunning() const;
     void pause();
     bool resume();
     void stop();
+
 protected:
     void incomingConnection(qintptr socket) override;
+
 private:
     QString sparqlData(QString url);
+
 private Q_SLOTS:
     void readClient();
     void discardClient();
+
 private:
     int port;
     bool disabled;

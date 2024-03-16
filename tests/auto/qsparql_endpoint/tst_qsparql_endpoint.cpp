@@ -149,7 +149,6 @@ void tst_QSparqlEndpoint::ask_query()
     delete r;
 }
 
-
 void tst_QSparqlEndpoint::query_with_error()
 {
     QSparqlConnectionOptions options;

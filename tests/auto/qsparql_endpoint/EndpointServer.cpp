@@ -42,12 +42,13 @@
 #include <QTcpSocket>
 #include <QStringList>
 
-EndpointServer::EndpointServer(int _port) : port(_port), disabled(true)
+EndpointServer::EndpointServer(int _port)
+    : port(_port), disabled(true)
 {
     if (!listen(QHostAddress::Any, port)) {
-        qWarning() << "Can't bind server to port "<< port;
+        qWarning() << "Can't bind server to port " << port;
     } else {
-        disabled=false;
+        disabled = false;
         //qDebug() << "Starting fake endpoint server";
     }
 }
@@ -59,7 +60,7 @@ EndpointServer::~EndpointServer()
 
 void EndpointServer::stop()
 {
-    disabled=true;
+    disabled = true;
     //qDebug() << "Shutting down fake endpoint www server";
     close();
 }
@@ -148,9 +149,11 @@ void EndpointServer::readClient()
     // server looks if it was a get request and sends a very simple HTML
     // document back.
     QTcpSocket* socket = (QTcpSocket*)sender();
+
     if (socket->canReadLine()) {
         QStringList tokens = QString(socket->readLine()).split(QRegExp("[ \r\n][ \r\n]*"));
-        if (tokens[0] == "GET") {
+
+        if (tokens.length() >= 2 && tokens[0] == "GET") {
             QString url = tokens[1];
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
@@ -158,7 +161,7 @@ void EndpointServer::readClient()
             socket->close();
 
             if (socket->state() == QTcpSocket::UnconnectedState) {
-                delete socket;
+                socket->deleteLater();
             }
         }
     }
@@ -177,13 +180,13 @@ bool EndpointServer::isRunning() const
 
 void EndpointServer::pause()
 {
-    disabled=true;
+    disabled = true;
 }
 
 bool EndpointServer::resume()
 {
     if (isListening()) {
-        disabled=false;
+        disabled = false;
         return true;
     } else {
         //qDebug() << "Can't resume server as there was problem with binding on port " << port;
