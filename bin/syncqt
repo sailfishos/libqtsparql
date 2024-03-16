@@ -28,17 +28,7 @@ die "syncqt: QTDIR not defined" if ! $ENV{"QTDIR"}; # sanity check
 my $isunix = 0;
 my $basedir = $ENV{"QTDIR"};
 $basedir =~ s=\\=/=g;
-my $modulepath = "";
-my $qtversion = `qmake -query QT_VERSION`;
-if (($? >> 8) != 0) {
-    # Using the qtchooser qmake wrapper?
-    $qtversion = `qmake -qt=5 -query QT_VERSION`;
-}
-if ($qtversion =~ /^5./) {
-    $modulepath = "Qt5Sparql"
-} else {
-    $modulepath = "QtSparql"
-}
+my $modulepath = "Qt5Sparql";
 my %modules = ( # path to module name map
         "QtSparql" => "$basedir/src/sparql",
 );

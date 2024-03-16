@@ -39,6 +39,7 @@
 
 #include "resultchecker.h"
 #include <QtTest/QtTest>
+#include <QElapsedTimer>
 #include <QtSparql>
 
 ResultChecker::ResultChecker()
@@ -67,7 +68,7 @@ void ResultChecker::append(QSparqlResult *r, const QPair<int, int>& range)
 
 bool ResultChecker::waitForAllFinished(int silenceTimeoutMs)
 {
-    QTime timeoutTimer;
+    QElapsedTimer timeoutTimer;
     timeoutTimer.start();
     bool timeout = false;
     while (!pendingResults.empty() && !timeout) {
