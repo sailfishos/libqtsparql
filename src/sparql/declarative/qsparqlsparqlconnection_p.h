@@ -45,14 +45,8 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
-#ifdef QT_VERSION_5
 #include <QtQml/qqml.h>
 #include <QQmlParserStatus>
-#define QDeclarativeParserStatus QQmlParserStatus
-#else
-#include <QtDeclarative/qdeclarative.h>
-#include <QDeclarativeParserStatus>
-#endif
 
 QT_BEGIN_HEADER
 
@@ -64,7 +58,7 @@ class SparqlQuery;
 class SparqlConnectionOptions;
 
 class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection,
-                                         public QDeclarativeParserStatus
+                                         public QQmlParserStatus
 {
     Q_OBJECT
     Q_ENUMS(Status)
@@ -73,7 +67,7 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection,
     Q_PROPERTY(QVariant result READ getResult NOTIFY resultReady)
     Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
     SparqlConnection();

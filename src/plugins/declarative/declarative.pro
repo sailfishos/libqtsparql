@@ -31,7 +31,6 @@ target.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
 
 QT = core
 QT *= qml
-DEFINES *= QT_VERSION_5
 
 INSTALLS += target
 LIBS += -lQt5Sparql

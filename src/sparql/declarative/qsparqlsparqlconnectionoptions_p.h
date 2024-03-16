@@ -46,14 +46,8 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstring.h>
 
-#ifdef QT_VERSION_5
 #include <QtQml/qqml.h>
 #include <QQmlParserStatus>
-#define QDeclarativeParserStatus QQmlParserStatus
-#else
-#include <QtDeclarative/qdeclarative.h>
-#include <QDeclarativeParserStatus>
-#endif
 
 QT_BEGIN_HEADER
 
@@ -62,7 +56,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Sparql)
 
 class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
-                                                public QDeclarativeParserStatus,
+                                                public QQmlParserStatus,
                                                 public QSparqlConnectionOptions
 {
     Q_OBJECT
@@ -73,7 +67,8 @@ class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
     Q_PROPERTY(QString path READ path WRITE setPath)
     Q_PROPERTY(int port READ port WRITE setPort)
     Q_PROPERTY(QString driverName READ driverName WRITE setDriverName)
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
+
 public:
     SparqlConnectionOptions() {}
     void classBegin() {}

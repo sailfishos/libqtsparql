@@ -45,15 +45,8 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
-#ifdef QT_VERSION_5
 #include <QtQml/qqml.h>
 #include <QQmlParserStatus>
-#define QDeclarativeParserStatus QQmlParserStatus
-#else
-#include <QtDeclarative/qdeclarative.h>
-#include <QDeclarativeParserStatus>
-#endif
-
 
 QT_BEGIN_HEADER
 
@@ -64,7 +57,7 @@ QT_MODULE(Sparql)
 class SparqlConnection;
 
 class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel,
-                                        public QDeclarativeParserStatus
+                                        public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSparqlQueryModel)
@@ -74,9 +67,16 @@ class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel,
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_CLASSINFO("DefaultProperty", "query")
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
+    enum Status {
+        Null,
+        Ready,
+        Loading,
+        Error
+    };
+
     SparqlListModel();
     void classBegin();
     void componentComplete();
@@ -84,9 +84,6 @@ public:
     Q_INVOKABLE QString errorString() const;
     Q_INVOKABLE QVariant get(int rowNumber);
     Q_INVOKABLE void reload();
-
-    enum Status { Null, Ready, Loading, Error };
-
 
 Q_SIGNALS:
     void countChanged();

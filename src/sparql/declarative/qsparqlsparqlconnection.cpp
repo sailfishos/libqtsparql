@@ -45,10 +45,10 @@
 #include <QSparqlError>
 
 SparqlConnection::SparqlConnection()
-  : asyncResult(0)
-  , lastResult(0)  // To avoid "result" property having undefined value in QML
-  , options(0)
-  , connectionStatus(Null)
+    : asyncResult(0)
+    , lastResult(0)  // To avoid "result" property having undefined value in QML
+    , options(0)
+    , connectionStatus(Null)
 {
 }
 
@@ -247,8 +247,7 @@ SparqlConnection::Status SparqlConnection::status()
 
 void SparqlConnection::setOptions(SparqlConnectionOptions* options)
 {
-    if (options)
-    {
+    if (options) {
        this->options = options;
     }
 }

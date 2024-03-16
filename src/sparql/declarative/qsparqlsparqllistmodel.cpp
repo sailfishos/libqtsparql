@@ -42,8 +42,8 @@
 #include <QtSparql>
 
 SparqlListModel::SparqlListModel()
-  : connection(0)
-  , modelStatus(Null)
+    : connection(0)
+    , modelStatus(Null)
 {
     connect(this, SIGNAL(rowsRemoved(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SIGNAL(countChanged()));
@@ -94,8 +94,7 @@ void SparqlListModel::reload()
 
 void SparqlListModel::setConnection(SparqlConnection* connection)
 {
-    if (connection)
-    {
+    if (connection) {
         this->connection = connection;
         connect(connection, SIGNAL(onCompleted()), this, SLOT(onConnectionComplete()));
     }

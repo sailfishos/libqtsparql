@@ -45,13 +45,13 @@ install_prf.CONFIG = no_check_exist
 include(kernel/kernel.pri)
 include(drivers/drivers.pri)
 include(models/models.pri)
-# TODO: revisit the qml api if ever needed
-#include(declarative/declarative.pri)
+include(declarative/declarative.pri)
 
 INSTALLS += \
         target \
         install_headers \
         install_prf
+
 target.path = $$QTSPARQL_INSTALL_LIBS
 
 QMAKE_PKGCONFIG_PREFIX = $$QTSPARQL_INSTALL_PREFIX

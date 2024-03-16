@@ -39,6 +39,7 @@
 
 #include <QtTest/QtTest>
 #include <QtGlobal>
+#include <QElapsedTimer>
 #include <QtQml/qqml.h>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -187,7 +188,7 @@ void compareResults(QVariant qmlResults, int resultSize, QString query)
 
 bool waitForSignals(QSignalSpy *signalSpy, int numSignals)
 {
-    QTime timer;
+    QElapsedTimer timer;
     int timeoutMs = 2000;
     bool timeout = false;
     timer.start();
