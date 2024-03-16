@@ -53,10 +53,6 @@ outpath=`/bin/pwd`
 unixtests="$relpath/config.tests/unix"
 WHICH="$unixtests/which.test"
 
-if [ -z "$PKG_CONFIG" ]; then
-    PKG_CONFIG=`"$WHICH" pkg-config 2>/dev/null`
-fi
-
 QMAKE_VARS_FILE=.qmake.vars
 :> "$QMAKE_VARS_FILE"
 
@@ -70,10 +66,6 @@ OPT_SHADOW=maybe
 PERL=`$WHICH perl 2>/dev/null`
 
 QMAKE=`$WHICH qmake 2>/dev/null`
-
-if [ -z "$QMAKE" ] ; then
-	QMAKE=`$WHICH qmake-qt4 2>/dev/null`
-fi
 
 if [ -z "$QMAKE" ] ; then
 	echo
@@ -90,6 +82,9 @@ if [ -z "$QT_VERSION" ] ; then
 	echo "Cannot proceed without QT_VERSION determined."
 	exit 1
 fi
+
+# note: supporting only qt5 at this point
+echo "Using Qt $QT_VERSION"
 
 # is this a shadow build?
 if [ "$OPT_SHADOW" = "maybe" ]; then
@@ -186,7 +181,6 @@ CFG_QTSPARQL_COVERAGE=
 case $QT_VERSION in
     # In qt5, QML imports are in the 'qml' directory
     "5."*) QTSPARQL_INSTALL_IMPORTS=`$QMAKE -query QT_INSTALL_QML`;;
-    *) QTSPARQL_INSTALL_IMPORTS=`$QMAKE -query QT_INSTALL_IMPORTS`;;
 esac
 
 # check how the user wants the SPARQL drivers to be built
@@ -346,7 +340,6 @@ QTSPARQL_INSTALL_DOCS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_D
 if [ -z "$QTSPARQL_INSTALL_HEADERS" ]; then
     case $QT_VERSION in
         "5."*) QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/Qt5Sparql";;
-        *) QTSPARQL_INSTALL_HEADERS="$QTSPARQL_INSTALL_PREFIX/include/QtSparql";;
     esac
 fi
 QTSPARQL_INSTALL_HEADERS=`"$relpath/config.tests/unix/makeabs" "$QTSPARQL_INSTALL_HEADERS"`
