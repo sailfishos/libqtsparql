@@ -40,7 +40,9 @@
 #include "EndpointService.h"
 #include <QDebug>
 
-EndpointService::EndpointService(int _port) : port(_port), server(0)
+EndpointService::EndpointService(int _port)
+    : port(_port)
+    , server(nullptr)
 {
 }
 

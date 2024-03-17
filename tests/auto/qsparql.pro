@@ -24,10 +24,25 @@ SUBDIRS = \
 
 contains(sparql-plugins, tracker_direct): SUBDIRS += qsparql_benchmark
 
-QSPARQL_TESTS = qsparql qsparqlquery qsparqlbinding qsparql_api qsparql_tracker \
-                qsparql_tracker_direct qsparql_tracker_direct_sync qsparql_ntriples \
-                qsparql_tracker_direct_crashes \
-                qsparqlresultrow qsparql_qmlbindings qsparql_endpoint
+QSPARQL_TESTS = \
+    qsparql \
+    qsparqlquery \
+    qsparqlbinding \
+    qsparql_tracker \
+    qsparql_ntriples \
+    qsparqlresultrow \
+    qsparql_endpoint
+
+# this skipped, needs a setup where connection fails
+#     qsparql_tracker_direct_crashes \
+
+# can be enabled when qml api is back, but needs also fixing
+# qsparql_qmlbindings \
+
+# skipped due to tracker migration as above
+#    qsparql_api \
+#    qsparql_tracker_direct \
+#    qsparql_tracker_direct_sync \
 
 check.CONFIG = recursive
 check.recurse = $$QSPARQL_TESTS

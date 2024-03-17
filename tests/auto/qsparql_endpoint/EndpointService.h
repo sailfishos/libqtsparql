@@ -51,11 +51,13 @@ class EndpointService : public QThread
 public:
     EndpointService(int port);
     ~EndpointService();
+
     void run();
     void stopService(int timeout);
     void pause();
     bool resume();
     bool isRunning();
+
 private:
     int port;
     EndpointServer *server;
