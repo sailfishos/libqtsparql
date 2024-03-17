@@ -63,7 +63,6 @@
 #include <QtSparql/qsparqlquery.h>
 #include <QtSparql/qsparqlqueryoptions.h>
 #include <QtSparql/private/qsparqlntriples_p.h>
-#define XSD_DATE
 #include "../../kernel/qsparqlxsd_p.h"
 
 #include <QDebug>
@@ -440,13 +439,13 @@ static QSparqlBinding qMakeBinding(const QVirtuosoResultPrivate* p, int colNum)
             SQLGetDescField(p->hdesc, colNum, SQL_DESC_COL_DT_DT_TYPE, &dv_dt_type, SQL_IS_INTEGER, NULL);
             switch (dv_dt_type) {
             case VIRTUOSO_DT_TYPE_DATETIME:
-                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::DateTime());
+                b.setValue(QString::fromUtf8(buffer.constData()), XSD::DateTime());
                 break;
             case VIRTUOSO_DT_TYPE_DATE:
-                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::Date());
+                b.setValue(QString::fromUtf8(buffer.constData()), XSD::Date());
                 break;
             case VIRTUOSO_DT_TYPE_TIME:
-                b.setValue(QString::fromUtf8(buffer.constData()), *XSD::Time());
+                b.setValue(QString::fromUtf8(buffer.constData()), XSD::Time());
                 break;
             default:
                 break;

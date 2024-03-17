@@ -42,40 +42,88 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLXSD_H
-#define QSPARQLXSD_H
-
-#include "qsparql.h"
-
-#include <QtCore/qurl.h>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Sparql)
+#include "qsparqlxsd_p.h"
 
 namespace XSD {
-QUrl Integer();
-QUrl Decimal();
-QUrl Date();
-QUrl Time();
-QUrl DateTime();
-QUrl Int();
-QUrl NonNegativeInteger();
-QUrl UnsignedInt();
-QUrl Short();
-QUrl Long();
-QUrl UnsignedLong();
-QUrl Boolean();
-QUrl Double();
-QUrl Float();
-QUrl String();
-QUrl Base64Binary();
+
+QUrl Integer()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#integer"));
 }
 
-QT_END_NAMESPACE
+QUrl Decimal()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#decimal"));
+}
 
-QT_END_HEADER
+QUrl Date()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#date"));
+}
 
-#endif // QSPARQLXSD_H
+QUrl Time()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#time"));
+}
+
+QUrl DateTime()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#dateTime"));
+}
+
+QUrl Int()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#int"));
+}
+
+QUrl NonNegativeInteger()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#nonNegativeInteger"));
+}
+
+QUrl UnsignedInt()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#unsignedInt"));
+}
+
+QUrl Short()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#short"));
+}
+
+QUrl Long()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#long"));
+}
+
+QUrl UnsignedLong()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#unsignedLong"));
+}
+
+QUrl Boolean()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#boolean"));
+}
+
+QUrl Double()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#double"));
+}
+
+QUrl Float()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#float"));
+}
+
+QUrl String()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#string"));
+}
+
+QUrl Base64Binary()
+{
+    return QUrl(QStringLiteral("http://www.w3.org/2001/XMLSchema#base64Binary"));
+}
+
+}
