@@ -62,7 +62,7 @@ class Q_SPARQL_EXPORT SparqlListModel : public QSparqlQueryModel,
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSparqlQueryModel)
     Q_ENUMS(Status)
-    Q_PROPERTY(QString query READ getQuery WRITE setQueryQML)
+    Q_PROPERTY(QString query READ getQuery WRITE setQueryProperty)
     Q_PROPERTY(SparqlConnection* connection READ getConnection WRITE setConnection)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
@@ -85,6 +85,12 @@ public:
     Q_INVOKABLE QVariant get(int rowNumber);
     Q_INVOKABLE void reload();
 
+    Status status();
+    void setConnection(SparqlConnection* connection);
+    SparqlConnection* getConnection();
+    void setQueryProperty(const QString &query);
+    QString getQuery() const;
+
 Q_SIGNALS:
     void countChanged();
     void statusChanged(SparqlListModel::Status);
@@ -95,18 +101,12 @@ private Q_SLOTS:
     void onConnectionComplete();
 
 private:
+    void changeStatus(SparqlListModel::Status status);
+
     SparqlConnection *connection;
     QString queryString;
     QString lastErrorMessage;
     Status modelStatus;
-
-    void changeStatus(SparqlListModel::Status status);
-    // property methods
-    Status status();
-    void setConnection(SparqlConnection* connection);
-    SparqlConnection* getConnection();
-    void setQueryQML(QString query);
-    QString getQuery() const;
 };
 
 QT_END_NAMESPACE

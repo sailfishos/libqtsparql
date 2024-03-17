@@ -62,8 +62,12 @@ void SparqlListModel::componentComplete()
     // we know if any connection options have been set
 }
 
-void SparqlListModel::setQueryQML(QString query)
+void SparqlListModel::setQueryProperty(const QString &query)
 {
+    if (query == queryString) {
+        return;
+    }
+
     queryString = query;
     // if the query property changes, after the binding has been
     // initilised, call reload

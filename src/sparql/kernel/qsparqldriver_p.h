@@ -70,6 +70,7 @@ class Q_SPARQL_EXPORT QSparqlDriver : public QObject
 public:
     explicit QSparqlDriver(QObject *parent=0);
     ~QSparqlDriver();
+
     virtual bool isOpen() const;
     bool isOpenError() const;
 

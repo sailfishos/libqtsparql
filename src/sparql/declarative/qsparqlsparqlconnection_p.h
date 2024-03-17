@@ -63,17 +63,22 @@ class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection,
     Q_OBJECT
     Q_ENUMS(Status)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QString driver WRITE setDriver READ getDriver)
+    Q_PROPERTY(QString driver READ getDriver WRITE setDriver)
     Q_PROPERTY(QVariant result READ getResult NOTIFY resultReady)
-    Q_PROPERTY(SparqlConnectionOptions * options WRITE setOptions READ getOptions)
+    Q_PROPERTY(SparqlConnectionOptions * options READ getOptions WRITE setOptions)
     Q_CLASSINFO("DefaultProperty", "driver")
     Q_INTERFACES(QQmlParserStatus)
 
 public:
+    enum Status {
+        Null,
+        Ready,
+        Loading,
+        Error
+    };
+
     SparqlConnection();
     ~SparqlConnection() {}
-
-    enum Status { Null, Ready, Loading, Error };
 
     void classBegin();
     void componentComplete();
