@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLSPARQLCONNECTIONOPTIONS_P_H
-#define QSPARQLSPARQLCONNECTIONOPTIONS_P_H
+#ifndef DECLARATIVESPARQLCONNECTIONOPTIONS_H
+#define DECLARATIVESPARQLCONNECTIONOPTIONS_H
 
 #include <qsparqlquerymodel.h>
 
@@ -55,9 +55,9 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
-                                                public QQmlParserStatus,
-                                                public QSparqlConnectionOptions
+class Q_SPARQL_EXPORT DeclarativeSparqlConnectionOptions : public QObject,
+                                                           public QQmlParserStatus,
+                                                           public QSparqlConnectionOptions
 {
     Q_OBJECT
     Q_PROPERTY(QString databaseName READ databaseName WRITE setDatabaseName)
@@ -70,7 +70,8 @@ class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
     Q_INTERFACES(QQmlParserStatus)
 
 public:
-    SparqlConnectionOptions() {}
+    DeclarativeSparqlConnectionOptions() {}
+
     void classBegin() {}
     void componentComplete() {}
 };

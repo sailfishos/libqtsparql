@@ -108,7 +108,7 @@ Q_SIGNALS:
 
 private:
     friend class QSparqlConnectionPrivate;
-    friend class SparqlConnection;
+    friend class DeclarativeSparqlConnection;
 
     void qmlConstructor(const QString& type, const QSparqlConnectionOptions& options = QSparqlConnectionOptions());
 

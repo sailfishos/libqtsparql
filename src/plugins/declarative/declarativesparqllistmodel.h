@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLSPARQLCONNECTION_P_H
-#define QSPARQLSPARQLCONNECTION_P_H
+#ifndef DECLARATIVESPARQLLISTMODEL_H
+#define DECLARATIVESPARQLLISTMODEL_H
 
 #include <qsparqlquerymodel.h>
 
@@ -54,19 +54,19 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class SparqlQuery;
-class SparqlConnectionOptions;
+class DeclarativeSparqlConnection;
 
-class Q_SPARQL_EXPORT SparqlConnection : public QSparqlConnection,
-                                         public QQmlParserStatus
+class Q_SPARQL_EXPORT DeclarativeSparqlListModel : public QSparqlQueryModel,
+                                                   public QQmlParserStatus
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QSparqlQueryModel)
     Q_ENUMS(Status)
+    Q_PROPERTY(QString query READ getQuery WRITE setQueryProperty)
+    Q_PROPERTY(DeclarativeSparqlConnection* connection READ getConnection WRITE setConnection)
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QString driver READ getDriver WRITE setDriver)
-    Q_PROPERTY(QVariant result READ getResult NOTIFY resultReady)
-    Q_PROPERTY(SparqlConnectionOptions * options READ getOptions WRITE setOptions)
-    Q_CLASSINFO("DefaultProperty", "driver")
+    Q_CLASSINFO("DefaultProperty", "query")
     Q_INTERFACES(QQmlParserStatus)
 
 public:
@@ -77,49 +77,39 @@ public:
         Error
     };
 
-    SparqlConnection();
-    ~SparqlConnection() {}
+    DeclarativeSparqlListModel();
 
     void classBegin();
     void componentComplete();
 
-    Q_INVOKABLE QVariant select(QString query, bool async = false);
-    Q_INVOKABLE QVariant select(QString query, QVariant boundValues, bool async = false);
-    Q_INVOKABLE QVariant ask(QString query, bool async = false);
-    Q_INVOKABLE QVariant ask(QString query, QVariant boundValues, bool async = false);
-    Q_INVOKABLE QVariant update(QString query, bool async = false);
-    Q_INVOKABLE QVariant update(QString query, QVariant boundValues, bool async = false);
-    Q_INVOKABLE QVariant construct(QString query, bool async = false);
-    Q_INVOKABLE QVariant construct(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QString errorString() const;
+    Q_INVOKABLE QVariant get(int rowNumber);
+    Q_INVOKABLE void reload();
 
-    void setOptions(SparqlConnectionOptions* options);
-    SparqlConnectionOptions* getOptions();
-    void setDriver(QString driverName);
-    QString getDriver();
     Status status();
-    QVariant getResult();
+
+    void setConnection(DeclarativeSparqlConnection* connection);
+    DeclarativeSparqlConnection* getConnection();
+
+    void setQueryProperty(const QString &query);
+    QString getQuery() const;
 
 Q_SIGNALS:
+    void countChanged();
     void statusChanged();
-    void resultReady();
-    void onCompleted();
 
 private Q_SLOTS:
-    void onResultFinished();
+    void onFinished();
+    void onStarted();
+    void onConnectionComplete();
 
 private:
-    QVariant resultToVariant(QSparqlResult *result);
-    QVariant runQuery(QSparqlQuery query, bool async);
-    void changeStatus(SparqlConnection::Status);
-    bool bindValues(QSparqlQuery *query, QVariant boundValues);
+    void changeStatus(DeclarativeSparqlListModel::Status status);
 
-    QString driverName;
+    DeclarativeSparqlConnection *connection;
+    QString queryString;
     QString lastErrorMessage;
-    QSparqlResult *asyncResult; // for async queries
-    QVariant lastResult;
-    SparqlConnectionOptions *options;
-    Status connectionStatus;
+    Status modelStatus;
 };
 
 QT_END_NAMESPACE

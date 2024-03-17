@@ -44,9 +44,9 @@
 #include <QtQml/qqml.h>
 
 #include <private/qsparqlresultslist_p.h>
-#include <private/qsparqlsparqllistmodel_p.h>
-#include <private/qsparqlsparqlconnection_p.h>
-#include <private/qsparqlsparqlconnectionoptions_p.h>
+#include <declarativesparqllistmodel.h>
+#include <declarativesparqlconnection.h>
+#include <declarativesparqlconnectionoptions.h>
 
 #include <qsparqlquerymodel.h>
 
@@ -62,10 +62,9 @@ public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtSparql"));
-        qmlRegisterType<SparqlListModel>(uri, 1, 0, "SparqlListModel");
-        qmlRegisterType<SparqlConnection>(uri, 1, 0, "SparqlConnection");
-        qmlRegisterType<SparqlConnectionOptions>(uri, 1, 0, "SparqlConnectionOptions");
-        qmlRegisterType<SparqlConnectionOptions>(uri, 0, 1, "SparqlConnectionOptions");
+        qmlRegisterType<DeclarativeSparqlListModel>(uri, 1, 0, "SparqlListModel");
+        qmlRegisterType<DeclarativeSparqlConnection>(uri, 1, 0, "SparqlConnection");
+        qmlRegisterType<DeclarativeSparqlConnectionOptions>(uri, 1, 0, "SparqlConnectionOptions");
         qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
     }
 };
