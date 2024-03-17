@@ -148,6 +148,6 @@ void SparqlListModel::changeStatus(SparqlListModel::Status status)
 {
     if (modelStatus != status) {
         modelStatus = status;
-        Q_EMIT statusChanged(modelStatus);
+        Q_EMIT statusChanged();
     }
 }

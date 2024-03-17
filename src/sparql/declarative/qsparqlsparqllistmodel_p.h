@@ -93,7 +93,7 @@ public:
 
 Q_SIGNALS:
     void countChanged();
-    void statusChanged(SparqlListModel::Status);
+    void statusChanged();
 
 private Q_SLOTS:
     void onFinished();

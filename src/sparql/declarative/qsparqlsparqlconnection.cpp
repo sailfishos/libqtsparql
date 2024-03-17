@@ -227,7 +227,7 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
         lastResult = resultList;
     }
     result->deleteLater();
-    Q_EMIT resultReady(lastResult);
+    Q_EMIT resultReady();
     return lastResult;
 }
 
@@ -235,7 +235,7 @@ void SparqlConnection::changeStatus(SparqlConnection::Status status)
 {
     if (connectionStatus != status) {
         connectionStatus = status;
-        Q_EMIT statusChanged(connectionStatus);
+        Q_EMIT statusChanged();
     }
 }
 // property set/get methods

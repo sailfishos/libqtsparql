@@ -93,33 +93,33 @@ public:
     Q_INVOKABLE QVariant construct(QString query, QVariant boundValues, bool async = false);
     Q_INVOKABLE QString errorString() const;
 
+    void setOptions(SparqlConnectionOptions* options);
+    SparqlConnectionOptions* getOptions();
+    void setDriver(QString driverName);
+    QString getDriver();
+    Status status();
+    QVariant getResult();
+
 Q_SIGNALS:
-    void statusChanged(SparqlConnection::Status);
-    void resultReady(QVariant);
+    void statusChanged();
+    void resultReady();
     void onCompleted();
 
 private Q_SLOTS:
     void onResultFinished();
 
 private:
+    QVariant resultToVariant(QSparqlResult *result);
+    QVariant runQuery(QSparqlQuery query, bool async);
+    void changeStatus(SparqlConnection::Status);
+    bool bindValues(QSparqlQuery *query, QVariant boundValues);
+
     QString driverName;
     QString lastErrorMessage;
     QSparqlResult *asyncResult; // for async queries
     QVariant lastResult;
     SparqlConnectionOptions *options;
     Status connectionStatus;
-
-    QVariant resultToVariant(QSparqlResult *result);
-    QVariant runQuery(QSparqlQuery query, bool async);
-    QVariant getResult();
-    void changeStatus(SparqlConnection::Status);
-    bool bindValues(QSparqlQuery *query, QVariant boundValues);
-    // property methods
-    void setOptions(SparqlConnectionOptions* options);
-    SparqlConnectionOptions* getOptions();
-    void setDriver(QString driverName);
-    QString getDriver();
-    Status status();
 };
 
 QT_END_NAMESPACE
