@@ -44,28 +44,24 @@
 #include <QQuickItem>
 #include <QQuickView>
 #include <QQmlEngine>
-#include <QtSparql>
 #include <QtDBus>
 #include <QString>
-
-typedef QGuiApplication ApplicationType;
-typedef QQuickView ViewType;
 
 class ModelLiveChange : public QObject
 {
     Q_OBJECT
 
-    ViewType *view;
+    QQuickView *view;
 
 public :
-    ModelLiveChange(ViewType *view);
+    ModelLiveChange(QQuickView *view);
     ~ModelLiveChange();
 
 public slots:
     void changed(QString);
 };
 
-ModelLiveChange::ModelLiveChange(ViewType *view)
+ModelLiveChange::ModelLiveChange(QQuickView *view)
     : view(view)
 {
     // Monitor dbus for any notifications from Tracker.
@@ -108,11 +104,11 @@ void ModelLiveChange::changed(QString className)
 
 int main(int argc, char *argv[])
 {
-    ApplicationType app(argc, argv);
+    QGuiApplication app(argc, argv);
     QCoreApplication::addLibraryPath("../../../plugins");
 
     // Initialise QML
-    ViewType viewQml;
+    QQuickView viewQml;
     // Load the QML plugins from the build tree, if
     // they haven't been install
     viewQml.engine()->addImportPath("../../../imports");

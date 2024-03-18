@@ -2,7 +2,6 @@ include(../sparql-examples.pri)
 
 SOURCES += main.cpp
 
-#QT += sparql #enable this later
 QT += gui dbus quick
 
 copy2build.target = $$QTSPARQL_BUILD_TREE/examples/sparql/qmlbindings/main-qt5.qml
