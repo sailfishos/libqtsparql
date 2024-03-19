@@ -8,7 +8,7 @@ Makefile*
 .qmake.cache
 config.tests/unix/tracker-sparql/tracker-sparql
 
-moc_*.cpp
+moc_*
 *.moc
 ui_*.h
 

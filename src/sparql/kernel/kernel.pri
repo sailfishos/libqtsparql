@@ -11,7 +11,8 @@ HEADERS +=      kernel/qsparql.h \
                 kernel/qsparqldriverplugin_p.h \
                 kernel/qsparqlerror.h \
                 kernel/qsparqlntriples_p.h \
-                kernel/qsparqlresult.h 
+                kernel/qsparqlresult.h \
+                kernel/qsparqlxsd_p.h
 
 SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqlconnection.cpp \
@@ -23,5 +24,5 @@ SOURCES +=      kernel/qsparqlquery.cpp \
                 kernel/qsparqldriverplugin.cpp \
                 kernel/qsparqlerror.cpp \
                 kernel/qsparqlntriples.cpp \
-                kernel/qsparqlresult.cpp 
-
+                kernel/qsparqlresult.cpp \
+                kernel/qsparqlxsd_p.cpp

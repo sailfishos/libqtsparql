@@ -1,7 +1,7 @@
 TEMPLATE      = subdirs
 
 SUBDIRS       = simple \
-                # qmlbindings \
+                qmlbindings \
                 iteration \
                 asynctracker \
 

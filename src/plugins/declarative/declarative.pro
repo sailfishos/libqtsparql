@@ -29,9 +29,7 @@ coverage {
 
 target.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
 
-QT = core
-QT *= qml
-DEFINES *= QT_VERSION_5
+QT = core qml
 
 INSTALLS += target
 LIBS += -lQt5Sparql
@@ -40,4 +38,14 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 DESTDIR = $$QTSPARQL_BUILD_TREE/imports/QtSparql
 
 TARGET = sparqlplugin
-SOURCES	= plugin.cpp
+
+SOURCES += \
+    plugin.cpp \
+    declarativesparqlconnection.cpp \
+    declarativesparqllistmodel.cpp
+
+HEADERS += \
+    declarativesparqlconnection.h \
+    declarativesparqlconnectionoptions.h \
+    declarativesparqllistmodel.h
+

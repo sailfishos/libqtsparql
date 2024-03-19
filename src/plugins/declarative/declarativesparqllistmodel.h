@@ -37,23 +37,16 @@
 **
 ****************************************************************************/
 
-#ifndef QSPARQLSPARQLCONNECTIONOPTIONS_P_H
-#define QSPARQLSPARQLCONNECTIONOPTIONS_P_H
+#ifndef DECLARATIVESPARQLLISTMODEL_H
+#define DECLARATIVESPARQLLISTMODEL_H
 
 #include <qsparqlquerymodel.h>
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
-#include <QtCore/qstring.h>
 
-#ifdef QT_VERSION_5
 #include <QtQml/qqml.h>
 #include <QQmlParserStatus>
-#define QDeclarativeParserStatus QQmlParserStatus
-#else
-#include <QtDeclarative/qdeclarative.h>
-#include <QDeclarativeParserStatus>
-#endif
 
 QT_BEGIN_HEADER
 
@@ -61,23 +54,62 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Sparql)
 
-class Q_SPARQL_EXPORT SparqlConnectionOptions : public QObject,
-                                                public QDeclarativeParserStatus,
-                                                public QSparqlConnectionOptions
+class DeclarativeSparqlConnection;
+
+class Q_SPARQL_EXPORT DeclarativeSparqlListModel : public QSparqlQueryModel,
+                                                   public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY(QString databaseName READ databaseName WRITE setDatabaseName)
-    Q_PROPERTY(QString userName READ userName WRITE setUserName)
-    Q_PROPERTY(QString password READ password WRITE setPassword)
-    Q_PROPERTY(QString hostName READ hostName WRITE setHostName)
-    Q_PROPERTY(QString path READ path WRITE setPath)
-    Q_PROPERTY(int port READ port WRITE setPort)
-    Q_PROPERTY(QString driverName READ driverName WRITE setDriverName)
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_DECLARE_PRIVATE(QSparqlQueryModel)
+    Q_ENUMS(Status)
+    Q_PROPERTY(QString query READ getQuery WRITE setQueryProperty)
+    Q_PROPERTY(DeclarativeSparqlConnection* connection READ getConnection WRITE setConnection)
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_CLASSINFO("DefaultProperty", "query")
+    Q_INTERFACES(QQmlParserStatus)
+
 public:
-    SparqlConnectionOptions() {}
-    void classBegin() {}
-    void componentComplete() {}
+    enum Status {
+        Null,
+        Ready,
+        Loading,
+        Error
+    };
+
+    DeclarativeSparqlListModel();
+
+    void classBegin();
+    void componentComplete();
+
+    Q_INVOKABLE QString errorString() const;
+    Q_INVOKABLE QVariant get(int rowNumber);
+    Q_INVOKABLE void reload();
+
+    Status status();
+
+    void setConnection(DeclarativeSparqlConnection* connection);
+    DeclarativeSparqlConnection* getConnection();
+
+    void setQueryProperty(const QString &query);
+    QString getQuery() const;
+
+Q_SIGNALS:
+    void countChanged();
+    void statusChanged();
+
+private Q_SLOTS:
+    void onFinished();
+    void onStarted();
+    void onConnectionComplete();
+
+private:
+    void changeStatus(DeclarativeSparqlListModel::Status status);
+
+    DeclarativeSparqlConnection *connection;
+    QString queryString;
+    QString lastErrorMessage;
+    Status modelStatus;
 };
 
 QT_END_NAMESPACE

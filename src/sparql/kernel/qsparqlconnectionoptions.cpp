@@ -77,17 +77,17 @@ public:
 
     class OptionInfo;
     class OptionRegistry;
-    };
+};
 
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, hostKey,  (QString::fromLatin1("host")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, pathKey, (QString::fromLatin1("path")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, portKey, (QString::fromLatin1("port")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, dataReadyIntervalKey, (QString::fromLatin1("dataReadyInterval")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, userKey, (QString::fromLatin1("user")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, passwordKey, (QString::fromLatin1("password")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, databaseKey, (QString::fromLatin1("database")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, maxThreadKey, (QString::fromLatin1("maxThread")));
-Q_GLOBAL_STATIC_WITH_ARGS(const QString, threadExpiryKey, (QString::fromLatin1("threadExpiry")));
+static QString hostKey = QStringLiteral("host");
+static QString pathKey = QStringLiteral("path");
+static QString portKey = QStringLiteral("port");
+static QString dataReadyIntervalKey = QStringLiteral("dataReadyInterval");
+static QString userKey = QStringLiteral("user");
+static QString passwordKey = QStringLiteral("password");
+static QString databaseKey = QStringLiteral("database");
+static QString maxThreadKey = QStringLiteral("maxThread");
+static QString threadExpiryKey = QStringLiteral("threadExpiry");
 
 class QSparqlConnectionOptionsPrivate::OptionInfo {
 public:
@@ -118,15 +118,15 @@ class QSparqlConnectionOptionsPrivate::OptionRegistry {
 public:
     OptionRegistry()
     {
-        registry.insert(*hostKey(),              new OptionInfo(QVariant(QString())) );
-        registry.insert(*pathKey(),              new OptionInfo(QVariant(QString())) );
-        registry.insert(*userKey(),              new OptionInfo(QVariant(QString())) );
-        registry.insert(*passwordKey(),          new OptionInfo(QVariant(QString())) );
-        registry.insert(*databaseKey(),          new OptionInfo(QVariant(QString())) );
-        registry.insert(*portKey(),              new OptionInfo(QVariant(int(-1)))   );
-        registry.insert(*dataReadyIntervalKey(), new OptionInfo(QVariant(int(1)),  &greaterThanZero) );
-        registry.insert(*maxThreadKey(),         new OptionInfo(QVariant(int(-1)), &greaterThanZero) );
-        registry.insert(*threadExpiryKey(),      new OptionInfo(QVariant(int(-1))) );
+        registry.insert(hostKey,              new OptionInfo(QVariant(QString())) );
+        registry.insert(pathKey,              new OptionInfo(QVariant(QString())) );
+        registry.insert(userKey,              new OptionInfo(QVariant(QString())) );
+        registry.insert(passwordKey,          new OptionInfo(QVariant(QString())) );
+        registry.insert(databaseKey,          new OptionInfo(QVariant(QString())) );
+        registry.insert(portKey,              new OptionInfo(QVariant(int(-1)))   );
+        registry.insert(dataReadyIntervalKey, new OptionInfo(QVariant(int(1)),  &greaterThanZero) );
+        registry.insert(maxThreadKey,         new OptionInfo(QVariant(int(-1)), &greaterThanZero) );
+        registry.insert(threadExpiryKey,      new OptionInfo(QVariant(int(-1))) );
     }
 
     ~OptionRegistry()
@@ -161,8 +161,7 @@ QVariant QSparqlConnectionOptionsPrivate::optionOrDefaultValue(const QString& na
     OptionMap::const_iterator optionIter = map.constFind(name);
     if (optionIter != map.constEnd()) {
         return *optionIter;
-    }
-    else {
+    } else {
         const OptionInfo* optionInfo = connectionOptionRegistry()->lookup(name);
         return (optionInfo ? optionInfo->defaultValue : QVariant());
     }
@@ -261,7 +260,7 @@ void QSparqlConnectionOptions::setOption(const QString& name, const QVariant& va
 */
 void QSparqlConnectionOptions::setDatabaseName(const QString& name)
 {
-    setOption(*databaseKey(), name);
+    setOption(databaseKey, name);
 }
 
 /*!
@@ -272,7 +271,7 @@ void QSparqlConnectionOptions::setDatabaseName(const QString& name)
 */
 void QSparqlConnectionOptions::setUserName(const QString& name)
 {
-    setOption(*userKey(), name);
+    setOption(userKey, name);
 }
 
 /*!
@@ -283,7 +282,7 @@ void QSparqlConnectionOptions::setUserName(const QString& name)
 */
 void QSparqlConnectionOptions::setPassword(const QString& password)
 {
-    setOption(*passwordKey(), password);
+    setOption(passwordKey, password);
 }
 
 /*!
@@ -293,7 +292,7 @@ void QSparqlConnectionOptions::setPassword(const QString& password)
 */
 void QSparqlConnectionOptions::setHostName(const QString& host)
 {
-    setOption(*hostKey(), host);
+    setOption(hostKey, host);
 }
 
 /*!
@@ -303,7 +302,7 @@ void QSparqlConnectionOptions::setHostName(const QString& host)
 */
 void QSparqlConnectionOptions::setPath(const QString& path)
 {
-    setOption(*pathKey(), path);
+    setOption(pathKey, path);
 }
 
 /*!
@@ -313,7 +312,7 @@ void QSparqlConnectionOptions::setPath(const QString& path)
 */
 void QSparqlConnectionOptions::setPort(int p)
 {
-    setOption(*portKey(), p);
+    setOption(portKey, p);
 }
 
 /*!
@@ -324,7 +323,7 @@ void QSparqlConnectionOptions::setPort(int p)
 */
 void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 {
-    setOption(*dataReadyIntervalKey(), interval);
+    setOption(dataReadyIntervalKey, interval);
 }
 
 /*!
@@ -335,7 +334,7 @@ void QSparqlConnectionOptions::setDataReadyInterval(int interval)
 */
 void QSparqlConnectionOptions::setMaxThreadCount(int p)
 {
-    setOption(*maxThreadKey(), p);
+    setOption(maxThreadKey, p);
 }
 
 /*!
@@ -348,7 +347,7 @@ void QSparqlConnectionOptions::setThreadExpiryTime(int p)
 {
     //do not need to check for > 0, if the value is negative
     //threads will not expire until the threadpool is destroyed
-    setOption(*threadExpiryKey(), p);
+    setOption(threadExpiryKey, p);
 }
 
 void QSparqlConnectionOptions::setDriverName(const QString &driver)
@@ -387,7 +386,7 @@ void QSparqlConnectionOptions::setNetworkAccessManager(QNetworkAccessManager* na
 */
 QString QSparqlConnectionOptions::databaseName() const
 {
-    return d->optionOrDefaultValue(*databaseKey()).value<QString>();
+    return d->optionOrDefaultValue(databaseKey).value<QString>();
 }
 
 /*!
@@ -397,7 +396,7 @@ QString QSparqlConnectionOptions::databaseName() const
 */
 QString QSparqlConnectionOptions::path() const
 {
-    return d->optionOrDefaultValue(*pathKey()).value<QString>();
+    return d->optionOrDefaultValue(pathKey).value<QString>();
 }
 
 /*!
@@ -408,7 +407,7 @@ QString QSparqlConnectionOptions::path() const
 */
 QString QSparqlConnectionOptions::userName() const
 {
-    return d->optionOrDefaultValue(*userKey()).value<QString>();
+    return d->optionOrDefaultValue(userKey).value<QString>();
 }
 
 /*!
@@ -419,7 +418,7 @@ QString QSparqlConnectionOptions::userName() const
 */
 QString QSparqlConnectionOptions::password() const
 {
-    return d->optionOrDefaultValue(*passwordKey()).value<QString>();
+    return d->optionOrDefaultValue(passwordKey).value<QString>();
 }
 
 /*!
@@ -429,7 +428,7 @@ QString QSparqlConnectionOptions::password() const
 */
 QString QSparqlConnectionOptions::hostName() const
 {
-    return d->optionOrDefaultValue(*hostKey()).value<QString>();
+    return d->optionOrDefaultValue(hostKey).value<QString>();
 }
 
 /*!
@@ -439,7 +438,7 @@ QString QSparqlConnectionOptions::hostName() const
 */
 int QSparqlConnectionOptions::port() const
 {
-    return d->optionOrDefaultValue(*portKey()).value<int>();
+    return d->optionOrDefaultValue(portKey).value<int>();
 }
 
 /*!
@@ -452,7 +451,7 @@ int QSparqlConnectionOptions::port() const
 */
 int QSparqlConnectionOptions::dataReadyInterval() const
 {
-    return d->optionOrDefaultValue(*dataReadyIntervalKey()).value<int>();
+    return d->optionOrDefaultValue(dataReadyIntervalKey).value<int>();
 }
 
 /*!
@@ -463,7 +462,7 @@ int QSparqlConnectionOptions::dataReadyInterval() const
 */
 int QSparqlConnectionOptions::maxThreadCount() const
 {
-    return d->optionOrDefaultValue(*maxThreadKey()).value<int>();
+    return d->optionOrDefaultValue(maxThreadKey).value<int>();
 }
 
 /*!
@@ -473,7 +472,7 @@ int QSparqlConnectionOptions::maxThreadCount() const
 */
 int QSparqlConnectionOptions::threadExpiryTime() const
 {
-    return d->optionOrDefaultValue(*threadExpiryKey()).value<int>();
+    return d->optionOrDefaultValue(threadExpiryKey).value<int>();
 }
 
 QString QSparqlConnectionOptions::driverName() const

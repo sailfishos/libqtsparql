@@ -68,9 +68,14 @@ class Q_SPARQL_EXPORT QSparqlConnection : public QObject
 {
     Q_OBJECT
 public:
-    enum Feature {  DefaultGraph,
-                    AskQueries, ConstructQueries, UpdateQueries,
-                    SyncExec, AsyncExec };
+    enum Feature {
+        DefaultGraph,
+        AskQueries,
+        ConstructQueries,
+        UpdateQueries,
+        SyncExec,
+        AsyncExec
+    };
 
     explicit QSparqlConnection(QObject* parent = 0);
     QSparqlConnection(const QString& type,
@@ -103,7 +108,7 @@ Q_SIGNALS:
 
 private:
     friend class QSparqlConnectionPrivate;
-    friend class SparqlConnection;
+    friend class DeclarativeSparqlConnection;
 
     void qmlConstructor(const QString& type, const QSparqlConnectionOptions& options = QSparqlConnectionOptions());
 

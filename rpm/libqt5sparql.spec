@@ -12,10 +12,19 @@ BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5Xml)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Gui)
+BuildRequires: pkgconfig(Qt5Qml)
+BuildRequires: pkgconfig(Qt5Quick)
 BuildRequires: pkgconfig(tracker-sparql-3.0)
 
 %description
 Library for accessing RDF stores.
+
+%package declarative
+Summary: QML plugin for QtSparql
+Requires: %{name} >= %{version}
+
+%description declarative
+%{summary}.
 
 %package devel
 Summary:  Qt Sparql development files
@@ -71,12 +80,13 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 %postun devel -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %license LICENSE.LGPL
 %{_libdir}/libQt5Sparql.so.*
 
+%files declarative
+%{_libdir}/qt5/qml/QtSparql
+
 %files devel
-%defattr(-,root,root,-)
 %{_libdir}/libQt5Sparql.so
 %{_libdir}/pkgconfig/*
 %{_includedir}/Qt5Sparql/*
@@ -85,14 +95,11 @@ sed -i 's,-L/home/abuild/[^ ]*,,' %{buildroot}/%{_libdir}/pkgconfig/*.pc
 %doc %{_datadir}/doc/libqt5sparql-doc/html/*
 
 %files tests
-%defattr(-,root,root,-)
 %{_libdir}/libqt5sparql-tests/*
 %{_datadir}/libqt5sparql-tests/*
 
 %files endpoint
-%defattr(-,root,root,-)
 %{_libdir}/qt5/plugins/sparqldrivers/libqsparqlendpoint.so
 
 %files tracker-direct
-%defattr(-,root,root,-)
 %{_libdir}/qt5/plugins/sparqldrivers/libqsparqltrackerdirect.so

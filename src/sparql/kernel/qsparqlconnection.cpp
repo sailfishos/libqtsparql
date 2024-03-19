@@ -116,7 +116,7 @@ public:
 
     static QStringList allKeys;
     static QHash<QString, QSparqlDriverPlugin*> plugins;
-    static QMutex pluginMutex; // protexts allKeys, plugins and driverDict
+    static QMutex pluginMutex; // protects allKeys, plugins and driverDict
 
     QSparqlDriver* driver;
     QString drvName;

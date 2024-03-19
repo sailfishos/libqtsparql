@@ -37,27 +37,27 @@
 **
 ****************************************************************************/
 
-#include "qsparqlsparqlconnection_p.h"
-#include "qsparqlsparqlconnectionoptions_p.h"
+#include "declarativesparqlconnection.h"
+#include "declarativesparqlconnectionoptions.h"
 
 #include <QSparqlResult>
 #include <QSparqlResultRow>
 #include <QSparqlError>
 
-SparqlConnection::SparqlConnection()
-  : asyncResult(0)
-  , lastResult(0)  // To avoid "result" property having undefined value in QML
-  , options(0)
-  , connectionStatus(Null)
+DeclarativeSparqlConnection::DeclarativeSparqlConnection()
+    : asyncResult(0)
+    , lastResult(0)  // To avoid "result" property having undefined value in QML
+    , options(0)
+    , connectionStatus(Null)
 {
 }
 
-void SparqlConnection::classBegin()
+void DeclarativeSparqlConnection::classBegin()
 {
     changeStatus(Loading);
 }
 
-void SparqlConnection::componentComplete()
+void DeclarativeSparqlConnection::componentComplete()
 {
     // we will create the connection once the component has finished reading, that way
     // we know if any connection options have been set
@@ -77,20 +77,20 @@ void SparqlConnection::componentComplete()
     Q_EMIT onCompleted();
 }
 
-QString SparqlConnection::errorString() const
+QString DeclarativeSparqlConnection::errorString() const
 {
     if (connectionStatus != Error)
         return QString();
     return lastErrorMessage;
 }
 
-QVariant SparqlConnection::select(QString queryString, bool async)
+QVariant DeclarativeSparqlConnection::select(QString queryString, bool async)
 {
     QSparqlQuery query(queryString);
     return runQuery(query, async);
 }
 
-QVariant SparqlConnection::select(QString queryString, QVariant boundValues, bool async)
+QVariant DeclarativeSparqlConnection::select(QString queryString, QVariant boundValues, bool async)
 {
     QSparqlQuery query(queryString);
     if (bindValues(&query, boundValues))
@@ -98,13 +98,13 @@ QVariant SparqlConnection::select(QString queryString, QVariant boundValues, boo
     return -1;
 }
 
-QVariant SparqlConnection::ask(QString queryString, bool async)
+QVariant DeclarativeSparqlConnection::ask(QString queryString, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::AskStatement);
     return runQuery(query, async);
 }
 
-QVariant SparqlConnection::ask(QString queryString, QVariant boundValues, bool async)
+QVariant DeclarativeSparqlConnection::ask(QString queryString, QVariant boundValues, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::AskStatement);
     if (bindValues(&query, boundValues))
@@ -112,7 +112,7 @@ QVariant SparqlConnection::ask(QString queryString, QVariant boundValues, bool a
     return -1;
 }
 
-QVariant SparqlConnection::update(QString queryString, bool async)
+QVariant DeclarativeSparqlConnection::update(QString queryString, bool async)
 {
     // inserts and deletes are both update queries, and run in the same
     // way, so it doesn't matter if this is an insert or delete statement
@@ -120,7 +120,7 @@ QVariant SparqlConnection::update(QString queryString, bool async)
     return runQuery(query, async);
 }
 
-QVariant SparqlConnection::update(QString queryString, QVariant boundValues, bool async)
+QVariant DeclarativeSparqlConnection::update(QString queryString, QVariant boundValues, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::InsertStatement);
     if (bindValues(&query, boundValues))
@@ -128,13 +128,13 @@ QVariant SparqlConnection::update(QString queryString, QVariant boundValues, boo
     return -1;
 }
 
-QVariant SparqlConnection::construct(QString queryString, bool async)
+QVariant DeclarativeSparqlConnection::construct(QString queryString, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
     return runQuery(query, async);
 }
 
-QVariant SparqlConnection::construct(QString queryString, QVariant boundValues, bool async)
+QVariant DeclarativeSparqlConnection::construct(QString queryString, QVariant boundValues, bool async)
 {
     QSparqlQuery query(queryString, QSparqlQuery::ConstructStatement);
     if (bindValues(&query, boundValues))
@@ -142,7 +142,7 @@ QVariant SparqlConnection::construct(QString queryString, QVariant boundValues, 
     return -1;
 }
 
-bool SparqlConnection::bindValues(QSparqlQuery *query, QVariant boundValues)
+bool DeclarativeSparqlConnection::bindValues(QSparqlQuery *query, QVariant boundValues)
 {
     if (!boundValues.convert(QVariant::Map)) {
         lastErrorMessage = QLatin1String("Invalid bound values hashmap");
@@ -160,7 +160,7 @@ bool SparqlConnection::bindValues(QSparqlQuery *query, QVariant boundValues)
     return true;
 }
 
-QVariant SparqlConnection::runQuery(QSparqlQuery query, bool async)
+QVariant DeclarativeSparqlConnection::runQuery(QSparqlQuery query, bool async)
 {
     if (!isValid()) {
         return -1;
@@ -180,18 +180,18 @@ QVariant SparqlConnection::runQuery(QSparqlQuery query, bool async)
     return 0;
 }
 
-QVariant SparqlConnection::getResult()
+QVariant DeclarativeSparqlConnection::getResult()
 {
     return lastResult;
 }
 
-void SparqlConnection::onResultFinished()
+void DeclarativeSparqlConnection::onResultFinished()
 {
     resultToVariant(asyncResult);
     asyncResult = 0;
 }
 
-QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
+QVariant DeclarativeSparqlConnection::resultToVariant(QSparqlResult *result)
 {
     // check for a result error
     if (result->hasError()) {
@@ -227,43 +227,42 @@ QVariant SparqlConnection::resultToVariant(QSparqlResult *result)
         lastResult = resultList;
     }
     result->deleteLater();
-    Q_EMIT resultReady(lastResult);
+    Q_EMIT resultReady();
     return lastResult;
 }
 
-void SparqlConnection::changeStatus(SparqlConnection::Status status)
+void DeclarativeSparqlConnection::changeStatus(DeclarativeSparqlConnection::Status status)
 {
     if (connectionStatus != status) {
         connectionStatus = status;
-        Q_EMIT statusChanged(connectionStatus);
+        Q_EMIT statusChanged();
     }
 }
 // property set/get methods
 
-SparqlConnection::Status SparqlConnection::status()
+DeclarativeSparqlConnection::Status DeclarativeSparqlConnection::status()
 {
     return connectionStatus;
 }
 
-void SparqlConnection::setOptions(SparqlConnectionOptions* options)
+void DeclarativeSparqlConnection::setOptions(DeclarativeSparqlConnectionOptions* options)
 {
-    if (options)
-    {
+    if (options) {
        this->options = options;
     }
 }
 
-SparqlConnectionOptions* SparqlConnection::getOptions()
+DeclarativeSparqlConnectionOptions* DeclarativeSparqlConnection::getOptions()
 {
     return options;
 }
 
-void SparqlConnection::setDriver(QString driverName)
+void DeclarativeSparqlConnection::setDriver(QString driverName)
 {
     this->driverName = driverName;
 }
 
-QString SparqlConnection::getDriver()
+QString DeclarativeSparqlConnection::getDriver()
 {
     return driverName;
 }

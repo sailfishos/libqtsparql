@@ -45,7 +45,6 @@
 #include <qsparqlbinding.h>
 #include <qsparqlquery.h>
 #include <qsparqlresultrow.h>
-#define XSD_INTEGER
 #include "../../kernel/qsparqlxsd_p.h"
 
 #include <QtCore/qvector.h>
@@ -224,7 +223,7 @@ QSparqlBinding QTrackerDirectSelectResult::binding(int field) const
     QSparqlBinding b;
     const QVariant& value = results[pos()][field];
     if (value.type() == QVariant::LongLong) {
-        b.setValue(value.toString(), *XSD::Integer());
+        b.setValue(value.toString(), XSD::Integer());
     }
     else {
         b.setValue(value);

@@ -44,7 +44,6 @@
 #include <QtCore/qdatetime.h>
 #include <QtCore/qregexp.h>
 
-#define XSD_ALL
 #include "qsparqlxsd_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -224,47 +223,34 @@ static int extractTimezone(QString& str)
 void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
 {
     d->nodetype = QSparqlBindingPrivate::Literal;
-    QByteArray s = dataTypeUri.toString().toLatin1();
     bool ok = true;
+    d->dataType = dataTypeUri;
 
-    if (s == "http://www.w3.org/2001/XMLSchema#int") {
-        d->dataType = *XSD::Int();
+    if (dataTypeUri == XSD::Int()) {
         setValue(value.toInt(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#integer") {
-        d->dataType = *XSD::Integer();
+    } else if (dataTypeUri == XSD::Integer()) {
         setValue(value.toLongLong(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger") {
-        d->dataType = *XSD::NonNegativeInteger();
+    } else if (dataTypeUri == XSD::NonNegativeInteger()) {
         setValue(value.toULongLong(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#unsignedInt") {
-        d->dataType = *XSD::UnsignedInt();
+    } else if (dataTypeUri == XSD::UnsignedInt()) {
         setValue(value.toUInt(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#decimal") {
-        d->dataType = *XSD::Decimal();
+    } else if (dataTypeUri == XSD::Decimal()) {
         setValue(value.toDouble(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#short") {
-        d->dataType = *XSD::Short();
+    } else if (dataTypeUri == XSD::Short()) {
         setValue(value.toInt(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#long") {
-        d->dataType = *XSD::Long();
+    } else if (dataTypeUri == XSD::Long()) {
         setValue(value.toLongLong(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#unsignedLong") {
-        d->dataType = *XSD::UnsignedLong();
+    } else if (dataTypeUri == XSD::UnsignedLong()) {
         setValue(value.toULongLong(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#boolean") {
-        d->dataType = *XSD::Boolean();
+    } else if (dataTypeUri == XSD::Boolean()) {
         setValue(value.toLower() == QLatin1String("true") || value.toLower() == QLatin1String("yes") || value.toInt() != 0);
-    } else if (s == "http://www.w3.org/2001/XMLSchema#double") {
-        d->dataType = *XSD::Double();
+    } else if (dataTypeUri == XSD::Double()) {
         setValue(value.toDouble(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#float") {
-        d->dataType = *XSD::Float();
+    } else if (dataTypeUri == XSD::Float()) {
         setValue(value.toDouble(&ok));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#string") {
-        d->dataType = *XSD::String();
+    } else if (dataTypeUri == XSD::String()) {
         setValue(value);
-    } else if (s == "http://www.w3.org/2001/XMLSchema#date") {
-        d->dataType = *XSD::Date();
+    } else if (dataTypeUri == XSD::Date()) {
         // xsd:dates can have timezones which aren't supported by QDate,
         // so convert to UTC time and use the derived date
         QString v(value);
@@ -272,21 +258,17 @@ void QSparqlBinding::setValue(const QString& value, const QUrl& dataTypeUri)
         QDateTime dt = QDateTime::fromString(v, Qt::ISODate);
         dt = dt.addSecs(adjustment);
         setValue(dt.date());
-    } else if (s == "http://www.w3.org/2001/XMLSchema#time") {
-        d->dataType = *XSD::Time();
+    } else if (dataTypeUri == XSD::Time()) {
         // xsd:times can have timezones which aren't supported by QTime,
         // so convert to UTC time and use that
         QString v(value);
         int adjustment = extractTimezone(v);
         setValue(QTime::fromString(v, Qt::ISODate).addSecs(adjustment));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#dateTime") {
-        d->dataType = *XSD::DateTime();
+    } else if (dataTypeUri == XSD::DateTime()) {
         setValue(QDateTime::fromString(value, Qt::ISODate));
-    } else if (s == "http://www.w3.org/2001/XMLSchema#base64Binary") {
-        d->dataType = *XSD::Base64Binary();
+    } else if (dataTypeUri == XSD::Base64Binary()) {
         setValue(QByteArray::fromBase64(value.toLatin1()));
     } else {
-        d->dataType = dataTypeUri;
         setValue(value);
     }
 
@@ -322,7 +304,7 @@ QString QSparqlBinding::toString() const
             literal = val.toBool() ? QLatin1String("true") : QLatin1String("false");
             break;
         case QVariant::Double:
-            if (dataTypeUri() == QUrl::fromEncoded("http://www.w3.org/2001/XMLSchema#decimal")) {
+            if (dataTypeUri() == XSD::Decimal()) {
                 literal = QString::number(val.toDouble(), 'f', 10);
                 literal.replace(QRegExp(QString::fromLatin1("0+$")), QString::fromLatin1(""));
             } else {
@@ -514,27 +496,27 @@ QUrl QSparqlBinding::dataTypeUri() const
 
     switch (val.type()) {
     case QVariant::Int:
-        return *XSD::Int();
+        return XSD::Int();
     case QVariant::LongLong:
-        return *XSD::Long();
+        return XSD::Long();
     case QVariant::UInt:
-        return *XSD::UnsignedInt();
+        return XSD::UnsignedInt();
     case QVariant::ULongLong:
-        return *XSD::UnsignedLong();
+        return XSD::UnsignedLong();
     case QVariant::Bool:
-        return *XSD::Boolean();
+        return XSD::Boolean();
     case QVariant::Double:
-        return *XSD::Double();
+        return XSD::Double();
     case QVariant::String:
-        return *XSD::String();
+        return XSD::String();
     case QVariant::Date:
-        return *XSD::Date();
+        return XSD::Date();
     case QVariant::Time:
-        return *XSD::Time();
+        return XSD::Time();
     case QVariant::DateTime:
-        return *XSD::DateTime();
+        return XSD::DateTime();
     case QVariant::ByteArray:
-        return *XSD::Base64Binary();
+        return XSD::Base64Binary();
     default:
         return QUrl();
     }

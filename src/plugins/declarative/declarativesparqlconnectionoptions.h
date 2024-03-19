@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (ivan.frade@nokia.com)
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtSparql module (not yet part of the Qt Toolkit).
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -37,38 +37,47 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qdebug.h>
-
-#include <QQmlExtensionPlugin>
-#include <QtQml/qqml.h>
-
-#include <private/qsparqlresultslist_p.h>
-#include <declarativesparqllistmodel.h>
-#include <declarativesparqlconnection.h>
-#include <declarativesparqlconnectionoptions.h>
+#ifndef DECLARATIVESPARQLCONNECTIONOPTIONS_H
+#define DECLARATIVESPARQLCONNECTIONOPTIONS_H
 
 #include <qsparqlquerymodel.h>
 
+#include <QtCore/qglobal.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qstring.h>
+
+#include <QtQml/qqml.h>
+#include <QQmlParserStatus>
+
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class SparqlPlugin : public QQmlExtensionPlugin
+QT_MODULE(Sparql)
+
+class Q_SPARQL_EXPORT DeclarativeSparqlConnectionOptions : public QObject,
+                                                           public QQmlParserStatus,
+                                                           public QSparqlConnectionOptions
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.nemomobile.QtSparql")
+    Q_PROPERTY(QString databaseName READ databaseName WRITE setDatabaseName)
+    Q_PROPERTY(QString userName READ userName WRITE setUserName)
+    Q_PROPERTY(QString password READ password WRITE setPassword)
+    Q_PROPERTY(QString hostName READ hostName WRITE setHostName)
+    Q_PROPERTY(QString path READ path WRITE setPath)
+    Q_PROPERTY(int port READ port WRITE setPort)
+    Q_PROPERTY(QString driverName READ driverName WRITE setDriverName)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
-    void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtSparql"));
-        qmlRegisterType<DeclarativeSparqlListModel>(uri, 1, 0, "SparqlListModel");
-        qmlRegisterType<DeclarativeSparqlConnection>(uri, 1, 0, "SparqlConnection");
-        qmlRegisterType<DeclarativeSparqlConnectionOptions>(uri, 1, 0, "SparqlConnectionOptions");
-        qmlRegisterType<QSparqlResultsList>(uri, 0, 1, "SparqlResultsList");
-    }
+    DeclarativeSparqlConnectionOptions() {}
+
+    void classBegin() {}
+    void componentComplete() {}
 };
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+QT_END_HEADER
+
+#endif
