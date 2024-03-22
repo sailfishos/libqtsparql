@@ -1,7 +1,7 @@
 # if sparql-drivers contains the driver name, we build the driver into QtSparql library.
 
-contains(sparql-drivers, all ) {
-    sparql-driver +=  tracker_direct virtuoso endpoint
+contains(sparql-drivers, all) {
+    sparql-driver += tracker_direct virtuoso endpoint
 }
 
 contains(sparql-drivers, tracker_direct) {
@@ -38,7 +38,7 @@ contains(sparql-drivers, virtuoso) {
 
 
 contains(sparql-drivers, endpoint) {
-    HEADERS +=      drivers/endpoint/qsparql_endpoint_p.h
-    SOURCES +=      drivers/endpoint/qsparql_endpoint.cpp
+    HEADERS += drivers/endpoint/qsparql_endpoint_p.h
+    SOURCES += drivers/endpoint/qsparql_endpoint.cpp
     DEFINES += QT_SPARQL_ENDPOINT
 }

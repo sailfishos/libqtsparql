@@ -22,9 +22,9 @@ INSTALLS += qmldir
 #QMAKE_EXTRA_TARGETS += copy2buildhook
 
 coverage {
-	coverage.CONFIG = recursive
-	# coverage.recurse = sparqlresultslist
-	QMAKE_EXTRA_TARGETS += coverage
+    coverage.CONFIG = recursive
+    # coverage.recurse = sparqlresultslist
+    QMAKE_EXTRA_TARGETS += coverage
 }
 
 target.path = $$QTSPARQL_INSTALL_IMPORTS/QtSparql
