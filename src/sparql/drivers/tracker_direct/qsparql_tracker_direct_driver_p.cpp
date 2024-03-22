@@ -438,6 +438,7 @@ static void notifierCallback(TrackerNotifier *self,
                              gpointer user_data)
 {
     Q_UNUSED(self);
+    Q_UNUSED(service);
     Q_UNUSED(events);
     QSparqlConnection *connection = static_cast<QTrackerDirectDriver*>(user_data)->connection();
     if (connection) {
