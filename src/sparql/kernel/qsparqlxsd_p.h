@@ -56,22 +56,23 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Sparql)
 
 namespace XSD {
-QUrl Integer();
-QUrl Decimal();
-QUrl Date();
-QUrl Time();
-QUrl DateTime();
-QUrl Int();
-QUrl NonNegativeInteger();
-QUrl UnsignedInt();
-QUrl Short();
-QUrl Long();
-QUrl UnsignedLong();
-QUrl Boolean();
-QUrl Double();
-QUrl Float();
-QUrl String();
-QUrl Base64Binary();
+// exporting for plugins
+Q_SPARQL_EXPORT QUrl Integer();
+Q_SPARQL_EXPORT QUrl Decimal();
+Q_SPARQL_EXPORT QUrl Date();
+Q_SPARQL_EXPORT QUrl Time();
+Q_SPARQL_EXPORT QUrl DateTime();
+Q_SPARQL_EXPORT QUrl Int();
+Q_SPARQL_EXPORT QUrl NonNegativeInteger();
+Q_SPARQL_EXPORT QUrl UnsignedInt();
+Q_SPARQL_EXPORT QUrl Short();
+Q_SPARQL_EXPORT QUrl Long();
+Q_SPARQL_EXPORT QUrl UnsignedLong();
+Q_SPARQL_EXPORT QUrl Boolean();
+Q_SPARQL_EXPORT QUrl Double();
+Q_SPARQL_EXPORT QUrl Float();
+Q_SPARQL_EXPORT QUrl String();
+Q_SPARQL_EXPORT QUrl Base64Binary();
 }
 
 QT_END_NAMESPACE
